@@ -85,6 +85,16 @@ class TestInlineCode(unittest.TestCase):
         output = '<code>&lt;html&gt;&lt;/html&gt;</code>'
         self.assertEqual(token.render(), output)
 
+class TestStrikethrough(unittest.TestCase):
+    def test_render(self):
+        token = Strikethrough('~~deleted text~~')
+        self.assertEqual(token.render(), '<del>deleted text</del>')
+
+    def test_escape(self):
+        token = Strikethrough('~~deleted &~~')
+        output = '<del>deleted &amp;</del>'
+        self.assertEqual(token.render(), output)
+
 class TestLink(unittest.TestCase):
     def test_render(self):
         token = Link('[link name](link target)')
@@ -102,11 +112,14 @@ class TestParagraph(unittest.TestCase):
         lines = ['some\n',
                  '**important**\n',
                  '[info](link),\n',
-                 'with `code`, *etc*.\n']
+                 'with `code`,\n',
+                 '~~deleted text~~,\n',
+                 '*etc*.\n']
         token = Paragraph(lines)
         output = """<p>
                        some <b>important</b> <a href="link">info</a>
                        , with <code>code</code>
+                       , <del>deleted text</del>
                        , <em>etc</em>.
                     </p>"""
         output = ''.join([ line.strip() for line in output.split('\n') ])

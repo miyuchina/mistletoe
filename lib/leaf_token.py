@@ -1,7 +1,8 @@
 import html
 from lib.base_token import Token
 
-__all__ = ['Bold', 'Italic', 'InlineCode', 'Link', 'RawText']
+__all__ = ['Bold', 'Italic', 'InlineCode', 'Strikethrough',
+           'Link', 'RawText']
 
 class LeafToken(Token):
     def __init__(self, content, tagname):
@@ -26,6 +27,10 @@ class InlineCode(LeafToken):
     # pre: raw = "`some code`"
     def __init__(self, raw):
         super().__init__(raw[1:-1], 'code')
+
+class Strikethrough(LeafToken):
+    def __init__(self, raw):
+        super().__init__(raw[2:-2], 'del')
 
 class Link(LeafToken):
     # pre: raw = "[link name](link target)"
