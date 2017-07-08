@@ -1,7 +1,7 @@
 # TODO: build an actual test suite
 
 import re
-import token
+import components as token
 
 def tokenize(lines):
     tokens = []
