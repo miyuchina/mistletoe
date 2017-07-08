@@ -1,37 +1,38 @@
 import re
 import lib.base_token as base_token
-import lib.block_token as block_token
+from lib.block_token import *
 import lib.leaf_token as leaf_token
 from lib.reader import *
 
 def tokenize(lines):
     tokens = []
     index = 0
+
+    def shift_token(token_type, reader_func):
+        end_index = reader_func(index, lines)
+        tokens.append(token_type(lines[index:end_index]))
+        return end_index
+
+    def shift_line_token(token_type=None):
+        if token_type:
+            tokens.append(token_type(lines[index]))
+        return index + 1
+
     while index < len(lines):
-        if lines[index].startswith('#'):
-            tokens.append(block_token.Heading(lines[index]))
-            index += 1
-        elif lines[index].startswith('> '):
-            end_index = read_quote(index, lines)
-            tokens.append(block_token.Quote(lines[index:end_index]))
-            index = end_index
-        elif lines[index].startswith('```'):
-            end_index = read_block_code(index, lines)
-            tokens.append(block_token.BlockCode(lines[index:end_index]))
-            index = end_index
-        elif lines[index] == '---\n':
-            tokens.append(block_token.Separator)
-            index += 1
-        elif lines[index].startswith('- '):
-            end_index = read_list(index, lines)
-            tokens.append(build_list(lines[index:end_index]))
-            index = end_index
-        elif lines[index] == '\n':
-            index += 1
-        else:
-            end_index = read_paragraph(index, lines)
-            tokens.append(block_token.Paragraph(lines[index:end_index]))
-            index = end_index
+        if lines[index].startswith('#'):        # heading
+            index = shift_line_token(Heading)
+        elif lines[index].startswith('> '):     # quote
+            index = shift_token(Quote, read_quote)
+        elif lines[index].startswith('```'):    # block code
+            index = shift_token(BlockCode, read_block_code)
+        elif lines[index] == '---\n':           # separator
+            index = shift_line_token(Separator)
+        elif lines[index].startswith('- '):     # list
+            index = shift_token(build_list, read_list)
+        elif lines[index] == '\n':              # skip empty line
+            index = shift_line_token()
+        else:                                   # paragraph
+            index = shift_token(Paragraph, read_paragraph)
     return tokens
 
 def tokenize_inner(content):
@@ -67,11 +68,11 @@ def tokenize_inner(content):
     return tokens
 
 def build_list(lines, level=0):
-    l = block_token.List()
+    l = List()
     index = 0
     while index < len(lines):
         if lines[index][level*4:].startswith('- '):
-            l.add(block_token.ListItem(lines[index]))
+            l.add(ListItem(lines[index]))
         else:
             curr_level = level + 1
             end_index = read_list(index, lines, curr_level)
