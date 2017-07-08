@@ -29,11 +29,11 @@ class Heading(Token):
 class Quote(Token):
     # pre: lines[i] = "> some text\n"
     def __init__(self, lines):
-        self.content = [ line.strip()[2:] for line in lines ]
+        self.content = [ line[2:] for line in lines ]
 
     def render(self):
         inner_tokens = parser.tokenize(self.content)
-        inner = '\n'.join([ token.render() for token in inner_tokens ])
+        inner = ''.join([ token.render() for token in inner_tokens ])
         return Token.tagify('blockquote', inner)
 
 class BlockCode(Token):
