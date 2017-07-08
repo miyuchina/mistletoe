@@ -1,5 +1,7 @@
 import unittest
-from components import *
+from lib.base_token import *
+from lib.block_token import *
+from lib.leaf_token import *
 from parser import build_list
 
 class TestToken(unittest.TestCase):

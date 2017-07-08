@@ -1,18 +1,9 @@
 import html
 import parser
+from lib.base_token import Token
 
-__all__ = ['Token', 'Heading', 'Quote', 'BlockCode', 'Bold', 'Italic',
-           'InlineCode', 'Link', 'Paragraph', 'List', 'ListItem',
-           'Separator', 'RawText']
-
-class Token(object):
-    def tagify(tag, content):
-        return "<{0}>{1}</{0}>".format(tag, content)
-
-    def tagify_attrs(tag, attrs, content):
-        attrs = [ "{}=\"{}\"".format(key, attrs[key]) for key in attrs ]
-        attrs = ' '.join(attrs)
-        return "<{0} {1}>{2}</{0}>".format(tag, attrs, content)
+__all__ = ['Heading', 'Quote', 'Paragraph', 'BlockCode',
+           'List', 'ListItem', 'Separator']
 
 class BlockToken(Token):
     def __init__(self, content, tagname, tokenize_func):
@@ -77,46 +68,3 @@ class ListItem(BlockToken):
 class Separator(BlockToken):
     def render():
         return '<hr>'
-
-class LeafToken(Token):
-    def __init__(self, content, tagname):
-        self.content = content
-        self.tagname = tagname
-
-    def render(self):
-        content = html.escape(self.content)
-        return Token.tagify(self.tagname, content)
-
-class Bold(LeafToken):
-    # pre: raw = "** some string **"
-    def __init__(self, raw):
-        super().__init__(raw[2:-2], 'b')
-
-class Italic(LeafToken):
-    # pre: raw = "* some string *"
-    def __init__(self, raw):
-        super().__init__(raw[1:-1], 'em')
-
-class InlineCode(LeafToken):
-    # pre: raw = "`some code`"
-    def __init__(self, raw):
-        super().__init__(raw[1:-1], 'code')
-
-class Link(LeafToken):
-    # pre: raw = "[link name](link target)"
-    def __init__(self, raw):
-        self.name = raw[1:raw.index(']')]
-        self.target = raw[raw.index('(')+1:-1]
-
-    def render(self):
-        attrs = { 'href': self.target }
-        name = html.escape(self.name)
-        return Token.tagify_attrs('a', attrs, name)
-
-class RawText(LeafToken):
-    def __init__(self, content):
-        self.content = content
-
-    def render(self):
-        return html.escape(self.content)
-
