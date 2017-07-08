@@ -1,7 +1,6 @@
 import re
-import lib.base_token as base_token
 from lib.block_token import *
-import lib.leaf_token as leaf_token
+from lib.leaf_token import *
 from lib.reader import *
 
 def tokenize(lines):
@@ -47,23 +46,23 @@ def tokenize_inner(content):
             return
         if re.match(r"\*\*(.+?)\*\*", content):           # bold
             i = content.index('**', 1) + 2
-            append_token(leaf_token.Bold, content, i)
+            append_token(Bold, content, i)
         elif re.match(r"\*(.+?)\*", content):             # italics
             i = content.index('*', 1) + 1
-            append_token(leaf_token.Italic, content, i)
+            append_token(Italic, content, i)
         elif re.match(r"`(.+?)`", content):               # inline code
             i = content.index('`', 1) + 1
-            append_token(leaf_token.InlineCode, content, i)
+            append_token(InlineCode, content, i)
         elif re.match(r"\[(.+?)\]\((.+?)\)", content):    # link
             i = content.index(')') + 1
-            append_token(leaf_token.Link, content, i)
+            append_token(Link, content, i)
         else:                                             # raw text
             try:                      # next token
                 p = r"(`(.+?)`)|(\*\*(.+?)\*\*)|(\*(.+?)\*)|\[(.+?)\]\((.+?)\)"
                 i = re.search(p, content).start()
             except AttributeError:    # no more tokens
                 i = len(content)
-            append_token(leaf_token.RawText, content, i)
+            append_token(RawText, content, i)
     tokenize_inner_helper(content)
     return tokens
 
