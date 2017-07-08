@@ -12,6 +12,21 @@ def tokenize(lines):
         tokens.append(token_type(lines[index:end_index]))
         return end_index
 
+    def build_list(lines, level=0):
+        l = List()
+        index = 0
+        while index < len(lines):
+            curr_line = lines[index][level*4:]
+            if curr_line.startswith('- '):
+                l.add(ListItem(lines[index]))
+            elif curr_line.startswith(' '*4):
+                curr_level = level + 1
+                end_index = read_list(index, lines, curr_level)
+                l.add(build_list(lines[index:end_index], curr_level))
+                index = end_index - 1
+            index += 1
+        return l
+
     def shift_line_token(token_type=None):
         if token_type:
             tokens.append(token_type(lines[index]))
@@ -74,18 +89,4 @@ def tokenize_inner(content):
 
     tokenize_inner_helper(content)
     return tokens
-
-def build_list(lines, level=0):
-    l = List()
-    index = 0
-    while index < len(lines):
-        if lines[index][level*4:].startswith('- '):
-            l.add(ListItem(lines[index]))
-        else:
-            curr_level = level + 1
-            end_index = read_list(index, lines, curr_level)
-            l.add(build_list(lines[index:end_index], curr_level))
-            index = end_index - 1
-        index += 1
-    return l
 

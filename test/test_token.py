@@ -2,7 +2,6 @@ import unittest
 from lib.base_token import *
 from lib.block_token import *
 from lib.leaf_token import *
-from parser import build_list
 
 class TestToken(unittest.TestCase):
     def test_tagify(self):
@@ -120,14 +119,19 @@ class TestListItem(unittest.TestCase):
 
 class TestList(unittest.TestCase):
     def test_render(self):
-        lines = ['- item 1\n',
-                 '- item 2\n',
-                 '    - nested item 1\n',
-                 '    - nested item 2\n',
-                 '        - **further** nested item\n',
-                 '    - nested item 3\n',
-                 '- item 3\n']
-        token = build_list(lines)
+        token = List()
+        token.add(ListItem('- item 1\n'))
+        token.add(ListItem('- item 2\n'))
+        sublist = List()
+        sublist.add(ListItem('    - nested item 1\n'))
+        sublist.add(ListItem('    - nested item 2\n'))
+        subsublist = List()
+        subsublist.add(ListItem('        - **further** nested item\n'))
+        sublist.add(subsublist)
+        sublist.add(ListItem('    - nested item 3\n'))
+        token.add(sublist)
+        token.add(ListItem('- item 3\n'))
+
         output = """<ul>
                         <li>item 1</li>
                         <li>item 2</li>
