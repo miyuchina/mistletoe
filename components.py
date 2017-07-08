@@ -14,28 +14,37 @@ class Token(object):
         attrs = ' '.join(attrs)
         return "<{0} {1}>{2}</{0}>".format(tag, attrs, content)
 
-class Heading(Token):
+class BlockToken(Token):
+    def __init__(self, content, tagname, tokenize_func):
+        self.content = content
+        self.tagname = tagname
+        self._tokenize_func = tokenize_func
+
+    def render(self):
+        inner_tokens = self._tokenize_func(self.content)
+        inner = ''.join([ token.render() for token in inner_tokens ])
+        return Token.tagify(self.tagname, inner)
+
+class Heading(BlockToken):
     # pre: line = "### heading 3\n"
     def __init__(self, line):
-        hashes, self.content = line.strip().split(' ', 1)
-        self.level = len(hashes)
+        hashes, content = line.strip().split(' ', 1)
+        tagname = "h{}".format(len(hashes))
+        super().__init__(content, tagname, parser.tokenize_inner)
 
-    def render(self):
-        inner_tokens = parser.tokenize_inner(self.content)
-        inner = ''.join([ token.render() for token in inner_tokens ])
-        return Token.tagify("h{}".format(self.level), inner)
-
-class Quote(Token):
+class Quote(BlockToken):
     # pre: lines[i] = "> some text\n"
     def __init__(self, lines):
-        self.content = [ line[2:] for line in lines ]
+        content = [ line[2:] for line in lines ]
+        super().__init__(content, 'blockquote', parser.tokenize)
 
-    def render(self):
-        inner_tokens = parser.tokenize(self.content)
-        inner = ''.join([ token.render() for token in inner_tokens ])
-        return Token.tagify('blockquote', inner)
+class Paragraph(BlockToken):
+    # pre: lines = ["some\n", "continuous\n", "lines\n"]
+    def __init__(self, lines):
+        content = ' '.join([ line.strip() for line in lines ])
+        super().__init__(content, 'p', parser.tokenize_inner)
 
-class BlockCode(Token):
+class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
     def __init__(self, lines):
         self.content = ''.join(lines[1:-1]) # implicit newlines
@@ -47,17 +56,7 @@ class BlockCode(Token):
         inner = Token.tagify_attrs('code', attrs, content)
         return Token.tagify('pre', inner)
 
-class Paragraph(Token):
-    # pre: lines = ["some\n", "continuous\n", "lines\n"]
-    def __init__(self, lines):
-        self.content = ' '.join([ line.strip() for line in lines ])
-
-    def render(self):
-        inner_tokens = parser.tokenize_inner(self.content)
-        inner = ''.join([ token.render() for token in inner_tokens ])
-        return Token.tagify('p', inner)
-
-class List(Token):
+class List(BlockToken):
     # pre: items = [
     # "- item 1\n",
     # "- item 2\n",
@@ -65,26 +64,17 @@ class List(Token):
     # "- item 3\n"
     # ]
     def __init__(self):
-        self.items = []
+        super().__init__([], 'ul', lambda x: x)
 
     def add(self, item):
-        self.items.append(item)
+        self.content.append(item)
 
-    def render(self):
-        inner = ''.join([ item.render() for item in self.items ])
-        return Token.tagify('ul', inner)
-
-class ListItem(Token):
+class ListItem(BlockToken):
     # pre: line = "- some *italics* text\n"
     def __init__(self, line):
-        self.content = line.strip()[2:]
+        super().__init__(line.strip()[2:], 'li', parser.tokenize_inner)
 
-    def render(self):
-        inner_tokens = parser.tokenize_inner(self.content)
-        inner = ''.join([ token.render() for token in inner_tokens ])
-        return Token.tagify('li', inner)
-
-class Separator(Token):
+class Separator(BlockToken):
     def render():
         return '<hr>'
 
@@ -129,5 +119,4 @@ class RawText(LeafToken):
 
     def render(self):
         return html.escape(self.content)
-
 

@@ -33,6 +33,38 @@ def tokenize(lines):
             index = end_index
     return tokens
 
+def tokenize_inner(content):
+    tokens = []
+
+    def append_token(token_type, content, index):
+        tokens.append(token_type(content[:index]))
+        tokenize_inner_helper(content[index:])
+
+    def tokenize_inner_helper(content):
+        if content == '':                                 # base case
+            return
+        if re.match(r"\*\*(.+?)\*\*", content):           # bold
+            i = content.index('**', 1) + 2
+            append_token(token.Bold, content, i)
+        elif re.match(r"\*(.+?)\*", content):             # italics
+            i = content.index('*', 1) + 1
+            append_token(token.Italic, content, i)
+        elif re.match(r"`(.+?)`", content):               # inline code
+            i = content.index('`', 1) + 1
+            append_token(token.InlineCode, content, i)
+        elif re.match(r"\[(.+?)\]\((.+?)\)", content):    # link
+            i = content.index(')') + 1
+            append_token(token.Link, content, i)
+        else:                                             # raw text
+            try:                      # next token
+                p = r"(`(.+?)`)|(\*\*(.+?)\*\*)|(\*(.+?)\*)|\[(.+?)\]\((.+?)\)"
+                i = re.search(p, content).start()
+            except AttributeError:    # no more tokens
+                i = len(content)
+            append_token(token.RawText, content, i)
+    tokenize_inner_helper(content)
+    return tokens
+
 def read_quote(index, lines):
     while index < len(lines):
         if not lines[index].startswith('> '):
@@ -77,34 +109,3 @@ def build_list(lines, level=0):
         index += 1
     return l
 
-def tokenize_inner(content):
-    tokens = []
-
-    def append_token(token_type, content, index):
-        tokens.append(token_type(content[:index]))
-        tokenize_inner_helper(content[index:])
-
-    def tokenize_inner_helper(content):
-        if content == '':                                 # base case
-            return
-        if re.match(r"\*\*(.+?)\*\*", content):           # bold
-            i = content.index('**', 1) + 2
-            append_token(token.Bold, content, i)
-        elif re.match(r"\*(.+?)\*", content):             # italics
-            i = content.index('*', 1) + 1
-            append_token(token.Italic, content, i)
-        elif re.match(r"`(.+?)`", content):               # inline code
-            i = content.index('`', 1) + 1
-            append_token(token.InlineCode, content, i)
-        elif re.match(r"\[(.+?)\]\((.+?)\)", content):    # link
-            i = content.index(')') + 1
-            append_token(token.Link, content, i)
-        else:                                             # raw text
-            try:                      # next token
-                p = r"(`(.+?)`)|(\*\*(.+?)\*\*)|(\*(.+?)\*)|\[(.+?)\]\((.+?)\)"
-                i = re.search(p, content).start()
-            except AttributeError:    # no more tokens
-                i = len(content)
-            append_token(token.RawText, content, i)
-    tokenize_inner_helper(content)
-    return tokens
