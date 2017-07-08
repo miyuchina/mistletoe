@@ -66,5 +66,8 @@ class ListItem(BlockToken):
         super().__init__(line.strip()[2:], 'li', parser.tokenize_inner)
 
 class Separator(BlockToken):
-    def render():
+    def __init__(self, line):
+        pass
+
+    def render(self):
         return '<hr>'

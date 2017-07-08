@@ -146,7 +146,7 @@ class TestList(unittest.TestCase):
 
 class TestSeparator(unittest.TestCase):
     def test_render(self):
-        self.assertEqual(Separator.render(), '<hr>')
+        self.assertEqual(Separator('---\n').render(), '<hr>')
 
 class TestRawText(unittest.TestCase):
     def test_render(self):
