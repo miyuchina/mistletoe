@@ -50,18 +50,39 @@ class TestBlockCode(unittest.TestCase):
         output = '<pre><code class="sh">rm dir\nmkdir test\n</code></pre>'
         self.assertEqual(token.render(), output)
 
+    def test_escape(self):
+        lines = ['```html\n',
+                 '<html>\n',
+                 '<b>some text</b>\n',
+                 '</html>\n',
+                 '```\n']
+        token = BlockCode(lines)
+        output = '<pre><code class="html">&lt;html&gt;\n&lt;b&gt;some text&lt;/b&gt;\n&lt;/html&gt;\n</code></pre>'
+        self.assertEqual(token.render(), output)
+
 class TestBold(unittest.TestCase):
     def test_render(self):
         self.assertEqual(Bold('**a str**').render(), '<b>a str</b>')
+
+    def test_escape(self):
+        self.assertEqual(Bold('**an &**').render(), '<b>an &amp;</b>')
 
 class TestItalic(unittest.TestCase):
     def test_render(self):
         self.assertEqual(Italic('*a str*').render(), '<em>a str</em>')
 
+    def test_escape(self):
+        self.assertEqual(Italic('*an &*').render(), '<em>an &amp;</em>')
+
 class TestInlineCode(unittest.TestCase):
     def test_render(self):
         token = InlineCode('`rm dir`')
         self.assertEqual(token.render(), '<code>rm dir</code>')
+
+    def test_escape(self):
+        token = InlineCode('`<html></html>`')
+        output = '<code>&lt;html&gt;&lt;/html&gt;</code>'
+        self.assertEqual(token.render(), output)
 
 class TestLink(unittest.TestCase):
     def test_render(self):
@@ -128,4 +149,7 @@ class TestSeparator(unittest.TestCase):
 class TestRawText(unittest.TestCase):
     def test_render(self):
         self.assertEqual(RawText('some text').render(), 'some text')
+
+    def test_escape(self):
+        self.assertEqual(RawText('an &').render(), 'an &amp;')
 

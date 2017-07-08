@@ -1,6 +1,5 @@
+import html
 import parser
-
-# TODO: make everything html safe
 
 __all__ = ['Token', 'Heading', 'Quote', 'BlockCode', 'Bold', 'Italic',
            'InlineCode', 'Link', 'Paragraph', 'List', 'ListItem',
@@ -44,7 +43,8 @@ class BlockCode(Token):
 
     def render(self):
         attrs = { 'class': self.language }
-        inner = Token.tagify_attrs('code', attrs, self.content)
+        content = html.escape(self.content)
+        inner = Token.tagify_attrs('code', attrs, content)
         return Token.tagify('pre', inner)
 
 class Bold(Token):
@@ -53,7 +53,8 @@ class Bold(Token):
         self.content = raw[2:-2]
 
     def render(self):
-        return Token.tagify('b', self.content)
+        content = html.escape(self.content)
+        return Token.tagify('b', content)
 
 class Italic(Token):
     # pre: raw = "* some string *"
@@ -61,7 +62,8 @@ class Italic(Token):
         self.content = raw[1:-1]
 
     def render(self):
-        return Token.tagify('em', self.content)
+        content = html.escape(self.content)
+        return Token.tagify('em', content)
 
 class InlineCode(Token):
     # pre: raw = "`some code`"
@@ -69,7 +71,8 @@ class InlineCode(Token):
         self.content = raw[1:-1]
 
     def render(self):
-        return Token.tagify('code', self.content)
+        content = html.escape(self.content)
+        return Token.tagify('code', content)
 
 class Link(Token):
     # pre: raw = "[link name](link target)"
@@ -79,7 +82,8 @@ class Link(Token):
 
     def render(self):
         attrs = { 'href': self.target }
-        return Token.tagify_attrs('a', attrs, self.name)
+        name = html.escape(self.name)
+        return Token.tagify_attrs('a', attrs, name)
 
 class Paragraph(Token):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
@@ -127,4 +131,5 @@ class RawText(Token):
         self.content = content
 
     def render(self):
-        return self.content
+        return html.escape(self.content)
+
