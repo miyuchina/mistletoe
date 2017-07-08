@@ -23,6 +23,26 @@ class TestQuote(unittest.TestCase):
         output = '<blockquote><p>line 1 line 2</p></blockquote>'
         self.assertEqual(token.render(), output)
 
+    def test_inner_render(self):
+        lines = ['> ## heading 2\n',
+                 '> *hello* world\n',
+                 '> \n',
+                 '> **new** paragraph\n',
+                 '> with [link](hello)\n']
+        token = Quote(lines)
+        output = """<blockquote>
+                        <h2>heading 2</h2>
+                        <p>
+                            <em>hello</em> world
+                        </p>
+                        <p>
+                            <b>new</b> paragraph with <a href="hello">
+                            link</a>
+                        </p>
+                    </blockquote>"""
+        output = ''.join([ line.strip() for line in output.split('\n') ])
+        self.assertEqual(token.render(), output)
+
 class TestBlockCode(unittest.TestCase):
     def test_render(self):
         lines = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
@@ -56,6 +76,20 @@ class TestParagraph(unittest.TestCase):
         output = '<p>some continuous lines</p>'
         self.assertEqual(token.render(), output)
 
+    def test_inner_render(self):
+        lines = ['some\n',
+                 '**important**\n',
+                 '[info](link),\n',
+                 'with `code`, *etc*.\n']
+        token = Paragraph(lines)
+        output = """<p>
+                       some <b>important</b> <a href="link">info</a>
+                       , with <code>code</code>
+                       , <em>etc</em>.
+                    </p>"""
+        output = ''.join([ line.strip() for line in output.split('\n') ])
+        self.assertEqual(token.render(), output)
+
 class TestListItem(unittest.TestCase):
     def test_render(self):
         token = ListItem('- some text\n')
@@ -67,7 +101,7 @@ class TestList(unittest.TestCase):
                  '- item 2\n',
                  '    - nested item 1\n',
                  '    - nested item 2\n',
-                 '        - further nested item\n',
+                 '        - **further** nested item\n',
                  '    - nested item 3\n',
                  '- item 3\n']
         token = build_list(lines)
@@ -78,7 +112,7 @@ class TestList(unittest.TestCase):
                             <li>nested item 1</li>
                             <li>nested item 2</li>
                             <ul>
-                                <li>further nested item</li>
+                                <li><b>further</b> nested item</li>
                             </ul>
                             <li>nested item 3</li>
                         </ul>
