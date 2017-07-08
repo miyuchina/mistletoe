@@ -1,7 +1,7 @@
-# TODO: build an actual test suite
-
 import re
 import components as token
+
+__all__ = ['read_quote', 'read_block_code', 'read_paragraph', 'read_list']
 
 def tokenize(lines):
     tokens = []
@@ -30,7 +30,7 @@ def tokenize(lines):
         else:
             end_index = read_paragraph(index, lines)
             tokens.append(token.Paragraph(lines[index:end_index]))
-            index = end_index + 1
+            index = end_index
     return tokens
 
 def read_quote(index, lines):
