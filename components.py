@@ -47,44 +47,6 @@ class BlockCode(Token):
         inner = Token.tagify_attrs('code', attrs, content)
         return Token.tagify('pre', inner)
 
-class Bold(Token):
-    # pre: raw = "** some string **"
-    def __init__(self, raw):
-        self.content = raw[2:-2]
-
-    def render(self):
-        content = html.escape(self.content)
-        return Token.tagify('b', content)
-
-class Italic(Token):
-    # pre: raw = "* some string *"
-    def __init__(self, raw):
-        self.content = raw[1:-1]
-
-    def render(self):
-        content = html.escape(self.content)
-        return Token.tagify('em', content)
-
-class InlineCode(Token):
-    # pre: raw = "`some code`"
-    def __init__(self, raw):
-        self.content = raw[1:-1]
-
-    def render(self):
-        content = html.escape(self.content)
-        return Token.tagify('code', content)
-
-class Link(Token):
-    # pre: raw = "[link name](link target)"
-    def __init__(self, raw):
-        self.name = raw[1:raw.index(']')]
-        self.target = raw[raw.index('(')+1:-1]
-
-    def render(self):
-        attrs = { 'href': self.target }
-        name = html.escape(self.name)
-        return Token.tagify_attrs('a', attrs, name)
-
 class Paragraph(Token):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
     def __init__(self, lines):
@@ -126,10 +88,46 @@ class Separator(Token):
     def render():
         return '<hr>'
 
-class RawText(Token):
+class LeafToken(Token):
+    def __init__(self, content, tagname):
+        self.content = content
+        self.tagname = tagname
+
+    def render(self):
+        content = html.escape(self.content)
+        return Token.tagify(self.tagname, content)
+
+class Bold(LeafToken):
+    # pre: raw = "** some string **"
+    def __init__(self, raw):
+        super().__init__(raw[2:-2], 'b')
+
+class Italic(LeafToken):
+    # pre: raw = "* some string *"
+    def __init__(self, raw):
+        super().__init__(raw[1:-1], 'em')
+
+class InlineCode(LeafToken):
+    # pre: raw = "`some code`"
+    def __init__(self, raw):
+        super().__init__(raw[1:-1], 'code')
+
+class Link(LeafToken):
+    # pre: raw = "[link name](link target)"
+    def __init__(self, raw):
+        self.name = raw[1:raw.index(']')]
+        self.target = raw[raw.index('(')+1:-1]
+
+    def render(self):
+        attrs = { 'href': self.target }
+        name = html.escape(self.name)
+        return Token.tagify_attrs('a', attrs, name)
+
+class RawText(LeafToken):
     def __init__(self, content):
         self.content = content
 
     def render(self):
         return html.escape(self.content)
+
 
