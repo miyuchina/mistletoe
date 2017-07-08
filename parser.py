@@ -1,7 +1,7 @@
 import re
-from lib.block_token import *
-from lib.leaf_token import *
-from lib.reader import *
+import lib.block_token as block_token
+import lib.leaf_token as leaf_token
+import lib.reader as reader
 
 def tokenize(lines):
     tokens = []
@@ -13,15 +13,15 @@ def tokenize(lines):
         return end_index
 
     def build_list(lines, level=0):
-        l = List()
+        l = block_token.List()
         index = 0
         while index < len(lines):
             curr_line = lines[index][level*4:]
             if curr_line.startswith('- '):
-                l.add(ListItem(lines[index]))
+                l.add(block_token.ListItem(lines[index]))
             elif curr_line.startswith(' '*4):
                 curr_level = level + 1
-                end_index = read_list(index, lines, curr_level)
+                end_index = reader.read_list(index, lines, curr_level)
                 l.add(build_list(lines[index:end_index], curr_level))
                 index = end_index - 1
             index += 1
@@ -34,19 +34,19 @@ def tokenize(lines):
 
     while index < len(lines):
         if lines[index].startswith('#'):        # heading
-            index = shift_line_token(Heading)
+            index = shift_line_token(block_token.Heading)
         elif lines[index].startswith('> '):     # quote
-            index = shift_token(Quote, read_quote)
+            index = shift_token(block_token.Quote, reader.read_quote)
         elif lines[index].startswith('```'):    # block code
-            index = shift_token(BlockCode, read_block_code)
+            index = shift_token(block_token.BlockCode, reader.read_block_code)
         elif lines[index] == '---\n':           # separator
-            index = shift_line_token(Separator)
+            index = shift_line_token(block_token.Separator)
         elif lines[index].startswith('- '):     # list
-            index = shift_token(build_list, read_list)
+            index = shift_token(build_list, reader.read_list)
         elif lines[index] == '\n':              # skip empty line
             index = shift_line_token()
         else:                                   # paragraph
-            index = shift_token(Paragraph, read_paragraph)
+            index = shift_token(block_token.Paragraph, reader.read_paragraph)
     return tokens
 
 def tokenize_inner(content):
@@ -72,22 +72,22 @@ def tokenize_inner(content):
             index = min([ match.start() for match in matches if match ])
         except ValueError:    # no more tokens
             index = len(content)
-        tokens.append(RawText(content[:index]))
+        tokens.append(leaf_token.RawText(content[:index]))
         tokenize_inner_helper(content[index:])
 
     def tokenize_inner_helper(content):
         if content == '':                                 # base case
             return
         if re_bold.match(content):      # bold
-            append_token(Bold, '**', content)
+            append_token(leaf_token.Bold, '**', content)
         elif re_ital.match(content):    # italics
-            append_token(Italic, '*', content)
+            append_token(leaf_token.Italic, '*', content)
         elif re_code.match(content):    # inline code
-            append_token(InlineCode, '`', content)
+            append_token(leaf_token.InlineCode, '`', content)
         elif re_thru.match(content):
-            append_token(Strikethrough, '~~', content)
+            append_token(leaf_token.Strikethrough, '~~', content)
         elif re_link.match(content):    # link
-            append_token(Link, ')', content)
+            append_token(leaf_token.Link, ')', content)
         else:                           # raw text
             append_raw_text(content)
 
