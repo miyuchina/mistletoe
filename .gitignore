@@ -1,3 +1,5 @@
 __pycache__/
 *.swp
 out.html
+venv/
+.coverage
