@@ -6,32 +6,30 @@ __all__ = ['Bold', 'Italic', 'InlineCode', 'Strikethrough',
            'Link', 'RawText']
 
 class LeafToken(object):
-    def __init__(self, content, tagname):
+    def __init__(self, content):
         self.children = tokenize_inner(content)
-        self.tagname = tagname
 
-    def render(self):
-        inner = ''.join([ token.render() for token in self.children ])
-        return renderer.tagify(self.tagname, inner)
+    def __eq__(self, other):
+        return self.children == other.children
 
 class Bold(LeafToken):
     # pre: raw = "** some string **"
     def __init__(self, raw):
-        super().__init__(raw[2:-2], 'b')
+        super().__init__(raw[2:-2])
 
 class Italic(LeafToken):
     # pre: raw = "* some string *"
     def __init__(self, raw):
-        super().__init__(raw[1:-1], 'em')
+        super().__init__(raw[1:-1])
 
 class InlineCode(LeafToken):
     # pre: raw = "`some code`"
     def __init__(self, raw):
-        super().__init__(raw[1:-1], 'code')
+        super().__init__(raw[1:-1])
 
 class Strikethrough(LeafToken):
     def __init__(self, raw):
-        super().__init__(raw[2:-2], 'del')
+        super().__init__(raw[2:-2])
 
 class Link(LeafToken):
     # pre: raw = "[link name](link target)"
@@ -39,17 +37,15 @@ class Link(LeafToken):
         self.name = raw[1:raw.index(']')]
         self.target = raw[raw.index('(')+1:-1]
 
-    def render(self):
-        attrs = { 'href': self.target }
-        name = html.escape(self.name)
-        return renderer.tagify_attrs('a', attrs, name)
+    def __eq__(self, other):
+        return self.name == other.name and self.target == other.target
 
 class RawText(LeafToken):
     def __init__(self, content):
         self.content = content
 
-    def render(self):
-        return html.escape(self.content)
+    def __eq__(self, other):
+        return self.content == other.content
 
 def tokenize_inner(content):
     tokens = []
