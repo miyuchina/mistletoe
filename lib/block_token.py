@@ -7,13 +7,11 @@ __all__ = ['Heading', 'Quote', 'Paragraph', 'BlockCode',
 
 class BlockToken(Token):
     def __init__(self, content, tagname, tokenize_func):
-        self.content = content
+        self.children = tokenize_func(content)
         self.tagname = tagname
-        self._tokenize_func = tokenize_func
 
     def render(self):
-        inner_tokens = self._tokenize_func(self.content)
-        inner = ''.join([ token.render() for token in inner_tokens ])
+        inner = ''.join([ token.render() for token in self.children ])
         return Token.tagify(self.tagname, inner)
 
 class Heading(BlockToken):
@@ -55,10 +53,11 @@ class List(BlockToken):
     # "- item 3\n"
     # ]
     def __init__(self):
-        super().__init__([], 'ul', lambda x: x)
+        self.children = []
+        self.tagname = 'ul'
 
     def add(self, item):
-        self.content.append(item)
+        self.children.append(item)
 
 class ListItem(BlockToken):
     # pre: line = "- some *italics* text\n"

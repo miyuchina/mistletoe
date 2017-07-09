@@ -1,4 +1,5 @@
 import html
+import parser
 from lib.base_token import Token
 
 __all__ = ['Bold', 'Italic', 'InlineCode', 'Strikethrough',
@@ -6,12 +7,12 @@ __all__ = ['Bold', 'Italic', 'InlineCode', 'Strikethrough',
 
 class LeafToken(Token):
     def __init__(self, content, tagname):
-        self.content = content
+        self.children = parser.tokenize_inner(content)
         self.tagname = tagname
 
     def render(self):
-        content = html.escape(self.content)
-        return Token.tagify(self.tagname, content)
+        inner = ''.join([ token.render() for token in self.children ])
+        return Token.tagify(self.tagname, inner)
 
 class Bold(LeafToken):
     # pre: raw = "** some string **"
