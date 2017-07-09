@@ -1,18 +1,18 @@
 import html
 import parser
-from lib.base_token import Token
+import lib.html_renderer as renderer
 
 __all__ = ['Heading', 'Quote', 'Paragraph', 'BlockCode',
            'List', 'ListItem', 'Separator']
 
-class BlockToken(Token):
+class BlockToken(object):
     def __init__(self, content, tagname, tokenize_func):
         self.children = tokenize_func(content)
         self.tagname = tagname
 
     def render(self):
         inner = ''.join([ token.render() for token in self.children ])
-        return Token.tagify(self.tagname, inner)
+        return renderer.tagify(self.tagname, inner)
 
 class Heading(BlockToken):
     # pre: line = "### heading 3\n"
@@ -42,8 +42,8 @@ class BlockCode(BlockToken):
     def render(self):
         attrs = { 'class': self.language }
         content = html.escape(self.content)
-        inner = Token.tagify_attrs('code', attrs, content)
-        return Token.tagify('pre', inner)
+        inner = renderer.tagify_attrs('code', attrs, content)
+        return renderer.tagify('pre', inner)
 
 class List(BlockToken):
     # pre: items = [

@@ -1,5 +1,5 @@
 import unittest
-from lib.reader import *
+from core.reader import *
 
 class TestReaders(unittest.TestCase):
     def test_read_quote(self):

@@ -1,7 +1,7 @@
 import re
-import lib.block_token as block_token
-import lib.leaf_token as leaf_token
-import lib.reader as reader
+import core.block_token as block_token
+import core.leaf_token as leaf_token
+import core.reader as reader
 
 def tokenize(lines):
     tokens = []

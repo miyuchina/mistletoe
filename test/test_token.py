@@ -1,16 +1,6 @@
 import unittest
-import lib.base_token as base_token
-import lib.block_token as block_token
-import lib.leaf_token as leaf_token
-
-class TestToken(unittest.TestCase):
-    def test_tagify(self):
-        self.assertEqual(base_token.Token.tagify('p', 'hello'), '<p>hello</p>')
-
-    def test_tagify_attrs(self):
-        attrs = {'class': 'myClass'}
-        output = '<p class="myClass">hello</p>'
-        self.assertEqual(base_token.Token.tagify_attrs('p', attrs, 'hello'), output)
+import core.block_token as block_token
+import core.leaf_token as leaf_token
 
 class TestHeading(unittest.TestCase):
     def test_render(self):

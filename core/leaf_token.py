@@ -1,18 +1,18 @@
 import html
 import parser
-from lib.base_token import Token
+import lib.html_renderer as renderer
 
 __all__ = ['Bold', 'Italic', 'InlineCode', 'Strikethrough',
            'Link', 'RawText']
 
-class LeafToken(Token):
+class LeafToken(object):
     def __init__(self, content, tagname):
         self.children = parser.tokenize_inner(content)
         self.tagname = tagname
 
     def render(self):
         inner = ''.join([ token.render() for token in self.children ])
-        return Token.tagify(self.tagname, inner)
+        return renderer.tagify(self.tagname, inner)
 
 class Bold(LeafToken):
     # pre: raw = "** some string **"
@@ -42,7 +42,7 @@ class Link(LeafToken):
     def render(self):
         attrs = { 'href': self.target }
         name = html.escape(self.name)
-        return Token.tagify_attrs('a', attrs, name)
+        return renderer.tagify_attrs('a', attrs, name)
 
 class RawText(LeafToken):
     def __init__(self, content):
