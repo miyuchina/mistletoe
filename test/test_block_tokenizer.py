@@ -1,7 +1,7 @@
 import unittest
-from core.reader import *
+import core.block_tokenizer as tokenizer
 
-class TestReaders(unittest.TestCase):
+class TestBlockTokenizer(unittest.TestCase):
     def test_read_quote(self):
         index = 0
         mixed_lines = ['> in the quote\n',
@@ -14,7 +14,7 @@ class TestReaders(unittest.TestCase):
         test_outputs = 2, 3
         for test, output in zip(test_cases, test_outputs):
             with self.subTest(test=test):
-                self.assertEqual(read_quote(index, test), output)
+                self.assertEqual(tokenizer.read_quote(index, test), output)
 
     def test_read_block_code(self):
         index = 0
@@ -32,7 +32,7 @@ class TestReaders(unittest.TestCase):
         test_outputs = 4, 4
         for test, output in zip(test_cases, test_outputs):
             with self.subTest(test=test):
-                self.assertEqual(read_block_code(index, test), output)
+                self.assertEqual(tokenizer.read_block_code(index, test), output)
 
     def test_read_paragraph(self):
         index = 0
@@ -47,7 +47,7 @@ class TestReaders(unittest.TestCase):
         test_outputs = 3, 2
         for test, output in zip(test_cases, test_outputs):
             with self.subTest(test=test):
-                self.assertEqual(read_paragraph(index, test), output)
+                self.assertEqual(tokenizer.read_paragraph(index, test), output)
 
     def test_read_list(self):
         index = 0
@@ -65,4 +65,4 @@ class TestReaders(unittest.TestCase):
         levels = 1, 0
         for test, output, level in zip(test_cases, test_outputs, levels):
             with self.subTest(test=test):
-                self.assertEqual(read_list(index, test, level), output)
+                self.assertEqual(tokenizer.read_list(index, test, level), output)
