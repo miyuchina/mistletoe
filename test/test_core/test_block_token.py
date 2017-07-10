@@ -10,7 +10,7 @@ class TestHeading(unittest.TestCase):
 
     def test_bold(self):
         t = block_token.Heading('## **heading** 2\n')
-        c0 = leaf_token.Bold('**heading**')
+        c0 = leaf_token.Strong('**heading**')
         c1 = leaf_token.RawText(' 2')
         self.assertEqual(t.children[0], c0)
         self.assertEqual(t.children[1], c1)
@@ -51,7 +51,7 @@ class TestParagraph(unittest.TestCase):
         l = ['some\n', '*continuous*\n', 'lines\n']
         t = block_token.Paragraph(l)
         c0 = leaf_token.RawText('some ')
-        c1 = leaf_token.Italic('*continuous*')
+        c1 = leaf_token.Emphasis('*continuous*')
         c2 = leaf_token.RawText(' lines')
         self.assertEqual(t.children[0], c0)
         self.assertEqual(t.children[1], c1)

@@ -4,10 +4,10 @@ def render(node):
     token_type = type(node).__name__
     return render_map[token_type](node)
 
-def render_bold(node):
-    return tagify('b', render_inner(node))
+def render_strong(node):
+    return tagify('strong', render_inner(node))
 
-def render_italic(node):
+def render_emphasis(node):
     return tagify('em', render_inner(node))
 
 def render_inline_code(node):
@@ -56,8 +56,8 @@ def render_inner(node):
     return ''.join([ render(child) for child in node.children ])
 
 render_map = {
-    'Bold': render_bold,
-    'Italic': render_italic,
+    'Strong': render_strong,
+    'Emphasis': render_emphasis,
     'InlineCode': render_inline_code,
     'Strikethrough': render_strikethrough,
     'Link': render_link,

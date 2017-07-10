@@ -14,12 +14,12 @@ class TestHTMLRenderer(unittest.TestCase):
         target = '<a href="hi">some text</a>'
         self.assertEqual(output, target)
 
-    def test_bold(self):
-        output = renderer.render(leaf_token.Bold('**some text**'))
-        self.assertEqual(output, '<b>some text</b>')
+    def test_strong(self):
+        output = renderer.render(leaf_token.Strong('**some text**'))
+        self.assertEqual(output, '<strong>some text</strong>')
 
-    def test_italic(self):
-        output = renderer.render(leaf_token.Italic('*some text*'))
+    def test_emphasis(self):
+        output = renderer.render(leaf_token.Emphasis('*some text*'))
         self.assertEqual(output, '<em>some text</em>')
 
     def test_inline_code(self):

@@ -25,15 +25,15 @@ class TestLink(unittest.TestCase):
         self.assertNotEqual(t1, t2)
         self.assertNotEqual(t1, t3)
 
-class TestBold(unittest.TestCase):
+class TestStrong(unittest.TestCase):
     def test_raw(self):
-        t = leaf_token.Bold('**some text**')
+        t = leaf_token.Strong('**some text**')
         c = leaf_token.RawText('some text')
         self.assertEqual(t.children[0], c)
 
-class TestItalic(unittest.TestCase):
+class TestEmphasis(unittest.TestCase):
     def test_raw(self):
-        t = leaf_token.Italic('*some text*')
+        t = leaf_token.Emphasis('*some text*')
         c = leaf_token.RawText('some text')
         self.assertEqual(t.children[0], c)
 

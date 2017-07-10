@@ -1,7 +1,7 @@
 import re
 import html
 
-__all__ = ['Bold', 'Italic', 'InlineCode', 'Strikethrough',
+__all__ = ['Strong', 'Emphasis', 'InlineCode', 'Strikethrough',
            'Link', 'RawText']
 
 class LeafToken(object):
@@ -11,13 +11,13 @@ class LeafToken(object):
     def __eq__(self, other):
         return self.children == other.children
 
-class Bold(LeafToken):
-    # pre: raw = "** some string **"
+class Strong(LeafToken):
+    # pre: raw = "**some string**"
     def __init__(self, raw):
         super().__init__(raw[2:-2])
 
-class Italic(LeafToken):
-    # pre: raw = "* some string *"
+class Emphasis(LeafToken):
+    # pre: raw = "*some string*"
     def __init__(self, raw):
         super().__init__(raw[1:-1])
 
@@ -76,9 +76,9 @@ def tokenize_inner(content):
         if content == '':                                 # base case
             return
         if re_bold.match(content):      # bold
-            append_token(Bold, '**', content)
+            append_token(Strong, '**', content)
         elif re_ital.match(content):    # italics
-            append_token(Italic, '*', content)
+            append_token(Emphasis, '*', content)
         elif re_code.match(content):    # inline code
             append_token(InlineCode, '`', content)
         elif re_thru.match(content):
