@@ -1,14 +1,13 @@
 import sys
-import parser
+import core.block_token as block_token
+import lib.html_renderer as renderer
 
 def main(filename=""):
     fin = open(filename, 'r') if filename else sys.stdin
     lines = fin.readlines()
-    rendered_l = [ token.render() for token in parser.tokenize(lines) ]
-    rendered = ''.join(rendered_l)
-    rendered += '\n'
+    markdown = block_token.Document(lines)
     fin.close()
-    return(rendered)
+    return renderer.render(markdown)
 
 if __name__ == "__main__":
     try:
