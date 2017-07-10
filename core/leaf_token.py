@@ -1,6 +1,5 @@
 import re
 import html
-import lib.html_renderer as renderer
 
 __all__ = ['Bold', 'Italic', 'InlineCode', 'Strikethrough',
            'Link', 'RawText']

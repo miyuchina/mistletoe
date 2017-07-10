@@ -1,7 +1,6 @@
 import html
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
-import lib.html_renderer as renderer
 
 __all__ = ['Heading', 'Quote', 'Paragraph', 'BlockCode',
            'List', 'ListItem', 'Separator']
@@ -12,6 +11,10 @@ class BlockToken(object):
 
     def __eq__(self, other):
         return self.children == other.children
+
+class Document(BlockToken):
+    def __init__(self, lines):
+        super().__init__(lines, tokenize)
 
 class Heading(BlockToken):
     # pre: line = "### heading 3\n"
