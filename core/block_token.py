@@ -52,9 +52,24 @@ class List(BlockToken):
     # "    - nested item\n",
     # "- item 3\n"
     # ]
-    def __init__(self):
+    def __init__(self, lines, level=0):
         self.children = []
-        self.tagname = 'ul'
+        self._level = level
+        self._build_list(lines)
+
+    def _build_list(self, lines):
+        index = 0
+        while index < len(lines):
+            curr_line = lines[index][self._level*4:]
+            if curr_line.startswith('- '):
+                self.children.append(ListItem(lines[index]))
+            elif curr_line.startswith(' '*4):
+                curr_level = self._level + 1
+                end_index = tokenizer.read_list(index, lines, curr_level)
+                sublist = List(lines[index:end_index], curr_level)
+                self.children.append(sublist)
+                index = end_index - 1
+            index += 1
 
     def __eq__(self, other):
         return self.children == other.children
@@ -86,21 +101,6 @@ def tokenize(lines):
         tokens.append(token_type(lines[index:end_index]))
         return end_index
 
-    def build_list(lines, level=0):
-        l = block_token.List()
-        index = 0
-        while index < len(lines):
-            curr_line = lines[index][level*4:]
-            if curr_line.startswith('- '):
-                l.add(block_token.ListItem(lines[index]))
-            elif curr_line.startswith(' '*4):
-                curr_level = level + 1
-                end_index = tokenizer.read_list(index, lines, curr_level)
-                l.add(build_list(lines[index:end_index], curr_level))
-                index = end_index - 1
-            index += 1
-        return l
-
     def shift_line_token(token_type=None):
         if token_type:
             tokens.append(token_type(lines[index]))
@@ -116,7 +116,7 @@ def tokenize(lines):
         elif lines[index] == '---\n':           # separator
             index = shift_line_token(Separator)
         elif lines[index].startswith('- '):     # list
-            index = shift_token(build_list, tokenizer.read_list)
+            index = shift_token(List, tokenizer.read_list)
         elif lines[index] == '\n':              # skip empty line
             index = shift_line_token()
         else:                                   # paragraph

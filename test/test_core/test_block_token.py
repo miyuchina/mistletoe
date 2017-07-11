@@ -70,10 +70,18 @@ class TestListItem(unittest.TestCase):
         self.assertEqual(t.children[0], c0)
         self.assertEqual(t.children[1], c1)
 
-@unittest.skip('pending')
 class TestList(unittest.TestCase):
-    def test(self):
-        pass
+    def test_children(self):
+        lines = ['- item 1\n',
+                 '- item 2\n',
+                 '    - nested item 1\n',
+                 '    - nested item 2\n',
+                 '- item 3\n']
+        t = block_token.List(lines)
+        c0 = block_token.ListItem(lines[0])
+        c2 = block_token.List(list(map(lambda s: s.strip(), lines[2:4])))
+        self.assertEqual(t.children[0], c0)
+        self.assertEqual(t.children[2], c2)
 
 class TestSeparator(unittest.TestCase):
     def test_equal(self):

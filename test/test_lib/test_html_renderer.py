@@ -79,14 +79,12 @@ class TestHTMLRenderer(unittest.TestCase):
         target = '<li>some text</li>'
 
     def test_list(self):
-        token = block_token.List()
-        token.add(block_token.ListItem('- item 1\n'))
-        token.add(block_token.ListItem('- item 2\n'))
-        sublist = block_token.List()
-        sublist.add(block_token.ListItem('    - nested item 1\n'))
-        sublist.add(block_token.ListItem('    - nested item 2\n'))
-        token.add(sublist)
-        token.add(block_token.ListItem('- item 3\n'))
+        lines = ['- item 1\n',
+                 '- item 2\n',
+                 '    - nested item 1\n',
+                 '    - nested item 2\n',
+                 '- item 3\n']
+        output = renderer.render(block_token.List(lines))
         target = ('<ul>'
                +      '<li>item 1</li>'
                +      '<li>item 2</li>'
@@ -96,7 +94,7 @@ class TestHTMLRenderer(unittest.TestCase):
                +      '</ul>'
                +      '<li>item 3</li>'
                +  '</ul>')
-        self.assertEqual(renderer.render(token), target)
+        self.assertEqual(output, target)
 
     def test_separator(self):
         output = renderer.render(block_token.Separator('---\n'))
