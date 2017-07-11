@@ -48,21 +48,21 @@ class RawText(LeafToken):
 
 def tokenize_inner(content):
     tokens = []
-    re_bold = re.compile(r"\*\*(.+?)\*\*")
-    re_ital = re.compile(r"\*(.+?)\*")
-    re_code = re.compile(r"`(.+?)`")
-    re_thru = re.compile(r"~~(.+?)~~")
-    re_link = re.compile(r"\[(.+?)\]\((.+?)\)")
+    re_strg = re.compile(r"\*\*(.+)\*\*|__(.+)__")
+    re_emph = re.compile(r"\*(.+)\*|_(.+)_")
+    re_code = re.compile(r"`(.+)`")
+    re_thru = re.compile(r"~~(.+)~~")
+    re_link = re.compile(r"\[(.+)\]\((.+)\)")
 
-    def append_token(token_type, close_tag, content):
-        index = content.index(close_tag, 1) + len(close_tag)
+    def append_token(token_type, match_obj, content):
+        index = match_obj.end()
         tokens.append(token_type(content[:index]))
         tokenize_inner_helper(content[index:])
 
     def append_raw_text(content):
         try:                  # next token
-            matches = [re_bold.search(content),
-                       re_ital.search(content),
+            matches = [re_strg.search(content),
+                       re_emph.search(content),
                        re_code.search(content),
                        re_thru.search(content),
                        re_link.search(content)]
@@ -75,16 +75,16 @@ def tokenize_inner(content):
     def tokenize_inner_helper(content):
         if content == '':                                 # base case
             return
-        if re_bold.match(content):      # bold
-            append_token(Strong, '**', content)
-        elif re_ital.match(content):    # italics
-            append_token(Emphasis, '*', content)
+        if re_strg.match(content):      # strong
+            append_token(Strong, re_strg.match(content), content)
+        elif re_emph.match(content):    # emphasis
+            append_token(Emphasis, re_emph.match(content), content)
         elif re_code.match(content):    # inline code
-            append_token(InlineCode, '`', content)
+            append_token(InlineCode, re_code.match(content), content)
         elif re_thru.match(content):
-            append_token(Strikethrough, '~~', content)
+            append_token(Strikethrough, re_thru.match(content), content)
         elif re_link.match(content):    # link
-            append_token(Link, ')', content)
+            append_token(Link, re_link.match(content), content)
         else:                           # raw text
             append_raw_text(content)
 
