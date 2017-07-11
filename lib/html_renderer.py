@@ -1,3 +1,5 @@
+import html
+
 __all__ = ['render']
 
 def render(node):
@@ -21,7 +23,7 @@ def render_link(node):
     return tagify_attrs('a', attrs, node.name)
 
 def render_raw_text(node):
-    return node.content
+    return html.escape(node.content)
 
 def render_heading(node):
     tag = 'h' + str(node.level)
