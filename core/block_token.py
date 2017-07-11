@@ -9,9 +9,6 @@ class BlockToken(object):
     def __init__(self, content, tokenize_func):
         self.children = tokenize_func(content)
 
-    def __eq__(self, other):
-        return self.children == other.children
-
 class Document(BlockToken):
     def __init__(self, lines):
         super().__init__(lines, tokenize)
@@ -41,10 +38,6 @@ class BlockCode(BlockToken):
         self.content = ''.join(lines[1:-1]) # implicit newlines
         self.language = lines[0].strip()[3:]
 
-    def __eq__(self, other):
-        return (self.content == other.content
-            and self.language == other.language)
-
 class List(BlockToken):
     # pre: items = [
     # "- item 1\n",
@@ -71,9 +64,6 @@ class List(BlockToken):
                 index = end_index - 1
             index += 1
 
-    def __eq__(self, other):
-        return self.children == other.children
-
     def add(self, item):
         self.children.append(item)
 
@@ -82,15 +72,9 @@ class ListItem(BlockToken):
     def __init__(self, line):
         super().__init__(line.strip()[2:], leaf_token.tokenize_inner)
 
-    def __eq__(self, other):
-        return self.children == other.children
-
 class Separator(BlockToken):
     def __init__(self, line):
         pass
-
-    def __eq__(self, other):
-        return isinstance(other, type(self))
 
 def tokenize(lines):
     tokens = []

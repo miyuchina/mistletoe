@@ -8,9 +8,6 @@ class LeafToken(object):
     def __init__(self, content):
         self.children = tokenize_inner(content)
 
-    def __eq__(self, other):
-        return self.children == other.children
-
 class Strong(LeafToken):
     # pre: raw = "**some string**"
     def __init__(self, raw):
@@ -36,15 +33,9 @@ class Link(LeafToken):
         self.name = raw[1:raw.index(']')]
         self.target = raw[raw.index('(')+1:-1]
 
-    def __eq__(self, other):
-        return self.name == other.name and self.target == other.target
-
 class RawText(LeafToken):
     def __init__(self, content):
         self.content = content
-
-    def __eq__(self, other):
-        return self.content == other.content
 
 def tokenize_inner(content):
     tokens = []
