@@ -78,8 +78,6 @@ class Separator(BlockToken):
         return isinstance(other, type(self))
 
 def tokenize(lines):
-    import core.block_token as block_token
-
     tokens = []
     index = 0
 
