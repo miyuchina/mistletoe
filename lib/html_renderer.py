@@ -67,6 +67,7 @@ render_map = {
     'InlineCode': render_inline_code,
     'Strikethrough': render_strikethrough,
     'Link': render_link,
+    'EscapeSequence': render_raw_text,
     'RawText': render_raw_text,
     'Heading': render_heading,
     'Quote': render_quote,

@@ -33,12 +33,17 @@ class Link(LeafToken):
         self.name = raw[1:raw.index(']')]
         self.target = raw[raw.index('(')+1:-1]
 
+class EscapeSequence(LeafToken):
+    def __init__(self, raw):
+        self.content = raw[1:]
+
 class RawText(LeafToken):
     def __init__(self, content):
         self.content = content
 
 def tokenize_inner(content):
     tokens = []
+    re_escp = re.compile(r"\\[\*\(\)\[\]\~]")
     re_strg = re.compile(r"\*\*(.+)\*\*|__(.+)__")
     re_emph = re.compile(r"\*(.+)\*|_(.+)_")
     re_code = re.compile(r"`(.+)`")
@@ -52,7 +57,8 @@ def tokenize_inner(content):
 
     def append_raw_text(content):
         try:                  # next token
-            matches = [re_strg.search(content),
+            matches = [re_escp.search(content),
+                       re_strg.search(content),
                        re_emph.search(content),
                        re_code.search(content),
                        re_thru.search(content),
@@ -64,9 +70,11 @@ def tokenize_inner(content):
         tokenize_inner_helper(content[index:])
 
     def tokenize_inner_helper(content):
-        if content == '':                                 # base case
+        if content == '':               # base case
             return
-        if re_strg.match(content):      # strong
+        if re_escp.match(content):      # escape sequence
+            append_token(EscapeSequence, re_escp.match(content), content)
+        elif re_strg.match(content):    # strong
             append_token(Strong, re_strg.match(content), content)
         elif re_emph.match(content):    # emphasis
             append_token(Emphasis, re_emph.match(content), content)

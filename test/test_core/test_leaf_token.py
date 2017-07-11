@@ -2,6 +2,16 @@ import unittest
 import test.test_core.helpers as helpers
 import core.leaf_token as leaf_token
 
+class TestEscapeSequence(unittest.TestCase):
+    def test_escape(self):
+        t = leaf_token.Strong('**some \*text***')
+        c0 = leaf_token.RawText('some ')
+        c1 = leaf_token.EscapeSequence('\*')
+        c2 = leaf_token.RawText('text*')
+        helpers.check_equal(self, t.children[0], c0)
+        helpers.check_equal(self, t.children[1], c1)
+        helpers.check_equal(self, t.children[2], c2)
+
 class TestRawText(unittest.TestCase):
     def test_equal(self):
         t1 = leaf_token.RawText('some text')
