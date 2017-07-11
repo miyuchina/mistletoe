@@ -78,7 +78,7 @@ class TestHTMLRenderer(unittest.TestCase):
         output = renderer.render(block_token.ListItem('- some text\n'))
         target = '<li>some text</li>'
 
-    def test_list(self):
+    def test_unordered_list(self):
         lines = ['- item 1\n',
                  '- item 2\n',
                  '    - nested item 1\n',
@@ -94,6 +94,24 @@ class TestHTMLRenderer(unittest.TestCase):
                +      '</ul>'
                +      '<li>item 3</li>'
                +  '</ul>')
+        self.assertEqual(output, target)
+
+    def test_ordered_list(self):
+        lines = ['1. item 1\n',
+                 '2. item 2\n',
+                 '    - nested item 1\n',
+                 '    - nested item 2\n',
+                 '3. item 3\n']
+        output = renderer.render(block_token.List(lines))
+        target = ('<ol start="1">'
+               +      '<li>item 1</li>'
+               +      '<li>item 2</li>'
+               +      '<ul>'
+               +          '<li>nested item 1</li>'
+               +          '<li>nested item 2</li>'
+               +      '</ul>'
+               +      '<li>item 3</li>'
+               +  '</ol>')
         self.assertEqual(output, target)
 
     def test_separator(self):

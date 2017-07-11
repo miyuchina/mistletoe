@@ -50,18 +50,27 @@ class List(BlockToken):
         self._level = level
         self._build_list(lines)
 
+    def _check_ordered(self, line):
+        leader = line.split(' ', 1)[0]
+        if leader[:-1].isdigit():
+            self.start = int(leader[:-1])
+
     def _build_list(self, lines):
+        import re
+        self._check_ordered(lines[0])
         index = 0
         while index < len(lines):
-            curr_line = lines[index][self._level*4:]
-            if curr_line.startswith('- '):
-                self.children.append(ListItem(lines[index]))
-            elif curr_line.startswith(' '*4):
+            line = lines[index][self._level*4:]
+            if line.startswith(' '*4):
                 curr_level = self._level + 1
                 end_index = tokenizer.read_list(index, lines, curr_level)
                 sublist = List(lines[index:end_index], curr_level)
                 self.children.append(sublist)
                 index = end_index - 1
+            elif re.match(r'-|[0-9]\.', line):
+                self.children.append(ListItem(lines[index]))
+            else:
+                self.children.append(leaf_token.RawText(line))
             index += 1
 
     def add(self, item):
@@ -70,7 +79,8 @@ class List(BlockToken):
 class ListItem(BlockToken):
     # pre: line = "- some *italics* text\n"
     def __init__(self, line):
-        super().__init__(line.strip()[2:], leaf_token.tokenize_inner)
+        content = line.strip().split(' ', 1)[1]
+        super().__init__(content, leaf_token.tokenize_inner)
 
 class Separator(BlockToken):
     def __init__(self, line):

@@ -46,7 +46,11 @@ def render_list_item(node):
     return tagify('li', render_inner(node))
 
 def render_list(node):
-    return tagify('ul', render_inner(node))
+    if hasattr(node, 'start'):
+        attrs = { 'start': node.start }
+        return tagify_attrs('ol', attrs, render_inner(node))
+    else:
+        return tagify('ul', render_inner(node))
 
 def render_separator(node):
     return '<hr>'
