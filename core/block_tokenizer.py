@@ -1,3 +1,5 @@
+import re
+
 __all__ = ['read_quote', 'read_block_code', 'read_paragraph', 'read_list']
 
 def read_quote(index, lines):
@@ -25,7 +27,8 @@ def read_paragraph(index, lines):
 
 def read_list(index, lines, level=0):
     while index < len(lines):
-        if not lines[index][level*4:].strip().startswith('- '):
+        expected_content = lines[index][level*4:].strip()
+        if not re.match(r'([\+\-\*])|([0-9]\.)', expected_content):
             return index
         index += 1
     return index

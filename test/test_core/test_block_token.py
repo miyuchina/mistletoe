@@ -78,8 +78,8 @@ class TestList(unittest.TestCase):
     def test_children(self):
         lines = ['- item 1\n',
                  '- item 2\n',
-                 '    - nested item 1\n',
-                 '    - nested item 2\n',
+                 '    * nested item 1\n',
+                 '    * nested item 2\n',
                  '- item 3\n']
         t = block_token.List(lines)
         sublist = ['- nested item 1\n', '- nested item 2\n']

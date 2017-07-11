@@ -1,3 +1,4 @@
+import re
 import html
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
@@ -56,7 +57,6 @@ class List(BlockToken):
             self.start = int(leader[:-1])
 
     def _build_list(self, lines):
-        import re
         self._check_ordered(lines[0])
         index = 0
         while index < len(lines):
@@ -67,10 +67,8 @@ class List(BlockToken):
                 sublist = List(lines[index:end_index], curr_level)
                 self.children.append(sublist)
                 index = end_index - 1
-            elif re.match(r'-|[0-9]\.', line):
-                self.children.append(ListItem(lines[index]))
             else:
-                self.children.append(leaf_token.RawText(line))
+                self.children.append(ListItem(lines[index]))
             index += 1
 
     def add(self, item):
@@ -109,7 +107,7 @@ def tokenize(lines):
             index = shift_token(BlockCode, tokenizer.read_block_code)
         elif lines[index] == '---\n':           # separator
             index = shift_line_token(Separator)
-        elif lines[index].startswith('- '):     # list
+        elif re.match(r'([\+\-\*])|([0-9]\.)', lines[index]):     # list 
             index = shift_token(List, tokenizer.read_list)
         elif lines[index] == '\n':              # skip empty line
             index = shift_line_token()
