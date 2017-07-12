@@ -78,7 +78,7 @@ class TestListItem(unittest.TestCase):
         helpers.check_equal(self, l[1], c1)
 
 class TestList(unittest.TestCase):
-    def test_children(self):
+    def test_is_list(self):
         lines = ['- item 1\n',
                  '- item 2\n',
                  '    * nested item 1\n',
@@ -90,6 +90,17 @@ class TestList(unittest.TestCase):
         c2 = block_token.List([ line.strip() for line in sublist ])
         helpers.check_equal(self, t.children[0], c0)
         helpers.check_equal(self, t.children[2], c2)
+
+    def test_not_list(self):
+        lines = ['-not a list\n',
+                 '\n',
+                 '- a list\n',
+                 '- more item\n']
+        t = block_token.Document(lines)
+        c0 = block_token.Paragraph([ lines[0] ])
+        c1 = block_token.List(lines[2:])
+        helpers.check_equal(self, t.children[0], c0)
+        helpers.check_equal(self, t.children[1], c1)
 
 class TestSeparator(unittest.TestCase):
     def test_equal(self):

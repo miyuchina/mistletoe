@@ -107,7 +107,7 @@ def tokenize(lines):
             index = shift_token(BlockCode, tokenizer.read_block_code)
         elif lines[index] == '---\n':           # separator
             index = shift_line_token(Separator)
-        elif re.match(r'([\+\-\*])|([0-9]\.)', lines[index]):     # list 
+        elif re.match(r'([\+\-\*] )|([0-9]\. )', lines[index]): # list 
             index = shift_token(List, tokenizer.read_list)
         elif lines[index] == '\n':              # skip empty line
             index = shift_line_token()
