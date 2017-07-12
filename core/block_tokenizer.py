@@ -1,35 +1,25 @@
-import re
+class BlockTokenizer(object):
+    def __init__(self, lines, token_types, fallback_token):
+        self.lines = lines
+        self.token_types = token_types
+        self.fallback_token = fallback_token
 
-__all__ = ['read_quote', 'read_block_code', 'read_paragraph', 'read_list']
-
-def read_quote(index, lines):
-    while index < len(lines):
-        if not lines[index].startswith('> '):
-            return index
-        index += 1
-    return index
-
-def read_block_code(index, lines):
-    index += 1    # skip first line
-    while index < len(lines):
-        if lines[index] == '```\n':
-            return index + 1
-        index += 1
-    return index
-
-def read_paragraph(index, lines):
-    index += 1
-    while index < len(lines):
-        if lines[index] == '\n':
-            return index
-        index += 1
-    return index
-
-def read_list(index, lines, level=0):
-    while index < len(lines):
-        expected_content = lines[index][level*4:].strip()
-        if not re.match(r'([\+\-\*])|([0-9]\.)', expected_content):
-            return index
-        index += 1
-    return index
-
+    def get_tokens(self):
+        index = 0
+        while index < len(self.lines):
+            matched = False
+            for token_type in self.token_types:
+                if token_type.check_start(self.lines[index]):
+                    curr_index = token_type.read(index, self.lines)
+                    yield token_type(self.lines[index:curr_index])
+                    matched = True
+                    index = curr_index
+                    break
+            if not matched:
+                if self.lines[index] == '\n':
+                    index += 1
+                else:
+                    curr_index = self.fallback_token.read(index, self.lines)
+                    yield self.fallback_token(self.lines[index:curr_index])
+                    index = curr_index
+        return

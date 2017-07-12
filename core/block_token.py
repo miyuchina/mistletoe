@@ -3,8 +3,13 @@ import html
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
 
-__all__ = ['Heading', 'Quote', 'Paragraph', 'BlockCode',
-           'List', 'ListItem', 'Separator']
+__all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Separator']
+
+def tokenize(lines):
+    token_types = [ globals()[key] for key in __all__ ]
+    fallback_token = Paragraph
+    bt = tokenizer.BlockTokenizer(lines, token_types, fallback_token)
+    return bt.get_tokens()
 
 class BlockToken(object):
     def __init__(self, content, tokenize_func):
@@ -17,9 +22,16 @@ class Document(BlockToken):
 class Heading(BlockToken):
     # pre: line = "### heading 3\n"
     def __init__(self, line):
+        line = line[0]
         hashes, content = line.strip().split(' ', 1)
         self.level = len(hashes)
         super().__init__(content, leaf_token.tokenize_inner)
+
+    @staticmethod
+    def read(index, lines): return index + 1
+
+    @staticmethod
+    def check_start(line): return line.startswith('#')
 
 class Quote(BlockToken):
     # pre: lines[i] = "> some text\n"
@@ -27,17 +39,44 @@ class Quote(BlockToken):
         content = [ line[2:] for line in lines ]
         super().__init__(content, tokenize)
 
+    @staticmethod
+    def read(index, lines):
+        while index < len(lines) and not lines[index].startswith('> '):
+            index += 1
+        return index
+
+    @staticmethod
+    def check_start(line): return line.startswith('> ')
+
 class Paragraph(BlockToken):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
     def __init__(self, lines):
         content = ' '.join([ line.strip() for line in lines ])
         super().__init__(content, leaf_token.tokenize_inner)
 
+    @staticmethod
+    def read(index, lines):
+        while index < len(lines) and lines[index] != '\n':
+            index += 1
+        return index
+
+    @staticmethod
+    def check_start(line): return line != '\n'
+
 class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
     def __init__(self, lines):
         self.content = ''.join(lines[1:-1]) # implicit newlines
         self.language = lines[0].strip()[3:]
+
+    @staticmethod
+    def read(index, lines):
+        while index < len(lines) and lines[index] != '```':
+            index += 1
+        return index
+
+    @staticmethod
+    def check_start(line): return line == '```\n'
 
 class List(BlockToken):
     # pre: items = [
@@ -47,9 +86,9 @@ class List(BlockToken):
     # "- item 3\n"
     # ]
     def __init__(self, lines, level=0):
-        self.children = []
+        self.children = self._build_list(lines)
         self._level = level
-        self._build_list(lines)
+        self._check_ordered(lines[0])
 
     def _check_ordered(self, line):
         leader = line.split(' ', 1)[0]
@@ -57,22 +96,29 @@ class List(BlockToken):
             self.start = int(leader[:-1])
 
     def _build_list(self, lines):
-        self._check_ordered(lines[0])
         index = 0
         while index < len(lines):
             line = lines[index][self._level*4:]
             if line.startswith(' '*4):
                 curr_level = self._level + 1
-                end_index = tokenizer.read_list(index, lines, curr_level)
-                sublist = List(lines[index:end_index], curr_level)
-                self.children.append(sublist)
-                index = end_index - 1
+                end_index = self.read(index, lines, curr_level)
+                yield List(lines[index:end_index], curr_level)
+                index = end_index
             else:
-                self.children.append(ListItem(lines[index]))
-            index += 1
+                yield ListItem(lines[index])
+                index += 1
 
-    def add(self, item):
-        self.children.append(item)
+    @staticmethod
+    def read(index, lines, level=0):
+        while index < len(lines):
+            expected_content = lines[index][level*4:].strip()
+            if not re.match(r'([\+\-\*] )|([0-9]\. )', expected_content):
+                return index
+            index += 1
+        return index
+
+    @staticmethod
+    def check_start(line): return re.match(r'([\+\-\*] )|([0-9]\. )', line)
 
 class ListItem(BlockToken):
     # pre: line = "- some *italics* text\n"
@@ -82,35 +128,11 @@ class ListItem(BlockToken):
 
 class Separator(BlockToken):
     def __init__(self, line):
-        pass
+        self.line = line
 
-def tokenize(lines):
-    tokens = []
-    index = 0
-
-    def shift_token(token_type, tokenize_func):
-        end_index = tokenize_func(index, lines)
-        tokens.append(token_type(lines[index:end_index]))
-        return end_index
-
-    def shift_line_token(token_type=None):
-        if token_type:
-            tokens.append(token_type(lines[index]))
+    @staticmethod
+    def read(index, lines):
         return index + 1
 
-    while index < len(lines):
-        if lines[index].startswith('#'):        # heading
-            index = shift_line_token(Heading)
-        elif lines[index].startswith('> '):     # quote
-            index = shift_token(Quote, tokenizer.read_quote)
-        elif lines[index].startswith('```'):    # block code
-            index = shift_token(BlockCode, tokenizer.read_block_code)
-        elif lines[index] == '---\n':           # separator
-            index = shift_line_token(Separator)
-        elif re.match(r'([\+\-\*] )|([0-9]\. )', lines[index]): # list 
-            index = shift_token(List, tokenizer.read_list)
-        elif lines[index] == '\n':              # skip empty line
-            index = shift_line_token()
-        else:                                   # paragraph
-            index = shift_token(Paragraph, tokenizer.read_paragraph)
-    return tokens
+    @staticmethod
+    def check_start(line): return line == '---\n'
