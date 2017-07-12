@@ -5,12 +5,12 @@ import core.block_token as block_token
 
 class TestHeading(unittest.TestCase):
     def test_raw(self):
-        t = block_token.Heading('### heading 3\n')
+        t = block_token.Heading([ '### heading 3\n' ])
         c = leaf_token.RawText('heading 3')
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_bold(self):
-        t = block_token.Heading('## **heading** 2\n')
+        t = block_token.Heading([ '## **heading** 2\n' ])
         c0 = leaf_token.Strong('heading')
         c1 = leaf_token.RawText(' 2')
         l = list(t.children)
@@ -21,14 +21,15 @@ class TestQuote(unittest.TestCase):
     def test_paragraph(self):
         t = block_token.Quote(['> line 1\n', '> line 2\n'])
         c = block_token.Paragraph(['line 1\n', 'line 2\n'])
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
 
     def test_heading(self):
         t = block_token.Quote(['> # heading 1\n', '> line 1\n'])
-        c0 = block_token.Heading('# heading 1\n')
+        c0 = block_token.Heading([ '# heading 1\n' ])
         c1 = block_token.Paragraph(['line 1\n'])
-        helpers.check_equal(self, t.children[0], c0)
-        helpers.check_equal(self, t.children[1], c1)
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
 
 class TestBlockCode(unittest.TestCase):
     def test_equal(self):
@@ -78,7 +79,7 @@ class TestListItem(unittest.TestCase):
         helpers.check_equal(self, l[1], c1)
 
 class TestList(unittest.TestCase):
-    def test_is_list(self):
+    def test_nested_list(self):
         lines = ['- item 1\n',
                  '- item 2\n',
                  '    * nested item 1\n',
@@ -87,9 +88,12 @@ class TestList(unittest.TestCase):
         t = block_token.List(lines)
         sublist = ['- nested item 1\n', '- nested item 2\n']
         c0 = block_token.ListItem(lines[0])
+        c1 = block_token.ListItem(lines[1])
         c2 = block_token.List([ line.strip() for line in sublist ])
-        helpers.check_equal(self, t.children[0], c0)
-        helpers.check_equal(self, t.children[2], c2)
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+        helpers.check_equal(self, l[2], c2)
 
     def test_not_list(self):
         lines = ['-not a list\n',
@@ -99,11 +103,12 @@ class TestList(unittest.TestCase):
         t = block_token.Document(lines)
         c0 = block_token.Paragraph([ lines[0] ])
         c1 = block_token.List(lines[2:])
-        helpers.check_equal(self, t.children[0], c0)
-        helpers.check_equal(self, t.children[1], c1)
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
 
 class TestSeparator(unittest.TestCase):
     def test_equal(self):
         t1 = block_token.Separator('---\n')
-        t2 = block_token.Separator('* * *\n')
+        t2 = block_token.Separator('---\n')
         helpers.check_equal(self, t1, t2)
