@@ -1,92 +1,48 @@
 import re
 import html
+import core.leaf_tokenizer as tokenizer
 
-__all__ = ['Strong', 'Emphasis', 'InlineCode', 'Strikethrough',
-           'Link', 'RawText']
+__all__ = ['EscapeSequence', 'Strong', 'Emphasis', 'InlineCode',
+           'Strikethrough', 'Link']
 
 class LeafToken(object):
     def __init__(self, content):
-        self.children = tokenize_inner(content)
+        token_types = [globals()[key] for key in __all__]
+        fallback_token = RawText
+        lt = tokenizer.LeafTokenizer(content, token_types, fallback_token)
+        self.children = lt.get_tokens()
 
 class Strong(LeafToken):
-    # pre: raw = "**some string**"
+    pattern = re.compile(r"\*\*(.+)\*\*|__(.+)__")
     def __init__(self, raw):
-        super().__init__(raw[2:-2])
+        super().__init__(raw)
 
 class Emphasis(LeafToken):
-    # pre: raw = "*some string*"
+    pattern = re.compile(r"\*(.+)\*|_(.+)_")
     def __init__(self, raw):
-        super().__init__(raw[1:-1])
+        super().__init__(raw)
 
 class InlineCode(LeafToken):
-    # pre: raw = "`some code`"
+    pattern = re.compile(r"`(.+)`")
     def __init__(self, raw):
-        super().__init__(raw[1:-1])
+        super().__init__(raw)
 
 class Strikethrough(LeafToken):
+    pattern = re.compile(r"~~(.+)~~")
     def __init__(self, raw):
-        super().__init__(raw[2:-2])
+        super().__init__(raw)
 
 class Link(LeafToken):
-    # pre: raw = "[link name](link target)"
+    pattern = re.compile(r"(\[(.+)\]\((.+)\))")
     def __init__(self, raw):
         self.name = raw[1:raw.index(']')]
         self.target = raw[raw.index('(')+1:-1]
 
 class EscapeSequence(LeafToken):
+    pattern = re.compile(r"\\([\*\(\)\[\]\~])")
     def __init__(self, raw):
-        self.content = raw[1:]
+        self.content = raw
 
 class RawText(LeafToken):
     def __init__(self, content):
         self.content = content
-
-def tokenize_inner(content):
-    tokens = []
-    re_escp = re.compile(r"\\[\*\(\)\[\]\~]")
-    re_strg = re.compile(r"\*\*(.+)\*\*|__(.+)__")
-    re_emph = re.compile(r"\*(.+)\*|_(.+)_")
-    re_code = re.compile(r"`(.+)`")
-    re_thru = re.compile(r"~~(.+)~~")
-    re_link = re.compile(r"\[(.+)\]\((.+)\)")
-
-    def append_token(token_type, match_obj, content):
-        index = match_obj.end()
-        tokens.append(token_type(content[:index]))
-        tokenize_inner_helper(content[index:])
-
-    def append_raw_text(content):
-        try:                  # next token
-            matches = [re_escp.search(content),
-                       re_strg.search(content),
-                       re_emph.search(content),
-                       re_code.search(content),
-                       re_thru.search(content),
-                       re_link.search(content)]
-            index = min([ match.start() for match in matches if match ])
-        except ValueError:    # no more tokens
-            index = len(content)
-        tokens.append(RawText(content[:index]))
-        tokenize_inner_helper(content[index:])
-
-    def tokenize_inner_helper(content):
-        if content == '':               # base case
-            return
-        if re_escp.match(content):      # escape sequence
-            append_token(EscapeSequence, re_escp.match(content), content)
-        elif re_strg.match(content):    # strong
-            append_token(Strong, re_strg.match(content), content)
-        elif re_emph.match(content):    # emphasis
-            append_token(Emphasis, re_emph.match(content), content)
-        elif re_code.match(content):    # inline code
-            append_token(InlineCode, re_code.match(content), content)
-        elif re_thru.match(content):
-            append_token(Strikethrough, re_thru.match(content), content)
-        elif re_link.match(content):    # link
-            append_token(Link, re_link.match(content), content)
-        else:                           # raw text
-            append_raw_text(content)
-
-    tokenize_inner_helper(content)
-    return tokens
-

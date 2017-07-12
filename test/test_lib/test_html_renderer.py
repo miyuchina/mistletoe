@@ -15,19 +15,19 @@ class TestHTMLRenderer(unittest.TestCase):
         self.assertEqual(output, target)
 
     def test_strong(self):
-        output = renderer.render(leaf_token.Strong('**some text**'))
+        output = renderer.render(leaf_token.Strong('some text'))
         self.assertEqual(output, '<strong>some text</strong>')
 
     def test_emphasis(self):
-        output = renderer.render(leaf_token.Emphasis('*some text*'))
+        output = renderer.render(leaf_token.Emphasis('some text'))
         self.assertEqual(output, '<em>some text</em>')
 
     def test_inline_code(self):
-        output = renderer.render(leaf_token.InlineCode('`some code`'))
+        output = renderer.render(leaf_token.InlineCode('some code'))
         self.assertEqual(output, '<code>some code</code>')
 
     def test_strikethrough(self):
-        output = renderer.render(leaf_token.Strikethrough('~~text~~'))
+        output = renderer.render(leaf_token.Strikethrough('text'))
         self.assertEqual(output, '<del>text</del>')
 
     def test_link(self):
@@ -35,7 +35,7 @@ class TestHTMLRenderer(unittest.TestCase):
         self.assertEqual(output, '<a href="target">name</a>')
 
     def test_escape_sequence(self):
-        output = renderer.render(leaf_token.EscapeSequence('\['))
+        output = renderer.render(leaf_token.EscapeSequence('['))
         self.assertEqual(output, '[')
 
     def test_raw_text(self):

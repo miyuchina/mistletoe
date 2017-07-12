@@ -4,13 +4,14 @@ import core.leaf_token as leaf_token
 
 class TestEscapeSequence(unittest.TestCase):
     def test_escape(self):
-        t = leaf_token.Strong('**some \*text***')
+        t = leaf_token.Strong('some \*text*')
         c0 = leaf_token.RawText('some ')
-        c1 = leaf_token.EscapeSequence('\*')
+        c1 = leaf_token.EscapeSequence('*')
         c2 = leaf_token.RawText('text*')
-        helpers.check_equal(self, t.children[0], c0)
-        helpers.check_equal(self, t.children[1], c1)
-        helpers.check_equal(self, t.children[2], c2)
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+        helpers.check_equal(self, l[2], c2)
 
 class TestRawText(unittest.TestCase):
     def test_equal(self):
@@ -38,24 +39,24 @@ class TestLink(unittest.TestCase):
 
 class TestStrong(unittest.TestCase):
     def test_raw(self):
-        t = leaf_token.Strong('**some text**')
+        t = leaf_token.Strong('some text')
         c = leaf_token.RawText('some text')
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
 
 class TestEmphasis(unittest.TestCase):
     def test_raw(self):
-        t = leaf_token.Emphasis('*some text*')
+        t = leaf_token.Emphasis('some text')
         c = leaf_token.RawText('some text')
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
 
 class TestInlineCode(unittest.TestCase):
     def test_raw(self):
-        t = leaf_token.InlineCode('`some code`')
+        t = leaf_token.InlineCode('some code')
         c = leaf_token.RawText('some code')
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
 
 class TestStrikethrough(unittest.TestCase):
     def test_raw(self):
-        t = leaf_token.Strikethrough('~~some text~~')
+        t = leaf_token.Strikethrough('some text')
         c = leaf_token.RawText('some text')
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
