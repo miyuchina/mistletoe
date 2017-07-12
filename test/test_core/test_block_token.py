@@ -7,14 +7,15 @@ class TestHeading(unittest.TestCase):
     def test_raw(self):
         t = block_token.Heading('### heading 3\n')
         c = leaf_token.RawText('heading 3')
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
 
     def test_bold(self):
         t = block_token.Heading('## **heading** 2\n')
-        c0 = leaf_token.Strong('**heading**')
+        c0 = leaf_token.Strong('heading')
         c1 = leaf_token.RawText(' 2')
-        helpers.check_equal(self, t.children[0], c0)
-        helpers.check_equal(self, t.children[1], c1)
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
 
 class TestQuote(unittest.TestCase):
     def test_paragraph(self):
@@ -49,30 +50,32 @@ class TestParagraph(unittest.TestCase):
         l = ['some\n', 'continuous\n', 'lines\n']
         t = block_token.Paragraph(l)
         c = leaf_token.RawText('some continuous lines')
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
 
     def test_italic(self):
-        l = ['some\n', '*continuous*\n', 'lines\n']
-        t = block_token.Paragraph(l)
+        lines = ['some\n', '*continuous*\n', 'lines\n']
+        t = block_token.Paragraph(lines)
         c0 = leaf_token.RawText('some ')
-        c1 = leaf_token.Emphasis('*continuous*')
+        c1 = leaf_token.Emphasis('continuous')
         c2 = leaf_token.RawText(' lines')
-        helpers.check_equal(self, t.children[0], c0)
-        helpers.check_equal(self, t.children[1], c1)
-        helpers.check_equal(self, t.children[2], c2)
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+        helpers.check_equal(self, l[2], c2)
 
 class TestListItem(unittest.TestCase):
     def test_raw(self):
         t = block_token.ListItem('- some text\n')
         c = leaf_token.RawText('some text')
-        helpers.check_equal(self, t.children[0], c)
+        helpers.check_equal(self, list(t.children)[0], c)
 
     def test_inline_code(self):
         t = block_token.ListItem('    - some `code`\n')
         c0 = leaf_token.RawText('some ')
-        c1 = leaf_token.InlineCode('`code`')
-        helpers.check_equal(self, t.children[0], c0)
-        helpers.check_equal(self, t.children[1], c1)
+        c1 = leaf_token.InlineCode('code')
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
 
 class TestList(unittest.TestCase):
     def test_children(self):

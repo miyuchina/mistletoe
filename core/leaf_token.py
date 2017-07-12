@@ -5,12 +5,15 @@ import core.leaf_tokenizer as tokenizer
 __all__ = ['EscapeSequence', 'Strong', 'Emphasis', 'InlineCode',
            'Strikethrough', 'Link']
 
+def tokenize_inner(content):
+    token_types = [ globals()[key] for key in __all__ ]
+    fallback_token = RawText
+    lt = tokenizer.LeafTokenizer(content, token_types, fallback_token)
+    return lt.get_tokens()
+
 class LeafToken(object):
     def __init__(self, content):
-        token_types = [globals()[key] for key in __all__]
-        fallback_token = RawText
-        lt = tokenizer.LeafTokenizer(content, token_types, fallback_token)
-        self.children = lt.get_tokens()
+        self.children = tokenize_inner(content)
 
 class Strong(LeafToken):
     pattern = re.compile(r"\*\*(.+)\*\*|__(.+)__")
