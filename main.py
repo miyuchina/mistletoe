@@ -10,9 +10,9 @@ def main(filename=""):
     return renderer.render(markdown)
 
 if __name__ == "__main__":
-    try:
+    if len(sys.argv) > 1:
         print(main(sys.argv[1]))
-    except IndexError:
+    else:
         try:
             print(main())
         except KeyboardInterrupt:
