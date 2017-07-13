@@ -2,12 +2,12 @@ import sys
 import core.block_token as block_token
 import lib.html_renderer as renderer
 
-def main(filename=""):
+def main(filename=None):
     fin = open(filename, 'r') if filename else sys.stdin
-    lines = fin.readlines()
-    markdown = block_token.Document(lines)
+    markdown = block_token.Document(iter(fin))
+    rendered = renderer.render(markdown)
     fin.close()
-    return renderer.render(markdown)
+    return rendered
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

@@ -3,7 +3,9 @@ import html
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
 
-__all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Separator']
+# TODO: add list
+# __all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Separator']
+__all__ = ['Heading', 'Quote', 'BlockCode', 'Separator']
 
 def tokenize(lines):
     token_types = [ globals()[key] for key in __all__ ]
@@ -21,17 +23,18 @@ class Document(BlockToken):
 
 class Heading(BlockToken):
     # pre: line = "### heading 3\n"
-    def __init__(self, line):
-        line = line[0]
+    def __init__(self, lines):
+        line = lines[0]
         hashes, content = line.strip().split(' ', 1)
         self.level = len(hashes)
         super().__init__(content, leaf_token.tokenize_inner)
 
     @staticmethod
-    def read(index, lines): return index + 1
-
-    @staticmethod
-    def check_start(line): return line.startswith('#')
+    def match(lines):
+        if len(lines) == 1:
+            if lines[0].startswith('#') and lines[0].find('# ') != -1:
+                return True
+        return False
 
 class Quote(BlockToken):
     # pre: lines[i] = "> some text\n"
@@ -40,13 +43,10 @@ class Quote(BlockToken):
         super().__init__(content, tokenize)
 
     @staticmethod
-    def read(index, lines):
-        while index < len(lines) and not lines[index].startswith('> '):
-            index += 1
-        return index
-
-    @staticmethod
-    def check_start(line): return line.startswith('> ')
+    def match(lines):
+        for line in lines:
+            if not line.startswith('> '): return False
+        return True
 
 class Paragraph(BlockToken):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
@@ -55,13 +55,10 @@ class Paragraph(BlockToken):
         super().__init__(content, leaf_token.tokenize_inner)
 
     @staticmethod
-    def read(index, lines):
-        while index < len(lines) and lines[index] != '\n':
-            index += 1
-        return index
-
-    @staticmethod
-    def check_start(line): return line != '\n'
+    def match(lines):
+        for line in lines:
+            if line == '\n': return False
+        return True
 
 class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
@@ -70,13 +67,8 @@ class BlockCode(BlockToken):
         self.language = lines[0].strip()[3:]
 
     @staticmethod
-    def read(index, lines):
-        while index < len(lines) and lines[index] != '```':
-            index += 1
-        return index
-
-    @staticmethod
-    def check_start(line): return line == '```\n'
+    def match(lines):
+        return lines[0].startswith('```') and lines[-1] == '```'
 
 class List(BlockToken):
     # pre: items = [
@@ -131,8 +123,5 @@ class Separator(BlockToken):
         self.line = line
 
     @staticmethod
-    def read(index, lines):
-        return index + 1
-
-    @staticmethod
-    def check_start(line): return line == '---\n'
+    def match(lines):
+        return len(lines) == 1 and lines[0] == '* * *\n'
