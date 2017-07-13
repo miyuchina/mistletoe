@@ -76,7 +76,7 @@ class BlockCode(BlockToken):
 
     @staticmethod
     def match(lines):
-        return lines[0].startswith('```') and lines[-1] == '```'
+        return lines[0].startswith('```') and lines[-1] == '```\n'
 
 class List(BlockToken):
     # pre: items = [
