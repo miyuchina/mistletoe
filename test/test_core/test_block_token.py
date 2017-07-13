@@ -14,6 +14,11 @@ class TestHeading(unittest.TestCase):
         c = leaf_token.RawText('heading 3')
         helpers.check_equal(self, list(t.children)[0], c)
 
+    def test_setext_heading(self):
+        t = block_token.Heading(['some\n', 'heading 2\n', '---\n'])
+        c = leaf_token.RawText('some heading 2')
+        helpers.check_equal(self, list(t.children)[0], c)
+
     def test_bold(self):
         t = block_token.Heading([ '## **heading** 2\n' ])
         c0 = leaf_token.Strong('heading')

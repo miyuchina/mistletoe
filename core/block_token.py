@@ -31,6 +31,10 @@ class Heading(BlockToken):
                 content = match_obj.group(2)
             except AttributeError:
                 raise RuntimeError('Unrecognized heading pattern.')
+        else:
+            if lines[-1][0] == '=': self.level = 1
+            elif lines[-1][0] == '-': self.level = 2
+            content = ' '.join([ line.strip() for line in lines[:-1] ])
         super().__init__(content, leaf_token.tokenize_inner)
 
     @staticmethod
@@ -38,7 +42,8 @@ class Heading(BlockToken):
         if len(lines) == 1:
             if Heading._atx_pattern.match(lines[0]):
                 return True
-        
+        else:
+            return lines[-1].startswith('---') or lines[-1].startswith('===')
         return False
 
 class Quote(BlockToken):
