@@ -71,12 +71,19 @@ class Paragraph(BlockToken):
 class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
     def __init__(self, lines):
-        self.content = ''.join(lines[1:-1]) # implicit newlines
-        self.language = lines[0].strip()[3:]
+        if lines[0].startswith('```'):
+            self.content = ''.join(lines[1:-1]) # implicit newlines
+            self.language = lines[0].strip()[3:]
+        else:
+            self.content = '\n'.join([line.strip() for line in lines]) + '\n'
+            self.language = ''
 
     @staticmethod
     def match(lines):
-        return lines[0].startswith('```') and lines[-1] == '```\n'
+        if lines[0].startswith('```') and lines[-1] == '```\n': return 1
+        for line in lines:
+            if not line.startswith(' '*4): return 0
+        return True
 
 class List(BlockToken):
     # pre: items = [

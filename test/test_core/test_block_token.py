@@ -42,10 +42,17 @@ class TestQuote(unittest.TestCase):
         helpers.check_equal(self, l[1], c1)
 
 class TestBlockCode(unittest.TestCase):
-    def test_equal(self):
+    def test_fenced_code(self):
         l = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
         t = block_token.Document(l)
         c = block_token.BlockCode(l)
+        helpers.check_equal(self, list(t.children)[0], c)
+
+    def test_indented_code(self):
+        l1 = ['    rm dir\n', '    mkdir test\n']
+        l2 = ['```\n', 'rm dir\n', 'mkdir test\n', '```\n']
+        t = block_token.Document(l1)
+        c = block_token.BlockCode(l2)
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_unequal(self):
