@@ -63,16 +63,18 @@ class TestParagraph(unittest.TestCase):
         c = leaf_token.RawText('some continuous lines')
         helpers.check_equal(self, list(t.children)[0], c)
 
-    def test_italic(self):
-        lines = ['some\n', '*continuous*\n', 'lines\n']
+    def test_inner(self):
+        lines = ['some\n', '*continuous*\n', '**lines**\n']
         t = block_token.Paragraph(lines)
         c0 = leaf_token.RawText('some ')
         c1 = leaf_token.Emphasis('continuous')
-        c2 = leaf_token.RawText(' lines')
+        c2 = leaf_token.RawText(' ')
+        c3 = leaf_token.Strong('lines')
         l = list(t.children)
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
         helpers.check_equal(self, l[2], c2)
+        helpers.check_equal(self, l[3], c3)
 
 class TestListItem(unittest.TestCase):
     def test_raw(self):

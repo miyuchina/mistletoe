@@ -2,7 +2,7 @@ import re
 import html
 import core.leaf_tokenizer as tokenizer
 
-__all__ = ['EscapeSequence', 'Strong', 'Emphasis', 'InlineCode',
+__all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
            'Strikethrough', 'Link']
 
 def tokenize_inner(content):
@@ -16,17 +16,17 @@ class LeafToken(object):
         self.children = tokenize_inner(content)
 
 class Strong(LeafToken):
-    pattern = re.compile(r"\*\*(.+)\*\*|__(.+)__")
+    pattern = re.compile(r"\*\*(.+)\*\*(?!\*)|__(.+)__(?!_)")
     def __init__(self, raw):
         super().__init__(raw)
 
 class Emphasis(LeafToken):
-    pattern = re.compile(r"\*(.+)\*|_(.+)_")
+    pattern = re.compile(r"\*((?:\*\*|[^\*])+?)\*(?!\*)|_((?:__|[^_])+?)_")
     def __init__(self, raw):
         super().__init__(raw)
 
 class InlineCode(LeafToken):
-    pattern = re.compile(r"`(.+)`")
+    pattern = re.compile(r"`(.+?)`")
     def __init__(self, raw):
         super().__init__(raw)
 
