@@ -11,11 +11,11 @@ class BlockTokenizer(object):
         for line in self.lines:
             if line != '\n': line_buffer.append(line)
             elif line_buffer:
-                matched = False
+                matched = 0
                 for token_type in self.token_types:
                     if token_type.match(line_buffer):
                         yield token_type(line_buffer)
-                        matched = True
+                        matched = 1
                         break
                 if not matched:
                     yield self.fallback_token(line_buffer)

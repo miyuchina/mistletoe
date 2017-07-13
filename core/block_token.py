@@ -39,10 +39,10 @@ class Heading(BlockToken):
     def match(lines):
         if len(lines) == 1:
             if Heading._atx_pattern.match(lines[0]):
-                return True
+                return 1
         else:
             return lines[-1].startswith('---') or lines[-1].startswith('===')
-        return False
+        return 0
 
 class Quote(BlockToken):
     # pre: lines[i] = "> some text\n"
@@ -53,8 +53,8 @@ class Quote(BlockToken):
     @staticmethod
     def match(lines):
         for line in lines:
-            if not line.startswith('> '): return False
-        return True
+            if not line.startswith('> '): return 0
+        return 1
 
 class Paragraph(BlockToken):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
@@ -65,8 +65,8 @@ class Paragraph(BlockToken):
     @staticmethod
     def match(lines):
         for line in lines:
-            if line == '\n': return False
-        return True
+            if line == '\n': return 0
+        return 1
 
 class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
@@ -93,15 +93,15 @@ class List(BlockToken):
 
     def _build_list(self, lines):
         line_buffer = []
-        nested = False
+        nested = 0
         for line in lines:
             if line.startswith(' '*4):
                 line_buffer.append(line)
-                nested = True
+                nested = 1
             elif nested:
                 yield List([ line[4:] for line in line_buffer ])
                 line_buffer.clear()
-                nested = False
+                nested = 0
                 yield ListItem(line)
             else: yield ListItem(line)
 
@@ -109,8 +109,8 @@ class List(BlockToken):
     def match(lines):
         for line in lines:
             if not re.match(r'([\+\-\*] )|([0-9]\. )', line.strip()):
-                return False
-        return True
+                return 0
+        return 1
 
 class ListItem(BlockToken):
     # pre: line = "- some *italics* text\n"

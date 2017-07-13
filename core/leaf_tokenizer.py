@@ -7,12 +7,12 @@ class LeafTokenizer(object):
     def get_tokens(self):
         index = 0
         while index < len(self.content):
-            matched = False
+            matched = 0
             for token_type in self.token_types:
                 match_obj = token_type.pattern.match(self.content[index:])
                 if match_obj:
                     yield token_type(match_obj.group(1))
-                    matched = True
+                    matched = 1
                     index += match_obj.end()
                     break
             if not matched:
