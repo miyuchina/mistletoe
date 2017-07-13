@@ -48,6 +48,7 @@ class TestHTMLRenderer(unittest.TestCase):
 
     def test_quote(self):
         lines = ['> # heading 1\n',
+                 '> \n',
                  '> a paragraph\n',
                  '> that spans\n',
                  '> a few lines.\n']
