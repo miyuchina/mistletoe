@@ -103,10 +103,10 @@ class List(BlockToken):
         nested = 0
         for line in lines:
             if line.startswith(' '*4):
-                line_buffer.append(line)
+                line_buffer.append(line[4:])
                 nested = 1
             elif nested:
-                yield List([ line[4:] for line in line_buffer ])
+                yield List(line_buffer)
                 line_buffer.clear()
                 nested = 0
                 yield ListItem(line)
