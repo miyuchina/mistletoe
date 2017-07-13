@@ -43,7 +43,7 @@ class TestHTMLRenderer(unittest.TestCase):
         self.assertEqual(output, 'some text')
 
     def test_heading(self):
-        output = renderer.render(block_token.Heading([ '# heading 1' ]))
+        output = renderer.render(block_token.Heading([ '# heading 1\n' ]))
         self.assertEqual(output, '<h1>heading 1</h1>')
 
     def test_quote(self):
