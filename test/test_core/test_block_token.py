@@ -100,12 +100,13 @@ class TestList(unittest.TestCase):
         c0 = block_token.ListItem(lines[0])
         c1 = block_token.ListItem(lines[1])
         c2 = block_token.List([ line.strip() for line in sublist ])
+        c3 = block_token.ListItem(lines[4])
         l = list(t.children)
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
         helpers.check_equal(self, l[2], c2)
+        helpers.check_equal(self, l[3], c3)
 
-    @unittest.expectedFailure
     def test_not_list(self):
         lines = ['-not a list\n',
                  '\n',

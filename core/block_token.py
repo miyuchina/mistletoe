@@ -2,9 +2,7 @@ import re
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
 
-# TODO: add list
-# __all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Separator']
-__all__ = ['Heading', 'Quote', 'BlockCode', 'Separator']
+__all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Separator']
 
 def tokenize(lines):
     token_types = [ globals()[key] for key in __all__ ]
@@ -87,40 +85,32 @@ class List(BlockToken):
     # "    - nested item\n",
     # "- item 3\n"
     # ]
-    def __init__(self, lines, level=0):
+    def __init__(self, lines):
         self.children = self._build_list(lines)
-        self._level = level
-        self._check_ordered(lines[0])
-
-    def _check_ordered(self, line):
-        leader = line.split(' ', 1)[0]
+        leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
 
     def _build_list(self, lines):
-        index = 0
-        while index < len(lines):
-            line = lines[index][self._level*4:]
+        line_buffer = []
+        nested = False
+        for line in lines:
             if line.startswith(' '*4):
-                curr_level = self._level + 1
-                end_index = self.read(index, lines, curr_level)
-                yield List(lines[index:end_index], curr_level)
-                index = end_index
-            else:
-                yield ListItem(lines[index])
-                index += 1
+                line_buffer.append(line)
+                nested = True
+            elif nested:
+                yield List([ line[4:] for line in line_buffer ])
+                line_buffer.clear()
+                nested = False
+                yield ListItem(line)
+            else: yield ListItem(line)
 
     @staticmethod
-    def read(index, lines, level=0):
-        while index < len(lines):
-            expected_content = lines[index][level*4:].strip()
-            if not re.match(r'([\+\-\*] )|([0-9]\. )', expected_content):
-                return index
-            index += 1
-        return index
-
-    @staticmethod
-    def check_start(line): return re.match(r'([\+\-\*] )|([0-9]\. )', line)
+    def match(lines):
+        for line in lines:
+            if not re.match(r'([\+\-\*] )|([0-9]\. )', line.strip()):
+                return False
+        return True
 
 class ListItem(BlockToken):
     # pre: line = "- some *italics* text\n"
