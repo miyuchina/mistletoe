@@ -20,7 +20,7 @@ class LeafTokenizer(object):
                 for token_type in self.token_types:
                     match_obj = token_type.pattern.search(self.content[index:])
                     if match_obj and match_obj.start() < min_index:
-                        min_index = match_obj.start()
+                        min_index = index + match_obj.start()
                 yield self.fallback_token(self.content[index:min_index])
                 index = min_index
         return
