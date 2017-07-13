@@ -4,8 +4,13 @@ import core.leaf_token as leaf_token
 import core.block_token as block_token
 
 class TestHeading(unittest.TestCase):
-    def test_raw(self):
+    def test_left_hashes(self):
         t = block_token.Heading([ '### heading 3\n' ])
+        c = leaf_token.RawText('heading 3')
+        helpers.check_equal(self, list(t.children)[0], c)
+
+    def test_enclosing_hashes(self):
+        t = block_token.Heading([ '### heading 3 #########  \n' ])
         c = leaf_token.RawText('heading 3')
         helpers.check_equal(self, list(t.children)[0], c)
 

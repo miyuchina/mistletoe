@@ -1,5 +1,4 @@
 import re
-import html
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
 
@@ -23,17 +22,23 @@ class Document(BlockToken):
 
 class Heading(BlockToken):
     # pre: line = "### heading 3\n"
+    _atx_pattern = re.compile(r'(#+) ([^#]+)( #* *)?\n$')
     def __init__(self, lines):
-        line = lines[0]
-        hashes, content = line.strip().split(' ', 1)
-        self.level = len(hashes)
+        if len(lines) == 1:
+            match_obj = self._atx_pattern.match(lines[0])
+            try:
+                self.level = len(match_obj.group(1))
+                content = match_obj.group(2)
+            except AttributeError:
+                raise RuntimeError('Unrecognized heading pattern.')
         super().__init__(content, leaf_token.tokenize_inner)
 
     @staticmethod
     def match(lines):
         if len(lines) == 1:
-            if lines[0].startswith('#') and lines[0].find('# ') != -1:
+            if Heading._atx_pattern.match(lines[0]):
                 return True
+        
         return False
 
 class Quote(BlockToken):
