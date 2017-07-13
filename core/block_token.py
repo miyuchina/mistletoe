@@ -20,7 +20,7 @@ class Document(BlockToken):
 
 class Heading(BlockToken):
     # pre: line = "### heading 3\n"
-    _atx_pattern = re.compile(r'(#+) ([^#]+)( #* *)?\n$')
+    _atx_pattern = re.compile(r'(#+) (.+?)( #* *)?\n$')
     def __init__(self, lines):
         if len(lines) == 1:
             match_obj = self._atx_pattern.match(lines[0])
