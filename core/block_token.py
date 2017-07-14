@@ -53,8 +53,8 @@ class Quote(BlockToken):
 class Paragraph(BlockToken):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
     def __init__(self, lines):
-        content = ' '.join([ line.strip() for line in lines ])
-        super().__init__(content, leaf_token.tokenize_inner)
+        content = ''.join(lines).replace('\n', ' ').strip()
+        self.children = leaf_token.tokenize_inner(content)
 
     @staticmethod
     def match(lines):
