@@ -1,4 +1,3 @@
-import re
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
 
@@ -20,15 +19,11 @@ class Document(BlockToken):
 
 class Heading(BlockToken):
     # pre: line = "### heading 3\n"
-    _atx_pattern = re.compile(r'(#+) (.+?)( #* *)?\n$')
     def __init__(self, lines):
         if len(lines) == 1:
-            match_obj = self._atx_pattern.match(lines[0])
-            try:
-                self.level = len(match_obj.group(1))
-                content = match_obj.group(2)
-            except AttributeError:
-                raise RuntimeError('Unrecognized heading pattern.')
+            hashes, content = lines[0].split('# ', 1)
+            content = content.split(' #', 1)[0].strip()
+            self.level = len(hashes) + 1
         else:
             if lines[-1][0] == '=': self.level = 1
             elif lines[-1][0] == '-': self.level = 2
@@ -37,11 +32,10 @@ class Heading(BlockToken):
 
     @staticmethod
     def match(lines):
-        if len(lines) == 1:
-            if Heading._atx_pattern.match(lines[0]):
-                return 1
+        if len(lines) == 1 and lines[0].find('# ') != -1: return 1
         else:
-            return lines[-1].startswith('---') or lines[-1].startswith('===')
+            return (lines[-1].startswith('---')
+                 or lines[-1].startswith('==='))
         return 0
 
 class Quote(BlockToken):
