@@ -115,7 +115,10 @@ class List(BlockToken):
     @staticmethod
     def match(lines):
         for line in lines:
-            if not re.match(r'([\+\-\*] )|([0-9]\. )', line.strip()):
+            if not (line.startswith('+ ')
+                    or line.startswith('- ')
+                    or line.startswith('* ')
+                    or (line.split('. ')[0].isdigit())):
                 return 0
         return 1
 
