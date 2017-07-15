@@ -30,6 +30,10 @@ class TestHTMLRenderer(unittest.TestCase):
         output = renderer.render(leaf_token.Strikethrough('text'))
         self.assertEqual(output, '<del>text</del>')
 
+    def test_image(self):
+        output = renderer.render(leaf_token.Image('![alt](target "title")'))
+        self.assertEqual(output, '<img src="target" alt="alt" title="title">')
+
     def test_link(self):
         output = renderer.render(leaf_token.Link('[name](target)'))
         self.assertEqual(output, '<a href="target">name</a>')
