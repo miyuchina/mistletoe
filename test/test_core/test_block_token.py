@@ -43,9 +43,11 @@ class TestQuote(unittest.TestCase):
 
 class TestBlockCode(unittest.TestCase):
     def test_fenced_code(self):
-        l = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
-        t = block_token.Document(l)
-        c = block_token.BlockCode(l)
+        l1 = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
+        # space is added at l2[2] to escape tokenizing by newlines
+        l2 = ['```sh\n', 'rm dir\n', ' \n', 'mkdir test\n', '```\n']
+        t = block_token.Document(l1)
+        c = block_token.BlockCode(l2)
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_indented_code(self):

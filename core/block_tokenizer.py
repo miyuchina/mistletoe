@@ -6,9 +6,28 @@ class BlockTokenizer(object):
         self.token_types = token_types
         self.fallback_token = fallback_token
 
+    def normalize(self):
+        code_fence = False
+        for line in self.lines:
+            if not code_fence and line.startswith('```'):
+                code_fence = True
+                yield '\n'
+                yield line
+            elif code_fence:
+                if line == '```\n':
+                    code_fence = False
+                    yield line
+                    yield '\n'
+                elif line == '\n':
+                    yield ' ' + line
+                else:
+                    yield line
+            else:
+                yield line
+
     def get_tokens(self):
         line_buffer = []
-        for line in self.lines:
+        for line in self.normalize():
             if line != '\n': line_buffer.append(line)
             elif line_buffer:
                 matched = 0
