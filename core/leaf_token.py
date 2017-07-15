@@ -16,7 +16,7 @@ class LeafToken(object):
         self.children = tokenize_inner(content)
 
 class Strong(LeafToken):
-    pattern = re.compile(r"\*\*(.+)\*\*(?!\*)|__(.+)__(?!_)")
+    pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
     def __init__(self, raw):
         super().__init__(raw)
 
