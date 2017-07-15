@@ -3,7 +3,7 @@ import html
 import core.leaf_tokenizer as tokenizer
 
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
-           'Strikethrough', 'Link']
+           'Strikethrough', 'Image', 'Link']
 
 def tokenize_inner(content):
     token_types = [ globals()[key] for key in __all__ ]
@@ -34,6 +34,18 @@ class Strikethrough(LeafToken):
     pattern = re.compile(r"~~(.+)~~")
     def __init__(self, raw):
         super().__init__(raw)
+
+class Image(LeafToken):
+    pattern = re.compile(r"(\!\[(.+?)\]\((.+?)\))")
+    def __init__(self, raw):
+        self.alt = raw[2:raw.index(']')]
+        target = raw[raw.index('(')+1:-1]
+        if target.find('"') != -1:
+            self.target = target[:target.index(' "')]
+            self.title = target[target.index(' "')+2:-1]
+        else:
+            self.target = target
+            self.title = ''
 
 class Link(LeafToken):
     pattern = re.compile(r"(\[(.+?)\]\((.+?)\))")

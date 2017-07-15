@@ -47,6 +47,12 @@ class TestLink(unittest.TestCase):
         helpers.check_equal(self, l[1], c1)
         helpers.check_equal(self, l[2], c2)
 
+class TestImage(unittest.TestCase):
+    def test_equal(self):
+        t1 = leaf_token.Image('![alt](link)')
+        t2 = leaf_token.Image('![alt](link)')
+        helpers.check_equal(self, t1, t2)
+
 class TestStrong(unittest.TestCase):
     def test_raw(self):
         t = leaf_token.Strong('some text')

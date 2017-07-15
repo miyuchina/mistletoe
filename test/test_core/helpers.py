@@ -7,6 +7,8 @@ def check_equal(test, t, o):
         test.assertEqual(t.content, o.content)
     elif hasattr(t, 'name') and hasattr(o, 'name'):
         test.assertEqual((t.name, t.target), (o.name, o.target))
+    elif hasattr(t, 'alt') and hasattr(o, 'alt'):
+        test.assertEqual((t.alt, t.target), (o.alt, o.target))
     elif (type(t).__name__ == 'Separator'
             and type(o).__name__ == 'Separator'):
         test.assertTrue(True)
