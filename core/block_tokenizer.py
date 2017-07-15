@@ -9,6 +9,7 @@ class BlockTokenizer(object):
     def normalize(self):
         code_fence = False
         for line in self.lines:
+            line = line.replace('\t', '    ')
             if not code_fence and line.startswith('```'):
                 code_fence = True
                 yield '\n'
