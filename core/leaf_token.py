@@ -50,7 +50,7 @@ class Image(LeafToken):
 class Link(LeafToken):
     pattern = re.compile(r"(\[(.+?)\]\((.+?)\))")
     def __init__(self, raw):
-        self.name = raw[1:raw.index(']')]
+        self.children = tokenize_inner(raw[1:raw.index(']')])
         self.target = raw[raw.index('(')+1:-1]
 
 class EscapeSequence(LeafToken):

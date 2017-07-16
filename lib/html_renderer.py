@@ -25,7 +25,7 @@ def render_image(node):
 
 def render_link(node):
     attrs = { 'href': node.target }
-    return tagify_attrs('a', attrs, node.name)
+    return tagify_attrs('a', attrs, render_inner(node))
 
 def render_raw_text(node):
     return html.escape(node.content)

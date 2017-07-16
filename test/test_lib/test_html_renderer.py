@@ -38,6 +38,10 @@ class TestHTMLRenderer(unittest.TestCase):
         output = renderer.render(leaf_token.Link('[name](target)'))
         self.assertEqual(output, '<a href="target">name</a>')
 
+    def test_link_with_children(self):
+        output = renderer.render(leaf_token.Link('[*text*](target)'))
+        self.assertEqual(output, '<a href="target"><em>text</em></a>')
+
     def test_escape_sequence(self):
         output = renderer.render(leaf_token.EscapeSequence('['))
         self.assertEqual(output, '[')
