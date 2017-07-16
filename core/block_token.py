@@ -1,7 +1,7 @@
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
 
-__all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Separator']
+__all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Table', 'Separator']
 
 def tokenize(lines):
     token_types = [ globals()[key] for key in __all__ ]
@@ -127,6 +127,12 @@ class Table(BlockToken):
         self.has_header_row = lines[1].find('---') != -1
         if self.has_header_row: lines.pop(1)
         self.children = [ TableRow(line) for line in lines ]
+
+    @staticmethod
+    def match(lines):
+        for line in lines:
+            if line[0] != '|' or line[-2] != '|': return False
+        return True
 
 class TableRow(BlockToken):
     def __init__(self, line):
