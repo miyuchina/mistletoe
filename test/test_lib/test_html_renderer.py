@@ -125,7 +125,7 @@ class TestHTMLRenderer(unittest.TestCase):
 
     def test_table_with_heading(self):
         lines = ['| header 1 | header 2 | header 3 |\n',
-                 '| --- | --- | --- |\n',
+                 '| :--- | :---: | ---: |\n',
                  '| cell 1 | cell 2 | cell 3 |\n',
                  '| more 1 | more 2 | more 3 |\n']
         output = renderer.render(block_token.Table(lines))
@@ -133,20 +133,20 @@ class TestHTMLRenderer(unittest.TestCase):
                       '<thead>'
                           '<tr>'
                               '<th>header 1</th>'
-                              '<th>header 2</th>'
-                              '<th>header 3</th>'
+                              '<th align="center">header 2</th>'
+                              '<th align="right">header 3</th>'
                           '</tr>'
                       '</thead>'
                       '<tbody>'
                           '<tr>'
                               '<td>cell 1</td>'
-                              '<td>cell 2</td>'
-                              '<td>cell 3</td>'
+                              '<td align="center">cell 2</td>'
+                              '<td align="right">cell 3</td>'
                           '</tr>'
                           '<tr>'
                               '<td>more 1</td>'
-                              '<td>more 2</td>'
-                              '<td>more 3</td>'
+                              '<td align="center">more 2</td>'
+                              '<td align="right">more 3</td>'
                           '</tr>'
                       '</tbody>'
                   '</table>')

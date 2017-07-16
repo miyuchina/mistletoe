@@ -74,7 +74,13 @@ def render_table_row(node, is_header_row=False):
 
 def render_table_cell(node, in_header_row=False):
     tagname = 'th' if in_header_row else 'td'
-    return tagify(tagname, render_inner(node))
+    if node.align is None:
+        return tagify(tagname, render_inner(node))
+    elif node.align == 0:
+        attrs = { 'align': 'center' }
+    elif node.align == 1:
+        attrs = { 'align': 'right' }
+    return tagify_attrs(tagname, attrs, render_inner(node))
 
 def render_separator(node):
     return '<hr>'

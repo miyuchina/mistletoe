@@ -1,3 +1,4 @@
+import itertools
 import core.block_tokenizer as tokenizer
 import core.leaf_token as leaf_token
 
@@ -126,8 +127,22 @@ class ListItem(BlockToken):
 class Table(BlockToken):
     def __init__(self, lines):
         self.has_header_row = lines[1].find('---') != -1
-        if self.has_header_row: lines.pop(1)
-        self.children = [ TableRow(line) for line in lines ]
+        if self.has_header_row:
+            self.column_align = self.parse_delimiter(lines.pop(1))
+        else: self.column_align = [ None ]
+        self.children = [ TableRow(line, self.column_align) for line in lines ]
+
+    @staticmethod
+    def parse_delimiter(delimiter):
+        columns = delimiter[1:-2].split('|')
+        return [ Table.parse_delimiter_column(column.strip())
+                    for column in columns ]
+
+    @staticmethod
+    def parse_delimiter_column(column):
+        if column[:4] == ':---' and column[-4:] == '---:': return 0
+        if column[-4:] == '---:': return 1
+        else: return None
 
     @staticmethod
     def match(lines):
@@ -136,12 +151,15 @@ class Table(BlockToken):
         return True
 
 class TableRow(BlockToken):
-    def __init__(self, line):
+    def __init__(self, line, row_align=[ 0 ]):
         cells = line[1:-2].split('|')
-        self.children = [ TableCell(cell.strip()) for cell in cells ]
+        self.children = [ TableCell(cell.strip(), align)
+                for cell, align in itertools.zip_longest(cells, row_align) ]
 
 class TableCell(BlockToken):
-    def __init__(self, content):
+    # self.align: None => align-left; 0 => align-mid; 1 => align-right
+    def __init__(self, content, align=0):
+        self.align = align
         super().__init__(content, leaf_token.tokenize_inner)
 
 class Separator(BlockToken):
