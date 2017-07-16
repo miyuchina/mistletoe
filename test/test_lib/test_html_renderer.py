@@ -58,9 +58,9 @@ class TestHTMLRenderer(unittest.TestCase):
                  '> a few lines.\n']
         output = renderer.render(block_token.Quote(lines))
         target = ('<blockquote>'
-               +      '<h1>heading 1</h1>'
-               +      '<p>a paragraph that spans a few lines.</p>'
-               +  '</blockquote>')
+                      '<h1>heading 1</h1>'
+                      '<p>a paragraph that spans a few lines.</p>'
+                  '</blockquote>')
         self.assertEqual(output, target)
 
     def test_paragraph(self):
@@ -76,11 +76,11 @@ class TestHTMLRenderer(unittest.TestCase):
                  '```\n']
         output = renderer.render(block_token.BlockCode(lines))
         target = ('<pre>'
-               +      '<code class="sh">'
-               +          'rm -rf *\n'
-               +          'mkdir test\n'
-               +      '</code>'
-               +  '</pre>')
+                      '<code class="sh">'
+                          'rm -rf *\n'
+                          'mkdir test\n'
+                      '</code>'
+                  '</pre>')
         self.assertEqual(output, target)
 
     def test_list_item(self):
@@ -95,14 +95,14 @@ class TestHTMLRenderer(unittest.TestCase):
                  '- item 3\n']
         output = renderer.render(block_token.List(lines))
         target = ('<ul>'
-               +      '<li>item 1</li>'
-               +      '<li>item 2</li>'
-               +      '<ul>'
-               +          '<li>nested item 1</li>'
-               +          '<li>nested item 2</li>'
-               +      '</ul>'
-               +      '<li>item 3</li>'
-               +  '</ul>')
+                      '<li>item 1</li>'
+                      '<li>item 2</li>'
+                      '<ul>'
+                          '<li>nested item 1</li>'
+                          '<li>nested item 2</li>'
+                      '</ul>'
+                      '<li>item 3</li>'
+                  '</ul>')
         self.assertEqual(output, target)
 
     def test_ordered_list(self):
@@ -113,14 +113,14 @@ class TestHTMLRenderer(unittest.TestCase):
                  '3. item 3\n']
         output = renderer.render(block_token.List(lines))
         target = ('<ol start="1">'
-               +      '<li>item 1</li>'
-               +      '<li>item 2</li>'
-               +      '<ul>'
-               +          '<li>nested item 1</li>'
-               +          '<li>nested item 2</li>'
-               +      '</ul>'
-               +      '<li>item 3</li>'
-               +  '</ol>')
+                      '<li>item 1</li>'
+                      '<li>item 2</li>'
+                      '<ul>'
+                          '<li>nested item 1</li>'
+                          '<li>nested item 2</li>'
+                      '</ul>'
+                      '<li>item 3</li>'
+                  '</ol>')
         self.assertEqual(output, target)
 
     def test_separator(self):
