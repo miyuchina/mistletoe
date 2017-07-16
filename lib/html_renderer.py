@@ -57,6 +57,25 @@ def render_list(node):
     else:
         return tagify('ul', render_inner(node))
 
+def render_table(node):
+    if node.has_header_row:
+        head = render_table_row(node.children[0], True)
+        body_inner = [ render_table_row(row) for row in node.children[1:] ]
+        body = ''.join(body_inner)
+        inner = tagify('thead', head) + tagify('tbody', body)
+    else:
+        inner = tagify('tbody', render_inner(node))
+    return tagify('table', inner)
+
+def render_table_row(node, is_header_row=False):
+    inner = ''.join([ render_table_cell(cell, is_header_row)
+                        for cell in node.children ])
+    return tagify('tr', inner)
+
+def render_table_cell(node, in_header_row=False):
+    tagname = 'th' if in_header_row else 'td'
+    return tagify(tagname, render_inner(node))
+
 def render_separator(node):
     return '<hr>'
 
@@ -81,6 +100,9 @@ render_map = {
     'BlockCode': render_block_code,
     'ListItem': render_list_item,
     'List': render_list,
+    'Table': render_table,
+    'TableRow': render_table_row,
+    'TableCell': render_table_cell,
     'Separator': render_separator,
     'Document': render_document
 }

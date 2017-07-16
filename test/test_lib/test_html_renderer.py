@@ -123,6 +123,55 @@ class TestHTMLRenderer(unittest.TestCase):
                   '</ol>')
         self.assertEqual(output, target)
 
+    def test_table_with_heading(self):
+        lines = ['| header 1 | header 2 | header 3 |\n',
+                 '| --- | --- | --- |\n',
+                 '| cell 1 | cell 2 | cell 3 |\n',
+                 '| more 1 | more 2 | more 3 |\n']
+        output = renderer.render(block_token.Table(lines))
+        target = ('<table>'
+                      '<thead>'
+                          '<tr>'
+                              '<th>header 1</th>'
+                              '<th>header 2</th>'
+                              '<th>header 3</th>'
+                          '</tr>'
+                      '</thead>'
+                      '<tbody>'
+                          '<tr>'
+                              '<td>cell 1</td>'
+                              '<td>cell 2</td>'
+                              '<td>cell 3</td>'
+                          '</tr>'
+                          '<tr>'
+                              '<td>more 1</td>'
+                              '<td>more 2</td>'
+                              '<td>more 3</td>'
+                          '</tr>'
+                      '</tbody>'
+                  '</table>')
+        self.assertEqual(output, target)
+
+    def test_table_without_heading(self):
+        lines = ['| cell 1 | cell 2 | cell 3 |\n',
+                 '| more 1 | more 2 | more 3 |\n']
+        output = renderer.render(block_token.Table(lines))
+        target = ('<table>'
+                      '<tbody>'
+                          '<tr>'
+                              '<td>cell 1</td>'
+                              '<td>cell 2</td>'
+                              '<td>cell 3</td>'
+                          '</tr>'
+                          '<tr>'
+                              '<td>more 1</td>'
+                              '<td>more 2</td>'
+                              '<td>more 3</td>'
+                          '</tr>'
+                      '</tbody>'
+                  '</table>')
+        self.assertEqual(output, target)
+
     def test_separator(self):
         output = renderer.render(block_token.Separator('---\n'))
         target = '<hr>'
