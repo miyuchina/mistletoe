@@ -1,16 +1,21 @@
-import itertools
+import re
 
 class BlockTokenizer(object):
     def __init__(self, iterable, token_types, fallback_token):
-        self.lines = itertools.chain(iterable, [ '\n' ])
+        self.lines = iterable
         self.token_types = token_types
         self.fallback_token = fallback_token
 
+
     def normalize(self):
+        heading = re.compile(r'#+ |=+$|-+$')
         code_fence = False
         for line in self.lines:
             line = line.replace('\t', '    ')
-            if not code_fence and line.startswith('```'):
+            if heading.match(line):
+                yield line
+                yield '\n'
+            elif not code_fence and line.startswith('```'):
                 code_fence = True
                 yield '\n'
                 yield line
@@ -23,8 +28,8 @@ class BlockTokenizer(object):
                     yield ' ' + line
                 else:
                     yield line
-            else:
-                yield line
+            else: yield line
+        yield '\n'
 
     def get_tokens(self):
         line_buffer = []
