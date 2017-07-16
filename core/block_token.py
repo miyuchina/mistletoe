@@ -67,11 +67,12 @@ class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
     def __init__(self, lines):
         if lines[0].startswith('```'):
-            self.children = [ leaf_token.RawText(''.join(lines[1:-1])) ]
+            content = ''.join(lines[1:-1])
             self.language = lines[0].strip()[3:]
         else:
-            self.children = [ leaf_token.RawText('\n'.join([line.strip() for line in lines]) + '\n') ]
+            content = ''.join([ line[4:] for line in lines ])
             self.language = ''
+        self.children = [ leaf_token.RawText(content) ]
 
     @staticmethod
     def match(lines):
