@@ -99,6 +99,16 @@ class TestListItem(unittest.TestCase):
         helpers.check_equal(self, l[1], c1)
 
 class TestList(unittest.TestCase):
+    def test_list_tokenize(self):
+        lines = ['- item 1\n',
+                 '- item 2\n',
+                 '    * nested item 1\n',
+                 '    * nested item 2\n',
+                 '- item 3\n']
+        t = block_token.Document(lines)
+        c = block_token.List(lines)
+        helpers.check_equal(self, list(t.children)[0], c)
+
     def test_nested_list(self):
         lines = ['- item 1\n',
                  '- item 2\n',

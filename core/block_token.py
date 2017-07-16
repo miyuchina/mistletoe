@@ -109,10 +109,11 @@ class List(BlockToken):
     @staticmethod
     def match(lines):
         for line in lines:
-            if not (line.startswith('+ ')
-                    or line.startswith('- ')
-                    or line.startswith('* ')
-                    or (line.split('. ')[0].isdigit())):
+            content = line.strip()
+            if not (content.startswith('+ ')
+                    or content.startswith('- ')
+                    or content.startswith('* ')
+                    or (content.split('. ')[0].isdigit())):
                 return 0
         return 1
 
