@@ -129,6 +129,33 @@ class TestList(unittest.TestCase):
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
 
+class TestTable(unittest.TestCase):
+    def test_row(self):
+        lines = ['| header 1 | header 2 | header 3 |\n',
+                 '| --- | --- | --- |\n',
+                 '| cell 1 | cell 2 | cell 3 |\n',
+                 '| more 1 | more 2 | more 3 |\n']
+        lines_c = ['| header 1 | header 2 | header 3 |\n',
+                   '| cell 1 | cell 2 | cell 3 |\n',
+                   '| more 1 | more 2 | more 3 |\n']
+        t = block_token.Table(lines)
+        c0 = block_token.TableRow(lines_c[0])
+        c1 = block_token.TableRow(lines_c[1])
+        c2 = block_token.TableRow(lines_c[2])
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+        helpers.check_equal(self, l[2], c2)
+
+class TestTableRow(unittest.TestCase):
+    def test_cell(self):
+        t = block_token.TableRow('| **cell** 1 | cell 2 |\n')
+        c0 = block_token.TableCell('**cell** 1')
+        c1 = block_token.TableCell('cell 2')
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+
 class TestSeparator(unittest.TestCase):
     def test_equal(self):
         t1 = block_token.Separator('---\n')

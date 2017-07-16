@@ -122,6 +122,21 @@ class ListItem(BlockToken):
         content = line.strip().split(' ', 1)[1]
         super().__init__(content, leaf_token.tokenize_inner)
 
+class Table(BlockToken):
+    def __init__(self, lines):
+        self.has_header_row = lines[1].find('---') != -1
+        if self.has_header_row: lines.pop(1)
+        self.children = [ TableRow(line) for line in lines ]
+
+class TableRow(BlockToken):
+    def __init__(self, line):
+        cells = line[1:-2].split('|')
+        self.children = [ TableCell(cell.strip()) for cell in cells ]
+
+class TableCell(BlockToken):
+    def __init__(self, content):
+        super().__init__(content, leaf_token.tokenize_inner)
+
 class Separator(BlockToken):
     def __init__(self, line):
         self.line = line
