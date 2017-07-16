@@ -19,23 +19,11 @@ class TestRawText(unittest.TestCase):
         t2 = leaf_token.RawText('some text')
         helpers.check_equal(self, t1, t2)
 
-    def test_unequal(self):
-        t1 = leaf_token.RawText('some text')
-        t2 = leaf_token.RawText('other text')
-        helpers.check_unequal(self, t1, t2)
-
 class TestLink(unittest.TestCase):
     def test_equal(self):
         t1 = leaf_token.Link('[name 1](target 1)')
         t2 = leaf_token.Link('[name 1](target 1)')
         helpers.check_equal(self, t1, t2)
-
-    def test_unequal(self):
-        t1 = leaf_token.Link('[name 1](target 1)')
-        t2 = leaf_token.Link('[name 2](target 1)')
-        t3 = leaf_token.Link('[name 1](target 2)')
-        helpers.check_unequal(self, t1, t2)
-        helpers.check_unequal(self, t1, t3)
 
     def test_multi_links(self):
         t = leaf_token.Emphasis('[name 1](target 1) and [name 2](target 2)')

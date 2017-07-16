@@ -62,13 +62,6 @@ class TestBlockCode(unittest.TestCase):
         c = block_token.BlockCode(l2)
         helpers.check_equal(self, list(t.children)[0], c)
 
-    def test_unequal(self):
-        l1 = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
-        l2 = ['```\n', 'rm dir\n', 'mkdir test\n', '```\n']
-        t1 = block_token.BlockCode(l1)
-        t2 = block_token.BlockCode(l2)
-        helpers.check_unequal(self, t1, t2)
-
 class TestParagraph(unittest.TestCase):
     def test_raw(self):
         l = ['some\n', 'continuous\n', 'lines\n']
