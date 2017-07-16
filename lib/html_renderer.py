@@ -43,9 +43,9 @@ def render_paragraph(node):
 def render_block_code(node):
     if node.language:
         attrs = { 'class': node.language }
-        return tagify('pre', tagify_attrs('code', attrs, node.content))
+        return tagify('pre', tagify_attrs('code', attrs, render_inner(node)))
     else:
-        return tagify('pre', tagify('code', node.content))
+        return tagify('pre', tagify('code', render_inner(node)))
 
 def render_list_item(node):
     return tagify('li', render_inner(node))

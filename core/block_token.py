@@ -67,10 +67,10 @@ class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
     def __init__(self, lines):
         if lines[0].startswith('```'):
-            self.content = ''.join(lines[1:-1]) # implicit newlines
+            self.children = [ leaf_token.RawText(''.join(lines[1:-1])) ]
             self.language = lines[0].strip()[3:]
         else:
-            self.content = '\n'.join([line.strip() for line in lines]) + '\n'
+            self.children = [ leaf_token.RawText('\n'.join([line.strip() for line in lines]) + '\n') ]
             self.language = ''
 
     @staticmethod
