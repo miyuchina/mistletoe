@@ -40,16 +40,15 @@ class Heading(BlockToken):
         return 0
 
 class Quote(BlockToken):
-    # pre: lines[i] = "> some text\n"
     def __init__(self, lines):
-        content = [ line[2:] for line in lines ]
+        content = []
+        for line in lines:
+            if line.startswith('> '): content.append(line[2:])
+            else: content.append(line)
         super().__init__(content, tokenize)
 
     @staticmethod
-    def match(lines):
-        for line in lines:
-            if not line.startswith('> '): return 0
-        return 1
+    def match(lines): return lines[0].startswith('> ')
 
 class Paragraph(BlockToken):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]

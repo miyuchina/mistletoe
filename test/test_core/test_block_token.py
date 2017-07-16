@@ -33,6 +33,11 @@ class TestQuote(unittest.TestCase):
         c = block_token.Paragraph(['line 1\n', 'line 2\n'])
         helpers.check_equal(self, list(t.children)[0], c)
 
+    def test_only_first_leader(self):
+        t = block_token.Quote(['> line 1\n', 'line 2\n'])
+        c = block_token.Paragraph(['line 1\n', 'line 2\n'])
+        helpers.check_equal(self, list(t.children)[0], c)
+
     def test_heading(self):
         t = block_token.Quote(['> # heading 1\n', '> \n', '> line 1\n'])
         c0 = block_token.Heading([ '# heading 1\n' ])
