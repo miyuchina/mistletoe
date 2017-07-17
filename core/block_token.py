@@ -114,7 +114,7 @@ class List(BlockToken):
             if not (content.startswith('+ ')
                     or content.startswith('- ')
                     or content.startswith('* ')
-                    or (content.split('. ')[0].isdigit())):
+                    or (content.split(' ')[0][:-1].isdigit())):
                 return 0
         return 1
 
