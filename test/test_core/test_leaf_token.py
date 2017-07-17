@@ -35,6 +35,13 @@ class TestLink(unittest.TestCase):
         helpers.check_equal(self, l[1], c1)
         helpers.check_equal(self, l[2], c2)
 
+    def test_link_with_children(self):
+        t = leaf_token.Link('[![alt](src)](target)')
+        c = leaf_token.Image('![alt](src)')
+        target = 'target'
+        helpers.check_equal(self, list(t.children)[0], c)
+        self.assertEqual(t.target, target)
+
 class TestImage(unittest.TestCase):
     def test_equal(self):
         t1 = leaf_token.Image('![alt](link)')
