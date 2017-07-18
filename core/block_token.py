@@ -127,11 +127,13 @@ class ListItem(BlockToken):
 
 class Table(BlockToken):
     def __init__(self, lines):
-        self.has_header_row = lines[1].find('---') != -1
-        if self.has_header_row:
-            self.column_align = self.parse_delimiter(lines.pop(1))
-        else: self.column_align = [ None ]
-        self.children = ( TableRow(line, self.column_align) for line in lines )
+        if lines[1].find('---') != -1:
+            column_align = self.parse_delimiter(lines.pop(1))
+            self.head = TableHead(lines[0], column_align)
+            self.body = TableBody(lines[1:], column_align)
+        else:
+            column_align = [ None ]
+            self.body = TableBody(lines, column_align)
 
     @staticmethod
     def parse_delimiter(delimiter):
@@ -150,6 +152,14 @@ class Table(BlockToken):
         for line in lines:
             if line[0] != '|' or line[-2] != '|': return False
         return True
+
+class TableHead(BlockToken):
+    def __init__(self, line, row_align=[ 0 ]):
+        self.children = [ TableRow(line, row_align) ]
+
+class TableBody(BlockToken):
+    def __init__(self, lines, row_align=[ 0 ]):
+        self.children = (TableRow(line, row_align) for line in lines)
 
 class TableRow(BlockToken):
     def __init__(self, line, row_align=[ 0 ]):

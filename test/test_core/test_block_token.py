@@ -160,10 +160,10 @@ class TestTable(unittest.TestCase):
         c0 = block_token.TableRow(lines_c[0])
         c1 = block_token.TableRow(lines_c[1])
         c2 = block_token.TableRow(lines_c[2])
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
+        helpers.check_equal(self, t.head.children[0], c0)
+        l = list(t.body.children)
+        helpers.check_equal(self, l[0], c1)
+        helpers.check_equal(self, l[1], c2)
 
 class TestTableRow(unittest.TestCase):
     def test_cell(self):
