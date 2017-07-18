@@ -1,28 +1,28 @@
 import unittest
 import test.test_core.helpers as helpers
-import core.leaf_token as leaf_token
+import core.span_token as span_token
 import core.block_token as block_token
 
 class TestHeading(unittest.TestCase):
     def test_left_hashes(self):
         t = block_token.Heading([ '### heading 3\n' ])
-        c = leaf_token.RawText('heading 3')
+        c = span_token.RawText('heading 3')
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_enclosing_hashes(self):
         t = block_token.Heading([ '### heading 3 #########  \n' ])
-        c = leaf_token.RawText('heading 3')
+        c = span_token.RawText('heading 3')
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_setext_heading(self):
         t = block_token.Heading(['some\n', 'heading 2\n', '---\n'])
-        c = leaf_token.RawText('some heading 2')
+        c = span_token.RawText('some heading 2')
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_bold(self):
         t = block_token.Heading([ '## **heading** 2\n' ])
-        c0 = leaf_token.Strong('heading')
-        c1 = leaf_token.RawText(' 2')
+        c0 = span_token.Strong('heading')
+        c1 = span_token.RawText(' 2')
         l = list(t.children)
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
@@ -66,16 +66,16 @@ class TestParagraph(unittest.TestCase):
     def test_raw(self):
         l = ['some\n', 'continuous\n', 'lines\n']
         t = block_token.Paragraph(l)
-        c = leaf_token.RawText('some continuous lines')
+        c = span_token.RawText('some continuous lines')
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_inner(self):
         lines = ['some\n', '*continuous*\n', '**lines**\n']
         t = block_token.Paragraph(lines)
-        c0 = leaf_token.RawText('some ')
-        c1 = leaf_token.Emphasis('continuous')
-        c2 = leaf_token.RawText(' ')
-        c3 = leaf_token.Strong('lines')
+        c0 = span_token.RawText('some ')
+        c1 = span_token.Emphasis('continuous')
+        c2 = span_token.RawText(' ')
+        c3 = span_token.Strong('lines')
         l = list(t.children)
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
@@ -85,13 +85,13 @@ class TestParagraph(unittest.TestCase):
 class TestListItem(unittest.TestCase):
     def test_raw(self):
         t = block_token.ListItem('- some text\n')
-        c = leaf_token.RawText('some text')
+        c = span_token.RawText('some text')
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_inline_code(self):
         t = block_token.ListItem('    - some `code`\n')
-        c0 = leaf_token.RawText('some ')
-        c1 = leaf_token.InlineCode('code')
+        c0 = span_token.RawText('some ')
+        c1 = span_token.InlineCode('code')
         l = list(t.children)
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)

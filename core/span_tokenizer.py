@@ -1,4 +1,4 @@
-class LeafTokenizer(object):
+class SpanTokenizer(object):
     def __init__(self, content, token_types, fallback_token):
         self.content = content
         self.token_types = token_types

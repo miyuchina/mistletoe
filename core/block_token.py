@@ -1,6 +1,6 @@
 import itertools
 import core.block_tokenizer as tokenizer
-import core.leaf_token as leaf_token
+import core.span_token as span_token
 
 __all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Table', 'Separator']
 
@@ -29,7 +29,7 @@ class Heading(BlockToken):
             if lines[-1][0] == '=': self.level = 1
             elif lines[-1][0] == '-': self.level = 2
             content = ' '.join([ line.strip() for line in lines[:-1] ])
-        super().__init__(content, leaf_token.tokenize_inner)
+        super().__init__(content, span_token.tokenize_inner)
 
     @staticmethod
     def match(lines):
@@ -54,7 +54,7 @@ class Paragraph(BlockToken):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
     def __init__(self, lines):
         content = ''.join(lines).replace('\n', ' ').strip()
-        self.children = leaf_token.tokenize_inner(content)
+        self.children = span_token.tokenize_inner(content)
 
     @staticmethod
     def match(lines):
@@ -71,7 +71,7 @@ class BlockCode(BlockToken):
         else:
             content = ''.join([ line[4:] for line in lines ])
             self.language = ''
-        self.children = [ leaf_token.RawText(content) ]
+        self.children = [ span_token.RawText(content) ]
 
     @staticmethod
     def match(lines):
@@ -123,7 +123,7 @@ class ListItem(BlockToken):
     # pre: line = "- some *italics* text\n"
     def __init__(self, line):
         content = line.strip().split(' ', 1)[1]
-        super().__init__(content, leaf_token.tokenize_inner)
+        super().__init__(content, span_token.tokenize_inner)
 
 class Table(BlockToken):
     def __init__(self, lines):
@@ -161,7 +161,7 @@ class TableCell(BlockToken):
     # self.align: None => align-left; 0 => align-mid; 1 => align-right
     def __init__(self, content, align=0):
         self.align = align
-        super().__init__(content, leaf_token.tokenize_inner)
+        super().__init__(content, span_token.tokenize_inner)
 
 class Separator(BlockToken):
     def __init__(self, line):
