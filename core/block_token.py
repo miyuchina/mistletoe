@@ -106,6 +106,7 @@ class List(BlockToken):
                 nested = 0
                 yield ListItem(line)
             else: yield ListItem(line)
+        if nested: yield List(line_buffer)
 
     @staticmethod
     def match(lines):
