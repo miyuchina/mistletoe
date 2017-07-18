@@ -1,188 +1,45 @@
 import unittest
-import core.block_token as block_token
-import core.leaf_token as leaf_token
+import core.block_token  as block_token
+import core.span_token   as span_token
 import lib.html_renderer as renderer
 
 class TestHTMLRenderer(unittest.TestCase):
-    def test_tagify(self):
-        output = renderer.tagify('p', 'some text')
-        target = '<p>some text</p>'
-        self.assertEqual(output, target)
+    def setUp(self):
+        self.renderer = renderer.HTMLRenderer()
 
-    def test_tagify_attrs(self):
-        output = renderer.tagify_attrs('a', { 'href': 'hi' }, 'some text')
-        target = '<a href="hi">some text</a>'
+    def _test_token(self, token_type, raw, target):
+        output = self.renderer.render(token_type(raw))
         self.assertEqual(output, target)
 
     def test_strong(self):
-        output = renderer.render(leaf_token.Strong('some text'))
-        self.assertEqual(output, '<strong>some text</strong>')
+        raw, target = 'some text', '<strong>some text</strong>'
+        self._test_token(span_token.Strong, raw, target)
 
     def test_emphasis(self):
-        output = renderer.render(leaf_token.Emphasis('some text'))
-        self.assertEqual(output, '<em>some text</em>')
+        raw, target = 'some text', '<em>some text</em>'
+        self._test_token(span_token.Emphasis, raw, target)
 
     def test_inline_code(self):
-        output = renderer.render(leaf_token.InlineCode('some code'))
-        self.assertEqual(output, '<code>some code</code>')
+        raw, target = 'some code', '<code>some code</code>'
+        self._test_token(span_token.InlineCode, raw, target)
 
     def test_strikethrough(self):
-        output = renderer.render(leaf_token.Strikethrough('text'))
-        self.assertEqual(output, '<del>text</del>')
+        raw, target = 'some text', '<del>some text</del>'
+        self._test_token(span_token.Strikethrough, raw, target)
 
     def test_image(self):
-        output = renderer.render(leaf_token.Image('![alt](target "title")'))
-        self.assertEqual(output, '<img src="target" alt="alt" title="title">')
+        raw = '![alt](src "title")'
+        target = '<img src="src" title="title" alt="alt">'
+        self._test_token(span_token.Image, raw, target)
 
     def test_link(self):
-        output = renderer.render(leaf_token.Link('[name](target)'))
-        self.assertEqual(output, '<a href="target">name</a>')
-
-    def test_link_with_children(self):
-        output = renderer.render(leaf_token.Link('[*text*](target)'))
-        self.assertEqual(output, '<a href="target"><em>text</em></a>')
+        raw, target = '[name](target)', '<a href="target">name</a>'
+        self._test_token(span_token.Link, raw, target)
 
     def test_escape_sequence(self):
-        output = renderer.render(leaf_token.EscapeSequence('['))
-        self.assertEqual(output, '[')
+        raw, target = '\*', '\*'
+        self._test_token(span_token.EscapeSequence, raw, target)
 
     def test_raw_text(self):
-        output = renderer.render(leaf_token.RawText('some text'))
-        self.assertEqual(output, 'some text')
-
-    def test_heading(self):
-        output = renderer.render(block_token.Heading([ '# heading 1\n' ]))
-        self.assertEqual(output, '<h1>heading 1</h1>')
-
-    def test_quote(self):
-        lines = ['> # heading 1\n',
-                 '> \n',
-                 '> a paragraph\n',
-                 '> that spans\n',
-                 '> a few lines.\n']
-        output = renderer.render(block_token.Quote(lines))
-        target = ('<blockquote>'
-                      '<h1>heading 1</h1>'
-                      '<p>a paragraph that spans a few lines.</p>'
-                  '</blockquote>')
-        self.assertEqual(output, target)
-
-    def test_paragraph(self):
-        lines = ['a paragraph\n', 'that spans\n', 'a few lines.\n']
-        output = renderer.render(block_token.Paragraph(lines))
-        target = '<p>a paragraph that spans a few lines.</p>'
-        self.assertEqual(output, target)
-
-    def test_block_code(self):
-        lines = ['```sh\n',
-                 'rm -rf *\n',
-                 'mkdir test\n',
-                 '```\n']
-        output = renderer.render(block_token.BlockCode(lines))
-        target = ('<pre>'
-                      '<code class="sh">'
-                          'rm -rf *\n'
-                          'mkdir test\n'
-                      '</code>'
-                  '</pre>')
-        self.assertEqual(output, target)
-
-    def test_list_item(self):
-        output = renderer.render(block_token.ListItem('- some text\n'))
-        target = '<li>some text</li>'
-
-    def test_unordered_list(self):
-        lines = ['- item 1\n',
-                 '- item 2\n',
-                 '    - nested item 1\n',
-                 '    - nested item 2\n',
-                 '- item 3\n']
-        output = renderer.render(block_token.List(lines))
-        target = ('<ul>'
-                      '<li>item 1</li>'
-                      '<li>item 2</li>'
-                      '<ul>'
-                          '<li>nested item 1</li>'
-                          '<li>nested item 2</li>'
-                      '</ul>'
-                      '<li>item 3</li>'
-                  '</ul>')
-        self.assertEqual(output, target)
-
-    def test_ordered_list(self):
-        lines = ['1. item 1\n',
-                 '2. item 2\n',
-                 '    - nested item 1\n',
-                 '    - nested item 2\n',
-                 '3. item 3\n']
-        output = renderer.render(block_token.List(lines))
-        target = ('<ol start="1">'
-                      '<li>item 1</li>'
-                      '<li>item 2</li>'
-                      '<ul>'
-                          '<li>nested item 1</li>'
-                          '<li>nested item 2</li>'
-                      '</ul>'
-                      '<li>item 3</li>'
-                  '</ol>')
-        self.assertEqual(output, target)
-
-    def test_table_with_heading(self):
-        lines = ['| header 1 | header 2 | header 3 |\n',
-                 '| :--- | :---: | ---: |\n',
-                 '| cell 1 | cell 2 | cell 3 |\n',
-                 '| more 1 | more 2 | more 3 |\n']
-        output = renderer.render(block_token.Table(lines))
-        target = ('<table>'
-                      '<thead>'
-                          '<tr>'
-                              '<th>header 1</th>'
-                              '<th align="center">header 2</th>'
-                              '<th align="right">header 3</th>'
-                          '</tr>'
-                      '</thead>'
-                      '<tbody>'
-                          '<tr>'
-                              '<td>cell 1</td>'
-                              '<td align="center">cell 2</td>'
-                              '<td align="right">cell 3</td>'
-                          '</tr>'
-                          '<tr>'
-                              '<td>more 1</td>'
-                              '<td align="center">more 2</td>'
-                              '<td align="right">more 3</td>'
-                          '</tr>'
-                      '</tbody>'
-                  '</table>')
-        self.assertEqual(output, target)
-
-    def test_table_without_heading(self):
-        lines = ['| cell 1 | cell 2 | cell 3 |\n',
-                 '| more 1 | more 2 | more 3 |\n']
-        output = renderer.render(block_token.Table(lines))
-        target = ('<table>'
-                      '<tbody>'
-                          '<tr>'
-                              '<td>cell 1</td>'
-                              '<td>cell 2</td>'
-                              '<td>cell 3</td>'
-                          '</tr>'
-                          '<tr>'
-                              '<td>more 1</td>'
-                              '<td>more 2</td>'
-                              '<td>more 3</td>'
-                          '</tr>'
-                      '</tbody>'
-                  '</table>')
-        self.assertEqual(output, target)
-
-    def test_separator(self):
-        output = renderer.render(block_token.Separator('---\n'))
-        target = '<hr>'
-        self.assertEqual(output, target)
-
-    def test_document(self):
-        output = renderer.render(block_token.Document(['some text\n']))
-        target = '<html><body><p>some text</p></body></html>'
-        self.assertEqual(output, target)
-
+        raw, target = 'john & jane', 'john &amp; jane'
+        self._test_token(span_token.RawText, raw, target)
