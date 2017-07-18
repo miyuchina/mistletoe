@@ -131,7 +131,7 @@ class Table(BlockToken):
         if self.has_header_row:
             self.column_align = self.parse_delimiter(lines.pop(1))
         else: self.column_align = [ None ]
-        self.children = [ TableRow(line, self.column_align) for line in lines ]
+        self.children = ( TableRow(line, self.column_align) for line in lines )
 
     @staticmethod
     def parse_delimiter(delimiter):
@@ -154,8 +154,8 @@ class Table(BlockToken):
 class TableRow(BlockToken):
     def __init__(self, line, row_align=[ 0 ]):
         cells = line[1:-2].split('|')
-        self.children = [ TableCell(cell.strip(), align)
-                for cell, align in itertools.zip_longest(cells, row_align) ]
+        self.children = ( TableCell(cell.strip(), align)
+                for cell, align in itertools.zip_longest(cells, row_align) )
 
 class TableCell(BlockToken):
     # self.align: None => align-left; 0 => align-mid; 1 => align-right
