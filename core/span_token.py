@@ -39,12 +39,12 @@ class Image(SpanToken):
     pattern = re.compile(r"(\!\[(.+?)\]\((.+?)\))")
     def __init__(self, raw):
         self.alt = raw[2:raw.index(']')]
-        target = raw[raw.index('(')+1:-1]
-        if target.find('"') != -1:
-            self.target = target[:target.index(' "')]
-            self.title = target[target.index(' "')+2:-1]
+        src = raw[raw.index('(')+1:-1]
+        if src.find('"') != -1:
+            self.src = src[:src.index(' "')]
+            self.title = src[src.index(' "')+2:-1]
         else:
-            self.target = target
+            self.src = src
             self.title = ''
 
 class Link(SpanToken):

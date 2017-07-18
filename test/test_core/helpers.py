@@ -5,6 +5,8 @@ def check_equal(test, t, o):
         test.assertEqual((t.language, t.content), (o.language, o.content))
     elif hasattr(t, 'content') and hasattr(o, 'content'):
         test.assertEqual(t.content, o.content)
+    elif hasattr(t, 'src') and hasattr(o, 'src'):
+        test.assertEqual((t.src, t.alt, t.title), (o.src, o.alt, o.title))
     elif hasattr(t, 'alt') and hasattr(o, 'alt'):
         test.assertEqual((t.alt, t.target), (o.alt, o.target))
     elif hasattr(t, 'target') and hasattr(o, 'target'):
