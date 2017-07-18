@@ -19,6 +19,7 @@ class HTMLRenderer(object):
                           '</code></pre>'),
             'List': '<{_tag}{_attr}>{_inner}</{_tag}>',
             'ListItem': '<li>{_inner}</li>',
+            'Document': '<html><body>{_inner}</body></html>'
         }
 
     def render(self, token):
