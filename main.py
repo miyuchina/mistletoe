@@ -5,7 +5,7 @@ import lib.html_renderer as renderer
 def main(filename=None):
     fin = open(filename, 'r') if filename else sys.stdin
     markdown = block_token.Document(iter(fin))
-    rendered = renderer.render(markdown)
+    rendered = renderer.HTMLRenderer().render(markdown)
     fin.close()
     return rendered
 

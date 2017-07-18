@@ -8,7 +8,7 @@ import lib.html_renderer as renderer
 def run():
     with open('test/profiler/jquery.md', 'r') as fin:
         t = token.Document(fin)
-        renderer.render(t)
+        renderer.HTMLRenderer().render(t)
 
 if __name__ == '__main__':
     for i in range(1000): run()
