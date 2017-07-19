@@ -151,14 +151,6 @@ class Table(BlockToken):
             if line[0] != '|' or line[-2] != '|': return False
         return True
 
-class TableHead(BlockToken):
-    def __init__(self, line, row_align=[ 0 ]):
-        self.children = [ TableRow(line, row_align) ]
-
-class TableBody(BlockToken):
-    def __init__(self, lines, row_align=[ 0 ]):
-        self.children = (TableRow(line, row_align) for line in lines)
-
 class TableRow(BlockToken):
     def __init__(self, line, row_align=[ None ]):
         cells = line[1:-2].split('|')
