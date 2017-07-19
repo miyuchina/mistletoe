@@ -127,8 +127,8 @@ class ListItem(BlockToken):
 
 class Table(BlockToken):
     def __init__(self, lines):
-        self.has_header_row = lines[1].find('---') != -1
-        if self.has_header_row:
+        self.has_header= lines[1].find('---') != -1
+        if self.has_header:
             self.column_align = self.parse_delimiter(lines.pop(1))
         else: self.column_align = [ None ]
         self.children = ( TableRow(line, self.column_align) for line in lines )
@@ -152,14 +152,14 @@ class Table(BlockToken):
         return True
 
 class TableRow(BlockToken):
-    def __init__(self, line, row_align=[ 0 ]):
+    def __init__(self, line, row_align=[ None ]):
         cells = line[1:-2].split('|')
         self.children = ( TableCell(cell.strip(), align)
                 for cell, align in itertools.zip_longest(cells, row_align) )
 
 class TableCell(BlockToken):
     # self.align: None => align-left; 0 => align-mid; 1 => align-right
-    def __init__(self, content, align=0):
+    def __init__(self, content, align=None):
         self.align = align
         super().__init__(content, span_token.tokenize_inner)
 
