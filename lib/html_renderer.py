@@ -17,6 +17,9 @@ class HTMLRenderer(object):
                 'BlockCode':      self.render_block_code,
                 'List':           self.render_list,
                 'ListItem':       self.render_list_item,
+                'Table':          self.render_table,
+                'TableRow':       self.render_table_row,
+                'TableCell':      self.render_table_cell,
                 'Separator':      self.render_separator,
                 'Document':       self.render_document,
                 }
@@ -78,6 +81,35 @@ class HTMLRenderer(object):
 
     def render_list_item(self, token):
         return '<li>{}</li>'.format(self.render_inner(token))
+
+    def render_table(self, token):
+        tp = '<table>{inner}</table>'
+        if token.has_header:
+            head_tp = '<thead>{inner}</thead>'
+            header = token.children.send(None)
+            head_inner = self.render_table_row(header, True)
+            head_rendered = head_tp.format(inner=head_inner)
+        else: head_rendered = ''
+        body_tp = '<tbody>{inner}</tbody>'
+        body_inner = self.render_inner(token)
+        body_rendered = body_tp.format(inner=body_inner)
+        return tp.format(inner=head_rendered+body_rendered)
+
+    def render_table_row(self, token, is_header=False):
+        tp = '<tr>{inner}</tr>'
+        inner = ''.join([ self.render_table_cell(child, is_header)
+                                        for child in token.children ])
+        return tp.format(inner=inner)
+
+    def render_table_cell(self, token, in_header=False):
+        tp = '<{tag}{attr}>{inner}</{tag}>'
+        tag = 'th' if in_header else 'td'
+        if token.align is None: align = 'left'
+        elif token.align == 0 : align = 'center'
+        elif token.align == 1 : align = 'right'
+        attr = ' align="{}"'.format(align)
+        inner = self.render_inner(token)
+        return tp.format(tag=tag, attr=attr, inner=inner)
 
     def render_separator(self, token):
         return '<hr>'
