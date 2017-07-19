@@ -54,12 +54,6 @@ class TestHTMLRenderer(unittest.TestCase):
                   '<p>a paragraph continued</p></blockquote>')
         self._test_token(block_token.Quote, raw, target)
 
-    def test_paragraph(self):
-        raw = ['a *paragraph*\n', 'with ~~multiple~~\n', 'lines\n']
-        target = ('<p>a <em>paragraph</em>'
-                  ' with <del>multiple</del> lines</p>')
-        self._test_token(block_token.Paragraph, raw, target)
-
     def test_block_code(self):
         raw = ['```sh\n', 'mkdir temp\n', 'rmdir temp\n', '```\n']
         target = ('<pre><code class="lang-sh">mkdir temp\n'
@@ -89,6 +83,70 @@ class TestHTMLRenderer(unittest.TestCase):
         raw = '    - some **bold** text\n'
         target = '<li>some <strong>bold</strong> text</li>'
         self._test_token(block_token.ListItem, raw, target)
+
+    def test_table_with_heading(self):
+        raw = ['| header 1 | header 2 | header 3 |\n',
+                 '| :--- | :---: | ---: |\n',
+                 '| cell 1 | cell 2 | cell 3 |\n',
+                 '| more 1 | more 2 | more 3 |\n']
+        target = ('<table>'
+                    '<thead>'
+                      '<tr>'
+                        '<th align="left">header 1</th>'
+                        '<th align="center">header 2</th>'
+                        '<th align="right">header 3</th>'
+                      '</tr>'
+                    '</thead>'
+                    '<tbody>'
+                       '<tr>'
+                         '<td align="left">cell 1</td>'
+                         '<td align="center">cell 2</td>'
+                         '<td align="right">cell 3</td>'
+                       '</tr>'
+                       '<tr>'
+                         '<td align="left">more 1</td>'
+                         '<td align="center">more 2</td>'
+                         '<td align="right">more 3</td>'
+                       '</tr>'
+                    '</tbody>'
+                  '</table>')
+        self._test_token(block_token.Table, raw, target)
+
+    def test_table_without_heading(self):
+        raw = ['| cell 1 | cell 2 | cell 3 |\n',
+                 '| more 1 | more 2 | more 3 |\n']
+        target = ('<table>'
+                    '<tbody>'
+                      '<tr>'
+                        '<td align="left">cell 1</td>'
+                        '<td align="left">cell 2</td>'
+                        '<td align="left">cell 3</td>'
+                      '</tr>'
+                      '<tr>'
+                        '<td align="left">more 1</td>'
+                        '<td align="left">more 2</td>'
+                        '<td align="left">more 3</td>'
+                        '</tr>'
+                    '</tbody>'
+                  '</table>')
+        self._test_token(block_token.Table, raw, target)
+
+    def test_table_row(self):
+        raw = '| cell 1 | cell 2 | cell 3 |\n'
+        target = ('<tr>'
+                    '<td align="left">cell 1</td>'
+                    '<td align="left">cell 2</td>'
+                    '<td align="left">cell 3</td>'
+                  '</tr>')
+        self._test_token(block_token.TableRow, raw, target)
+
+    def test_table_cell(self):
+        raw, target= 'cell', '<td align="left">cell</td>'
+        self._test_token(block_token.TableCell, raw, target)
+
+    def test_separator(self):
+        raw, target = '***\n', '<hr>'
+        self._test_token(block_token.Separator, raw, target)
 
     def test_document(self):
         raw = ['a paragraph\n']
