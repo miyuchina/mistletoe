@@ -34,7 +34,8 @@ class BlockTokenizer(object):
     def get_tokens(self):
         line_buffer = []
         for line in self.normalize():
-            if line != '\n': line_buffer.append(line)
+            if line != '\n':
+                line_buffer.append(line)
             elif line_buffer:
                 matched = 0
                 for token_type in self.token_types:

@@ -5,10 +5,10 @@ import core.span_token as span_token
 __all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Table', 'Separator']
 
 def tokenize(lines):
-    token_types = [ globals()[key] for key in __all__ ]
+    token_types = [globals()[key] for key in __all__]
     fallback_token = Paragraph
-    bt = tokenizer.BlockTokenizer(lines, token_types, fallback_token)
-    return bt.get_tokens()
+    tok = tokenizer.BlockTokenizer(lines, token_types, fallback_token)
+    return tok.get_tokens()
 
 class BlockToken(object):
     def __init__(self, content, tokenize_func):
@@ -26,29 +26,32 @@ class Heading(BlockToken):
             content = content.split(' #', 1)[0].strip()
             self.level = len(hashes) + 1
         else:
-            if lines[-1][0] == '=': self.level = 1
-            elif lines[-1][0] == '-': self.level = 2
-            content = ' '.join([ line.strip() for line in lines[:-1] ])
+            if lines[-1][0] == '=':
+                self.level = 1
+            elif lines[-1][0] == '-':
+                self.level = 2
+            content = ' '.join([line.strip() for line in lines[:-1]])
         super().__init__(content, span_token.tokenize_inner)
 
     @staticmethod
     def match(lines):
-        if len(lines) == 1 and lines[0].find('# ') != -1: return 1
-        else:
-            return (lines[-1].startswith('---')
-                 or lines[-1].startswith('==='))
-        return 0
+        if len(lines) == 1 and lines[0].find('# ') != -1:
+            return True
+        return lines[-1].startswith('---') or lines[-1].startswith('===')
 
 class Quote(BlockToken):
     def __init__(self, lines):
         content = []
         for line in lines:
-            if line.startswith('> '): content.append(line[2:])
-            else: content.append(line)
+            if line.startswith('> '):
+                content.append(line[2:])
+            else:
+                content.append(line)
         super().__init__(content, tokenize)
 
     @staticmethod
-    def match(lines): return lines[0].startswith('> ')
+    def match(lines):
+        return lines[0].startswith('> ')
 
 class Paragraph(BlockToken):
     # pre: lines = ["some\n", "continuous\n", "lines\n"]
@@ -59,8 +62,9 @@ class Paragraph(BlockToken):
     @staticmethod
     def match(lines):
         for line in lines:
-            if line == '\n': return 0
-        return 1
+            if line == '\n':
+                return False
+        return True
 
 class BlockCode(BlockToken):
     # pre: lines = ["```sh\n", "rm -rf /", ..., "```"]
@@ -69,15 +73,17 @@ class BlockCode(BlockToken):
             content = ''.join(lines[1:-1])
             self.language = lines[0].strip()[3:]
         else:
-            content = ''.join([ line[4:] for line in lines ])
+            content = ''.join([line[4:] for line in lines])
             self.language = ''
-        self.children = [ span_token.RawText(content) ]
+        self.children = [span_token.RawText(content)]
 
     @staticmethod
     def match(lines):
-        if lines[0].startswith('```') and lines[-1] == '```\n': return 1
+        if lines[0].startswith('```') and lines[-1] == '```\n':
+            return True
         for line in lines:
-            if not line.startswith(' '*4): return 0
+            if not line.startswith(' '*4):
+                return False
         return True
 
 class List(BlockToken):
@@ -88,12 +94,13 @@ class List(BlockToken):
     # "- item 3\n"
     # ]
     def __init__(self, lines):
-        self.children = self._build_list(lines)
+        self.children = List._build_list(lines)
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
 
-    def _build_list(self, lines):
+    @staticmethod
+    def _build_list(lines):
         line_buffer = []
         nested = 0
         for line in lines:
@@ -105,8 +112,10 @@ class List(BlockToken):
                 line_buffer.clear()
                 nested = 0
                 yield ListItem(line)
-            else: yield ListItem(line)
-        if nested: yield List(line_buffer)
+            else:
+                yield ListItem(line)
+        if nested:
+            yield List(line_buffer)
 
     @staticmethod
     def match(lines):
@@ -127,35 +136,40 @@ class ListItem(BlockToken):
 
 class Table(BlockToken):
     def __init__(self, lines):
-        self.has_header= lines[1].find('---') != -1
+        self.has_header = lines[1].find('---') != -1
         if self.has_header:
             self.column_align = self.parse_delimiter(lines.pop(1))
-        else: self.column_align = [ None ]
-        self.children = ( TableRow(line, self.column_align) for line in lines )
+        else: self.column_align = [None]
+        self.children = (TableRow(line, self.column_align) for line in lines)
 
     @staticmethod
     def parse_delimiter(delimiter):
         columns = delimiter[1:-2].split('|')
-        return [ Table.parse_delimiter_column(column.strip())
-                    for column in columns ]
+        return [Table.parse_delimiter_column(column.strip())
+                for column in columns]
 
     @staticmethod
     def parse_delimiter_column(column):
-        if column[:4] == ':---' and column[-4:] == '---:': return 0
-        if column[-4:] == '---:': return 1
-        else: return None
+        if column[:4] == ':---' and column[-4:] == '---:':
+            return 0
+        if column[-4:] == '---:':
+            return 1
+        return None
 
     @staticmethod
     def match(lines):
         for line in lines:
-            if line[0] != '|' or line[-2] != '|': return False
+            if line[0] != '|' or line[-2] != '|':
+                return False
         return True
 
 class TableRow(BlockToken):
-    def __init__(self, line, row_align=[ None ]):
+    def __init__(self, line, row_align=None):
+        if row_align is None:
+            row_align = [None]
         cells = line[1:-2].split('|')
-        self.children = ( TableCell(cell.strip(), align)
-                for cell, align in itertools.zip_longest(cells, row_align) )
+        self.children = (TableCell(cell.strip(), align)
+                         for cell, align in itertools.zip_longest(cells, row_align))
 
 class TableCell(BlockToken):
     # self.align: None => align-left; 0 => align-mid; 1 => align-right

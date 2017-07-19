@@ -1,29 +1,29 @@
 class LaTeXRenderer(object):
     def __init__(self):
         self.render_map = {
-                'Strong':         self.render_strong,
-                'Emphasis':       self.render_emphasis,
-                'InlineCode':     self.render_inline_code,
-                'RawText':        self.render_raw_text,
-                'Strikethrough':  self.render_strikethrough,
-                'Image':          self.render_image,
-                'Link':           self.render_link,
-                'EscapeSequence': self.render_raw_text,
-                'Heading':        self.render_heading,
-                'Quote':          self.render_quote,
-                'Paragraph':      self.render_paragraph,
-                'BlockCode':      self.render_block_code,
-                'List':           self.render_list,
-                'ListItem':       self.render_list_item,
-                'Separator':      self.render_separator,
-                'Document':       self.render_document,
-                }
+            'Strong':         self.render_strong,
+            'Emphasis':       self.render_emphasis,
+            'InlineCode':     self.render_inline_code,
+            'RawText':        self.render_raw_text,
+            'Strikethrough':  self.render_strikethrough,
+            'Image':          self.render_image,
+            'Link':           self.render_link,
+            'EscapeSequence': self.render_raw_text,
+            'Heading':        self.render_heading,
+            'Quote':          self.render_quote,
+            'Paragraph':      self.render_paragraph,
+            'BlockCode':      self.render_block_code,
+            'List':           self.render_list,
+            'ListItem':       self.render_list_item,
+            'Separator':      self.render_separator,
+            'Document':       self.render_document,
+            }
 
     def render(self, token):
         return self.render_map[type(token).__name__](token)
 
     def render_inner(self, token):
-        return ''.join( self.render(child) for child in token.children )
+        return ''.join([self.render(child) for child in token.children])
 
     def render_strong(self, token):
         return '\\textbf{{{}}}'.format(self.render_inner(token))
@@ -37,14 +37,16 @@ class LaTeXRenderer(object):
     def render_strikethrough(self, token):
         return '\\sout{{{}}}'.format(self.render_inner(token))
 
-    def render_image(self, token):
+    @staticmethod
+    def render_image(token):
         return '\n\\includegraphics{{{}}}\n'.format(token.src)
 
     def render_link(self, token):
-        tp = '\\href{{{}}}{{{}}}'
-        return tp.format(token.target, self.render_inner(token))
+        template = '\\href{{{}}}{{{}}}'
+        return template.format(token.target, self.render_inner(token))
 
-    def render_raw_text(self, token):
+    @staticmethod
+    def render_raw_text(token):
         return token.content
 
     def render_heading(self, token):
@@ -52,39 +54,39 @@ class LaTeXRenderer(object):
             return '\n\\section{{{}}}\n'.format(self.render_inner(token))
         elif token.level == 2:
             return '\n\\subsection{{{}}}\n'.format(self.render_inner(token))
-        else:
-            return '\n\\subsubsection{{{}}}\n'.format(self.render_inner(token))
+        return '\n\\subsubsection{{{}}}\n'.format(self.render_inner(token))
 
     def render_quote(self, token):
-        tp = '<blockquote>{inner}</blockquote>'
-        return tp.format(inner=self.render_inner(token))
+        template = '<blockquote>{inner}</blockquote>'
+        return template.format(inner=self.render_inner(token))
 
     def render_paragraph(self, token):
         return '\n{}\n'.format(self.render_inner(token))
 
     def render_block_code(self, token):
-        tp = '\n\\begin{{lstlisting}}[language={}]\n{}\\end{{lstlisting}}\n'
-        return tp.format(token.language, self.render_inner(token))
+        template = '\n\\begin{{lstlisting}}[language={}]\n{}\\end{{lstlisting}}\n'
+        return template.format(token.language, self.render_inner(token))
 
     def render_list(self, token):
-        tp = '\\begin{{{tag}}}\n{inner}\\end{{{tag}}}\n'
+        template = '\\begin{{{tag}}}\n{inner}\\end{{{tag}}}\n'
         tag = 'enumerate' if hasattr(token, 'start') else 'itemize'
         inner = self.render_inner(token)
-        return tp.format(tag=tag, inner=inner)
+        return template.format(tag=tag, inner=inner)
 
     def render_list_item(self, token):
         return '\\item {}\n'.format(self.render_inner(token))
 
-    def render_separator(self, token):
+    @staticmethod
+    def render_separator(token):
         return '\\hrulefill'
 
     def render_document(self, token):
-        tp = ('\\documentclass{{article}}\n'
-              '\\usepackage{{hyperref}}\n'
-              '\\usepackage{{graphicx}}\n'
-              '\\usepackage{{listings}}\n'
-              '\\usepackage[normalem]{{ulem}}\n'
-              '\\begin{{document}}\n'
-              '{inner}'
-              '\\end{{document}}\n')
-        return tp.format(inner=self.render_inner(token))
+        template = ('\\documentclass{{article}}\n'
+                    '\\usepackage{{hyperref}}\n'
+                    '\\usepackage{{graphicx}}\n'
+                    '\\usepackage{{listings}}\n'
+                    '\\usepackage[normalem]{{ulem}}\n'
+                    '\\begin{{document}}\n'
+                    '{inner}'
+                    '\\end{{document}}\n')
+        return template.format(inner=self.render_inner(token))

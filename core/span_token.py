@@ -1,15 +1,14 @@
 import re
-import html
 import core.span_tokenizer as tokenizer
 
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
            'Strikethrough', 'Image', 'Link']
 
 def tokenize_inner(content):
-    token_types = [ globals()[key] for key in __all__ ]
+    token_types = [globals()[key] for key in __all__]
     fallback_token = RawText
-    lt = tokenizer.SpanTokenizer(content, token_types, fallback_token)
-    return lt.get_tokens()
+    tok = tokenizer.SpanTokenizer(content, token_types, fallback_token)
+    return tok.get_tokens()
 
 class SpanToken(object):
     def __init__(self, content):
@@ -17,23 +16,15 @@ class SpanToken(object):
 
 class Strong(SpanToken):
     pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
-    def __init__(self, raw):
-        super().__init__(raw)
 
 class Emphasis(SpanToken):
     pattern = re.compile(r"\*((?:\*\*|[^\*])+?)\*(?!\*)|_((?:__|[^_])+?)_")
-    def __init__(self, raw):
-        super().__init__(raw)
 
 class InlineCode(SpanToken):
     pattern = re.compile(r"`(.+?)`")
-    def __init__(self, raw):
-        super().__init__(raw)
 
 class Strikethrough(SpanToken):
     pattern = re.compile(r"~~(.+)~~")
-    def __init__(self, raw):
-        super().__init__(raw)
 
 class Image(SpanToken):
     pattern = re.compile(r"(\!\[(.+?)\]\((.+?)\))")

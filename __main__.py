@@ -18,8 +18,10 @@ def interactive():
             contents = []
             print('>>> ', end='')
             while True:
-                try: line = input() + '\n'
-                except EOFError: break
+                try:
+                    line = input() + '\n'
+                except EOFError:
+                    break
                 contents.append(line)
                 print('... ', end='')
             markdown = block_token.Document(contents)
@@ -30,5 +32,7 @@ def interactive():
             return
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1: convert(sys.argv[1])
-    else: interactive()
+    if len(sys.argv) > 1:
+        convert(sys.argv[1])
+    else:
+        interactive()
