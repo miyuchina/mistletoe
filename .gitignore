@@ -4,3 +4,4 @@ out.html
 venv/
 .coverage
 htmlcov
+render_latex.py
