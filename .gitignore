@@ -4,5 +4,6 @@ out.html
 venv/
 .coverage
 htmlcov
-render_latex.py
 .pylintrc
+*.egg-info
+dist

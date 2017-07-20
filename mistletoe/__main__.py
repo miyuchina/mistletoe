@@ -13,7 +13,7 @@ def convert(filename):
 
 def interactive():
     time = datetime.datetime.now().date()
-    print('mistletoe [version 0.9.0 alpha] (interactive, {})'.format(time))
+    print('mistletoe [version 0.1 alpha] (interactive, {})'.format(time))
     print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
     while True:
         try:
@@ -33,8 +33,11 @@ def interactive():
             print('\nTerminated by user.')
             return
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) > 1:
         convert(sys.argv[1])
     else:
         interactive()
+
+if __name__ == "__main__":
+    main()
