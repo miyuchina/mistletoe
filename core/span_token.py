@@ -7,8 +7,7 @@ __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
 def tokenize_inner(content):
     token_types = [globals()[key] for key in __all__]
     fallback_token = RawText
-    tok = tokenizer.SpanTokenizer(content, token_types, fallback_token)
-    return tok.get_tokens()
+    return tokenizer.tokenize(content, token_types, fallback_token)
 
 class SpanToken(object):
     def __init__(self, content):

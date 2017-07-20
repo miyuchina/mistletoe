@@ -7,8 +7,7 @@ __all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Table', 'Separator']
 def tokenize(lines):
     token_types = [globals()[key] for key in __all__]
     fallback_token = Paragraph
-    tok = tokenizer.BlockTokenizer(lines, token_types, fallback_token)
-    return tok.get_tokens()
+    return tokenizer.tokenize(lines, token_types, fallback_token)
 
 class BlockToken(object):
     def __init__(self, content, tokenize_func):
