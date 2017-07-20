@@ -4,7 +4,7 @@ def render(token):
     return HTMLRenderer().render(token)
 
 class HTMLRenderer(object):
-    def __init__(self):
+    def __init__(self, preamble=''):
         self.render_map = {
             'Strong':         self.render_strong,
             'Emphasis':       self.render_emphasis,
@@ -26,6 +26,7 @@ class HTMLRenderer(object):
             'Separator':      self.render_separator,
             'Document':       self.render_document,
             }
+        self.preamble = preamble
 
     def render(self, token):
         return self.render_map[type(token).__name__](token)
@@ -124,5 +125,7 @@ class HTMLRenderer(object):
         return '<hr>'
 
     def render_document(self, token):
-        template = '<html><body>{inner}</body></html>'
-        return template.format(inner=self.render_inner(token))
+        template = '<html>{preamble}<body>{inner}</body></html>'
+        inner = self.render_inner(token)
+        return template.format(preamble=self.preamble, inner=inner)
+
