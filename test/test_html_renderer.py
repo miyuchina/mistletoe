@@ -4,11 +4,8 @@ import mistletoe.span_token as span_token
 import mistletoe.html_renderer as renderer
 
 class TestHTMLRenderer(unittest.TestCase):
-    def setUp(self):
-        self.renderer = renderer.HTMLRenderer()
-
     def _test_token(self, token_type, raw, target):
-        output = self.renderer.render(token_type(raw))
+        output = renderer.render(token_type(raw))
         self.assertEqual(output, target)
 
     def test_strong(self):

@@ -1,5 +1,8 @@
 import html
 
+def render(token):
+    return HTMLRenderer().render(token)
+
 class HTMLRenderer(object):
     def __init__(self):
         self.render_map = {
