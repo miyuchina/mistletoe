@@ -1,7 +1,7 @@
 import unittest
-import core.block_token  as block_token
-import core.span_token   as span_token
-import lib.html_renderer as renderer
+import mistletoe.block_token as block_token
+import mistletoe.span_token as span_token
+import mistletoe.html_renderer as renderer
 
 class TestHTMLRenderer(unittest.TestCase):
     def setUp(self):

@@ -1,6 +1,6 @@
 import itertools
-import core.block_tokenizer as tokenizer
-import core.span_token as span_token
+import mistletoe.block_tokenizer as tokenizer
+import mistletoe.span_token as span_token
 
 __all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Table', 'Separator']
 

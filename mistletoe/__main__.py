@@ -1,7 +1,9 @@
+import os
 import sys
+sys.path.insert(0, os.getcwd())
 import datetime
-import core.block_token as block_token
-import lib.html_renderer as renderer
+import mistletoe.block_token as block_token
+import mistletoe.html_renderer as renderer
 
 def convert(filename):
     with open(filename, 'r') as fin:

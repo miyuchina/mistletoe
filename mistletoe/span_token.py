@@ -1,5 +1,5 @@
 import re
-import core.span_tokenizer as tokenizer
+import mistletoe.span_tokenizer as tokenizer
 
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
            'Strikethrough', 'Image', 'Link']

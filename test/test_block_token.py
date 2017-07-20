@@ -1,7 +1,7 @@
 import unittest
-import test.test_core.helpers as helpers
-import core.span_token as span_token
-import core.block_token as block_token
+import test.helpers as helpers
+import mistletoe.span_token as span_token
+import mistletoe.block_token as block_token
 
 class TestHeading(unittest.TestCase):
     def test_left_hashes(self):
