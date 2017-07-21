@@ -77,8 +77,9 @@ class HTMLRenderer(object):
         return '<p>{}</p>'.format(self.render_inner(token))
 
     def render_block_code(self, token):
-        template = '<pre><code class="lang-{}">{}</code></pre>'
-        return template.format(token.language, self.render_inner(token))
+        template = '<pre><code{attr}>{inner}</code></pre>'
+        attr = ' class="lang-{}"'.format(token.language) if token.language else ''
+        return template.format(attr=attr, inner=self.render_inner(token))
 
     def render_list(self, token):
         template = '<{tag}{attr}>{inner}</{tag}>'
