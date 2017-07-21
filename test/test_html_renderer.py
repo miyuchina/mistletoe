@@ -45,6 +45,10 @@ class TestHTMLRenderer(unittest.TestCase):
         raw, target = 'john & jane', 'john &amp; jane'
         self._test_token(span_token.RawText, raw, target)
 
+    def test_html_span(self):
+        raw = target = '<some>text</some>'
+        self._test_token(span_token.HTMLSpan, raw, target)
+
     def test_heading(self):
         raw, target = [ '### heading 3\n' ], '<h3>heading 3</h3>'
         self._test_token(block_token.Heading, raw, target)
@@ -148,6 +152,16 @@ class TestHTMLRenderer(unittest.TestCase):
     def test_separator(self):
         raw, target = '***\n', '<hr>'
         self._test_token(block_token.Separator, raw, target)
+
+    def test_html_block(self):
+        raw = ['# hello\n',
+               '<p>this is\n',
+               'a paragraph</p>\n']
+        target = ('<html><body>'
+                  '<h1>hello</h1>'
+                  '<p>this is\na paragraph</p>\n'
+                  '</body></html>')
+        self._test_token(block_token.Document, raw, target)
 
     def test_document(self):
         raw = ['a paragraph\n']

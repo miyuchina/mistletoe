@@ -1,4 +1,5 @@
 import html
+import mistletoe.html_tokenizer
 
 def render(token):
     return HTMLRenderer().render(token)
@@ -15,6 +16,7 @@ class HTMLRenderer(object):
             'Link':           self.render_link,
             'AutoLink':       self.render_auto_link,
             'EscapeSequence': self.render_raw_text,
+            'HTMLSpan':       self.render_html_span,
             'Heading':        self.render_heading,
             'Quote':          self.render_quote,
             'Paragraph':      self.render_paragraph,
@@ -25,6 +27,7 @@ class HTMLRenderer(object):
             'TableRow':       self.render_table_row,
             'TableCell':      self.render_table_cell,
             'Separator':      self.render_separator,
+            'HTMLBlock':      self.render_html_block,
             'Document':       self.render_document,
             }
         self.preamble = preamble
@@ -64,6 +67,10 @@ class HTMLRenderer(object):
     @staticmethod
     def render_raw_text(token):
         return html.escape(token.content)
+
+    @staticmethod
+    def render_html_span(token):
+        return token.content
 
     def render_heading(self, token):
         template = '<h{level}>{inner}</h{level}>'
@@ -130,6 +137,10 @@ class HTMLRenderer(object):
     @staticmethod
     def render_separator(token):
         return '<hr>'
+
+    @staticmethod
+    def render_html_block(token):
+        return token.content
 
     def render_document(self, token):
         template = '<html>{preamble}<body>{inner}</body></html>'
