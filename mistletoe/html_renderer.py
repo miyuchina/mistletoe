@@ -1,5 +1,4 @@
 import html
-import mistletoe.html_tokenizer
 
 def render(token):
     return HTMLRenderer().render(token)

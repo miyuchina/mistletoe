@@ -30,3 +30,9 @@ span_token.__all__.insert(0, 'HTMLSpan')
 
 block_token.HTMLBlock = HTMLBlock
 block_token.__all__.insert(0, 'HTMLBlock')
+
+def clear():
+    del span_token.HTMLSpan
+    del block_token.HTMLBlock
+    span_token.__all__.pop(0)
+    block_token.__all__.pop(0)
