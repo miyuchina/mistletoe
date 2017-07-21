@@ -1,4 +1,5 @@
 import re
+import html
 import mistletoe
 import mistletoe.html_renderer
 
@@ -15,8 +16,10 @@ class CustomRenderer(mistletoe.html_renderer.HTMLRenderer):
         self.render_map['GitHubWiki'] = self.render_github_wiki
 
     def render_github_wiki(self, token):
-        template = '<a href="{}">{}</a>'
-        return template.format(token.target, self.render_inner(token))
+        template = '<a href="{target}">{inner}</a>'
+        target = html.escape(target)
+        inner = self.render_inner(token)
+        return template.format(target=target, inner=inner)
 
 mistletoe.span_token.GitHubWiki = GitHubWiki
 mistletoe.span_token.__all__.append('GitHubWiki')

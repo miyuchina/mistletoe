@@ -55,13 +55,17 @@ class HTMLRenderer(object):
         return template.format(token.src, token.title, token.alt)
 
     def render_link(self, token):
-        template = '<a href="{}">{}</a>'
-        return template.format(token.target, self.render_inner(token))
+        template = '<a href="{target}">{inner}</a>'
+        target = html.escape(token.target)
+        inner = self.render_inner(token)
+        return template.format(target=target, inner=inner)
 
     @staticmethod
     def render_auto_link(token):
-        template = '<a href="{}">{}</a>'
-        return template.format(token.target, token.name)
+        template = '<a href="{target}">{name}</a>'
+        target = html.escape(token.target)
+        name = html.escape(token.name)
+        return template.format(target=target, name=name)
 
     @staticmethod
     def render_raw_text(token):
