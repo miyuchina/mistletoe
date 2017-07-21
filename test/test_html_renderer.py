@@ -33,6 +33,10 @@ class TestHTMLRenderer(unittest.TestCase):
         raw, target = '[name](target)', '<a href="target">name</a>'
         self._test_token(span_token.Link, raw, target)
 
+    def test_autolink(self):
+        raw, target = 'link', '<a href="link">link</a>'
+        self._test_token(span_token.AutoLink, raw, target)
+
     def test_escape_sequence(self):
         raw, target = '\*', '\*'
         self._test_token(span_token.EscapeSequence, raw, target)

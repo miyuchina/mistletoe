@@ -42,6 +42,17 @@ class TestLink(unittest.TestCase):
         helpers.check_equal(self, list(t.children)[0], c)
         self.assertEqual(t.target, target)
 
+class TestAutoLink(unittest.TestCase):
+    def test(self):
+        t = span_token.Strong('some <link> in strong text')
+        c0 = span_token.RawText('some ')
+        c1 = span_token.AutoLink('link')
+        c2 = span_token.RawText(' in strong text')
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+        helpers.check_equal(self, l[2], c2)
+
 class TestImage(unittest.TestCase):
     def test_equal(self):
         t1 = span_token.Image('![alt](link)')

@@ -13,6 +13,7 @@ class HTMLRenderer(object):
             'Strikethrough':  self.render_strikethrough,
             'Image':          self.render_image,
             'Link':           self.render_link,
+            'AutoLink':       self.render_auto_link,
             'EscapeSequence': self.render_raw_text,
             'Heading':        self.render_heading,
             'Quote':          self.render_quote,
@@ -54,6 +55,11 @@ class HTMLRenderer(object):
     def render_link(self, token):
         template = '<a href="{}">{}</a>'
         return template.format(token.target, self.render_inner(token))
+
+    @staticmethod
+    def render_auto_link(token):
+        template = '<a href="{}">{}</a>'
+        return template.format(token.target, token.name)
 
     @staticmethod
     def render_raw_text(token):

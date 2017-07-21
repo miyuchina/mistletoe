@@ -2,7 +2,7 @@ import re
 import mistletoe.span_tokenizer as tokenizer
 
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
-           'Strikethrough', 'Image', 'Link']
+           'Strikethrough', 'Image', 'Link', 'AutoLink']
 
 def tokenize_inner(content):
     token_types = [globals()[key] for key in __all__]
@@ -43,6 +43,12 @@ class Link(SpanToken):
         split_index = len(raw) - raw[::-1].index(']') - 1
         super().__init__(raw[1:split_index])
         self.target = raw[split_index+2:-1]
+
+class AutoLink(SpanToken):
+    pattern = re.compile(r"<(.+?)>")
+    def __init__(self, raw):
+        self.name = raw
+        self.target = raw
 
 class EscapeSequence(SpanToken):
     pattern = re.compile(r"\\([\*\(\)\[\]\~])")

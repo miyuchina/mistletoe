@@ -9,6 +9,8 @@ def check_equal(test, t, o):
         test.assertEqual((t.src, t.alt, t.title), (o.src, o.alt, o.title))
     elif hasattr(t, 'alt') and hasattr(o, 'alt'):
         test.assertEqual((t.alt, t.target), (o.alt, o.target))
+    elif hasattr(t, 'name') and hasattr(o, 'name'):
+        test.assertEqual((t.name, t.target), (o.name, o.target))
     elif hasattr(t, 'target') and hasattr(o, 'target'):
         [ check_equal(test, tc, to) for tc, to in zip(t.children, o.children) ]
         test.assertEqual(t.target, o.target)
