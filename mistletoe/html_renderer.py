@@ -1,4 +1,5 @@
 import html
+import urllib.parse
 
 def render(token):
     return HTMLRenderer().render(token)
@@ -56,14 +57,14 @@ class HTMLRenderer(object):
 
     def render_link(self, token):
         template = '<a href="{target}">{inner}</a>'
-        target = html.escape(token.target)
+        target = urllib.parse.quote_plus(token.target)
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)
 
     @staticmethod
     def render_auto_link(token):
         template = '<a href="{target}">{name}</a>'
-        target = html.escape(token.target)
+        target = urllib.parse.quote_plus(token.target)
         name = html.escape(token.name)
         return template.format(target=target, name=name)
 

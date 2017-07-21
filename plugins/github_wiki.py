@@ -1,5 +1,6 @@
 import re
 import html
+import urllib.parse
 import mistletoe
 import mistletoe.html_renderer
 
@@ -17,7 +18,7 @@ class CustomRenderer(mistletoe.html_renderer.HTMLRenderer):
 
     def render_github_wiki(self, token):
         template = '<a href="{target}">{inner}</a>'
-        target = html.escape(target)
+        target = urllib.parse.quote_plus(target)
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)
 
