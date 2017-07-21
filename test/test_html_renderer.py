@@ -2,6 +2,7 @@ import unittest
 import mistletoe.block_token as block_token
 import mistletoe.span_token as span_token
 import mistletoe.html_renderer as renderer
+import mistletoe.html_token
 
 class TestHTMLRenderer(unittest.TestCase):
     def _test_token(self, token_type, raw, target):

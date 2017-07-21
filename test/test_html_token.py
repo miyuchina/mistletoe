@@ -2,7 +2,7 @@ import unittest
 import test.helpers as helpers
 import mistletoe.span_token as span_token
 import mistletoe.block_token as block_token
-import mistletoe.html_tokenizer
+import mistletoe.html_token
 
 class TestHTMLTokenizer(unittest.TestCase):
     def test_span(self):
