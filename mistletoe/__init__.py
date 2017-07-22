@@ -4,8 +4,8 @@ __all__ = ['html_renderer', 'ast_renderer', 'block_token', 'block_tokenizer',
 from mistletoe.block_token import Document
 
 def markdown(iterable):
-    import mistletoe.html_tokenizer as tokenizer
+    import mistletoe.html_token as token
     import mistletoe.html_renderer as renderer
     rendered = renderer.render(Document(iterable))
-    tokenizer.clear()
+    token.clear()
     return rendered
