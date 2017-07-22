@@ -1,14 +1,12 @@
-import sys
-import os
-sys.path.insert(0, os.getcwd())
-
-import core.block_token as token
-import lib.html_renderer as renderer
+import mistletoe
+import mistletoe.html_token
+from mistletoe.html_renderer import render
+from mistletoe import Document
 
 def run():
     with open('test/profiler/jquery.md', 'r') as fin:
-        t = token.Document(fin)
-        renderer.HTMLRenderer().render(t)
+        rendered = render(Document(fin))
+        return rendered
 
 if __name__ == '__main__':
     for i in range(1000): run()
