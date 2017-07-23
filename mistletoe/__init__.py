@@ -7,5 +7,4 @@ def markdown(iterable):
     import mistletoe.html_token as token
     import mistletoe.html_renderer as renderer
     rendered = renderer.render(Document(iterable))
-    token.clear()
     return rendered

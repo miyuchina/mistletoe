@@ -1,19 +1,13 @@
-import os
 import sys
-sys.path.insert(0, os.getcwd())
-import datetime
-import mistletoe.block_token as block_token
-import mistletoe.html_renderer as renderer
+import mistletoe
 
 def convert(filename):
     with open(filename, 'r') as fin:
-        markdown = block_token.Document(iter(fin))
-        rendered = renderer.HTMLRenderer().render(markdown)
-    print(rendered)
+        rendered = mistletoe.markdown(iter(fin))
+    print(rendered, end='')
 
 def interactive():
-    time = datetime.datetime.now().date()
-    print('mistletoe [version 0.1 alpha] (interactive, {})'.format(time))
+    print('mistletoe [version 0.1 alpha] (interactive)')
     print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
     while True:
         try:
@@ -26,11 +20,9 @@ def interactive():
                     break
                 contents.append(line)
                 print('... ', end='')
-            markdown = block_token.Document(contents)
-            rendered = renderer.HTMLRenderer().render(markdown)
-            print('\n' + rendered)
+            print('\n' + mistletoe.markdown(contents), end='')
         except KeyboardInterrupt:
-            print('\nTerminated by user.')
+            print('\nExiting.')
             return
 
 def main():
