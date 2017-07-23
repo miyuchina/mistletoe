@@ -77,23 +77,23 @@ class HTMLRenderer(object):
         return token.content
 
     def render_heading(self, token):
-        template = '<h{level}>{inner}</h{level}>'
+        template = '<h{level}>{inner}</h{level}>\n'
         return template.format(level=token.level, inner=self.render_inner(token))
 
     def render_quote(self, token):
-        template = '<blockquote>{inner}</blockquote>'
+        template = '<blockquote>\n{inner}</blockquote>\n'
         return template.format(inner=self.render_inner(token))
 
     def render_paragraph(self, token):
-        return '<p>{}</p>'.format(self.render_inner(token))
+        return '<p>{}</p>\n'.format(self.render_inner(token))
 
     def render_block_code(self, token):
-        template = '<pre><code{attr}>{inner}</code></pre>'
+        template = '<pre>\n<code{attr}>\n{inner}</code>\n</pre>\n'
         attr = ' class="lang-{}"'.format(token.language) if token.language else ''
         return template.format(attr=attr, inner=self.render_inner(token))
 
     def render_list(self, token):
-        template = '<{tag}{attr}>{inner}</{tag}>'
+        template = '<{tag}{attr}>\n{inner}</{tag}>\n'
         if hasattr(token, 'start'):
             tag = 'ol'
             attr = ' start="{}"'.format(token.start)
@@ -104,29 +104,29 @@ class HTMLRenderer(object):
         return template.format(tag=tag, attr=attr, inner=inner)
 
     def render_list_item(self, token):
-        return '<li>{}</li>'.format(self.render_inner(token))
+        return '<li>{}</li>\n'.format(self.render_inner(token))
 
     def render_table(self, token):
-        template = '<table>{inner}</table>'
+        template = '<table>\n{inner}</table>\n'
         if token.has_header:
-            head_template = '<thead>{inner}</thead>'
+            head_template = '<thead>\n{inner}</thead>\n'
             header = token.children.send(None)
             head_inner = self.render_table_row(header, True)
             head_rendered = head_template.format(inner=head_inner)
         else: head_rendered = ''
-        body_template = '<tbody>{inner}</tbody>'
+        body_template = '<tbody>\n{inner}</tbody>\n'
         body_inner = self.render_inner(token)
         body_rendered = body_template.format(inner=body_inner)
         return template.format(inner=head_rendered+body_rendered)
 
     def render_table_row(self, token, is_header=False):
-        template = '<tr>{inner}</tr>'
+        template = '<tr>\n{inner}</tr>\n'
         inner = ''.join([self.render_table_cell(child, is_header)
                          for child in token.children])
         return template.format(inner=inner)
 
     def render_table_cell(self, token, in_header=False):
-        template = '<{tag}{attr}>{inner}</{tag}>'
+        template = '<{tag}{attr}>{inner}</{tag}>\n'
         tag = 'th' if in_header else 'td'
         if token.align is None:
             align = 'left'
@@ -140,14 +140,14 @@ class HTMLRenderer(object):
 
     @staticmethod
     def render_separator(token):
-        return '<hr>'
+        return '<hr>\n'
 
     @staticmethod
     def render_html_block(token):
         return token.content
 
     def render_document(self, token):
-        template = '<html>{preamble}<body>{inner}</body></html>'
+        template = '<html>\n{preamble}<body>\n{inner}</body>\n</html>\n'
         inner = self.render_inner(token)
         return template.format(preamble=self.preamble, inner=inner)
 
