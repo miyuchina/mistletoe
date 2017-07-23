@@ -2,6 +2,22 @@ import re
 import mistletoe.span_token as span_token
 import mistletoe.block_token as block_token
 
+__all__ = ['HTMLBlock', 'HTMLSpan']
+
+class Context(object):
+    def __enter__(self):
+        span_token.HTMLSpan = HTMLSpan
+        span_token.__all__.insert(0, 'HTMLSpan')
+        block_token.HTMLBlock = HTMLBlock
+        block_token.__all__.insert(0, 'HTMLBlock')
+        return self
+
+    def __exit__(self, exception_type, exception_val, traceback):
+        del span_token.HTMLSpan
+        del block_token.HTMLBlock
+        span_token.__all__.pop(0)
+        block_token.__all__.pop(0)
+
 class HTMLBlock(block_token.BlockToken):
     def __init__(self, lines):
         self.content = ''.join(lines) # implicit newlines
@@ -24,15 +40,3 @@ class HTMLSpan(span_token.SpanToken):
     pattern = re.compile(r"(<([A-z0-9]+)( .+)*>(.+)<\/\2>)")
     def __init__(self, content):
         self.content = content
-
-span_token.HTMLSpan = HTMLSpan
-span_token.__all__.insert(0, 'HTMLSpan')
-
-block_token.HTMLBlock = HTMLBlock
-block_token.__all__.insert(0, 'HTMLBlock')
-
-def clear():
-    del span_token.HTMLSpan
-    del block_token.HTMLBlock
-    span_token.__all__.pop(0)
-    block_token.__all__.pop(0)
