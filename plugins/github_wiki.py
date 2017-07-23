@@ -6,6 +6,24 @@ import mistletoe.html_token
 from mistletoe.html_renderer import HTMLRenderer
 from mistletoe.span_token import SpanToken
 
+__all__ = ['GitHubWiki', 'GitHubWikiRenderer']
+
+class Context(object):
+    def __init__(self):
+        self.renderer = GitHubWikiRenderer
+
+    def __enter__(self):
+        mistletoe.span_token.GitHubWiki = GitHubWiki
+        mistletoe.span_token.__all__.append('GitHubWiki')
+        return self
+
+    def __exit__(self, exception_type, exception_val, traceback):
+        del mistletoe.span_token.GitHubWiki
+        mistletoe.span_token.__all__.remove('GitHubWiki')
+
+    def render(self, token):
+        return self.renderer().render(token)
+
 class GitHubWiki(SpanToken):
     pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
     def __init__(self, raw):
@@ -23,22 +41,6 @@ class GitHubWikiRenderer(HTMLRenderer):
         target = urllib.parse.quote_plus(token.target)
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)
-
-class Context(object):
-    def __init__(self):
-        self.renderer = GitHubWikiRenderer
-
-    def __enter__(self):
-        mistletoe.span_token.GitHubWiki = GitHubWiki
-        mistletoe.span_token.__all__.append('GitHubWiki')
-        return self
-
-    def __exit__(self, exception_type, exception_val, traceback):
-        del mistletoe.span_token.GitHubWiki
-        mistletoe.span_token.__all__.remove('GitHubWiki')
-
-    def render(self, token):
-        return self.renderer().render(token)
 
 if __name__ == '__main__':
     lines = ['# GitHub Wiki link demo\n',
