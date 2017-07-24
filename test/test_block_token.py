@@ -96,6 +96,11 @@ class TestListItem(unittest.TestCase):
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
 
+    def test_whitespace(self):
+        t = block_token.ListItem(['-    list\n', '   content\n'])
+        c = span_token.RawText('list content')
+        helpers.check_equal(self, list(t.children)[0], c)
+
 class TestList(unittest.TestCase):
     def test_is_list(self):
         lines = ['-not a list\n',

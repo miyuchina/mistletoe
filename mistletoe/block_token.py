@@ -138,8 +138,8 @@ class List(BlockToken):
 
 class ListItem(BlockToken):
     def __init__(self, lines):
-        line = ' '.join(lines)     # XXX
-        content = line.strip().split(' ', 1)[1]
+        line = ' '.join([line.strip() for line in lines])
+        content = line.split(' ', 1)[1].strip()
         super().__init__(content, span_token.tokenize_inner)
 
 class Table(BlockToken):
