@@ -22,3 +22,10 @@ def check_equal(test, t, o):
         test.assertTrue(True)
     else:
         raise RuntimeError('Think long and hard about what you\'ve done.')
+
+def inspect_first_content(token):
+    if hasattr(token, 'content'):
+        return token.content
+    else:
+        # destructive to generator objects
+        return inspect_first_content(list(token.children)[0])
