@@ -1,5 +1,8 @@
 def check_equal(test, t, o):
-    if hasattr(t, 'children') and hasattr(o, 'children'):
+    if t.__class__.__name__ != o.__class__.__name__:
+        raise TypeError('Undefined token type comparison: '
+                        + type(t).__name__ + ', ' + type(o).__name__)
+    elif hasattr(t, 'children') and hasattr(o, 'children'):
         [ check_equal(test, tc, to) for tc, to in zip(t.children, o.children) ]
     elif hasattr(t, 'language') and hasattr(o, 'language'):
         test.assertEqual((t.language, t.content), (o.language, o.content))
@@ -15,8 +18,7 @@ def check_equal(test, t, o):
         [ check_equal(test, tc, to) for tc, to in zip(t.children, o.children) ]
         test.assertEqual(t.target, o.target)
     elif (type(t).__name__ == 'Separator'
-            and type(o).__name__ == 'Separator'):
+          and type(o).__name__ == 'Separator'):
         test.assertTrue(True)
     else:
-        raise Exception('Undefined token type comparison: '
-                        + type(t).__name__ + ', ' + type(o).__name__)
+        raise RuntimeError('Think long and hard about what you\'ve done.')
