@@ -87,7 +87,7 @@ class TestHTMLRenderer(unittest.TestCase):
         self._test_token(block_token.List, raw, target)
 
     def test_list_item(self):
-        raw = '    - some **bold** text\n'
+        raw = ['    - some **bold** text\n']
         target = '<li>some <strong>bold</strong> text</li>\n'
         self._test_token(block_token.ListItem, raw, target)
 

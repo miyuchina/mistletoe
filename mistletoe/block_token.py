@@ -101,35 +101,44 @@ class List(BlockToken):
     @staticmethod
     def _build_list(lines):
         line_buffer = []
-        nested = 0
+        nested = False
         for line in lines:
-            if line.startswith(' '*4):
+            if List.has_valid_leader(line):
+                if line_buffer:
+                    if nested:
+                        yield List(line_buffer)
+                        nested = False
+                    else:
+                        yield ListItem(line_buffer)
+                    line_buffer.clear()
+                line_buffer.append(line)
+            elif line.startswith(' '*4):
+                if not nested and List.has_valid_leader(line[4:]):
+                    if line_buffer:
+                        yield ListItem(line_buffer)
+                        line_buffer.clear()
+                    nested = True
                 line_buffer.append(line[4:])
-                nested = 1
-            elif nested:
-                yield List(line_buffer)
-                line_buffer.clear()
-                nested = 0
-                yield ListItem(line)
             else:
-                yield ListItem(line)
-        if nested:
-            yield List(line_buffer)
+                line_buffer.append(line)
+        if line_buffer:
+            yield List(line_buffer) if nested else ListItem(line_buffer)
+            line_buffer.clear()     # recursion magic; critical
+
+    @staticmethod
+    def has_valid_leader(line):
+        return (line.startswith(('+ ', '- ', '* '))
+                or (line.split(' ')[0][:-1].isdigit()))
 
     @staticmethod
     def match(lines):
-        for line in lines:
-            content = line.strip()
-            if not (content.startswith('+ ')
-                    or content.startswith('- ')
-                    or content.startswith('* ')
-                    or (content.split(' ')[0][:-1].isdigit())):
-                return 0
-        return 1
+        if not List.has_valid_leader(lines[0].strip()):
+            return False
+        return True
 
 class ListItem(BlockToken):
-    # pre: line = "- some *italics* text\n"
-    def __init__(self, line):
+    def __init__(self, lines):
+        line = ' '.join(lines)     # XXX
         content = line.strip().split(' ', 1)[1]
         super().__init__(content, span_token.tokenize_inner)
 

@@ -84,12 +84,12 @@ class TestParagraph(unittest.TestCase):
 
 class TestListItem(unittest.TestCase):
     def test_raw(self):
-        t = block_token.ListItem('- some text\n')
+        t = block_token.ListItem(['- some text\n'])
         c = span_token.RawText('some text')
         helpers.check_equal(self, list(t.children)[0], c)
 
     def test_inline_code(self):
-        t = block_token.ListItem('    - some `code`\n')
+        t = block_token.ListItem(['    - some `code`\n'])
         c0 = span_token.RawText('some ')
         c1 = span_token.InlineCode('code')
         l = list(t.children)
@@ -97,6 +97,18 @@ class TestListItem(unittest.TestCase):
         helpers.check_equal(self, l[1], c1)
 
 class TestList(unittest.TestCase):
+    def test_is_list(self):
+        lines = ['-not a list\n',
+                 '\n',
+                 '- a list\n',
+                 '-continued\n']
+        t = block_token.Document(lines)
+        c0 = block_token.Paragraph([ lines[0] ])
+        c1 = block_token.List(lines[2:])
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+
     def test_tokenize_unordered_list(self):
         lines = ['- item 1\n',
                  '- item 2\n',
@@ -125,27 +137,41 @@ class TestList(unittest.TestCase):
                  '- item 3\n']
         t = block_token.List(lines)
         sublist = ['- nested item 1\n', '- nested item 2\n']
-        c0 = block_token.ListItem(lines[0])
-        c1 = block_token.ListItem(lines[1])
+        c0 = block_token.ListItem(lines[0:1])
+        c1 = block_token.ListItem(lines[1:2])
         c2 = block_token.List([ line.strip() for line in sublist ])
-        c3 = block_token.ListItem(lines[4])
+        c3 = block_token.ListItem(lines[4:5])
         l = list(t.children)
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
         helpers.check_equal(self, l[2], c2)
         helpers.check_equal(self, l[3], c3)
 
-    def test_not_list(self):
-        lines = ['-not a list\n',
-                 '\n',
-                 '- a list\n',
-                 '- more item\n']
-        t = block_token.Document(lines)
-        c0 = block_token.Paragraph([ lines[0] ])
-        c1 = block_token.List(lines[2:])
+    def test_lazy_list_match(self):
+        lines = ['* item 1\n',
+                 '*    item 2\n',
+                 '* item 3\n',
+                 '  continued with indent\n',
+                 '* item 4\n',
+                 'with lazy continuation\n',
+                 '    + nested item 1\n',
+                 '    continued\n',
+                 '- item 5\n'
+                 'cont\'d\n']
+        t = block_token.List(lines)
+        c0 = block_token.ListItem(lines[0:1])
+        c1 = block_token.ListItem(lines[1:2])
+        c2 = block_token.ListItem(lines[2:4])
+        c3 = block_token.ListItem(lines[4:6])
+        c4 = block_token.List([line.strip() for line in lines[6:8]])
+        c5 = block_token.ListItem(lines[8:])
         l = list(t.children)
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
+        helpers.check_equal(self, l[2], c2)
+        helpers.check_equal(self, l[3], c3)
+        helpers.check_equal(self, l[4], c4)
+        helpers.check_equal(self, l[5], c5)
 
 class TestTable(unittest.TestCase):
     def test_row(self):
