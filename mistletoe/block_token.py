@@ -34,7 +34,9 @@ class Heading(BlockToken):
 
     @staticmethod
     def match(lines):
-        if len(lines) == 1 and lines[0].find('# ') != -1:
+        if (len(lines) == 1
+            and lines[0].startswith('#')
+            and lines[0].find('# ') != -1):
             return True
         return lines[-1].startswith('---') or lines[-1].startswith('===')
 
