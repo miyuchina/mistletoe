@@ -1,8 +1,8 @@
-import markdown2
+import markdown
 
 def run():
     with open('jquery.md', 'r') as fin:
-        markdown2.markdown(fin.read())
+        markdown.markdown(fin.read())
 
 if __name__ == '__main__':
     for i in range(1000): run()
