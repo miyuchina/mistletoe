@@ -378,7 +378,7 @@ Copyright & License
   [Open Font License][font-license].
 * mistletoe is released under [GNU GPLv3][license], a copyleft license.
 
-[logo]: logo.svg
+[logo]: https://cdn.rawgit.com/miyuchina/mistletoe/3f0125f1/logo.svg
 [build-badge]: https://travis-ci.org/miyuchina/mistletoe.svg?branch=master
 [cover-badge]: https://coveralls.io/repos/github/miyuchina/mistletoe/badge.svg
 [travis]: https://travis-ci.org/miyuchina/mistletoe
