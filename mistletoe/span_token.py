@@ -21,6 +21,8 @@ class Emphasis(SpanToken):
 
 class InlineCode(SpanToken):
     pattern = re.compile(r"`(.+?)`")
+    def __init__(self, content):
+        self.children = [RawText(content)]
 
 class Strikethrough(SpanToken):
     pattern = re.compile(r"~~(.+)~~")
