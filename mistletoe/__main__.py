@@ -3,7 +3,7 @@ import mistletoe
 
 def convert(filename):
     with open(filename, 'r') as fin:
-        rendered = mistletoe.markdown(iter(fin))
+        rendered = mistletoe.markdown(fin)
     print(rendered, end='')
 
 def interactive():
