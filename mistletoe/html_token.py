@@ -37,6 +37,6 @@ class HTMLBlock(block_token.BlockToken):
         return True
 
 class HTMLSpan(span_token.SpanToken):
-    pattern = re.compile(r"(<([A-z0-9]+)( .+)*>(.+)<\/\2>)")
+    pattern = re.compile(r"(<([A-z0-9]+)( .+)?>(.+)<\/\2>)")
     def __init__(self, content):
         self.content = content
