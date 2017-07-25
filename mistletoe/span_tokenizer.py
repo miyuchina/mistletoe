@@ -7,7 +7,7 @@ def tokenize(content, token_types, fallback_token):
         min_token_type = None
         for token_type in token_types:
             match_obj = token_type.pattern.search(new_content)
-            if match_obj and match_obj.start() < min_index:
+            if match_obj and index + match_obj.start() < min_index:
                 min_index = index + match_obj.start()
                 min_match_obj = match_obj
                 min_token_type = token_type
