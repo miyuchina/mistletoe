@@ -2,7 +2,7 @@ import itertools
 import mistletoe.block_tokenizer as tokenizer
 import mistletoe.span_token as span_token
 
-__all__ = ['Heading', 'Quote', 'BlockCode', 'List', 'Table', 'Separator']
+__all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table']
 
 def tokenize(lines):
     token_types = [globals()[key] for key in __all__]
