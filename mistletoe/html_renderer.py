@@ -1,10 +1,38 @@
+"""
+HTML renderer for mistletoe.
+"""
+
 import html
 import urllib.parse
 
 def render(token):
+    """
+    Wrapper function for HTMLRenderer. Creates a HTMLRenderer instance
+    and renders the token passed in.
+
+    Unless you want to mess with the actual HTMLRenderer class, to render
+    a token to HTML you would only need to do:
+
+        >>> from HTMLRenderer import render
+        >>> token = block_token.Document(lines)
+        >>> render(token)
+
+    ... without importing the class itself.
+    """
     return HTMLRenderer().render(token)
 
 class HTMLRenderer(object):
+    """
+    HTML renderer class.
+
+    Naming conventions:
+        The keys of self.render_map should exactly match the class name of
+        tokens (see HTMLRenderer.render).
+
+    Attributes:
+        render_map (dict): maps tokens to their corresponding render functions.
+        preamble (str): to be injected between <html> and <body> tags.
+    """
     def __init__(self, preamble=''):
         self.render_map = {
             'Strong':         self.render_strong,
@@ -33,9 +61,18 @@ class HTMLRenderer(object):
         self.preamble = preamble
 
     def render(self, token):
-        return self.render_map[type(token).__name__](token)
+        """
+        Grabs the class name from input token and finds its corresponding
+        render function.
+
+        Basically a janky way to do polymorphism.
+        """
+        return self.render_map[token.__class__.__name__](token)
 
     def render_inner(self, token):
+        """
+        Recursively renders child tokens.
+        """
         return ''.join([self.render(child) for child in token.children])
 
     def render_strong(self, token):
@@ -150,4 +187,3 @@ class HTMLRenderer(object):
         template = '<html>\n{preamble}<body>\n{inner}</body>\n</html>\n'
         inner = self.render_inner(token)
         return template.format(preamble=self.preamble, inner=inner)
-
