@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='mistletoe',
-      version='0.1',
+      version='0.1.1',
       description='A fast, extensible Markdown parser in pure Python.',
       url='https://github.com/miyuchina/mistletoe',
       author='Mi Yu',
@@ -9,5 +9,17 @@ setup(name='mistletoe',
       license='GNU GPLv3',
       packages=['mistletoe'],
       entry_points={'console_scripts': ['mistletoe = mistletoe.__main__:main']},
+      classifiers=[
+          'Development Status :: 3 - Alpha',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: Implementation :: CPython',
+          'Programming Language :: Python :: Implementation :: PyPy',
+          'Topic :: Software Development :: Libraries :: Python Modules',
+          'Topic :: Text Processing :: Markup',
+          ],
+      keywords='markdown lexer parser development',
       python_requires='~=3.5',
       zip_safe=False)

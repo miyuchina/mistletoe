@@ -7,3 +7,4 @@ htmlcov
 .pylintrc
 *.egg-info
 dist
+build/
