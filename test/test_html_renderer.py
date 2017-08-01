@@ -30,6 +30,13 @@ class TestHTMLRenderer(unittest.TestCase):
         target = '<img src="src" title="title" alt="alt">'
         self._test_token(span_token.Image, raw, target)
 
+    def test_footnote_image(self):
+        raw = ['![alt] [foo]\n', '\n', '[foo]: bar\n']
+        target = ('<html>\n<body>\n'
+                  '<p><img src="bar" alt="alt"></p>\n'
+                  '</body>\n</html>\n')
+        self._test_token(block_token.Document, raw, target)
+
     def test_link(self):
         raw, target = '[name](target)', '<a href="target">name</a>'
         self._test_token(span_token.Link, raw, target)

@@ -19,7 +19,7 @@ def render(token):
 
     ... without importing the class itself.
     """
-    return HTMLRenderer().render(token)
+    return HTMLRenderer().render(token, {})
 
 class HTMLRenderer(object):
     """
@@ -41,6 +41,7 @@ class HTMLRenderer(object):
             'RawText':        self.render_raw_text,
             'Strikethrough':  self.render_strikethrough,
             'Image':          self.render_image,
+            'FootnoteImage':  self.render_footnote_image,
             'Link':           self.render_link,
             'AutoLink':       self.render_auto_link,
             'EscapeSequence': self.render_raw_text,
@@ -60,76 +61,89 @@ class HTMLRenderer(object):
             }
         self.preamble = preamble
 
-    def render(self, token):
+    def render(self, token, footnotes):
         """
         Grabs the class name from input token and finds its corresponding
         render function.
 
         Basically a janky way to do polymorphism.
         """
-        return self.render_map[token.__class__.__name__](token)
+        return self.render_map[token.__class__.__name__](token, footnotes)
 
-    def render_inner(self, token):
+    def render_inner(self, token, footnotes):
         """
         Recursively renders child tokens.
         """
-        return ''.join([self.render(child) for child in token.children])
+        return ''.join([self.render(child, footnotes)
+                        for child in token.children])
 
-    def render_strong(self, token):
-        return '<strong>{}</strong>'.format(self.render_inner(token))
+    def render_strong(self, token, footnotes):
+        template = '<strong>{}</strong>'
+        return template.format(self.render_inner(token, footnotes))
 
-    def render_emphasis(self, token):
-        return '<em>{}</em>'.format(self.render_inner(token))
+    def render_emphasis(self, token, footnotes):
+        template = '<em>{}</em>'
+        return template.format(self.render_inner(token, footnotes))
 
-    def render_inline_code(self, token):
-        return '<code>{}</code>'.format(self.render_inner(token))
+    def render_inline_code(self, token, footnotes):
+        template = '<code>{}</code>'
+        return template.format(self.render_inner(token, footnotes))
 
-    def render_strikethrough(self, token):
-        return '<del>{}</del>'.format(self.render_inner(token))
+    def render_strikethrough(self, token, footnotes):
+        template = '<del>{}</del>'
+        return template.format(self.render_inner(token, footnotes))
 
     @staticmethod
-    def render_image(token):
+    def render_image(token, footnotes):
         template = '<img src="{}" title="{}" alt="{}">'
         return template.format(token.src, token.title, token.alt)
 
-    def render_link(self, token):
+    @staticmethod
+    def render_footnote_image(token, footnotes):
+        template = '<img src="{}" alt="{}">'
+        src = footnotes.get(token.children[0].key, '')
+        return template.format(src, token.alt)
+
+    def render_link(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
         target = urllib.parse.quote_plus(token.target)
-        inner = self.render_inner(token)
+        inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 
     @staticmethod
-    def render_auto_link(token):
+    def render_auto_link(token, footnotes):
         template = '<a href="{target}">{name}</a>'
         target = urllib.parse.quote_plus(token.target)
         name = html.escape(token.name)
         return template.format(target=target, name=name)
 
     @staticmethod
-    def render_raw_text(token):
+    def render_raw_text(token, footnotes):
         return html.escape(token.content)
 
     @staticmethod
-    def render_html_span(token):
+    def render_html_span(token, footnotes):
         return token.content
 
-    def render_heading(self, token):
+    def render_heading(self, token, footnotes):
         template = '<h{level}>{inner}</h{level}>\n'
-        return template.format(level=token.level, inner=self.render_inner(token))
+        inner = self.render_inner(token, footnotes)
+        return template.format(level=token.level, inner=inner)
 
-    def render_quote(self, token):
+    def render_quote(self, token, footnotes):
         template = '<blockquote>\n{inner}</blockquote>\n'
-        return template.format(inner=self.render_inner(token))
+        return template.format(inner=self.render_inner(token, footnotes))
 
-    def render_paragraph(self, token):
-        return '<p>{}</p>\n'.format(self.render_inner(token))
+    def render_paragraph(self, token, footnotes):
+        return '<p>{}</p>\n'.format(self.render_inner(token, footnotes))
 
-    def render_block_code(self, token):
+    def render_block_code(self, token, footnotes):
         template = '<pre>\n<code{attr}>\n{inner}</code>\n</pre>\n'
         attr = ' class="lang-{}"'.format(token.language) if token.language else ''
-        return template.format(attr=attr, inner=self.render_inner(token))
+        inner = self.render_inner(token, footnotes)
+        return template.format(attr=attr, inner=inner)
 
-    def render_list(self, token):
+    def render_list(self, token, footnotes):
         template = '<{tag}{attr}>\n{inner}</{tag}>\n'
         if hasattr(token, 'start'):
             tag = 'ol'
@@ -137,32 +151,32 @@ class HTMLRenderer(object):
         else:
             tag = 'ul'
             attr = ''
-        inner = self.render_inner(token)
+        inner = self.render_inner(token, footnotes)
         return template.format(tag=tag, attr=attr, inner=inner)
 
-    def render_list_item(self, token):
-        return '<li>{}</li>\n'.format(self.render_inner(token))
+    def render_list_item(self, token, footnotes):
+        return '<li>{}</li>\n'.format(self.render_inner(token, footnotes))
 
-    def render_table(self, token):
+    def render_table(self, token, footnotes):
         template = '<table>\n{inner}</table>\n'
         if token.has_header:
             head_template = '<thead>\n{inner}</thead>\n'
             header = token.children.send(None)
-            head_inner = self.render_table_row(header, True)
+            head_inner = self.render_table_row(header, footnotes, True)
             head_rendered = head_template.format(inner=head_inner)
         else: head_rendered = ''
         body_template = '<tbody>\n{inner}</tbody>\n'
-        body_inner = self.render_inner(token)
+        body_inner = self.render_inner(token, footnotes)
         body_rendered = body_template.format(inner=body_inner)
         return template.format(inner=head_rendered+body_rendered)
 
-    def render_table_row(self, token, is_header=False):
+    def render_table_row(self, token, footnotes, is_header=False):
         template = '<tr>\n{inner}</tr>\n'
-        inner = ''.join([self.render_table_cell(child, is_header)
+        inner = ''.join([self.render_table_cell(child, footnotes, is_header)
                          for child in token.children])
         return template.format(inner=inner)
 
-    def render_table_cell(self, token, in_header=False):
+    def render_table_cell(self, token, footnotes, in_header=False):
         template = '<{tag}{attr}>{inner}</{tag}>\n'
         tag = 'th' if in_header else 'td'
         if token.align is None:
@@ -172,18 +186,19 @@ class HTMLRenderer(object):
         elif token.align == 1:
             align = 'right'
         attr = ' align="{}"'.format(align)
-        inner = self.render_inner(token)
+        inner = self.render_inner(token, footnotes)
         return template.format(tag=tag, attr=attr, inner=inner)
 
     @staticmethod
-    def render_separator(token):
+    def render_separator(token, footnotes):
         return '<hr>\n'
 
     @staticmethod
-    def render_html_block(token):
+    def render_html_block(token, footnotes):
         return token.content
 
-    def render_document(self, token):
+    def render_document(self, token, footnotes):
         template = '<html>\n{preamble}<body>\n{inner}</body>\n</html>\n'
-        inner = self.render_inner(token)
+        token.children = list(token.children)  # kick off generator
+        inner = self.render_inner(token, token.footnotes)
         return template.format(preamble=self.preamble, inner=inner)

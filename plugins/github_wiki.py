@@ -22,7 +22,7 @@ class Context(object):
         mistletoe.span_token.__all__.remove('GitHubWiki')
 
     def render(self, token):
-        return self.renderer().render(token)
+        return self.renderer().render(token, {})
 
 class GitHubWiki(SpanToken):
     pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
@@ -36,10 +36,10 @@ class GitHubWikiRenderer(HTMLRenderer):
         super().__init__(preamble)
         self.render_map['GitHubWiki'] = self.render_github_wiki
 
-    def render_github_wiki(self, token):
+    def render_github_wiki(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
         target = urllib.parse.quote_plus(token.target)
-        inner = self.render_inner(token)
+        inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 
 if __name__ == '__main__':
