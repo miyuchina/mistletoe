@@ -39,7 +39,7 @@ def normalize(lines):
     # can yield the last token
     yield '\n'
 
-def tokenize(iterable, token_types, fallback_token):
+def tokenize(iterable, token_types, fallback_token, root=None):
     """
     Searches for token_types in iterable, and applies fallback_token
     to lines in between.
@@ -61,9 +61,16 @@ def tokenize(iterable, token_types, fallback_token):
             # tries to match in the order of token_types
             for token_type in token_types:
                 if token_type.match(line_buffer):
-                    yield token_type(line_buffer)
+                    if root and token_type.__name__ == 'FootnoteBlock':
+                        store_footnotes(root, token_type(line_buffer))
+                    else:
+                        yield token_type(line_buffer)
                     matched = True
                     break
             if not matched:
                 yield fallback_token(line_buffer)
             line_buffer.clear()
+
+def store_footnotes(root_node, footnote_block):
+    for entry in footnote_block.children:
+        root_node.footnotes[entry.key] = entry.value

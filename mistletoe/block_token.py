@@ -13,7 +13,7 @@ tokenize). Don't mess with it unless you know what you are doing!
 __all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table',
            'FootnoteBlock']
 
-def tokenize(lines):
+def tokenize(lines, root=None):
     """
     A wrapper around block_tokenizer.tokenize. Pass in all block-level
     token constructors as arguments to block_tokenizer.tokenize.
@@ -26,7 +26,7 @@ def tokenize(lines):
     """
     token_types = [globals()[key] for key in __all__]
     fallback_token = Paragraph
-    return tokenizer.tokenize(lines, token_types, fallback_token)
+    return tokenizer.tokenize(lines, token_types, fallback_token, root)
 
 class BlockToken(object):
     """
@@ -54,7 +54,8 @@ class Document(BlockToken):
     Document token.
     """
     def __init__(self, lines):
-        super().__init__(lines, tokenize)
+        self.footnotes = {}
+        self.children = tokenize(lines, root=self)
 
 class Heading(BlockToken):
     """

@@ -220,8 +220,10 @@ class TestFootnoteBlock(unittest.TestCase):
         lines = ['[key 1]: value 1\n',
                  '[key 2]: value 2\n']
         t = block_token.Document(lines)
+        list(t.children)  # kick off generator
         c = block_token.FootnoteBlock(lines)
-        helpers.check_equal(self, list(t.children)[0], c)
+        d = {entry.key: entry.value for entry in c.children}
+        self.assertEqual(t.footnotes, d)
 
 class TestSeparator(unittest.TestCase):
     def test_equal(self):

@@ -7,6 +7,7 @@ class TestASTRenderer(unittest.TestCase):
         d = token.Document(['# heading 1', '\n', 'hello\n', 'world\n'])
         output = renderer.get_ast(d)
         target = {'type': 'Document',
+                  'footnotes': {},
                   'children': [{
                       'type': 'Heading',
                       'level': 1,
