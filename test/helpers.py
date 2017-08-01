@@ -17,8 +17,10 @@ def check_equal(test, t, o):
     elif hasattr(t, 'target'):
         [ check_equal(test, tc, to) for tc, to in zip(t.children, o.children) ]
         test.assertEqual(t.target, o.target)
-    elif hasattr(t, 'key'):
+    elif hasattr(t, 'value'):  # FootnoteEntry
         test.assertEqual((t.key, t.value), (o.key, o.value))
+    elif hasattr(t, 'key'):    # FootnoteAnchor
+        test.assertEqual(t.key, o.key)
     elif type(t).__name__ == 'Separator':
         test.assertTrue(True)
     else:

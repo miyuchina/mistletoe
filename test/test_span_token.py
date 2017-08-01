@@ -59,6 +59,13 @@ class TestImage(unittest.TestCase):
         t2 = span_token.Image('![alt](link)')
         helpers.check_equal(self, t1, t2)
 
+class TestFootnoteImage(unittest.TestCase):
+    def test_raw(self):
+        t = span_token.FootnoteImage('![alt] [key]')
+        c = span_token.FootnoteAnchor('key')
+        self.assertEqual(t.alt, 'alt')
+        helpers.check_equal(self, list(t.children)[0], c)
+
 class TestStrong(unittest.TestCase):
     def test_raw(self):
         t = span_token.Strong('some text')

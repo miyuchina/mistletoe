@@ -10,7 +10,7 @@ The items and ordering of this __all__ matters to mistletoe (see
 tokenize_inner). Don't mess with it unless you know what you are doing!
 """
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
-           'Strikethrough', 'Image', 'Link', 'AutoLink']
+           'Strikethrough', 'Image', 'FootnoteImage', 'Link', 'AutoLink']
 
 def tokenize_inner(content):
     """
@@ -105,6 +105,20 @@ class Image(SpanToken):
             self.src = src
             self.title = ''
 
+class FootnoteImage(SpanToken):
+    """
+    Footnote image tokens. ("![alt] [some key]")
+
+    Attributes:
+        alt (str): alternative text.
+        children (str): a list containing a single FootnoteAnchor.
+    """
+    pattern = re.compile("(\!\[(.+?)\] *\[(.+?)\])")
+    def __init__(self, raw):
+        self.alt = raw[2:raw.index(']')]
+        src_key = raw[raw.index('[', 2)+1:-1]
+        self.children = [FootnoteAnchor(src_key)]
+
 class Link(SpanToken):
     """
     Link tokens. ("[name](target)")
@@ -147,3 +161,11 @@ class RawText(SpanToken):
     """
     def __init__(self, raw):
         self.content = raw
+
+class FootnoteAnchor(SpanToken):
+    """
+    Footnote anchor.
+    To be replaced at render time.
+    """
+    def __init__(self, raw):
+        self.key = raw
