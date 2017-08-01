@@ -17,6 +17,8 @@ def check_equal(test, t, o):
     elif hasattr(t, 'target'):
         [ check_equal(test, tc, to) for tc, to in zip(t.children, o.children) ]
         test.assertEqual(t.target, o.target)
+    elif hasattr(t, 'key'):
+        test.assertEqual((t.key, t.value), (o.key, o.value))
     elif type(t).__name__ == 'Separator':
         test.assertTrue(True)
     else:

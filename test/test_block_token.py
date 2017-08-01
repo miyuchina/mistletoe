@@ -205,6 +205,24 @@ class TestTableRow(unittest.TestCase):
         helpers.check_equal(self, l[0], c0)
         helpers.check_equal(self, l[1], c1)
 
+class TestFootnoteBlock(unittest.TestCase):
+    def test_footnote_block(self):
+        lines = ['[key 1]: value 1\n',
+                 '[key 2]: value 2\n']
+        t = block_token.FootnoteBlock(lines)
+        c0 = block_token.FootnoteEntry('[key 1]: value 1\n')
+        c1 = block_token.FootnoteEntry('[key 2]: value 2\n')
+        l = list(t.children)
+        helpers.check_equal(self, l[0], c0)
+        helpers.check_equal(self, l[1], c1)
+
+    def test_match(self):
+        lines = ['[key 1]: value 1\n',
+                 '[key 2]: value 2\n']
+        t = block_token.Document(lines)
+        c = block_token.FootnoteBlock(lines)
+        helpers.check_equal(self, list(t.children)[0], c)
+
 class TestSeparator(unittest.TestCase):
     def test_equal(self):
         t1 = block_token.Separator('---\n')

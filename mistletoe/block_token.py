@@ -10,7 +10,8 @@ import mistletoe.span_token as span_token
 The items and ordering of this __all__ matters to mistletoe (see
 tokenize). Don't mess with it unless you know what you are doing!
 """
-__all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table']
+__all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table',
+           'FootnoteBlock']
 
 def tokenize(lines):
     """
@@ -324,6 +325,40 @@ class TableCell(BlockToken):
     def __init__(self, content, align=None):
         self.align = align
         super().__init__(content, span_token.tokenize_inner)
+
+class FootnoteBlock(BlockToken):
+    """
+    Footnote tokens.
+    A collection of footnote entries.
+
+    Attributes:
+        children (list): footnote entry tokens.
+    """
+    def __init__(self, lines):
+        self.children = [FootnoteEntry(line) for line in lines]
+
+    @staticmethod
+    def match(lines):
+        for line in lines:
+            if not (line.startswith('[') or line.find(']:') != -1):
+                return False
+        return True
+
+class FootnoteEntry(BlockToken):
+    """
+    Footnote entry tokens.
+    Special tokens that aren't really boundaries (but kind of are).
+
+    Should only be called by FootnoteBlock.__init__().
+
+    Attributes:
+        key (str): key of footnote entry.
+        value (str): value of footnote entry.
+    """
+    def __init__(self, line):
+        key, value = line.split(']:')
+        self.key = key[1:]
+        self.value = value.strip()
 
 class Separator(BlockToken):
     """
