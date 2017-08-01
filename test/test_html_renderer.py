@@ -88,7 +88,8 @@ class TestHTMLRenderer(unittest.TestCase):
                '    3. nested item 2\n',
                '        * further nested\n',
                '- item 3\n']
-        target = ('<ul>\n'
+        target = ('<html>\n<body>\n'
+                  '<ul>\n'
                     '<li>item 1</li>\n'
                     '<li>item 2</li>\n'
                     '<ol start="2">\n'
@@ -97,8 +98,9 @@ class TestHTMLRenderer(unittest.TestCase):
                       '<ul>\n<li>further nested</li>\n</ul>\n'
                     '</ol>\n'
                     '<li>item 3</li>\n'
-                  '</ul>\n')
-        self._test_token(block_token.List, raw, target)
+                  '</ul>\n'
+                  '</body>\n</html>\n')
+        self._test_token(block_token.Document, raw, target)
 
     def test_list_item(self):
         raw = ['    - some **bold** text\n']

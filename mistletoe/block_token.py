@@ -155,11 +155,11 @@ class List(BlockToken):
     Boundary between span-level and block-level tokens.
 
     Attributes:
-        children (generator): inner tokens (ListItem or List).
+        children (list): inner tokens (ListItem or List).
         start (int): first index of ordered list (undefined if unordered).
     """
     def __init__(self, lines):
-        self.children = List._build_list(lines)
+        self.children = list(List._build_list(lines))
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
