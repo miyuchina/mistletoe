@@ -341,7 +341,7 @@ class FootnoteBlock(BlockToken):
     @staticmethod
     def match(lines):
         for line in lines:
-            if not (line.startswith('[') or line.find(']:') != -1):
+            if not (line.startswith('[') and line.find(']:') != -1):
                 return False
         return True
 
