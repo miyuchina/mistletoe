@@ -100,9 +100,15 @@ class HTMLRenderer(object):
 
     @staticmethod
     def render_footnote_image(token, footnotes):
-        template = '<img src="{}" alt="{}">'
-        src = footnotes.get(token.children[0].key, '')
-        return template.format(src, token.alt)
+        template = '<img src="{src}" title="{title}" alt="{alt}">'
+        maybe_src = footnotes.get(token.children[0].key, '')
+        if maybe_src.find('"') != -1:
+            src = maybe_src[:maybe_src.index(' "')]
+            title = maybe_src[maybe_src.index(' "')+2:-1]
+        else:
+            src = maybe_src
+            title = ''
+        return template.format(src=src, title=title, alt=token.alt)
 
     def render_link(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
