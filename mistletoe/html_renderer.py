@@ -43,6 +43,7 @@ class HTMLRenderer(object):
             'Image':          self.render_image,
             'FootnoteImage':  self.render_footnote_image,
             'Link':           self.render_link,
+            'FootnoteLink':   self.render_footnote_link,
             'AutoLink':       self.render_auto_link,
             'EscapeSequence': self.render_raw_text,
             'HTMLSpan':       self.render_html_span,
@@ -113,6 +114,13 @@ class HTMLRenderer(object):
     def render_link(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
         target = urllib.parse.quote_plus(token.target)
+        inner = self.render_inner(token, footnotes)
+        return template.format(target=target, inner=inner)
+
+    def render_footnote_link(self, token, footnotes):
+        template = '<a href="{target}">{inner}</a>'
+        raw_target = footnotes.get(token.target.key, '')
+        target = urllib.parse.quote_plus(raw_target)
         inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 

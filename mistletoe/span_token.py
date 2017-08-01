@@ -10,7 +10,8 @@ The items and ordering of this __all__ matters to mistletoe (see
 tokenize_inner). Don't mess with it unless you know what you are doing!
 """
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
-           'Strikethrough', 'Image', 'FootnoteImage', 'Link', 'AutoLink']
+           'Strikethrough', 'Image', 'FootnoteImage', 'Link',
+           'FootnoteLink', 'AutoLink']
 
 def tokenize_inner(content):
     """
@@ -132,6 +133,20 @@ class Link(SpanToken):
         split_index = len(raw) - raw[::-1].index(']') - 1
         super().__init__(raw[1:split_index])
         self.target = raw[split_index+2:-1]
+
+class FootnoteLink(SpanToken):
+    """
+    Footnote-style links. ("[name] [some target]")
+
+    Attributes:
+        children (generator): link name still needs further parsing.
+        target (FootnoteAnchor): to be looked up when rendered.
+    """
+    pattern = re.compile(r"(\[((?:!\[(.+?)\]\((.+?)\))|(?:.+?))\] *\[(.+?)\])")
+    def __init__(self, raw):
+        split_index = len(raw) - raw[::-1].index('[')
+        super().__init__(raw[1:split_index-1].strip()[:-1])
+        self.target = FootnoteAnchor(raw[split_index:-1])
 
 class AutoLink(SpanToken):
     """

@@ -42,6 +42,13 @@ class TestLink(unittest.TestCase):
         helpers.check_equal(self, list(t.children)[0], c)
         self.assertEqual(t.target, target)
 
+class TestFootnoteLink(unittest.TestCase):
+    def test_raw(self):
+        t = span_token.FootnoteLink('[alt] [key]')
+        c = span_token.RawText('alt')
+        helpers.check_equal(self, list(t.children)[0], c)
+        helpers.check_equal(self, t.target, span_token.FootnoteAnchor('key'))
+
 class TestAutoLink(unittest.TestCase):
     def test(self):
         t = span_token.Strong('some <link> in strong text')

@@ -41,6 +41,13 @@ class TestHTMLRenderer(unittest.TestCase):
         raw, target = '[name](target)', '<a href="target">name</a>'
         self._test_token(span_token.Link, raw, target)
 
+    def test_footnote_link(self):
+        raw = ['[name] [key]\n', '\n', '[key]: target\n']
+        target = ('<html>\n<body>\n'
+                  '<p><a href="target">name</a></p>\n'
+                  '</body>\n</html>\n')
+        self._test_token(block_token.Document, raw, target)
+
     def test_autolink(self):
         raw, target = 'link', '<a href="link">link</a>'
         self._test_token(span_token.AutoLink, raw, target)
