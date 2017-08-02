@@ -128,7 +128,7 @@ class Link(SpanToken):
         children (generator): link name still needs further parsing.
         target (str): link target.
     """
-    pattern = re.compile(r"(\[((?:!\[(.+?)\]\((.+?)\))|(?:.+?))\]\((.+?)\))")
+    pattern = re.compile(r"(\[((?:!\[(.+?)\][\[\(](.+?)[\)\]])|(?:.+?))\]\((.+?)\))")
     def __init__(self, raw):
         split_index = len(raw) - raw[::-1].index(']') - 1
         super().__init__(raw[1:split_index])
@@ -142,7 +142,7 @@ class FootnoteLink(SpanToken):
         children (generator): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
-    pattern = re.compile(r"(\[((?:!\[(.+?)\]\((.+?)\))|(?:.+?))\] *\[(.+?)\])")
+    pattern = re.compile(r"(\[((?:!\[(.+?)\][\[\(](.+?)[\)\]])|(?:.+?))\] *\[(.+?)\])")
     def __init__(self, raw):
         split_index = len(raw) - raw[::-1].index('[')
         super().__init__(raw[1:split_index-1].strip()[:-1])
