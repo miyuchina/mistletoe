@@ -3,7 +3,6 @@ HTML renderer for mistletoe.
 """
 
 import html
-import urllib.parse
 
 def render(token):
     """
@@ -20,6 +19,10 @@ def render(token):
     ... without importing the class itself.
     """
     return HTMLRenderer().render(token, {})
+
+def escape_url(raw):
+    from urllib.parse import quote
+    return quote(raw, safe='/#')
 
 class HTMLRenderer(object):
     """
@@ -113,21 +116,21 @@ class HTMLRenderer(object):
 
     def render_link(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
-        target = urllib.parse.quote_plus(token.target)
+        target = escape_url(token.target)
         inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 
     def render_footnote_link(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
         raw_target = footnotes.get(token.target.key, '')
-        target = urllib.parse.quote_plus(raw_target)
+        target = escape_url(raw_target)
         inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 
     @staticmethod
     def render_auto_link(token, footnotes):
         template = '<a href="{target}">{name}</a>'
-        target = urllib.parse.quote_plus(token.target)
+        target = escape_url(token.target)
         name = html.escape(token.name)
         return template.format(target=target, name=name)
 
