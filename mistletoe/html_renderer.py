@@ -102,7 +102,7 @@ class HTMLRenderer(object):
     @staticmethod
     def render_footnote_image(token, footnotes):
         template = '<img src="{src}" title="{title}" alt="{alt}">'
-        maybe_src = footnotes.get(token.children[0].key, '')
+        maybe_src = footnotes.get(token.src.key, '')
         if maybe_src.find('"') != -1:
             src = maybe_src[:maybe_src.index(' "')]
             title = maybe_src[maybe_src.index(' "')+2:-1]

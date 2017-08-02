@@ -112,13 +112,13 @@ class FootnoteImage(SpanToken):
 
     Attributes:
         alt (str): alternative text.
-        children (str): a list containing a single FootnoteAnchor.
+        src (FootnoteAnchor): could point to both src and title.
     """
     pattern = re.compile("(\!\[(.+?)\] *\[(.+?)\])")
     def __init__(self, raw):
         self.alt = raw[2:raw.index(']')]
-        src_key = raw[raw.index('[', 2)+1:-1]
-        self.children = [FootnoteAnchor(src_key)]
+        raw_src_key = raw[raw.index('[', 2)+1:-1]
+        self.src = FootnoteAnchor(raw_src_key)
 
 class Link(SpanToken):
     """
