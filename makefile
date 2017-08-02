@@ -1,7 +1,7 @@
 .PHONY: run test coverage
 
 run:
-	python3 main.py
+	python3 -m mistletoe
 
 test:
 	python3 -m unittest
