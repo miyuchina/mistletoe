@@ -22,7 +22,7 @@ def render(token):
 
 def escape_url(raw):
     from urllib.parse import quote
-    return quote(raw, safe='/#')
+    return quote(raw, safe='/#:')
 
 class HTMLRenderer(object):
     """
