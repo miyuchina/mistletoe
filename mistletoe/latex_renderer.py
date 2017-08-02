@@ -1,3 +1,6 @@
+def render(token):
+    return LaTeXRenderer().render(token)
+
 class LaTeXRenderer(object):
     def __init__(self):
         self.render_map = {
