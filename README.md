@@ -1,5 +1,4 @@
-![mistletoe][logo]
-==================
+<h1>mistletoe<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right'></h1>
 
 [![Build Status][build-badge]][travis]
 [![Coverage Status][cover-badge]][coveralls]
@@ -374,11 +373,8 @@ Copyright & License
 -------------------
 * mistletoe's logo uses artwork by Daniele De Santis, under
   [CC BY 3.0][cc-by].
-* The font used in the logo is [Cedarville Cursive][logo-font], released under
-  [Open Font License][font-license].
 * mistletoe is released under [GNU GPLv3][license], a copyleft license.
 
-[logo]: https://cdn.rawgit.com/miyuchina/mistletoe/3f0125f1/logo.svg
 [build-badge]: https://travis-ci.org/miyuchina/mistletoe.svg?branch=master
 [cover-badge]: https://coveralls.io/repos/github/miyuchina/mistletoe/badge.svg
 [travis]: https://travis-ci.org/miyuchina/mistletoe
@@ -392,6 +388,4 @@ Copyright & License
 [jquery]: https://github.com/jquery/jquery/blob/master/README.md
 [hettinger]: https://www.youtube.com/watch?v=voXVTjwnn-U
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
-[logo-font]: https://fonts.google.com/specimen/Cedarville+Cursive
-[font-license]: http://scripts.sil.org/cms/scripts/page.php?site_id=nrsi&id=OFL_web
 [license]: LICENSE
