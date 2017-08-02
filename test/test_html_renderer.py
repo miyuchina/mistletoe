@@ -75,6 +75,11 @@ class TestHTMLRenderer(unittest.TestCase):
                   '<p>a paragraph continued</p>\n</blockquote>\n')
         self._test_token(block_token.Quote, raw, target)
 
+    def test_paragraph(self):
+        raw = ['a paragraph\n', 'continued\n']
+        target = '<p>a paragraph continued</p>\n'
+        self._test_token(block_token.Paragraph, raw, target)
+
     def test_block_code(self):
         raw = ['```sh\n', 'mkdir temp\n', 'rmdir temp\n', '```\n']
         target = ('<pre>\n<code class="lang-sh">\nmkdir temp\n'
