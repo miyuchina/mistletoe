@@ -341,7 +341,8 @@ class FootnoteBlock(BlockToken):
     @staticmethod
     def match(lines):
         for line in lines:
-            if not (line.startswith('[') and line.find(']:') != -1):
+            content = line.strip()
+            if not (content.startswith('[') and content.find(']:') != -1):
                 return False
         return True
 
@@ -357,7 +358,7 @@ class FootnoteEntry(BlockToken):
         value (str): value of footnote entry.
     """
     def __init__(self, line):
-        key, value = line.split(']:')
+        key, value = line.strip().split(']:')
         self.key = key[1:]
         self.value = value.strip()
 
