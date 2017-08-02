@@ -50,7 +50,8 @@ class LaTeXRenderer(object):
 
     @staticmethod
     def render_raw_text(token):
-        return token.content
+        return (token.content.replace('$', '\$').replace('#', '\#')
+                             .replace('{', '\{').replace('}', '\}'))
 
     def render_heading(self, token):
         if token.level == 1:
