@@ -1,4 +1,4 @@
-.PHONY: run test coverage
+.PHONY: run test coverage integration
 
 run:
 	python3 -m mistletoe
@@ -11,3 +11,6 @@ coverage:
 	python3 -m coverage run -m unittest && \
 	coverage report && \
 	deactivate
+
+integration:
+	./test/test_ci.sh
