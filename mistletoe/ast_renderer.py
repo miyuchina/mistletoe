@@ -3,6 +3,15 @@ Abstract syntax tree renderer for mistletoe.
 """
 
 import json
+from mistletoe.base_renderer import BaseRenderer
+
+class ASTRenderer(BaseRenderer):
+    def render(self, token, footnotes):
+        """
+        Returns the string representation of the AST; compliant with other
+        renderer.render functions.
+        """
+        return json.dumps(get_ast(token), indent=2)
 
 def get_ast(token):
     """
@@ -24,10 +33,3 @@ def get_ast(token):
     if 'children' in node:
         node['children'] = [get_ast(child) for child in node['children']]
     return node
-
-def render(token):
-    """
-    Returns the string representation of the AST; compliant with other
-    renderer.render functions.
-    """
-    return json.dumps(get_ast(token), indent=2)
