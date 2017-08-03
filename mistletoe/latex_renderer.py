@@ -1,9 +1,6 @@
-from mistletoe.html_renderer import HTMLRenderer
+from mistletoe.base_renderer import BaseRenderer
 
-def render(token):
-    return LaTeXRenderer().render(token, {})
-
-class LaTeXRenderer(HTMLRenderer):
+class LaTeXRenderer(BaseRenderer):
     def render_strong(self, token, footnotes):
         return '\\textbf{{{}}}'.format(self.render_inner(token, footnotes))
 

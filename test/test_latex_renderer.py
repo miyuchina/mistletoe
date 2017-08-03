@@ -1,12 +1,12 @@
 import unittest
 import mistletoe.block_token as block_token
 import mistletoe.span_token as span_token
-import mistletoe.latex_renderer as renderer
+from mistletoe.latex_renderer import LaTeXRenderer
 
 class TestLaTeXRenderer(unittest.TestCase):
     def _test_token(self, token_type, raw, target):
-        output = renderer.render(token_type(raw))
-        self.assertEqual(output, target)
+        with LaTeXRenderer() as r:
+            self.assertEqual(r(token_type(raw)), target)
 
     def test_strong(self):
         raw, target = 'some text', '\\textbf{some text}'
