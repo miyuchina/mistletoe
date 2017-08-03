@@ -15,26 +15,17 @@ Remember to spell mistletoe in lowercase!
 
 Features
 --------
-* **Fast**: mistletoe strives to be as fast as the
-  [fastest implementation][mistune] currently available: that is, over 3
-  times faster than [Python-Markdown][python-markdown], and over 4 times
-  faster than [Python-Markdown2][python-markdown2].
-
-    - mistletoe uses Python generators under the hood. If you choose not to
-      render some lower-level tokens, they will not get parsed: a huge
-      performance improvement.
-
-    - mistletoe uses a streaming algorithm to parse input files. Together
-      with generators, this means that mistletoe is light on memory, and by
-      nature can deal with very large input files.
+* **Fast**: mistletoe is as fast as the [fastest implementation][mistune]
+  currently available: that is, over 3 times faster than
+  [Python-Markdown][python-markdown], and over 4 times faster than
+  [Python-Markdown2][python-markdown2].
 
 * **Modular**: mistletoe is designed with modularity in mind. Its initial
   goal is to provide a clear and easy API to extend upon.
 
 * **Customizable**: mistletoe wants to solve the problem: "my Markdown is
-  better than yours." Markdown's syntax is, and should be, a matter of
-  personal preference. As such, mistletoe does not make sweeping decisions,
-  but leaves much in the hands of the user.
+  better than yours." We want tools to suite our needs, rather than letting
+  tools dictate (and inhibit) our usage.
 
 Installation
 ------------
@@ -110,39 +101,23 @@ and rendering to HTML.
 ### Okay, give it to me straight
 
 Here's how you would manually specify extra tokens and a renderer for
-mistletoe. In the following example, we add `HTMLBlock` and `HTMLSpan`
-to the normal parsing process, and use `HTMLRenderer` to render the AST:
+mistletoe. In the following example, we use `HTMLRenderer` to render
+the AST, which adds `HTMLBlock` and `HTMLSpan` to the normal parsing
+process.
 
 ```python
 from mistletoe import Document
-from mistletoe.html_token import Context
-from mistletoe.html_renderer import render
-
-with open('foo.md', 'r') as fin:
-    with Context():
-        rendered = render(Document(fin))
-```
-
-... or an even more verbose version:
-
-```python
-from mistletoe import Document
-from mistletoe.html_token import Context
 from mistletoe.html_renderer import HTMLRenderer
 
 with open('foo.md', 'r') as fin:
-    with Context():
-        token = Document(fin)
-        renderer = HTMLRenderer()
-        rendered = renderer.render(token)
+    with HTMLRenderer() as r:
+        rendered = r(Document(fin))
 ```
 
 Developer's Guide
 -----------------
-Although chances of mistletoe undergoing another crazy overhaul is very
-limited, its API is not stabilized yet. That said, however, here's an example
-to add GitHub-style wiki links to the parsing process, and provide a renderer
-for this new token.
+Here's an example to add GitHub-style wiki links to the parsing process,
+and provide a renderer for this new token.
 
 ### A new token
 
@@ -208,9 +183,9 @@ class GitHubWiki(SpanToken):
 ### A new renderer
 
 If we only need to use GitHubWiki only once, we can simply create an
-`HTMLRenderer` instance, and append a `render()` function to its
-`render_map`. However, let's suppose we are writing a plugin for others to
-use. We only need to subclass `HTMLRenderer` to provide reusability:
+`HTMLRenderer` instance, and append a `render_github_wiki()` function to
+its `render_map`. However, let's suppose we are writing a plugin for others
+to use. We only need to subclass `HTMLRenderer` to provide reusability:
 
 ```python
 from mistletoe.html_renderer import HTMLRenderer
@@ -266,48 +241,45 @@ mistletoe.span_token.GitHubWiki = GitHubWiki
 mistletoe.span_token.__all__.append('GitHubWiki')
 ```
 
-When we render, we create a new instance of `GitHubWikiRenderer`,
-and call `render()` on the input token:
+Because `GitHubWikiRenderer` subclasses `HTMLRenderer` (which in turn
+is a subclass of `BaseRenderer`), its instances are callable. This
+provides a cleaner render process:
 
 ```python
-rendered = GitHubWikiRenderer().render(token)
+rendered = GitHubWikiRenderer()(token)
 ```
 
 We are technically good to go at this point. However, the code above
-messes up `span_token`'s global namespace quite a bit. The actual
-`github_wiki` module in the `plugins/` directory uses Python's context
-manager:
+messes up `span_token`'s namespace quite a bit. The actual `github_wiki`
+module in the `plugins/` directory uses Python's context manager:
 
 ```python
-class Context(object):
-    def __init__(self):
-        self.renderer = GitHubWikiRenderer
-
+class GitHubWikiRenderer(HTMLRenderer):
+    # ...
     def __enter__(self):
-        mistletoe.span_token.GitHubWiki = GitHubWiki
-        mistletoe.span_token.__all__.append('GitHubWiki')
-        return self
+        span_token.GitHubWiki = GitHubWiki
+        span_token.__all__.append('GitHubWiki')
+        return super().__enter__()
 
     def __exit__(self, exception_type, exception_val, traceback):
-        del mistletoe.span_token.GitHubWiki
-        mistletoe.span_token.__all__.remove('GitHubWiki')
-
-    def render(self, token):
-        return self.renderer().render(token)
+        del span_token.GitHubWiki
+        span_token.__all__.remove('GitHubWiki')
+        super().__exit__(exception_type, exception_val, traceback)
+    # ...
 ```
 
 This allows us to use our new token like this:
 
 ```python
 from mistletoe import Document
-from plugins.github_wiki import Context
+from plugins.github_wiki import GitHubWikiRenderer
 
 with open('foo.md', 'r') as fin:
-    with Context() as c:
-        rendered = c.render(Document(fin))
+    with GitHubWikiRenderer() as r:
+        rendered = r(Document(fin))
 ```
 
-For more info, take a look at the `html_renderer` module in mistletoe.
+For more info, take a look at the `base_renderer` module in mistletoe.
 The docstrings might give you a more granular idea of customizing mistletoe
 to your needs.
 
@@ -330,8 +302,12 @@ of reasons I created mistletoe in the first place:
   could it be?" (well, quite a lot harder than I expected.)
 * "For fun," says David Beasley.
 
-mistletoe shares with mistune the goal that Markdown parsers should be fast,
-and other parser implementations in Python leaves much to be desired.
+Here's two things mistune inspired mistletoe to do:
+
+* Markdown parsers should be fast, and other parser implementations in Python
+  leaves much to be desired.
+* A parser implementation for Markdown does not need to restrict itself to one
+  flavor (or, "standard") of Markdown.
 
 Here's two things mistletoe does differently from mistune:
 
@@ -339,35 +315,22 @@ Here's two things mistletoe does differently from mistune:
   mistletoe breaks its functionality into modules.
 * mistune, as of now, can only render Markdown into HTML. It is relatively
   trivial to write a new renderer for mistletoe.
+    - This might make mistletoe look a bit closer to [MobileDoc][mobiledoc],
+      in that it gives simple Markdown additional power to deal with a variety
+      of additional input and output demands.
 
-The implications of these are quite profound, and there's no definite I'm-
-better-than-you answer. Mistune is near perfect if one wants what it provides:
-I have used mistune extensively in the past, and had a great experience.
-If you want more control, however, give mistletoe a try.
-
-My hunch is that mistletoe *will be slower* than a fully optimized mistune
-*when feature complete.* This is because separating components into
-modules creates quite a bit of lookup overhead, that is inevitable with
-mistletoe but not a concern with mistune.
-
-As of now mistletoe performs marginally better on CPython 3.6 than mistune.
-Parsing [README.md][jquery] of the jQuery project (whose syntax mistletoe
-fully supports) 1000 times shows that mistletoe is as fast as mistune. Using
-PyPy (whose function overheads are better optimized than CPython), mistune
-takes about 7 seconds to complete the said task, whereas mistletoe takes
-less than 5 seconds.
-
-This, however, is not indicative of final performance difference, as mistletoe
-is not yet feature complete.
+The implications of these are quite profound, and there's no definite
+this-is-better-than-that answer. Mistune is near perfect if one wants what
+it provides: I have used mistune extensively in the past, and had a great
+experience. If you want more control, however, give mistletoe a try.
 
 Finally, to quote [Raymond Hettinger][hettinger]:
 
 > If you make something successful, you don't have to make something else
 > unsuccessful.
 
-There is infinite fun and inspiration to be found in reinventing the wheels,
-and proclaiming one's supremacy to satisfy his or her ego, while holding those
-who came before in disrespect, is prioritizing the trivial.
+Messing around in Python and rebuilding tools that I personally use and love
+is an immensely more rewarding experience than competition.
 
 Copyright & License
 -------------------
@@ -385,7 +348,7 @@ Copyright & License
 [xkcd]: https://xkcd.com/208/
 [meme]: http://www.greghendershott.com/img/grumpy-regexp-parser.png
 [hendershott]: http://www.greghendershott.com/2013/11/markdown-parser-redesign.html
-[jquery]: https://github.com/jquery/jquery/blob/master/README.md
+[mobiledoc]: https://github.com/bustle/mobiledoc-kit
 [hettinger]: https://www.youtube.com/watch?v=voXVTjwnn-U
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
 [license]: LICENSE
