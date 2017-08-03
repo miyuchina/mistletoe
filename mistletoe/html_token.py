@@ -1,5 +1,8 @@
 """
 Mixin HTML tags support for mistletoe.
+
+Injection into the parsing process is achieved in the corresponding
+renderer (mistletoe.html_renderer in this case.)
 """
 
 import re

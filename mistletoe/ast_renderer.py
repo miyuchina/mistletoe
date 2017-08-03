@@ -8,8 +8,9 @@ from mistletoe.base_renderer import BaseRenderer
 class ASTRenderer(BaseRenderer):
     def render(self, token, footnotes):
         """
-        Returns the string representation of the AST; compliant with other
-        renderer.render functions.
+        Returns the string representation of the AST.
+
+        Overrides super().render. Delegates the logic to get_ast.
         """
         return json.dumps(get_ast(token), indent=2)
 

@@ -1,3 +1,7 @@
+"""
+LaTeX renderer for mistletoe.
+"""
+
 from mistletoe.base_renderer import BaseRenderer
 
 class LaTeXRenderer(BaseRenderer):
@@ -118,6 +122,8 @@ class LaTeXRenderer(BaseRenderer):
         return '\\hrulefill\n'
 
     def render_document(self, token, footnotes):
+        # I probably should import those packages iff the document
+        # is actually using them... oh well.
         template = ('\\documentclass{{article}}\n'
                     '\\usepackage{{csquotes}}\n'
                     '\\usepackage{{hyperref}}\n'
@@ -127,6 +133,8 @@ class LaTeXRenderer(BaseRenderer):
                     '\\begin{{document}}\n'
                     '{inner}'
                     '\\end{{document}}\n')
+        # kick off generator (destructive)
         token.children = list(token.children)
+        # ... after the previous line token.footnotes is populated.
         inner = self.render_inner(token, token.footnotes)
         return template.format(inner=inner)

@@ -15,11 +15,18 @@ class HTMLRenderer(BaseRenderer):
     See mistletoe.base_renderer module for more info.
     """
     def __init__(self, preamble=''):
+        """
+        Defines extra renderer functions for html_token.HTMLSpan
+        and html_token.HTMLBlock.
+        """
         super().__init__(preamble)
         self.render_map['HTMLSpan'] = self.render_html_span
         self.render_map['HTMLBlock'] = self.render_html_block
 
     def __enter__(self):
+        """
+        Namespace injection magic. Overrides super().__enter__.
+        """
         # injecting attributes:
         span_token.HTMLSpan = html_token.HTMLSpan
         block_token.HTMLBlock = html_token.HTMLBlock
@@ -29,6 +36,9 @@ class HTMLRenderer(BaseRenderer):
         return self
 
     def __exit__(self, exception_type, exception_val, traceback):
+        """
+        Teardown. Overrides super().__exit__.
+        """
         # clean up namespace
         del span_token.HTMLSpan
         del block_token.HTMLBlock
@@ -130,6 +140,10 @@ class HTMLRenderer(BaseRenderer):
         return '<li>{}</li>\n'.format(self.render_inner(token, footnotes))
 
     def render_table(self, token, footnotes):
+        # This is actually gross and I wonder if there's a better way to do it.
+        #
+        # The primary difficulty seems to be passing down alignment options to
+        # reach individual cells.
         template = '<table>\n{inner}</table>\n'
         if token.has_header:
             head_template = '<thead>\n{inner}</thead>\n'
@@ -171,10 +185,15 @@ class HTMLRenderer(BaseRenderer):
 
     def render_document(self, token, footnotes):
         template = '<html>\n{preamble}<body>\n{inner}</body>\n</html>\n'
-        token.children = list(token.children)  # kick off generator
+        # kick off generator (destructive)
+        token.children = list(token.children)
+        # ... after the previous line token.footnotes is populated
         inner = self.render_inner(token, token.footnotes)
         return template.format(preamble=self.preamble, inner=inner)
 
 def escape_url(raw):
+    """
+    Escape urls to prevent code injection craziness. (Hopefully.)
+    """
     from urllib.parse import quote
     return quote(raw, safe='/#:')

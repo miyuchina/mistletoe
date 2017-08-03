@@ -1,3 +1,7 @@
+"""
+GitHub Wiki support for mistletoe.
+"""
+
 import re
 import html
 import mistletoe.span_token as span_token
@@ -20,11 +24,13 @@ class GitHubWikiRenderer(HTMLRenderer):
     def __enter__(self):
         span_token.GitHubWiki = GitHubWiki
         span_token.__all__.append('GitHubWiki')
+        # we also want mixin HTML support
         return super().__enter__()
 
     def __exit__(self, exception_type, exception_val, traceback):
         del span_token.GitHubWiki
         span_token.__all__.remove('GitHubWiki')
+        # cleanup HTML token injections as well
         super().__exit__(exception_type, exception_val, traceback)
 
     def render_github_wiki(self, token, footnotes):
@@ -34,9 +40,10 @@ class GitHubWikiRenderer(HTMLRenderer):
         return template.format(target=target, inner=inner)
 
 if __name__ == '__main__':
+    from mistletoe import Document
     lines = ['# GitHub Wiki link demo\n',
              'A block-level token that\n',
              'contains a [[Github Wiki|target]]\n',
              'link.\n']
-    with GitHubWikiRenderer as r:
+    with GitHubWikiRenderer() as r:
         print(r(Document(lines)))
