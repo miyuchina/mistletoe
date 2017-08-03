@@ -21,6 +21,7 @@ class TestGithubWiki(unittest.TestCase):
             helpers.check_equal(self, l[2], c2)
 
     def test_render(self):
-        with GitHubWikiRenderer() as r:
+        with GitHubWikiRenderer() as renderer:
             t = span_token.GitHubWiki('[[wiki|target]]')
-            self.assertEqual(r(t), '<a href="target">wiki</a>')
+            target = '<a href="target">wiki</a>'
+            self.assertEqual(renderer.render(t), target)

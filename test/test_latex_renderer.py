@@ -5,8 +5,8 @@ from mistletoe.latex_renderer import LaTeXRenderer
 
 class TestLaTeXRenderer(unittest.TestCase):
     def _test_token(self, token_type, raw, target):
-        with LaTeXRenderer() as r:
-            self.assertEqual(r(token_type(raw)), target)
+        with LaTeXRenderer() as renderer:
+            self.assertEqual(renderer.render(token_type(raw)), target)
 
     def test_strong(self):
         raw, target = 'some text', '\\textbf{some text}'

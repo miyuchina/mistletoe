@@ -8,7 +8,6 @@ class BaseRenderer(object):
 
     All renderers should ...
     *   ... define all render functions specified in self.render_map;
-    *   ... be callable (by inheriting the default __call__ function);
     *   ... be a context manager (by inheriting __enter__ and __exit__);
 
     Custom renderers could ...
@@ -62,7 +61,7 @@ class BaseRenderer(object):
             }
         self.preamble = preamble
 
-    def render(self, token, footnotes):
+    def render(self, token, footnotes={}):
         """
         Grabs the class name from input token and finds its corresponding
         render function.
@@ -91,18 +90,6 @@ class BaseRenderer(object):
         """
         rendered = [self.render(child, footnotes) for child in token.children]
         return ''.join(rendered)
-
-    def __call__(self, token):
-        """
-        Make instances of renderer classes callable.
-        
-        Purely for ease of use: the logic is delegated to the actual
-        render function.
-
-        Arguments:
-            token: the token to be rendered, usually Document.
-        """
-        return self.render(token, {})
 
     def __enter__(self):
         """

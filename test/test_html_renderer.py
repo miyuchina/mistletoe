@@ -6,8 +6,8 @@ from mistletoe.html_renderer import HTMLRenderer
 
 class TestHTMLRenderer(unittest.TestCase):
     def _test_token(self, token_type, raw, target):
-        with HTMLRenderer() as r:
-            self.assertEqual(r(token_type(raw)), target)
+        with HTMLRenderer() as renderer:
+            self.assertEqual(renderer.render(token_type(raw)), target)
 
     def test_strong(self):
         raw, target = 'some text', '<strong>some text</strong>'

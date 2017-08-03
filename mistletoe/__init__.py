@@ -13,5 +13,5 @@ def markdown(iterable):
     Enables inline and block-level HTML tags.
     """
     from mistletoe.html_renderer import HTMLRenderer
-    with HTMLRenderer() as r:
-        return r(Document(iterable))
+    with HTMLRenderer() as renderer:
+        return renderer.render(Document(iterable))

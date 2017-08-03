@@ -110,8 +110,8 @@ from mistletoe import Document
 from mistletoe.html_renderer import HTMLRenderer
 
 with open('foo.md', 'r') as fin:
-    with HTMLRenderer() as r:
-        rendered = r(Document(fin))
+    with HTMLRenderer() as renderer:
+        rendered = renderer.render(Document(fin))
 ```
 
 Developer's Guide
@@ -241,12 +241,10 @@ mistletoe.span_token.GitHubWiki = GitHubWiki
 mistletoe.span_token.__all__.append('GitHubWiki')
 ```
 
-Because `GitHubWikiRenderer` subclasses `HTMLRenderer` (which in turn
-is a subclass of `BaseRenderer`), its instances are callable. This
-provides a cleaner render process:
+... and when we render:
 
 ```python
-rendered = GitHubWikiRenderer()(token)
+rendered = GitHubWikiRenderer().render(token)
 ```
 
 We are technically good to go at this point. However, the code above
@@ -275,8 +273,8 @@ from mistletoe import Document
 from plugins.github_wiki import GitHubWikiRenderer
 
 with open('foo.md', 'r') as fin:
-    with GitHubWikiRenderer() as r:
-        rendered = r(Document(fin))
+    with GitHubWikiRenderer() as renderer:
+        rendered = renderer.render(Document(fin))
 ```
 
 For more info, take a look at the `base_renderer` module in mistletoe.
