@@ -3,83 +3,38 @@ HTML renderer for mistletoe.
 """
 
 import html
+import mistletoe.span_token as span_token
+import mistletoe.block_token as block_token
+import mistletoe.html_token as html_token
+from mistletoe.base_renderer import BaseRenderer
 
-def render(token):
-    """
-    Wrapper function for HTMLRenderer. Creates a HTMLRenderer instance
-    and renders the token passed in.
-
-    Unless you want to mess with the actual HTMLRenderer class, to render
-    a token to HTML you would only need to do:
-
-        >>> from HTMLRenderer import render
-        >>> token = block_token.Document(lines)
-        >>> render(token)
-
-    ... without importing the class itself.
-    """
-    return HTMLRenderer().render(token, {})
-
-def escape_url(raw):
-    from urllib.parse import quote
-    return quote(raw, safe='/#:')
-
-class HTMLRenderer(object):
+class HTMLRenderer(BaseRenderer):
     """
     HTML renderer class.
 
-    Naming conventions:
-        The keys of self.render_map should exactly match the class name of
-        tokens (see HTMLRenderer.render).
-
-    Attributes:
-        render_map (dict): maps tokens to their corresponding render functions.
-        preamble (str): to be injected between <html> and <body> tags.
+    See mistletoe.base_renderer module for more info.
     """
     def __init__(self, preamble=''):
-        self.render_map = {
-            'Strong':         self.render_strong,
-            'Emphasis':       self.render_emphasis,
-            'InlineCode':     self.render_inline_code,
-            'RawText':        self.render_raw_text,
-            'Strikethrough':  self.render_strikethrough,
-            'Image':          self.render_image,
-            'FootnoteImage':  self.render_footnote_image,
-            'Link':           self.render_link,
-            'FootnoteLink':   self.render_footnote_link,
-            'AutoLink':       self.render_auto_link,
-            'EscapeSequence': self.render_raw_text,
-            'HTMLSpan':       self.render_html_span,
-            'Heading':        self.render_heading,
-            'Quote':          self.render_quote,
-            'Paragraph':      self.render_paragraph,
-            'BlockCode':      self.render_block_code,
-            'List':           self.render_list,
-            'ListItem':       self.render_list_item,
-            'Table':          self.render_table,
-            'TableRow':       self.render_table_row,
-            'TableCell':      self.render_table_cell,
-            'Separator':      self.render_separator,
-            'HTMLBlock':      self.render_html_block,
-            'Document':       self.render_document,
-            }
-        self.preamble = preamble
+        super().__init__(preamble)
+        self.render_map['HTMLSpan'] = self.render_html_span
+        self.render_map['HTMLBlock'] = self.render_html_block
 
-    def render(self, token, footnotes):
-        """
-        Grabs the class name from input token and finds its corresponding
-        render function.
+    def __enter__(self):
+        # injecting attributes:
+        span_token.HTMLSpan = html_token.HTMLSpan
+        block_token.HTMLBlock = html_token.HTMLBlock
+        # ... which will be picked up by the tokenizer by:
+        span_token.__all__.insert(0, 'HTMLSpan')
+        block_token.__all__.insert(0, 'HTMLBlock')
+        return self
 
-        Basically a janky way to do polymorphism.
-        """
-        return self.render_map[token.__class__.__name__](token, footnotes)
-
-    def render_inner(self, token, footnotes):
-        """
-        Recursively renders child tokens.
-        """
-        return ''.join([self.render(child, footnotes)
-                        for child in token.children])
+    def __exit__(self, exception_type, exception_val, traceback):
+        # clean up namespace
+        del span_token.HTMLSpan
+        del block_token.HTMLBlock
+        # stop trying to match for these tokens
+        span_token.__all__.pop(0)
+        block_token.__all__.pop(0)
 
     def render_strong(self, token, footnotes):
         template = '<strong>{}</strong>'
@@ -219,3 +174,7 @@ class HTMLRenderer(object):
         token.children = list(token.children)  # kick off generator
         inner = self.render_inner(token, token.footnotes)
         return template.format(preamble=self.preamble, inner=inner)
+
+def escape_url(raw):
+    from urllib.parse import quote
+    return quote(raw, safe='/#:')

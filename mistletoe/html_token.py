@@ -8,41 +8,6 @@ import mistletoe.block_token as block_token
 
 __all__ = ['HTMLBlock', 'HTMLSpan']
 
-class Context(object):
-    """
-    Context manager for HTMLBlock and HTMLSpan token injections.
-
-    Essentially it allows you to do this:
-
-        >>> from html_token import Context
-        >>> span_token.HTMLSpan
-        AttributeError: module 'span_token' has no attribute 'HTMLSpan'
-        >>> with Context():
-        ...     span_token.HTMLSpan
-        <class 'html_token.HTMLSpan'>
-        >>> span_token.HTMLSpan
-        AttributeError: module 'span_token' has no attribute 'HTMLSpan'
-
-    ... which is significantly cleaner than if one were to inject
-    them manually every time.
-    """
-    def __enter__(self):
-        # injecting attributes:
-        span_token.HTMLSpan = HTMLSpan            
-        block_token.HTMLBlock = HTMLBlock
-        # ... which will be picked up by the tokenizer by:
-        span_token.__all__.insert(0, 'HTMLSpan')
-        block_token.__all__.insert(0, 'HTMLBlock')
-        return self
-
-    def __exit__(self, exception_type, exception_val, traceback):
-        # clear up namespace
-        del span_token.HTMLSpan
-        del block_token.HTMLBlock
-        # stop trying to match for these tokens
-        span_token.__all__.pop(0)
-        block_token.__all__.pop(0)
-
 class HTMLBlock(block_token.BlockToken):
     """
     Block-level HTML tokens.

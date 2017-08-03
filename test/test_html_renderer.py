@@ -2,12 +2,12 @@ import unittest
 import mistletoe.block_token as block_token
 import mistletoe.span_token as span_token
 import mistletoe.html_token as html_token
-import mistletoe.html_renderer as renderer
+from mistletoe.html_renderer import HTMLRenderer
 
 class TestHTMLRenderer(unittest.TestCase):
     def _test_token(self, token_type, raw, target):
-        output = renderer.render(token_type(raw))
-        self.assertEqual(output, target)
+        with HTMLRenderer() as r:
+            self.assertEqual(r(token_type(raw)), target)
 
     def test_strong(self):
         raw, target = 'some text', '<strong>some text</strong>'
@@ -62,8 +62,7 @@ class TestHTMLRenderer(unittest.TestCase):
 
     def test_html_span(self):
         raw = target = '<some>text</some>'
-        with html_token.Context():
-            self._test_token(span_token.HTMLSpan, raw, target)
+        self._test_token(html_token.HTMLSpan, raw, target)
 
     def test_heading(self):
         raw, target = [ '### heading 3\n' ], '<h3>heading 3</h3>\n'
@@ -184,8 +183,7 @@ class TestHTMLRenderer(unittest.TestCase):
                   '<h1>hello</h1>\n'
                   '<p>this is\na paragraph</p>\n'
                   '</body>\n</html>\n')
-        with html_token.Context():
-            self._test_token(block_token.Document, raw, target)
+        self._test_token(block_token.Document, raw, target)
 
     def test_document(self):
         raw = ['a paragraph\n']
