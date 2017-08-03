@@ -16,9 +16,14 @@ Remember to spell mistletoe in lowercase!
 Features
 --------
 * **Fast**: mistletoe is as fast as the [fastest implementation][mistune]
-  currently available: that is, over 3 times faster than
-  [Python-Markdown][python-markdown], and over 4 times faster than
-  [Python-Markdown2][python-markdown2].
+  currently available: that is, over 4 times faster than
+  [Python-Markdown][python-markdown], and much faster than
+  [Python-Markdown2][python-markdown2]. Try the benchmarks yourself by
+  running:
+  
+  ```sh
+  python3 test/benchmark.py
+  ```
 
 * **Modular**: mistletoe is designed with modularity in mind. Its initial
   goal is to provide a clear and easy API to extend upon.
