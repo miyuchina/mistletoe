@@ -1,30 +1,11 @@
 import re
 import html
-import urllib.parse
-import mistletoe
-import mistletoe.html_token
-from mistletoe.html_renderer import HTMLRenderer
-from mistletoe.span_token import SpanToken
+import mistletoe.span_token as span_token
+from mistletoe.html_renderer import HTMLRenderer, escape_url
 
 __all__ = ['GitHubWiki', 'GitHubWikiRenderer']
 
-class Context(object):
-    def __init__(self):
-        self.renderer = GitHubWikiRenderer
-
-    def __enter__(self):
-        mistletoe.span_token.GitHubWiki = GitHubWiki
-        mistletoe.span_token.__all__.append('GitHubWiki')
-        return self
-
-    def __exit__(self, exception_type, exception_val, traceback):
-        del mistletoe.span_token.GitHubWiki
-        mistletoe.span_token.__all__.remove('GitHubWiki')
-
-    def render(self, token):
-        return self.renderer().render(token, {})
-
-class GitHubWiki(SpanToken):
+class GitHubWiki(span_token.SpanToken):
     pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
     def __init__(self, raw):
         alt, target = raw[2:-2].split('|', 1)
@@ -36,9 +17,19 @@ class GitHubWikiRenderer(HTMLRenderer):
         super().__init__(preamble)
         self.render_map['GitHubWiki'] = self.render_github_wiki
 
+    def __enter__(self):
+        span_token.GitHubWiki = GitHubWiki
+        span_token.__all__.append('GitHubWiki')
+        return super().__enter__()
+
+    def __exit__(self, exception_type, exception_val, traceback):
+        del span_token.GitHubWiki
+        span_token.__all__.remove('GitHubWiki')
+        super().__exit__(exception_type, exception_val, traceback)
+
     def render_github_wiki(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
-        target = urllib.parse.quote_plus(token.target)
+        target = escape_url(token.target)
         inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 
@@ -47,6 +38,5 @@ if __name__ == '__main__':
              'A block-level token that\n',
              'contains a [[Github Wiki|target]]\n',
              'link.\n']
-    with mistletoe.html_token.Context(), Context() as c:
-        token = mistletoe.Document(lines)
-        print(c.render(token))
+    with GitHubWikiRenderer as r:
+        print(r(Document(lines)))
