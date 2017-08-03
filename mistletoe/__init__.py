@@ -12,7 +12,6 @@ def markdown(iterable):
     Output HTML with default settings.
     Enables inline and block-level HTML tags.
     """
-    from mistletoe.html_token import Context
-    from mistletoe.html_renderer import render
-    with Context(): # span_token.HTMLSpan, block_token.HTMLBlock
-        return render(Document(iterable))
+    from mistletoe.html_renderer import HTMLRenderer
+    with HTMLRenderer() as r:
+        return r(Document(iterable))
