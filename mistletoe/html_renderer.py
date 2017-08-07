@@ -14,9 +14,6 @@ class HTMLRenderer(BaseRenderer):
 
     See mistletoe.base_renderer module for more info.
     """
-    def __init__(self, preamble=''):
-        super().__init__(preamble)
-
     def __enter__(self):
         """
         Namespace injection magic. Overrides super().__enter__.
@@ -184,12 +181,12 @@ class HTMLRenderer(BaseRenderer):
         return token.content
 
     def render_document(self, token, footnotes):
-        template = '<html>\n{preamble}<body>\n{inner}</body>\n</html>\n'
+        template = '<html>\n<body>\n{inner}</body>\n</html>\n'
         # kick off generator (destructive)
         token.children = list(token.children)
         # ... after the previous line token.footnotes is populated
         inner = self.render_inner(token, token.footnotes)
-        return template.format(preamble=self.preamble, inner=inner)
+        return template.format(inner=inner)
 
 def escape_url(raw):
     """

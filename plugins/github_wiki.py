@@ -17,9 +17,6 @@ class GitHubWiki(span_token.SpanToken):
         self.target = target.strip()
 
 class GitHubWikiRenderer(HTMLRenderer):
-    def __init__(self, preamble=''):
-        super().__init__(preamble)
-
     def __enter__(self):
         span_token.GitHubWiki = GitHubWiki
         span_token.__all__.append('GitHubWiki')

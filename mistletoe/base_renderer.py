@@ -32,9 +32,8 @@ class BaseRenderer(object):
 
     Attributes:
         render_map (dict): maps tokens to their corresponding render functions.
-        preamble (str): user-defined header section.
     """
-    def __init__(self, preamble=''):
+    def __init__(self):
         self.render_map = {
             'Strong':         self.render_strong,
             'Emphasis':       self.render_emphasis,
@@ -59,7 +58,6 @@ class BaseRenderer(object):
             'Separator':      self.render_separator,
             'Document':       self.render_document,
             }
-        self.preamble = preamble
 
     def render(self, token, footnotes={}):
         """
