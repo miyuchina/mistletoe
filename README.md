@@ -2,6 +2,8 @@
 
 [![Build Status][build-badge]][travis]
 [![Coverage Status][cover-badge]][coveralls]
+[![PyPI][pypi-badge]][pypi]
+[![is wheel][wheel-badge]][pypi]
 
 mistletoe is a Markdown parser in pure Python, designed to be fast, modular
 and fully customizable.
@@ -34,8 +36,9 @@ Features
 
 Installation
 ------------
-mistletoe is tested on Python 3.5, Python 3.6, and PyPy 5.8.0. Install
-mistletoe with pip:
+mistletoe requires Python 3.3 and above, including Python 3.7, the current
+development branch. It is also tested on PyPy 5.8.0. Install mistletoe with
+pip:
 
 ```sh
 pip3 install mistletoe
@@ -73,7 +76,7 @@ mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
 
 ```
-mistletoe [version 0.1 alpha] (interactive)
+mistletoe [version 0.2] (interactive)
 Type Ctrl-D to complete input, or Ctrl-C to exit.
 >>> some **bold text**
 ... and some *italics*
@@ -344,10 +347,13 @@ Copyright & License
   [CC BY 3.0][cc-by].
 * mistletoe is released under [GNU GPLv3][license], a copyleft license.
 
-[build-badge]: https://travis-ci.org/miyuchina/mistletoe.svg?branch=master
-[cover-badge]: https://coveralls.io/repos/github/miyuchina/mistletoe/badge.svg
+[build-badge]: https://img.shields.io/travis/miyuchina/mistletoe.svg?style=flat-square
+[cover-badge]: https://img.shields.io/coveralls/miyuchina/mistletoe.svg?style=flat-square
+[pypi-badge]: https://img.shields.io/pypi/v/mistletoe.svg?style=flat-square
+[wheel-badge]: https://img.shields.io/pypi/wheel/mistletoe.svg?style=flat-square
 [travis]: https://travis-ci.org/miyuchina/mistletoe
 [coveralls]: https://coveralls.io/github/miyuchina/mistletoe?branch=master
+[pypi]: https://pypi.python.org/pypi/mistletoe
 [mistune]: https://github.com/lepture/mistune
 [python-markdown]: https://github.com/waylan/Python-Markdown
 [python-markdown2]: https://github.com/trentm/python-markdown2
