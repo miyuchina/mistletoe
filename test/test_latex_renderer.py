@@ -1,6 +1,7 @@
 import unittest
 import mistletoe.block_token as block_token
 import mistletoe.span_token as span_token
+import mistletoe.latex_token as latex_token
 from mistletoe.latex_renderer import LaTeXRenderer
 
 class TestLaTeXRenderer(unittest.TestCase):
@@ -65,6 +66,10 @@ class TestLaTeXRenderer(unittest.TestCase):
     def test_autolink(self):
         raw, target = 'target', '\\url{target}'
         self._test_token(span_token.AutoLink, raw, target)
+
+    def test_math(self):
+        raw, target = '$ 1 + 2 = 3 $', '$ 1 + 2 = 3 $'
+        self._test_token(latex_token.Math, raw, target)
 
     def test_raw_text(self):
         raw, target = '$&#{}', '\\$\\&\\#\\{\\}'
