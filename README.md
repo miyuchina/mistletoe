@@ -254,7 +254,8 @@ rendered = GitHubWikiRenderer().render(token)
 
 We are technically good to go at this point. However, the code above
 messes up `span_token`'s namespace quite a bit. The actual `github_wiki`
-module in the `plugins/` directory uses Python's context manager:
+module in the `plugins/` directory uses Python's context manager, and
+also cleans up our extra render function in the `render_map`:
 
 ```python
 class GitHubWikiRenderer(HTMLRenderer):
@@ -262,11 +263,13 @@ class GitHubWikiRenderer(HTMLRenderer):
     def __enter__(self):
         span_token.GitHubWiki = GitHubWiki
         span_token.__all__.append('GitHubWiki')
+        self.render_map['GitHubWiki'] = self.render_github_wiki
         return super().__enter__()
 
     def __exit__(self, exception_type, exception_val, traceback):
         del span_token.GitHubWiki
         span_token.__all__.remove('GitHubWiki')
+        del self.render_map['GitHubWiki']
         super().__exit__(exception_type, exception_val, traceback)
     # ...
 ```

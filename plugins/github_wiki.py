@@ -19,17 +19,18 @@ class GitHubWiki(span_token.SpanToken):
 class GitHubWikiRenderer(HTMLRenderer):
     def __init__(self, preamble=''):
         super().__init__(preamble)
-        self.render_map['GitHubWiki'] = self.render_github_wiki
 
     def __enter__(self):
         span_token.GitHubWiki = GitHubWiki
         span_token.__all__.append('GitHubWiki')
+        self.render_map['GitHubWiki'] = self.render_github_wiki
         # we also want mixin HTML support
         return super().__enter__()
 
     def __exit__(self, exception_type, exception_val, traceback):
         del span_token.GitHubWiki
         span_token.__all__.remove('GitHubWiki')
+        del self.render_map['GitHubWiki']
         # cleanup HTML token injections as well
         super().__exit__(exception_type, exception_val, traceback)
 

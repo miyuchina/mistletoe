@@ -15,13 +15,7 @@ class HTMLRenderer(BaseRenderer):
     See mistletoe.base_renderer module for more info.
     """
     def __init__(self, preamble=''):
-        """
-        Defines extra renderer functions for html_token.HTMLSpan
-        and html_token.HTMLBlock.
-        """
         super().__init__(preamble)
-        self.render_map['HTMLSpan'] = self.render_html_span
-        self.render_map['HTMLBlock'] = self.render_html_block
 
     def __enter__(self):
         """
@@ -33,6 +27,9 @@ class HTMLRenderer(BaseRenderer):
         # ... which will be picked up by the tokenizer by:
         span_token.__all__.insert(0, 'HTMLSpan')
         block_token.__all__.insert(0, 'HTMLBlock')
+        # add render options for extra tokens
+        self.render_map['HTMLSpan'] = self.render_html_span
+        self.render_map['HTMLBlock'] = self.render_html_block
         return self
 
     def __exit__(self, exception_type, exception_val, traceback):
@@ -45,6 +42,9 @@ class HTMLRenderer(BaseRenderer):
         # stop trying to match for these tokens
         span_token.__all__.pop(0)
         block_token.__all__.pop(0)
+        # remove render_map entries
+        del self.render_map['HTMLSpan']
+        del self.render_map['HTMLBlock']
 
     def render_strong(self, token, footnotes):
         template = '<strong>{}</strong>'
