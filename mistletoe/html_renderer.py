@@ -181,12 +181,10 @@ class HTMLRenderer(BaseRenderer):
         return token.content
 
     def render_document(self, token, footnotes):
-        template = '<html>\n<body>\n{inner}</body>\n</html>\n'
         # kick off generator (destructive)
         token.children = list(token.children)
         # ... after the previous line token.footnotes is populated
-        inner = self.render_inner(token, token.footnotes)
-        return template.format(inner=inner)
+        return self.render_inner(token, token.footnotes)
 
 def escape_url(raw):
     """

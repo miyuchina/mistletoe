@@ -32,9 +32,7 @@ class TestHTMLRenderer(unittest.TestCase):
 
     def test_footnote_image(self):
         raw = ['![alt] [foo]\n', '\n', '[foo]: bar "title"\n']
-        target = ('<html>\n<body>\n'
-                  '<p><img src="bar" title="title" alt="alt"></p>\n'
-                  '</body>\n</html>\n')
+        target = '<p><img src="bar" title="title" alt="alt"></p>\n'
         self._test_token(block_token.Document, raw, target)
 
     def test_link(self):
@@ -43,9 +41,7 @@ class TestHTMLRenderer(unittest.TestCase):
 
     def test_footnote_link(self):
         raw = ['[name] [key]\n', '\n', '[key]: target\n']
-        target = ('<html>\n<body>\n'
-                  '<p><a href="target">name</a></p>\n'
-                  '</body>\n</html>\n')
+        target = '<p><a href="target">name</a></p>\n'
         self._test_token(block_token.Document, raw, target)
 
     def test_autolink(self):
@@ -92,8 +88,7 @@ class TestHTMLRenderer(unittest.TestCase):
                '    3. nested item 2\n',
                '        * further nested\n',
                '- item 3\n']
-        target = ('<html>\n<body>\n'
-                  '<ul>\n'
+        target = ('<ul>\n'
                     '<li>item 1</li>\n'
                     '<li>item 2</li>\n'
                     '<ol start="2">\n'
@@ -102,8 +97,7 @@ class TestHTMLRenderer(unittest.TestCase):
                       '<ul>\n<li>further nested</li>\n</ul>\n'
                     '</ol>\n'
                     '<li>item 3</li>\n'
-                  '</ul>\n'
-                  '</body>\n</html>\n')
+                  '</ul>\n')
         self._test_token(block_token.Document, raw, target)
 
     def test_list_item(self):
@@ -179,13 +173,10 @@ class TestHTMLRenderer(unittest.TestCase):
         raw = ['# hello\n',
                '<p>this is\n',
                'a paragraph</p>\n']
-        target = ('<html>\n<body>\n'
-                  '<h1>hello</h1>\n'
-                  '<p>this is\na paragraph</p>\n'
-                  '</body>\n</html>\n')
+        target = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'
         self._test_token(block_token.Document, raw, target)
 
     def test_document(self):
         raw = ['a paragraph\n']
-        target = '<html>\n<body>\n<p>a paragraph</p>\n</body>\n</html>\n'
+        target = '<p>a paragraph</p>\n'
         self._test_token(block_token.Document, raw, target)
