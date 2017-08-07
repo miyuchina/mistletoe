@@ -133,8 +133,5 @@ class LaTeXRenderer(BaseRenderer):
                     '\\begin{{document}}\n'
                     '{inner}'
                     '\\end{{document}}\n')
-        # kick off generator (destructive)
-        token.children = list(token.children)
-        # ... after the previous line token.footnotes is populated.
         inner = self.render_inner(token, token.footnotes)
         return template.format(inner=inner)

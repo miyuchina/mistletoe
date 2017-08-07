@@ -55,7 +55,9 @@ class Document(BlockToken):
     """
     def __init__(self, lines):
         self.footnotes = {}
-        self.children = tokenize(lines, root=self)
+        # Document tokens have immediate access to first-level block tokens.
+        # Useful for footnotes, etc.
+        self.children = list(tokenize(lines, root=self))
 
 class Heading(BlockToken):
     """
