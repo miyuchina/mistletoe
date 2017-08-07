@@ -1,7 +1,10 @@
 language: python
 python:
+    - "3.3"
+    - "3.4"
     - "3.5"
     - "3.6"
+    - "nightly"
 script: make test
 after_success:
     - pip install coveralls
