@@ -6,12 +6,12 @@ __all__ = ['html_renderer', 'ast_renderer', 'block_token', 'block_tokenizer',
            'span_token', 'span_tokenizer']
 
 from mistletoe.block_token import Document
+from mistletoe.html_renderer import HTMLRenderer
 
-def markdown(iterable):
+def markdown(iterable, renderer_cls=HTMLRenderer):
     """
     Output HTML with default settings.
     Enables inline and block-level HTML tags.
     """
-    from mistletoe.html_renderer import HTMLRenderer
-    with HTMLRenderer() as renderer:
+    with renderer_cls() as renderer:
         return renderer.render(Document(iterable))
