@@ -1,7 +1,8 @@
 from setuptools import setup
+import mistletoe
 
 setup(name='mistletoe',
-      version='0.2',
+      version=mistletoe.__version__,
       description='A fast, extensible Markdown parser in pure Python.',
       url='https://github.com/miyuchina/mistletoe',
       author='Mi Yu',

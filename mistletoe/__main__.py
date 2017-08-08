@@ -18,7 +18,7 @@ def interactive():
     Parse user input, dump to stdout, rinse and repeat.
     Python REPL style.
     """
-    print('mistletoe [version 0.2] (interactive)')
+    print('mistletoe [version {}] (interactive)'.format(mistletoe.__version__))
     print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
     while True:                               # eval loop
         try:
