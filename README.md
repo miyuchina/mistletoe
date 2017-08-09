@@ -30,9 +30,9 @@ Features
 * **Modular**: mistletoe is designed with modularity in mind. Its initial
   goal is to provide a clear and easy API to extend upon.
 
-* **Customizable**: mistletoe wants to solve the problem: "my Markdown is
-  better than yours." We want tools to suite our needs, rather than letting
-  tools dictate (and inhibit) our usage.
+* **Customizable**: as of now, mistletoe can render Markdown documents to
+  LaTeX, HTML and an abstract syntax tree out of the box. Writing a new
+  renderer for mistletoe is a relatively trivial task.
 
 Installation
 ------------
@@ -104,18 +104,24 @@ with open('foo.md', 'r') as fin:
 ```
 
 `mistletoe.markdown()` uses mistletoe's default settings: allowing HTML mixins
-and rendering to HTML.
+and rendering to HTML. The function also accepts an additional argument
+`renderer`. To produce LaTeX output:
 
-### Okay, give it to me straight
+```python
+import mistletoe
+from mistletoe.latex_renderer import LaTeXRenderer
 
-Here's how you would manually specify extra tokens and a renderer for
-mistletoe. In the following example, we use `HTMLRenderer` to render
+with open('foo.md', 'r') as fin:
+    rendered = mistletoe.markdown(fin, LaTeXRenderer)
+```
+
+Finally, here's how you would manually specify extra tokens and a renderer
+for mistletoe. In the following example, we use `HTMLRenderer` to render
 the AST, which adds `HTMLBlock` and `HTMLSpan` to the normal parsing
 process.
 
 ```python
-from mistletoe import Document
-from mistletoe.html_renderer import HTMLRenderer
+from mistletoe import Document, HTMLRenderer
 
 with open('foo.md', 'r') as fin:
     with HTMLRenderer() as renderer:
