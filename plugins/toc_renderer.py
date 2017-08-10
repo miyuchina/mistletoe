@@ -12,9 +12,11 @@ class TOCRenderer(HTMLRenderer):
     """
     Extends HTMLRenderer class for table of contents support.
     """
-    def __init__(self):
+    def __init__(self, omit_title=True, filter_conds=[]):
         super().__init__()
-        self.headings = []
+        self._headings = []
+        self.omit_title = omit_title
+        self.filter_conds = filter_conds
 
     @property
     def toc(self):
@@ -29,7 +31,7 @@ class TOCRenderer(HTMLRenderer):
             template = '{indent}- {content}\n'
             return template.format(indent=get_indent(level), content=content)
 
-        return List([build_list_item(heading) for heading in self.headings])
+        return List([build_list_item(heading) for heading in self._headings])
 
     def render_heading(self, token, footnotes):
         """
@@ -37,7 +39,9 @@ class TOCRenderer(HTMLRenderer):
         then returns it.
         """
         rendered = super().render_heading(token, footnotes)
-        self.store_rendered_heading(rendered)
+        if not (self.omit_title and token.level == 1
+                or any(cond(rendered) for cond in self.filter_conds)):
+            self.store_rendered_heading(rendered)
         return rendered
 
     def store_rendered_heading(self, rendered):
@@ -47,7 +51,7 @@ class TOCRenderer(HTMLRenderer):
         """
         level = int(rendered[2])
         content = re.sub(r'<.+?>', '', rendered[4:-6])
-        self.headings.append((level, content))
+        self._headings.append((level, content))
 
 if __name__ == '__main__':
     from mistletoe import Document
