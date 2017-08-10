@@ -351,7 +351,7 @@ Copyright & License
 -------------------
 * mistletoe's logo uses artwork by Daniele De Santis, under
   [CC BY 3.0][cc-by].
-* mistletoe is released under [GNU GPLv3][license], a copyleft license.
+* mistletoe is released under [MIT][license].
 
 [build-badge]: https://img.shields.io/travis/miyuchina/mistletoe.svg?style=flat-square
 [cover-badge]: https://img.shields.io/coveralls/miyuchina/mistletoe.svg?style=flat-square
