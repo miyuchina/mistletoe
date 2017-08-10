@@ -25,6 +25,8 @@ class TOCRenderer(HTMLRenderer):
         Returns table of contents as a block_token.List instance.
         """
         def get_indent(level):
+            if self.omit_title:
+                level -= 1
             return ' ' * 4 * (level - 1)
 
         def build_list_item(heading):
