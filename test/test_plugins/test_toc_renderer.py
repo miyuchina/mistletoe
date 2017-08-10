@@ -15,6 +15,12 @@ class TestTOCRenderer(unittest.TestCase):
         rendered_heading = renderer.render_heading(token, {})
         self.assertEqual(renderer._headings[0], (3, 'some text'))
 
+    def test_depth(self):
+        renderer = TOCRenderer(depth=3)
+        token = Document(['# title\n', '## heading\n', '#### heading\n'])
+        renderer.render(token)
+        self.assertEqual(renderer._headings, [(2, 'heading')])
+
     def test_omit_title(self):
         renderer = TOCRenderer(omit_title=True)
         token = Document(['# title\n', '\n', '## heading\n'])

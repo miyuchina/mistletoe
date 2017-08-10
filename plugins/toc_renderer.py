@@ -12,9 +12,10 @@ class TOCRenderer(HTMLRenderer):
     """
     Extends HTMLRenderer class for table of contents support.
     """
-    def __init__(self, omit_title=True, filter_conds=[]):
+    def __init__(self, depth=5, omit_title=True, filter_conds=[]):
         super().__init__()
         self._headings = []
+        self.depth = depth
         self.omit_title = omit_title
         self.filter_conds = filter_conds
 
@@ -41,6 +42,7 @@ class TOCRenderer(HTMLRenderer):
         rendered = super().render_heading(token, footnotes)
         content = self.parse_rendered_heading(rendered)
         if not (self.omit_title and token.level == 1
+                or token.level > self.depth
                 or any(cond(content) for cond in self.filter_conds)):
             self._headings.append((token.level, content))
         return rendered
