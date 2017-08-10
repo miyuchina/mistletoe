@@ -4,11 +4,10 @@ from mistletoe.block_token import Document, Heading, List
 from plugins.toc_renderer import TOCRenderer
 
 class TestTOCRenderer(unittest.TestCase):
-    def test_store_rendered_heading(self):
-        renderer = TOCRenderer()
+    def test_parse_rendered_heading(self):
         rendered_heading = '<h3>some <em>text</em></h3>\n'
-        renderer.store_rendered_heading(rendered_heading)
-        self.assertEqual(renderer._headings[0], (3, 'some text'))
+        content = TOCRenderer.parse_rendered_heading(rendered_heading)
+        self.assertEqual(content, 'some text')
 
     def test_render_heading(self):
         renderer = TOCRenderer()
@@ -24,16 +23,16 @@ class TestTOCRenderer(unittest.TestCase):
 
     def test_filter_conditions(self):
         import re
-        filter_conds = [lambda x: re.match(r'<h2>', x),
-                        lambda x: re.match(r'<h3>', x)]
+        filter_conds = [lambda x: re.match(r'heading', x),
+                        lambda x: re.match(r'foo', x)]
         renderer = TOCRenderer(filter_conds=filter_conds)
         token = Document(['# title\n',
                           '\n',
                           '## heading\n',
                           '\n',
-                          '#### heading \n'])
+                          '#### not heading\n'])
         renderer.render(token)
-        self.assertEqual(renderer._headings, [(4, 'heading')])
+        self.assertEqual(renderer._headings, [(4, 'not heading')])
 
     def test_get_toc(self):
         headings = [(1, 'heading 1'),

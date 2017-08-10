@@ -39,19 +39,18 @@ class TOCRenderer(HTMLRenderer):
         then returns it.
         """
         rendered = super().render_heading(token, footnotes)
+        content = self.parse_rendered_heading(rendered)
         if not (self.omit_title and token.level == 1
-                or any(cond(rendered) for cond in self.filter_conds)):
-            self.store_rendered_heading(rendered)
+                or any(cond(content) for cond in self.filter_conds)):
+            self._headings.append((token.level, content))
         return rendered
 
-    def store_rendered_heading(self, rendered):
+    @staticmethod
+    def parse_rendered_heading(rendered):
         """
-        Helper method; converts rendered heading to a tuple pair
-        (level, content), where content is stripped of HTML tags.
+        Helper method; converts rendered heading to plain text.
         """
-        level = int(rendered[2])
-        content = re.sub(r'<.+?>', '', rendered[4:-6])
-        self._headings.append((level, content))
+        return re.sub(r'<.+?>', '', rendered[4:-6])
 
 if __name__ == '__main__':
     from mistletoe import Document
