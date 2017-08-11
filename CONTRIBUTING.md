@@ -97,8 +97,14 @@ Apart from that, stay consistent with the coding style around you. But don't
 get boggled down by this: if you have a genius idea, I'd love to clean up
 for you; write down your genius idea first.
 
+## Get in touch
+
+I tweet [@mi_before_yu][twitter]. Also yell at me over [email][email].
+
 [nargles]: http://harrypotter.wikia.com/wiki/Nargle
 [readme]: README.md
 [wiki]: https://github.com/miyuchina/mistletoe/wiki
 [style-guide]: https://google.github.io/styleguide/pyguide.html
 [pep-8]: https://www.python.org/dev/peps/pep-0008/
+[twitter]: https://twitter.com/mi_before_yu
+[email]: mailto:miyu.china@icloud.com
