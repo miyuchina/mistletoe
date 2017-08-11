@@ -52,6 +52,8 @@ cd mistletoe
 pip3 install -e .
 ```
 
+See the [contributing][contributing] doc for how to contribute to mistletoe.
+
 Usage
 -----
 
@@ -363,6 +365,7 @@ Copyright & License
 [mistune]: https://github.com/lepture/mistune
 [python-markdown]: https://github.com/waylan/Python-Markdown
 [python-markdown2]: https://github.com/trentm/python-markdown2
+[contributing]: CONTRIBUTING.md
 [xkcd]: https://xkcd.com/208/
 [meme]: http://www.greghendershott.com/img/grumpy-regexp-parser.png
 [hendershott]: http://www.greghendershott.com/2013/11/markdown-parser-redesign.html
