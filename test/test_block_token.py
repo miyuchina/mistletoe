@@ -55,6 +55,12 @@ class TestBlockCode(unittest.TestCase):
         c = block_token.BlockCode(l2)
         helpers.check_equal(self, list(t.children)[0], c)
 
+    def test_hash_in_code(self):
+        l = ['```python\n', '# comment\n', '```\n']
+        t = block_token.Document(l)
+        c = span_token.RawText('# comment\n')
+        helpers.check_equal(self, list(list(t.children)[0].children)[0], c)
+
     def test_indented_code(self):
         l1 = ['    rm dir\n', '    mkdir test\n']
         l2 = ['```\n', 'rm dir\n', 'mkdir test\n', '```\n']

@@ -17,11 +17,8 @@ def normalize(lines):
         # normalize tabs
         line = line.replace('\t', '    ')
         # append headings with a newline
-        if heading.match(line):
-            yield line
-            yield '\n'
         # enclose code fence with newlines.
-        elif not code_fence and line.startswith('```'):
+        if not code_fence and line.startswith('```'):
             code_fence = True
             yield '\n'
             yield line
@@ -34,6 +31,9 @@ def normalize(lines):
                 yield ' ' + line
             else:
                 yield line
+        elif heading.match(line):
+            yield line
+            yield '\n'
         else: yield line
     # end the document with a newline, so that tokenize
     # can yield the last token
