@@ -16,8 +16,8 @@ class MathJaxRenderer(HTMLRenderer, LaTeXRenderer):
 
     def render_math(self, token, footnotes):
         if token.content.startswith('$$'):
-            return token.content
-        return '${}$'.format(token.content)
+            return self.render_raw_text(token, footnotes)
+        return '${}$'.format(self.render_raw_text(token, footnotes))
 
     def render_document(self, token, footnotes):
         output = super().render_document(token, footnotes)
