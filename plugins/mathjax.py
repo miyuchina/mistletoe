@@ -2,7 +2,6 @@
 Provides MathJax support for rendering Markdown with LaTeX to html.
 """
 
-from mistletoe.latex_token import Math
 from mistletoe.html_renderer import HTMLRenderer
 from mistletoe.latex_renderer import LaTeXRenderer
 
