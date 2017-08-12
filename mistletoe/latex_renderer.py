@@ -15,7 +15,7 @@ class LaTeXRenderer(BaseRenderer):
 
     def __exit__(self, exception_type, exception_val, traceback):
         del span_token.Math
-        span_token.__all__.pop(1)
+        span_token.__all__.remove('Math')
         del self.render_map['Math']
 
     def render_strong(self, token, footnotes):

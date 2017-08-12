@@ -37,8 +37,8 @@ class HTMLRenderer(BaseRenderer):
         del span_token.HTMLSpan
         del block_token.HTMLBlock
         # stop trying to match for these tokens
-        span_token.__all__.pop(0)
-        block_token.__all__.pop(0)
+        span_token.__all__.remove('HTMLSpan')
+        block_token.__all__.remove('HTMLBlock')
         # remove render_map entries
         del self.render_map['HTMLSpan']
         del self.render_map['HTMLBlock']
