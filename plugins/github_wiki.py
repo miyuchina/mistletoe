@@ -4,44 +4,24 @@ GitHub Wiki support for mistletoe.
 
 import re
 import html
-import mistletoe.span_token as span_token
+from mistletoe.span_token import SpanToken
 from mistletoe.html_renderer import HTMLRenderer, escape_url
 
-__all__ = ['GitHubWiki', 'GitHubWikiRenderer']
+__all__ = ['GithubWiki', 'GithubWikiRenderer']
 
-class GitHubWiki(span_token.SpanToken):
+class GithubWiki(SpanToken):
     pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
     def __init__(self, raw):
         alt, target = raw[2:-2].split('|', 1)
         super().__init__(alt.strip())
         self.target = target.strip()
 
-class GitHubWikiRenderer(HTMLRenderer):
-    def __enter__(self):
-        span_token.GitHubWiki = GitHubWiki
-        span_token.__all__.append('GitHubWiki')
-        self.render_map['GitHubWiki'] = self.render_github_wiki
-        # we also want mixin HTML support
-        return super().__enter__()
-
-    def __exit__(self, exception_type, exception_val, traceback):
-        del span_token.GitHubWiki
-        span_token.__all__.remove('GitHubWiki')
-        del self.render_map['GitHubWiki']
-        # cleanup HTML token injections as well
-        super().__exit__(exception_type, exception_val, traceback)
+class GithubWikiRenderer(HTMLRenderer):
+    def __init__(self):
+        super().__init__(GithubWiki)
 
     def render_github_wiki(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
         target = escape_url(token.target)
         inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
-
-if __name__ == '__main__':
-    from mistletoe import Document
-    lines = ['# GitHub Wiki link demo\n',
-             'A block-level token that\n',
-             'contains a [[Github Wiki|target]]\n',
-             'link.\n']
-    with GitHubWikiRenderer() as r:
-        print(r(Document(lines)))

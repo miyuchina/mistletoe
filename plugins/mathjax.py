@@ -12,15 +12,6 @@ class MathJaxRenderer(HTMLRenderer, LaTeXRenderer):
     """
     mathjax_src = '<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>\n'
 
-    def __enter__(self):
-        super().__enter__()                    # HTMLRenderer.__enter__
-        super(HTMLRenderer, self).__enter__()  # LaTeXRenderer.__enter__
-        return self
-
-    def __exit__(self, *args):
-        super().__exit__(*args)                   # HTMLRenderer.__exit__
-        super(HTMLRenderer, self).__exit__(*args) # LaTeXRenderer.__exit__
-
     def render_math(self, token, footnotes):
         """
         Ensure Math tokens are all enclosed in two dollar signs.
