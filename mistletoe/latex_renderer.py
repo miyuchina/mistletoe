@@ -2,21 +2,13 @@
 LaTeX renderer for mistletoe.
 """
 
-import mistletoe.span_token as span_token
 import mistletoe.latex_token as latex_token
 from mistletoe.base_renderer import BaseRenderer
 
 class LaTeXRenderer(BaseRenderer):
-    def __enter__(self):
-        span_token.Math = latex_token.Math
-        span_token.__all__.insert(1, 'Math')
-        self.render_map['Math'] = self.render_math
-        return self
-
-    def __exit__(self, exception_type, exception_val, traceback):
-        del span_token.Math
-        span_token.__all__.remove('Math')
-        del self.render_map['Math']
+    def __init__(self, *extras):
+        latex_tokens = [getattr(latex_token, name) for name in latex_token.__all__]
+        super().__init__(*latex_tokens, *extras)
 
     def render_strong(self, token, footnotes):
         return '\\textbf{{{}}}'.format(self.render_inner(token, footnotes))

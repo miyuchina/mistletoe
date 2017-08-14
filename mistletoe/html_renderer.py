@@ -3,8 +3,6 @@ HTML renderer for mistletoe.
 """
 
 import html
-import mistletoe.span_token as span_token
-import mistletoe.block_token as block_token
 import mistletoe.html_token as html_token
 from mistletoe.base_renderer import BaseRenderer
 
@@ -14,34 +12,9 @@ class HTMLRenderer(BaseRenderer):
 
     See mistletoe.base_renderer module for more info.
     """
-    def __enter__(self):
-        """
-        Namespace injection magic. Overrides super().__enter__.
-        """
-        # injecting attributes:
-        span_token.HTMLSpan = html_token.HTMLSpan
-        block_token.HTMLBlock = html_token.HTMLBlock
-        # ... which will be picked up by the tokenizer by:
-        span_token.__all__.insert(0, 'HTMLSpan')
-        block_token.__all__.insert(0, 'HTMLBlock')
-        # add render options for extra tokens
-        self.render_map['HTMLSpan'] = self.render_html_span
-        self.render_map['HTMLBlock'] = self.render_html_block
-        return self
-
-    def __exit__(self, exception_type, exception_val, traceback):
-        """
-        Teardown. Overrides super().__exit__.
-        """
-        # clean up namespace
-        del span_token.HTMLSpan
-        del block_token.HTMLBlock
-        # stop trying to match for these tokens
-        span_token.__all__.remove('HTMLSpan')
-        block_token.__all__.remove('HTMLBlock')
-        # remove render_map entries
-        del self.render_map['HTMLSpan']
-        del self.render_map['HTMLBlock']
+    def __init__(self, *extras):
+        html_tokens = [getattr(html_token, name) for name in html_token.__all__]
+        return super().__init__(*html_tokens, *extras)
 
     def render_strong(self, token, footnotes):
         template = '<strong>{}</strong>'
