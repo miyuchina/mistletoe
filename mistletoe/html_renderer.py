@@ -3,6 +3,7 @@ HTML renderer for mistletoe.
 """
 
 import html
+from itertools import chain
 import mistletoe.html_token as html_token
 from mistletoe.base_renderer import BaseRenderer
 
@@ -14,7 +15,7 @@ class HTMLRenderer(BaseRenderer):
     """
     def __init__(self, *extras):
         tokens = self._tokens_from_module(html_token)
-        super().__init__(*tokens, *extras)
+        super().__init__(*chain(tokens, extras))
 
     def render_strong(self, token, footnotes):
         template = '<strong>{}</strong>'
