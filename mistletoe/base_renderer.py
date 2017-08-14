@@ -3,8 +3,7 @@ Base class for renderers.
 """
 
 import re
-import mistletoe.block_token as block_token
-import mistletoe.span_token as span_token
+import inspect
 
 class BaseRenderer(object):
     parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
@@ -109,14 +108,8 @@ class BaseRenderer(object):
             return 'render_{}'.format(snake)
 
         for token in self._extras:
-            cls_name = token.__name__
-            if issubclass(token, block_token.BlockToken):
-                setattr(block_token, cls_name, token)
-                block_token.__all__.insert(1, cls_name)
-            else:
-                setattr(span_token, cls_name, token)
-                span_token.__all__.insert(1, cls_name)
-            self.render_map[cls_name] = getattr(self, cls_to_func(cls_name))
+            inspect.getmodule(token.__bases__[0]).add_token(token)
+            self.render_map[token.__name__] = getattr(self, cls_to_func(token.__name__))
         return self
 
     def __exit__(self, exception_type, exception_val, traceback):
@@ -127,12 +120,7 @@ class BaseRenderer(object):
         tokens injected should clean up namespace here.
         """
         for token in self._extras:
-            if issubclass(token, block_token.BlockToken):
-                delattr(block_token, token.__name__)
-                block_token.__all__.remove(token.__name__)
-            else:
-                delattr(span_token, token.__name__)
-                span_token.__all__.remove(token.__name__)
+            inspect.getmodule(token.__bases__[0]).remove_token(token)
             del self.render_map[token.__name__]
 
     @staticmethod

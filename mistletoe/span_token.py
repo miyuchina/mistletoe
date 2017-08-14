@@ -28,6 +28,14 @@ def tokenize_inner(content):
     fallback_token = RawText
     return tokenizer.tokenize(content, token_types, fallback_token)
 
+def add_token(token_cls):
+    globals()[token_cls.__name__] = token_cls
+    __all__.insert(1, token_cls.__name__)
+
+def remove_token(token_cls):
+    del globals()[token_cls.__name__]
+    __all__.remove(token_cls.__name__)
+
 class SpanToken(object):
     """
     Base class for span-level tokens. Recursively parse inner tokens.

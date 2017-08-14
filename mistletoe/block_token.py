@@ -28,6 +28,14 @@ def tokenize(lines, root=None):
     fallback_token = Paragraph
     return tokenizer.tokenize(lines, token_types, fallback_token, root)
 
+def add_token(token_cls):
+    globals()[token_cls.__name__] = token_cls
+    __all__.insert(1, token_cls.__name__)
+
+def remove_token(token_cls):
+    del globals()[token_cls.__name__]
+    __all__.remove(token_cls.__name__)
+
 class BlockToken(object):
     """
     Base class for span-level tokens. Recursively parse inner tokens.
