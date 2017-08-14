@@ -3,9 +3,14 @@
 set -e
 
 function main {
+    if [[ "$1" == "" ]]; then
+        echo "[Error] Specify how far you want to go back."
+        exit 1
+    fi
+
     CURR_BRANCH="$(get_current_branch)"
 
-    git checkout --quiet HEAD~1
+    git checkout --quiet HEAD~$1
     render_to_file "out2.html"
     OLD_SHA=$(get_sha "out2.html")
 
@@ -42,4 +47,4 @@ function get_diff {
     diff out.html out2.html | view -
 }
 
-main
+main $1
