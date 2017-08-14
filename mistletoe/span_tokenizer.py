@@ -33,6 +33,9 @@ def tokenize(content, token_types, fallback_token):
             # there's text between our current position and the next token
             yield fallback_token(content[index:min_index])
         if min_match_obj:                # min_match_obj is not None
-            yield min_token_type(min_match_obj.group(1))
+            yield min_token_type(_first_not_none_group(min_match_obj))
             index += min_match_obj.end() # update pointer
         else: return                     # min_match_obj is None; no more tokens
+
+def _first_not_none_group(match_obj):
+    return next(group for group in match_obj.groups() if group is not None)

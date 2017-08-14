@@ -85,6 +85,11 @@ class TestEmphasis(unittest.TestCase):
         c = span_token.RawText('some text')
         helpers.check_equal(self, list(t.children)[0], c)
 
+    def test_parse(self):
+        t = span_token.Strong('_some text_')
+        c = span_token.Emphasis('some text')
+        helpers.check_equal(self, list(t.children)[0], c)
+
 class TestInlineCode(unittest.TestCase):
     def test_raw(self):
         t = span_token.InlineCode('some code')
