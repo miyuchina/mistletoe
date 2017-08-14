@@ -6,7 +6,7 @@ import markdown
 import markdown2
 import mistune
 import mistletoe
-from time import time
+from time import perf_counter
 
 __all__ = ['run_markdown', 'run_markdown2', 'run_mistune', 'run_mistletoe']
 
@@ -16,10 +16,10 @@ TIMES = 1000
 def benchmark(func):
     def inner():
         print(func.__name__.split('_')[1], end=": ")
-        start = time()
+        start = perf_counter()
         for i in range(TIMES):
             func()
-        end = time()
+        end = perf_counter()
         print(end - start)
     return inner
 
