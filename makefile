@@ -1,4 +1,4 @@
-.PHONY: run test coverage integration
+.PHONY: run test coverage integration benchmark
 
 run:
 	python3 -m mistletoe
@@ -13,4 +13,7 @@ coverage:
 	deactivate
 
 integration:
-	./test/test_ci.sh
+	./test/test_ci.sh 1
+
+benchmark:
+	python3 test/benchmark.py
