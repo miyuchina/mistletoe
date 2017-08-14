@@ -7,8 +7,8 @@ from mistletoe.base_renderer import BaseRenderer
 
 class LaTeXRenderer(BaseRenderer):
     def __init__(self, *extras):
-        latex_tokens = [getattr(latex_token, name) for name in latex_token.__all__]
-        super().__init__(*latex_tokens, *extras)
+        tokens = self._tokens_from_module(latex_token)
+        super().__init__(*tokens, *extras)
 
     def render_strong(self, token, footnotes):
         return '\\textbf{{{}}}'.format(self.render_inner(token, footnotes))

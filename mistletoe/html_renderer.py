@@ -13,8 +13,8 @@ class HTMLRenderer(BaseRenderer):
     See mistletoe.base_renderer module for more info.
     """
     def __init__(self, *extras):
-        html_tokens = [getattr(html_token, name) for name in html_token.__all__]
-        return super().__init__(*html_tokens, *extras)
+        tokens = self._tokens_from_module(html_token)
+        super().__init__(*tokens, *extras)
 
     def render_strong(self, token, footnotes):
         template = '<strong>{}</strong>'

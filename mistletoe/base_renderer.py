@@ -134,3 +134,7 @@ class BaseRenderer(object):
                 delattr(span_token, token.__name__)
                 span_token.__all__.remove(token.__name__)
             del self.render_map[token.__name__]
+
+    @staticmethod
+    def _tokens_from_module(module):
+        return [getattr(module, name) for name in module.__all__]
