@@ -7,6 +7,7 @@ import mistletoe.block_token as block_token
 import mistletoe.span_token as span_token
 
 class BaseRenderer(object):
+    parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
     """
     Base class for renderers.
 
@@ -103,14 +104,19 @@ class BaseRenderer(object):
         injected to mistletoe.span_token / mistletoe.block_token
         namespace.
         """
+        def cls_to_func(cls_name):
+            snake = '_'.join(map(str.lower, self.parse_name.findall(cls_name)))
+            return 'render_{}'.format(snake)
+
         for token in self._extras:
+            cls_name = token.__name__
             if issubclass(token, block_token.BlockToken):
-                setattr(block_token, token.__name__, token)
-                block_token.__all__.insert(1, token.__name__)
+                setattr(block_token, cls_name, token)
+                block_token.__all__.insert(1, cls_name)
             else:
-                setattr(span_token, token.__name__, token)
-                span_token.__all__.insert(1, token.__name__)
-            self.render_map[token.__name__] = getattr(self, cls_to_render_func(token.__name__))
+                setattr(span_token, cls_name, token)
+                span_token.__all__.insert(1, cls_name)
+            self.render_map[cls_name] = getattr(self, cls_to_func(cls_name))
         return self
 
     def __exit__(self, exception_type, exception_val, traceback):
@@ -128,6 +134,3 @@ class BaseRenderer(object):
                 delattr(span_token, token.__name__)
                 span_token.__all__.remove(token.__name__)
             del self.render_map[token.__name__]
-
-def cls_to_render_func(cls_name):
-    return 'render_' + '_'.join(map(str.lower, re.findall(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))", cls_name)))
