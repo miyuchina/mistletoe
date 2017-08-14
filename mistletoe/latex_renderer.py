@@ -8,6 +8,10 @@ from mistletoe.base_renderer import BaseRenderer
 
 class LaTeXRenderer(BaseRenderer):
     def __init__(self, *extras):
+        """
+        Args:
+            extras (list): allows subclasses to add even more custom tokens.
+        """
         tokens = self._tokens_from_module(latex_token)
         super().__init__(*chain(tokens, extras))
 

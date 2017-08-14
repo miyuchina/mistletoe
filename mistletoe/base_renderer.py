@@ -15,27 +15,31 @@ class BaseRenderer(object):
     *   ... be a context manager (by inheriting __enter__ and __exit__);
 
     Custom renderers could ...
+    *   ... add additional tokens into the parsing process by passing custom
+        tokens to super().__init__();
     *   ... add additional render functions by appending to self.render_map;
-    *   ... inject custom tokens into the parsing process (by overriding
-        __enter__ and __exit__)
 
-    Example:
+    Usage:
         Suppose SomeRenderer inherits BaseRenderer, and fin is the input file.
         The syntax looks something like this:
 
             >>> from mistletoe import Document
             >>> from some_renderer import SomeRenderer
-            >>> with SomeRenderer as r:
-            ...     rendered = r(Document(fin))
+            >>> with SomeRenderer() as renderer:
+            ...     rendered = renderer.render(Document(fin))
 
         See mistletoe.html_renderer for an implementation example.
 
     Naming conventions:
-        The keys of self.render_map should exactly match the class
-        name of tokens.
+        *   The keys of self.render_map should exactly match the class
+            name of tokens;
+        *   Render function names should be of form: "render_" + the
+            "snake-case" form of token's class name.
 
     Attributes:
         render_map (dict): maps tokens to their corresponding render functions.
+        _extras (list): a list of custom tokens to be added to the
+                        parsing process.
     """
     def __init__(self, *extras):
         self.render_map = {
@@ -98,10 +102,12 @@ class BaseRenderer(object):
         """
         Make renderer classes into context managers.
 
-        This should be overridden in subclasses when custom tokens
-        are needed. Specifically, custom token classes should be
-        injected to mistletoe.span_token / mistletoe.block_token
-        namespace.
+        Takes self._extras and inserts the tokens into the parsing process;
+        also adds respective render functions to self.render_map.
+
+        For better performance, custom renderers can override this function
+        and do injections manually. Regexes and inspect.getmodule can be
+        expensive when executed significant number of times.
         """
         def cls_to_func(cls_name):
             snake = '_'.join(map(str.lower, self.parse_name.findall(cls_name)))
@@ -116,8 +122,8 @@ class BaseRenderer(object):
         """
         Make renderer classes into context managers.
 
-        Provides teardown logic for __enter__. Subclasses with custom
-        tokens injected should clean up namespace here.
+        Removes self._extras from their respective name space;
+        also removes respective render functions from self.render_map.
         """
         for token in self._extras:
             inspect.getmodule(token.__bases__[0]).remove_token(token)
@@ -125,4 +131,9 @@ class BaseRenderer(object):
 
     @staticmethod
     def _tokens_from_module(module):
+        """
+        Helper method; takes a module and returns a list of all token classes
+        specified in module.__all__. Useful when custom tokens are defined in a
+        separate module.
+        """
         return [getattr(module, name) for name in module.__all__]

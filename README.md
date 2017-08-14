@@ -132,6 +132,9 @@ with open('foo.md', 'r') as fin:
 
 Developer's Guide
 -----------------
+**Note:** mistletoe 0.3 significantly simplifies the process of adding your
+custom tokens, but breaks backwards compatibility. Oh well.
+
 Here's an example to add GitHub-style wiki links to the parsing process,
 and provide a renderer for this new token.
 
@@ -144,7 +147,7 @@ token, all we need to do is make a subclass of `SpanToken`:
 ```python
 from mistletoe.span_token import SpanToken
 
-class GitHubWiki(SpanToken):
+class GithubWiki(SpanToken):
     pass
 ```
 
@@ -154,7 +157,7 @@ parsing process. As a refresher, GitHub wiki looks something like this:
 that stores the compiled regex:
 
 ```python
-class GitHubWiki(SpanToken):
+class GithubWiki(SpanToken):
     pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
     def __init__(self, raw):
         pass
@@ -188,7 +191,7 @@ After some cleaning-up, this is what our new token class looks like:
 ```python
 from mistletoe.span_token import SpanToken
 
-class GitHubWiki(SpanToken):
+class GithubWiki(SpanToken):
     pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
     def __init__(self, raw):
         alt, target = raw[2:-2].split('|', 1)
@@ -198,23 +201,20 @@ class GitHubWiki(SpanToken):
 
 ### A new renderer
 
-If we only need to use GitHubWiki only once, we can simply create an
-`HTMLRenderer` instance, and append a `render_github_wiki()` function to
-its `render_map`. However, let's suppose we are writing a plugin for others
-to use. We only need to subclass `HTMLRenderer` to provide reusability:
+Adding a custom token to the parsing process usually involves a lot
+of nasty implementation details. Fortunately, mistletoe takes care
+of most of them for you. Simply pass your custom token class to 
+`super().__init__()` does the trick:
 
 ```python
 from mistletoe.html_renderer import HTMLRenderer
 
-class GitHubWikiRenderer(HTMLRenderer):
-    def __init__(self, preamble=''):
-        super().__init__(preamble)
-        self.render_map['GitHubWiki'] = self.render_github_wiki
+class GithubWikiRenderer(HTMLRenderer):
+    def __init__(self):
+        super().__init__(GithubWiki)
 ```
 
-The `super` constructor call inherits the original `render_map` from
-`HTMLRenderer`. We then add an additional entry to the `render_map`,
-pointing to our new render method:
+We then only need to tell mistletoe how to render our new token:
 
 ```python
 def render_github_wiki(self, token):
@@ -223,69 +223,23 @@ def render_github_wiki(self, token):
     inner = self.render_inner(token)
     return template.format(target=target, inner=inner)
 ```
-
-`self.render_inner(token)` recursively calls `render()` on the child tokens
-of `token`, then joins them together as a single string. Cleaning up, we
-have our new renderer class:
+Cleaning up, we have our new renderer class:
 
 ```python
-import urllib.parse
-from mistletoe.html_renderer import HTMLRenderer
+from mistletoe.html_renderer import HTMLRenderer, escape_url
 
-class GitHubWikiRenderer(HTMLRenderer):
-    def __init__(self, preamble=''):
-        super().__init__(preamble)
-        self.render_map['GitHubWiki'] = self.render_github_wiki
+class GithubWikiRenderer(HTMLRenderer):
+    def __init__(self):
+        super().__init__(GithubWiki)
 
-    def render_github_wiki(self, token):
+    def render_github_wiki(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
-        target = urllib.parse.quote_plus(token.target)
-        inner = self.render_inner(token)
+        target = escape_url(token.target)
+        inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 ```
 
-### Putting everything together
-
-mistletoe's span-level tokenizer looks for tokens in the `__all__`
-variable of `span_token` module.  The magic of injecting our `GitHubWiki`
-token into the parsing process, then, is pretty straight-forward:
-
-```python
-import mistletoe
-
-mistletoe.span_token.GitHubWiki = GitHubWiki
-mistletoe.span_token.__all__.append('GitHubWiki')
-```
-
-... and when we render:
-
-```python
-rendered = GitHubWikiRenderer().render(token)
-```
-
-We are technically good to go at this point. However, the code above
-messes up `span_token`'s namespace quite a bit. The actual `github_wiki`
-module in the `plugins/` directory uses Python's context manager, and
-also cleans up our extra render function in the `render_map`:
-
-```python
-class GitHubWikiRenderer(HTMLRenderer):
-    # ...
-    def __enter__(self):
-        span_token.GitHubWiki = GitHubWiki
-        span_token.__all__.append('GitHubWiki')
-        self.render_map['GitHubWiki'] = self.render_github_wiki
-        return super().__enter__()
-
-    def __exit__(self, exception_type, exception_val, traceback):
-        del span_token.GitHubWiki
-        span_token.__all__.remove('GitHubWiki')
-        del self.render_map['GitHubWiki']
-        super().__exit__(exception_type, exception_val, traceback)
-    # ...
-```
-
-This allows us to use our new token like this:
+### Take it for a spin?
 
 ```python
 from mistletoe import Document

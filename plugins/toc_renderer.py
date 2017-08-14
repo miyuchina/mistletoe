@@ -16,10 +16,11 @@ class TOCRenderer(HTMLRenderer):
         depth (int): the maximum level of heading to be included in TOC;
         omit_title (bool): whether to ignore tokens where token.level == 1;
         filter_conds (list): when any of these functions evaluate to true,
-                             current heading will not be included.
+                             current heading will not be included;
+        extras (list): allows subclasses to add even more custom tokens.
     """
-    def __init__(self, depth=5, omit_title=True, filter_conds=[]):
-        super().__init__()
+    def __init__(self, depth=5, omit_title=True, filter_conds=[], *extras):
+        super().__init__(*extras)
         self._headings = []
         self.depth = depth
         self.omit_title = omit_title

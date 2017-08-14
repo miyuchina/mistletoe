@@ -14,6 +14,10 @@ class HTMLRenderer(BaseRenderer):
     See mistletoe.base_renderer module for more info.
     """
     def __init__(self, *extras):
+        """
+        Args:
+            extras (list): allows subclasses to add even more custom tokens.
+        """
         tokens = self._tokens_from_module(html_token)
         super().__init__(*chain(tokens, extras))
 
