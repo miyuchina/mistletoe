@@ -97,7 +97,8 @@ class Heading(BlockToken):
                 and lines[0].find('# ') != -1):
             return True
         # setext heading
-        return lines[-1].startswith('---') or lines[-1].startswith('===')
+        return len(lines) > 1 and (lines[-1].startswith('---')
+                                   or lines[-1].startswith('==='))
 
 class Quote(BlockToken):
     """
@@ -148,7 +149,7 @@ class BlockCode(BlockToken):
         else:                           # indented code
             content = ''.join([line[4:] for line in lines])
             self.language = ''
-        self.children = [span_token.RawText(content)]
+        self.children = iter([span_token.RawText(content)])
 
     @staticmethod
     def match(lines):
@@ -169,10 +170,12 @@ class List(BlockToken):
         start (int): first index of ordered list (undefined if unordered).
     """
     def __init__(self, lines):
-        self.children = list(List._build_list(lines))
+        self.children = iter(list(List._build_list(lines)))
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
+        else:
+            self.start = None
 
     @staticmethod
     def _build_list(lines):
@@ -267,27 +270,27 @@ class Table(BlockToken):
     def __init__(self, lines):
         self.has_header = lines[1].find('---') != -1
         if self.has_header:
-            self.column_align = self.parse_delimiter(lines.pop(1))
-        else: self.column_align = [None]
+            self.column_align = [self.parse_align(column)
+                    for column in self.split_delimiter(lines.pop(1))]
+        else:
+            self.column_align = [None]
         self.children = (TableRow(line, self.column_align) for line in lines)
 
     @staticmethod
-    def parse_delimiter(delimiter):
+    def split_delimiter(delimiter):
         """
         Helper function; returns a list of align options.
 
         Args:
-            delimiter (str): e.g.: "| :--- | :---: | ---: |"
+            delimiter (str): e.g.: "| :--- | :---: | ---: |\n"
 
         Returns:
             a list of align options (None, 0 or 1).
         """
-        columns = delimiter[1:-2].split('|')
-        return [Table.parse_delimiter_column(column.strip())
-                for column in columns]
+        return (column.strip() for column in delimiter[1:-2].split('|'))
 
     @staticmethod
-    def parse_delimiter_column(column):
+    def parse_align(column):
         """
         Helper function; returns align option from cell content.
 
@@ -315,9 +318,8 @@ class TableRow(BlockToken):
 
     Should only be called by Table.__init__().
     """
-    def __init__(self, line, row_align=None):
-        if row_align is None:     # immutable sentinal value
-            row_align = [None]    # default row_align
+    def __init__(self, line, row_align=[None]):
+        self.row_align = row_align
         cells = line[1:-2].split('|')
         self.children = (TableCell(cell.strip(), align)
                          for cell, align in zip_longest(cells, row_align))
@@ -346,7 +348,7 @@ class FootnoteBlock(BlockToken):
         children (list): footnote entry tokens.
     """
     def __init__(self, lines):
-        self.children = [FootnoteEntry(line) for line in lines]
+        self.children = iter([FootnoteEntry(line) for line in lines])
 
     @staticmethod
     def match(lines):
@@ -376,9 +378,10 @@ class Separator(BlockToken):
     """
     Separator token (a.k.a. horizontal rule.)
     """
-    def __init__(self, line):
-        self.line = line
+    _acceptable_pattern = {'---\n', '* * *\n', '***\n', '===\n'}
+    def __init__(self, lines):
+        self.lines = lines
 
     @staticmethod
     def match(lines):
-        return len(lines) == 1 and lines[0] == '* * *\n'
+        return len(lines) == 1 and lines[0] in Separator._acceptable_pattern

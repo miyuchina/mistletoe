@@ -1,238 +1,265 @@
 import unittest
-import test.helpers as helpers
 import mistletoe.span_token as span_token
 import mistletoe.block_token as block_token
 
+
 class TestHeading(unittest.TestCase):
-    def test_left_hashes(self):
-        t = block_token.Heading([ '### heading 3\n' ])
-        c = span_token.RawText('heading 3')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse_atx(self):
+        token = next(block_token.tokenize(['### heading 3\n']))
+        self.assertIsInstance(token, block_token.Heading)
+        self.assertEqual(token.level, 3)
 
-    def test_enclosing_hashes(self):
-        t = block_token.Heading([ '### heading 3 #########  \n' ])
-        c = span_token.RawText('heading 3')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse_setext(self):
+        token = next(block_token.tokenize(['some\n', 'heading\n', '---\n']))
+        self.assertIsInstance(token, block_token.Heading)
+        self.assertEqual(token.level, 2)
 
-    def test_setext_heading(self):
-        t = block_token.Heading(['some\n', 'heading 2\n', '---\n'])
-        c = span_token.RawText('some heading 2')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_children_with_enclosing_hashes(self):
+        token = next(block_token.tokenize(['### heading 3 #####  \n']))
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'heading 3')
 
-    def test_bold(self):
-        t = block_token.Heading([ '## **heading** 2\n' ])
-        c0 = span_token.Strong('heading')
-        c1 = span_token.RawText(' 2')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
 
 class TestQuote(unittest.TestCase):
-    def test_paragraph(self):
-        t = block_token.Quote(['> line 1\n', '> line 2\n'])
-        c = block_token.Paragraph(['line 1\n', 'line 2\n'])
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse(self):
+        token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
+        self.assertIsInstance(token, block_token.Quote)
 
-    def test_only_first_leader(self):
-        t = block_token.Quote(['> line 1\n', 'line 2\n'])
-        c = block_token.Paragraph(['line 1\n', 'line 2\n'])
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_children(self):
+        token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
 
-    def test_heading(self):
-        t = block_token.Quote(['> # heading 1\n', '> \n', '> line 1\n'])
-        c0 = block_token.Heading([ '# heading 1\n' ])
-        c1 = block_token.Paragraph(['line 1\n'])
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
+        child = next(token.children)
+        self.assertIsInstance(child, block_token.Paragraph)
+
+        grandchild = next(child.children)
+        self.assertIsInstance(grandchild, span_token.RawText)
+        self.assertEqual(grandchild.content, 'line 1 line 2')
+
+    def test_lazy_continuation(self):
+        token = next(block_token.tokenize(['> line 1\n', 'line 2\n']))
+
+        child = next(token.children)
+        self.assertIsInstance(child, block_token.Paragraph)
+
+        grandchild = next(child.children)
+        self.assertIsInstance(grandchild, span_token.RawText)
+        self.assertEqual(grandchild.content, 'line 1 line 2')
+
 
 class TestBlockCode(unittest.TestCase):
-    def test_fenced_code(self):
-        l1 = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
-        # space is added at l2[2] to escape tokenizing by newlines
-        l2 = ['```sh\n', 'rm dir\n', ' \n', 'mkdir test\n', '```\n']
-        t = block_token.Document(l1)
-        c = block_token.BlockCode(l2)
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse_fenced_code(self):
+        lines = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, block_token.BlockCode)
+        self.assertEqual(token.language, 'sh')
 
-    def test_hash_in_code(self):
-        l = ['```python\n', '# comment\n', '```\n']
-        t = block_token.Document(l)
-        c = span_token.RawText('# comment\n')
-        helpers.check_equal(self, list(list(t.children)[0].children)[0], c)
+    def test_children_in_fenced_code(self):
+        lines = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
+        token = next(block_token.tokenize(lines))
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'rm dir\nmkdir test\n')
 
-    def test_indented_code(self):
-        l1 = ['    rm dir\n', '    mkdir test\n']
-        l2 = ['```\n', 'rm dir\n', 'mkdir test\n', '```\n']
-        t = block_token.Document(l1)
-        c = block_token.BlockCode(l2)
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_fence_code_lazy_continuation(self):
+        lines = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, block_token.BlockCode)
+
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'rm dir\n \nmkdir test\n')
+
+    def test_hashes(self):
+        lines = ['```python\n', '# comment\n', '```\n']
+        token = next(block_token.tokenize(lines))
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, '# comment\n')
+
+    def test_parse_indented_code(self):
+        lines = ['    rm dir\n', '    mkdir test\n']
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, block_token.BlockCode)
+        self.assertEqual(token.language, '')
+
+    def test_children_in_indented_code(self):
+        lines = ['    rm dir\n', '    mkdir test\n']
+        token = next(block_token.tokenize(lines))
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'rm dir\nmkdir test\n')
+
 
 class TestParagraph(unittest.TestCase):
-    def test_raw(self):
-        l = ['some\n', 'continuous\n', 'lines\n']
-        t = block_token.Paragraph(l)
-        c = span_token.RawText('some continuous lines')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse(self):
+        lines = ['some\n', 'continuous\n', 'lines\n']
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, block_token.Paragraph)
 
-    def test_inner(self):
-        lines = ['some\n', '*continuous*\n', '**lines**\n']
-        t = block_token.Paragraph(lines)
-        c0 = span_token.RawText('some ')
-        c1 = span_token.Emphasis('continuous')
-        c2 = span_token.RawText(' ')
-        c3 = span_token.Strong('lines')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
-        helpers.check_equal(self, l[3], c3)
+    def test_children(self):
+        lines = ['some\n', 'continuous\n', 'lines\n']
+        token = next(block_token.tokenize(lines))
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'some continuous lines')
+
 
 class TestListItem(unittest.TestCase):
-    def test_raw(self):
-        t = block_token.ListItem(['- some text\n'])
-        c = span_token.RawText('some text')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_children(self):
+        token = block_token.ListItem(['- some text\n'])
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'some text')
 
-    def test_inline_code(self):
-        t = block_token.ListItem(['    - some `code`\n'])
-        c0 = span_token.RawText('some ')
-        c1 = span_token.InlineCode('code')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
+    def test_lazy_continuation(self):
+        token = block_token.ListItem(['- list\n', 'content\n'])
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'list content')
 
     def test_whitespace(self):
-        t = block_token.ListItem(['-    list\n', '   content\n'])
-        c = span_token.RawText('list content')
-        helpers.check_equal(self, list(t.children)[0], c)
+        token = block_token.ListItem(['-   text  \n'])
+        child = next(token.children)
+        self.assertEqual(child.content, 'text')
+
 
 class TestList(unittest.TestCase):
-    def test_is_list(self):
-        lines = ['-not a list\n',
-                 '\n',
-                 '- a list\n',
-                 '-continued\n']
-        t = block_token.Document(lines)
-        c0 = block_token.Paragraph([ lines[0] ])
-        c1 = block_token.List(lines[2:])
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
+    def test_parse_unordered_list(self):
+        token = next(block_token.tokenize(['- a list\n', 'continued\n']))
+        self.assertIsInstance(token, block_token.List)
+        self.assertIsNone(token.start)
 
-    def test_tokenize_unordered_list(self):
-        lines = ['- item 1\n',
-                 '- item 2\n',
-                 '    * nested item 1\n',
-                 '    * nested item 2\n',
-                 '- item 3\n']
-        t = block_token.Document(lines)
-        c = block_token.List(lines)
-        helpers.check_equal(self, list(t.children)[0], c)
-
-    def test_tokenize_ordered_list(self):
+    def test_parse_ordered_list(self):
         lines = ['1) item 1\n',
                  '2) item 2\n',
                  '    * nested item 1\n',
                  '    * nested item 2\n',
                  '3) item 3\n']
-        t = block_token.Document(lines)
-        c = block_token.List(lines)
-        helpers.check_equal(self, list(t.children)[0], c)
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, block_token.List)
+        self.assertEqual(token.start, 1)
 
-    def test_nested_list(self):
+    def test_children(self):
+        token = next(block_token.tokenize(['- a list\n', 'continued\n']))
+        child = next(token.children)
+        self.assertIsInstance(child, block_token.ListItem)
+
+    def test_parse_nested_lists(self):
         lines = ['- item 1\n',
                  '- item 2\n',
                  '    * nested item 1\n',
                  '    * nested item 2\n',
                  '- item 3\n']
-        t = block_token.List(lines)
-        sublist = ['- nested item 1\n', '- nested item 2\n']
-        c0 = block_token.ListItem(lines[0:1])
-        c1 = block_token.ListItem(lines[1:2])
-        c2 = block_token.List([ line.strip() for line in sublist ])
-        c3 = block_token.ListItem(lines[4:5])
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
-        helpers.check_equal(self, l[3], c3)
+        tokens = next(block_token.tokenize(lines)).children
 
-    def test_lazy_list_match(self):
+        token1 = next(tokens)
+        self.assertIsInstance(token1, block_token.ListItem)
+
+        token2 = next(tokens)
+        self.assertIsInstance(token2, block_token.ListItem)
+
+        token3 = next(tokens)
+        self.assertIsInstance(token3, block_token.List)
+
+        token4 = next(tokens)
+        self.assertIsInstance(token4, block_token.ListItem)
+
+    def test_lazy_continuation(self):
         lines = ['* item 1\n',
-                 '*    item 2\n',
-                 '* item 3\n',
+                 '* item 2\n',
                  '  continued with indent\n',
-                 '* item 4\n',
+                 '* item 3\n',
                  'with lazy continuation\n',
                  '    + nested item 1\n',
-                 '    continued\n',
-                 '- item 5\n'
-                 'cont\'d\n']
-        t = block_token.List(lines)
-        c0 = block_token.ListItem(lines[0:1])
-        c1 = block_token.ListItem(lines[1:2])
-        c2 = block_token.ListItem(lines[2:4])
-        c3 = block_token.ListItem(lines[4:6])
-        c4 = block_token.List([line.strip() for line in lines[6:8]])
-        c5 = block_token.ListItem(lines[8:])
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
-        helpers.check_equal(self, l[3], c3)
-        helpers.check_equal(self, l[4], c4)
-        helpers.check_equal(self, l[5], c5)
+                 '    continued\n']
+        tokens = next(block_token.tokenize(lines)).children
+        
+        token1 = next(tokens)
+        self.assertIsInstance(token1, block_token.ListItem)
+
+        token2 = next(tokens)
+        self.assertIsInstance(token2, block_token.ListItem)
+
+        token3 = next(tokens)
+        self.assertIsInstance(token3, block_token.ListItem)
+
+        token4 = next(tokens)
+        self.assertIsInstance(token4, block_token.List)
+
 
 class TestTable(unittest.TestCase):
-    def test_row(self):
+    def test_parse_align(self):
+        test_func = block_token.Table.parse_align
+        self.assertEqual(test_func(':------'), None)
+        self.assertEqual(test_func(':-----:'), 0)
+        self.assertEqual(test_func('------:'), 1)
+
+    def test_parse_delimiter(self):
+        test_func = block_token.Table.split_delimiter
+        self.assertEqual(list(test_func('| :--- | :---: | ---:|\n')),
+                [':---', ':---:', '---:'])
+
+    def test_parse(self):
         lines = ['| header 1 | header 2 | header 3 |\n',
                  '| --- | --- | --- |\n',
                  '| cell 1 | cell 2 | cell 3 |\n',
                  '| more 1 | more 2 | more 3 |\n']
-        lines_c = ['| header 1 | header 2 | header 3 |\n',
-                   '| cell 1 | cell 2 | cell 3 |\n',
-                   '| more 1 | more 2 | more 3 |\n']
-        t = block_token.Table(lines)
-        c0 = block_token.TableRow(lines_c[0])
-        c1 = block_token.TableRow(lines_c[1])
-        c2 = block_token.TableRow(lines_c[2])
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, block_token.Table)
+        self.assertEqual(token.has_header, True)
+        self.assertEqual(token.column_align, [None, None, None])
+
 
 class TestTableRow(unittest.TestCase):
-    def test_cell(self):
-        t = block_token.TableRow('| **cell** 1 | cell 2 |\n')
-        c0 = block_token.TableCell('**cell** 1')
-        c1 = block_token.TableCell('cell 2')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
+    def test_parse(self):
+        lines = ['| cell 1 | cell 2 |\n',
+                 '| more 1 | more 2 |\n']
+        token = next(block_token.Table(lines).children)
+        self.assertIsInstance(token, block_token.TableRow)
+        self.assertEqual(token.row_align, [None])
+
+
+class TestTableCell(unittest.TestCase):
+    def test_parse(self):
+        token = next(block_token.TableRow('| cell 2 |\n').children)
+        self.assertIsInstance(token, block_token.TableCell)
+        self.assertEqual(token.align, None)
+
+    def test_children(self):
+        token = next(block_token.TableRow('| cell 2 |\n').children)
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'cell 2')
+
 
 class TestFootnoteBlock(unittest.TestCase):
-    def test_footnote_block(self):
+    def test_parse(self):
         lines = ['[key 1]: value 1\n',
                  '[key 2]: value 2\n']
-        t = block_token.FootnoteBlock(lines)
-        c0 = block_token.FootnoteEntry('[key 1]: value 1\n')
-        c1 = block_token.FootnoteEntry('[key 2]: value 2\n')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, block_token.FootnoteBlock)
 
-    def test_match(self):
+
+class TestFootnoteEntry(unittest.TestCase):
+    def test_parse(self):
+        lines = ['[key]: value\n']
+        token = next(block_token.FootnoteBlock(lines).children)
+        self.assertIsInstance(token, block_token.FootnoteEntry)
+        self.assertEqual(token.key, 'key')
+        self.assertEqual(token.value, 'value')
+
+
+class TestDocument(unittest.TestCase):
+    def test_store_footnote(self):
         lines = ['[key 1]: value 1\n',
                  '[key 2]: value 2\n']
-        t = block_token.Document(lines)
-        list(t.children)  # kick off generator
-        c = block_token.FootnoteBlock(lines)
-        d = {entry.key: entry.value for entry in c.children}
-        self.assertEqual(t.footnotes, d)
+        document = block_token.Document(lines)
+        self.assertEqual(document.footnotes['key 1'], 'value 1')
+        self.assertEqual(document.footnotes['key 2'], 'value 2')
+
 
 class TestSeparator(unittest.TestCase):
-    def test_equal(self):
-        t1 = block_token.Separator('---\n')
-        t2 = block_token.Separator('---\n')
-        helpers.check_equal(self, t1, t2)
+    def test_parse(self):
+        token = next(block_token.tokenize(['---\n']))
+        self.assertIsInstance(token, block_token.Separator)
