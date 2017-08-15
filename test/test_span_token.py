@@ -1,103 +1,151 @@
 import unittest
-import test.helpers as helpers
 import mistletoe.span_token as span_token
 
-class TestEscapeSequence(unittest.TestCase):
-    def test_escape(self):
-        t = span_token.Strong('some \*text*')
-        c0 = span_token.RawText('some ')
-        c1 = span_token.EscapeSequence('*')
-        c2 = span_token.RawText('text*')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
-
-class TestRawText(unittest.TestCase):
-    def test_equal(self):
-        t1 = span_token.RawText('some text')
-        t2 = span_token.RawText('some text')
-        helpers.check_equal(self, t1, t2)
-
-class TestLink(unittest.TestCase):
-    def test_equal(self):
-        t1 = span_token.Link('[name 1](target 1)')
-        t2 = span_token.Link('[name 1](target 1)')
-        helpers.check_equal(self, t1, t2)
-
-    def test_multi_links(self):
-        t = span_token.Emphasis('[name 1](target 1) and [name 2](target 2)')
-        c0 = span_token.Link('[name 1](target 1)')
-        c1 = span_token.RawText(' and ')
-        c2 = span_token.Link('[name 2](target 2)')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
-
-    def test_link_with_children(self):
-        t = span_token.Link('[![alt](src)](target)')
-        c = span_token.Image('![alt](src)')
-        target = 'target'
-        helpers.check_equal(self, list(t.children)[0], c)
-        self.assertEqual(t.target, target)
-
-class TestFootnoteLink(unittest.TestCase):
-    def test_raw(self):
-        t = span_token.FootnoteLink('[alt] [key]')
-        c = span_token.RawText('alt')
-        helpers.check_equal(self, list(t.children)[0], c)
-        helpers.check_equal(self, t.target, span_token.FootnoteAnchor('key'))
-
-class TestAutoLink(unittest.TestCase):
-    def test(self):
-        t = span_token.Strong('some <link> in strong text')
-        c0 = span_token.RawText('some ')
-        c1 = span_token.AutoLink('link')
-        c2 = span_token.RawText(' in strong text')
-        l = list(t.children)
-        helpers.check_equal(self, l[0], c0)
-        helpers.check_equal(self, l[1], c1)
-        helpers.check_equal(self, l[2], c2)
-
-class TestImage(unittest.TestCase):
-    def test_equal(self):
-        t1 = span_token.Image('![alt](link)')
-        t2 = span_token.Image('![alt](link)')
-        helpers.check_equal(self, t1, t2)
-
-class TestFootnoteImage(unittest.TestCase):
-    def test_raw(self):
-        t = span_token.FootnoteImage('![alt] [key]')
-        c = span_token.FootnoteAnchor('key')
-        self.assertEqual(t.alt, 'alt')
-        helpers.check_equal(self, t.src, c)
 
 class TestStrong(unittest.TestCase):
-    def test_raw(self):
-        t = span_token.Strong('some text')
-        c = span_token.RawText('some text')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse_asterisk(self):
+        token = next(span_token.tokenize_inner('**some text**'))
+        self.assertIsInstance(token, span_token.Strong)
+        self.assertEqual(token._raw, '**some text**')
+
+    def test_parse_underscore(self):
+        token = next(span_token.tokenize_inner('__some text__'))
+        self.assertIsInstance(token, span_token.Strong)
+        self.assertEqual(token._raw, '__some text__')
+
 
 class TestEmphasis(unittest.TestCase):
-    def test_raw(self):
-        t = span_token.Emphasis('some text')
-        c = span_token.RawText('some text')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse_asterisk(self):
+        token = next(span_token.tokenize_inner('*some text*'))
+        self.assertIsInstance(token, span_token.Emphasis)
+        self.assertEqual(token._raw, '*some text*')
 
-    def test_parse(self):
-        t = span_token.Strong('_some text_')
-        c = span_token.Emphasis('some text')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse_underscore(self):
+        token = next(span_token.tokenize_inner('_some text_'))
+        self.assertIsInstance(token, span_token.Emphasis)
+        self.assertEqual(token._raw, '_some text_')
+
 
 class TestInlineCode(unittest.TestCase):
-    def test_raw(self):
-        t = span_token.InlineCode('some code')
-        c = span_token.RawText('some code')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse(self):
+        token = next(span_token.tokenize_inner('`some code`'))
+        self.assertIsInstance(token, span_token.InlineCode)
+        self.assertEqual(token._raw, '`some code`')
+
+    def test_children(self):
+        token = next(span_token.tokenize_inner('`some code`'))
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.RawText)
+        self.assertEqual(child.content, 'some code')
+
 
 class TestStrikethrough(unittest.TestCase):
-    def test_raw(self):
-        t = span_token.Strikethrough('some text')
-        c = span_token.RawText('some text')
-        helpers.check_equal(self, list(t.children)[0], c)
+    def test_parse(self):
+        token = next(span_token.tokenize_inner('~~some code~~'))
+        self.assertIsInstance(token, span_token.Strikethrough)
+        self.assertEqual(token._raw, '~~some code~~')
+
+
+class TestLink(unittest.TestCase):
+    def test_parse(self):
+        token = next(span_token.tokenize_inner('[name 1] (target 1)'))
+        self.assertIsInstance(token, span_token.Link)
+        self.assertEqual(token._raw, '[name 1] (target 1)')
+        self.assertEqual(token.target, 'target 1')
+
+    def test_parse_multi_links(self):
+        tokens = span_token.tokenize_inner('[n1](t1) & [n2](t2)')
+
+        token1 = next(tokens)
+        self.assertIsInstance(token1, span_token.Link)
+        self.assertEqual(token1._raw, '[n1](t1)')
+
+        token2 = next(tokens)
+        self.assertIsInstance(token2, span_token.RawText)
+        self.assertEqual(token2.content, ' & ')
+
+        token3 = next(tokens)
+        self.assertIsInstance(token3, span_token.Link)
+        self.assertEqual(token3._raw, '[n2](t2)')
+
+    def test_children(self):
+        token = next(span_token.tokenize_inner('[![alt](src)](target)'))
+        child = next(token.children)
+        self.assertIsInstance(child, span_token.Image)
+        self.assertEqual(child._raw, '![alt](src)')
+
+
+class TestFootnoteLink(unittest.TestCase):
+    def test_parse(self):
+        token = next(span_token.tokenize_inner('[alt] [key]'))
+        self.assertIsInstance(token, span_token.FootnoteLink)
+        self.assertEqual(token._raw, '[alt] [key]')
+
+    def test_footnote_anchor(self):
+        token = next(span_token.tokenize_inner('[alt] [key]')).target
+        self.assertIsInstance(token, span_token.FootnoteAnchor)
+        self.assertEqual(token.key, 'key')
+
+
+class TestAutoLink(unittest.TestCase):
+    def test_parse(self):
+        token = next(span_token.tokenize_inner('<link>'))
+        self.assertIsInstance(token, span_token.AutoLink)
+        self.assertEqual(token._raw, '<link>')
+        self.assertEqual(token.name, 'link')
+        self.assertEqual(token.target, 'link')
+
+
+class TestImage(unittest.TestCase):
+    def test_parse_without_title(self):
+        token = next(span_token.tokenize_inner('![alt] (link)'))
+        self.assertIsInstance(token, span_token.Image)
+        self.assertEqual(token._raw, '![alt] (link)')
+        self.assertEqual(token.alt, 'alt')
+        self.assertEqual(token.src, 'link')
+        self.assertIsNone(token.title)
+
+    def test_parse_with_title(self):
+        token = next(span_token.tokenize_inner('![alt] (link "title")'))
+        self.assertEqual(token.title, 'title')
+
+
+class TestFootnoteImage(unittest.TestCase):
+    def test_parse(self):
+        token = next(span_token.tokenize_inner('![alt] [key]'))
+        self.assertIsInstance(token, span_token.FootnoteImage)
+        self.assertEqual(token._raw, '![alt] [key]')
+        self.assertEqual(token.alt, 'alt')
+
+    def test_footnote_anchor(self):
+        token = next(span_token.tokenize_inner('![alt] [key]')).src
+        self.assertIsInstance(token, span_token.FootnoteAnchor)
+        self.assertEqual(token.key, 'key')
+
+
+class TestEscapeSequence(unittest.TestCase):
+    def test_parse(self):
+        token = next(span_token.tokenize_inner('\*'))
+        self.assertIsInstance(token, span_token.EscapeSequence)
+        self.assertEqual(token.content, '*')
+
+    def test_parse_in_text(self):
+        tokens = span_token.tokenize_inner('some \*text*')
+
+        token1 = next(tokens)
+        self.assertIsInstance(token1, span_token.RawText)
+        self.assertEqual(token1.content, 'some ')
+
+        token2 = next(tokens)
+        self.assertIsInstance(token2, span_token.EscapeSequence)
+        self.assertEqual(token2.content, '*')
+
+        token3 = next(tokens)
+        self.assertIsInstance(token3, span_token.RawText)
+        self.assertEqual(token3.content, 'text*')
+
+
+class TestRawText(unittest.TestCase):
+    def test_attribute(self):
+        token = span_token.RawText('some text')
+        self.assertEqual(token.content, 'some text')

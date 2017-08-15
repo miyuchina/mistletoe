@@ -26,7 +26,7 @@ def tokenize_inner(content):
     """
     token_types = [globals()[key] for key in __all__]
     fallback_token = RawText
-    return tokenizer.tokenize(content, token_types, fallback_token)
+    yield from tokenizer.tokenize(content, token_types, fallback_token)
 
 def add_token(token_cls):
     globals()[token_cls.__name__] = token_cls
@@ -56,8 +56,11 @@ class SpanToken(object):
     Attributes:
         children (generator object): inner tokens.
     """
-    def __init__(self, raw):
-        self.children = tokenize_inner(raw)
+    def __init__(self, match_obj):
+        self._raw = match_obj.group(0)
+
+def _first_not_none_group(match_obj):
+    return next(group for group in match_obj.groups() if group is not None)
 
 class Strong(SpanToken):
     """
@@ -66,6 +69,9 @@ class Strong(SpanToken):
     raw does not contain enclosing asterisks or underscores.
     """
     pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.children = tokenize_inner(_first_not_none_group(match_obj))
 
 class Emphasis(SpanToken):
     """
@@ -74,6 +80,9 @@ class Emphasis(SpanToken):
     raw does not contain enclosing asterisks or underscores.
     """
     pattern = re.compile(r"\*((?:\*\*|[^\*])+?)\*(?!\*)|_((?:__|[^_])+?)_")
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.children = tokenize_inner(_first_not_none_group(match_obj))
 
 class InlineCode(SpanToken):
     """
@@ -82,8 +91,9 @@ class InlineCode(SpanToken):
     raw does not contain enclosing apostrophes.
     """
     pattern = re.compile(r"`(.+?)`")
-    def __init__(self, raw):
-        self.children = [RawText(raw)]
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.children = iter([RawText(match_obj.group(1))])
 
 class Strikethrough(SpanToken):
     """
@@ -92,6 +102,9 @@ class Strikethrough(SpanToken):
     raw does not contain enclosing tildas.
     """
     pattern = re.compile(r"~~(.+)~~")
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.children = tokenize_inner(match_obj.group(1))
 
 class Image(SpanToken):
     """
@@ -103,16 +116,12 @@ class Image(SpanToken):
         src (str): image source.
         title (str): image title (default to empty).
     """
-    pattern = re.compile(r"(\!\[(.+?)\]\((.+?)\))")
-    def __init__(self, raw):
-        self.alt = raw[2:raw.index(']')]
-        src = raw[raw.index('(')+1:-1]
-        if src.find('"') != -1:
-            self.src = src[:src.index(' "')]
-            self.title = src[src.index(' "')+2:-1]
-        else:
-            self.src = src
-            self.title = ''
+    pattern = re.compile(r'\!\[(.+?)\] *\((.+?)(?:"(.+?)")*\)')
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.alt = match_obj.group(1)
+        self.src = match_obj.group(2)
+        self.title = match_obj.group(3)
 
 class FootnoteImage(SpanToken):
     """
@@ -122,11 +131,11 @@ class FootnoteImage(SpanToken):
         alt (str): alternative text.
         src (FootnoteAnchor): could point to both src and title.
     """
-    pattern = re.compile(r"(\!\[(.+?)\] *\[(.+?)\])")
-    def __init__(self, raw):
-        self.alt = raw[2:raw.index(']')]
-        raw_src_key = raw[raw.index('[', 2)+1:-1]
-        self.src = FootnoteAnchor(raw_src_key)
+    pattern = re.compile(r"\!\[(.+?)\] *\[(.+?)\]")
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.alt = match_obj.group(1)
+        self.src = FootnoteAnchor(match_obj.group(2))
 
 class Link(SpanToken):
     """
@@ -136,11 +145,11 @@ class Link(SpanToken):
         children (generator): link name still needs further parsing.
         target (str): link target.
     """
-    pattern = re.compile(r"(\[((?:!\[(.+?)\][\[\(](.+?)[\)\]])|(?:.+?))\]\((.+?)\))")
-    def __init__(self, raw):
-        split_index = len(raw) - raw[::-1].index(']') - 1
-        super().__init__(raw[1:split_index])
-        self.target = raw[split_index+2:-1]
+    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *\((.+?)\)")
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.children = tokenize_inner(match_obj.group(1))
+        self.target = match_obj.group(2)
 
 class FootnoteLink(SpanToken):
     """
@@ -150,11 +159,11 @@ class FootnoteLink(SpanToken):
         children (generator): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
-    pattern = re.compile(r"(\[((?:!\[(.+?)\][\[\(](.+?)[\)\]])|(?:.+?))\] *\[(.+?)\])")
-    def __init__(self, raw):
-        split_index = len(raw) - raw[::-1].index('[')
-        super().__init__(raw[1:split_index-1].strip()[:-1])
-        self.target = FootnoteAnchor(raw[split_index:-1])
+    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *\[(.+?)\]")
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.children = tokenize_inner(match_obj.group(1))
+        self.target = FootnoteAnchor(match_obj.group(2))
 
 class AutoLink(SpanToken):
     """
@@ -166,17 +175,19 @@ class AutoLink(SpanToken):
         target (str): link target.
     """
     pattern = re.compile(r"<(.+?)>")
-    def __init__(self, raw):
-        self.name = raw
-        self.target = raw
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.name = match_obj.group(1)
+        self.target = match_obj.group(1)
 
 class EscapeSequence(SpanToken):
     """
     Escape sequences. ("\*")
     """
     pattern = re.compile(r"\\([\*\(\)\[\]\~])")
-    def __init__(self, raw):
-        self.content = raw
+    def __init__(self, match_obj):
+        super().__init__(match_obj)
+        self.content = match_obj.group(1)
 
 class RawText(SpanToken):
     """
