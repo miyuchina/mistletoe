@@ -36,6 +36,9 @@ def remove_token(token_cls):
     del globals()[token_cls.__name__]
     __all__.remove(token_cls.__name__)
 
+def _first_not_none_group(match_obj):
+    return next(group for group in match_obj.groups() if group is not None)
+
 class SpanToken(object):
     """
     Base class for span-level tokens. Recursively parse inner tokens.
@@ -57,10 +60,7 @@ class SpanToken(object):
         children (generator object): inner tokens.
     """
     def __init__(self, match_obj):
-        self._raw = match_obj.group(0)
-
-def _first_not_none_group(match_obj):
-    return next(group for group in match_obj.groups() if group is not None)
+        self.children = tokenize_inner(match_obj.group(1))
 
 class Strong(SpanToken):
     """
@@ -70,7 +70,6 @@ class Strong(SpanToken):
     """
     pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
     def __init__(self, match_obj):
-        super().__init__(match_obj)
         self.children = tokenize_inner(_first_not_none_group(match_obj))
 
 class Emphasis(SpanToken):
@@ -81,7 +80,6 @@ class Emphasis(SpanToken):
     """
     pattern = re.compile(r"\*((?:\*\*|[^\*])+?)\*(?!\*)|_((?:__|[^_])+?)_")
     def __init__(self, match_obj):
-        super().__init__(match_obj)
         self.children = tokenize_inner(_first_not_none_group(match_obj))
 
 class InlineCode(SpanToken):
@@ -92,7 +90,6 @@ class InlineCode(SpanToken):
     """
     pattern = re.compile(r"`(.+?)`")
     def __init__(self, match_obj):
-        super().__init__(match_obj)
         self.children = iter([RawText(match_obj.group(1))])
 
 class Strikethrough(SpanToken):
@@ -102,9 +99,6 @@ class Strikethrough(SpanToken):
     raw does not contain enclosing tildas.
     """
     pattern = re.compile(r"~~(.+)~~")
-    def __init__(self, match_obj):
-        super().__init__(match_obj)
-        self.children = tokenize_inner(match_obj.group(1))
 
 class Image(SpanToken):
     """
@@ -116,10 +110,9 @@ class Image(SpanToken):
         src (str): image source.
         title (str): image title (default to empty).
     """
-    pattern = re.compile(r'\!\[(.+?)\] *\((.+?)(?:"(.+?)")*\)')
+    pattern = re.compile(r'\!\[(.+?)\] *\((.+?)(?: *"(.+?)")?\)')
     def __init__(self, match_obj):
-        super().__init__(match_obj)
-        self.alt = match_obj.group(1)
+        self.children = iter([RawText(match_obj.group(1))])
         self.src = match_obj.group(2)
         self.title = match_obj.group(3)
 
@@ -133,8 +126,7 @@ class FootnoteImage(SpanToken):
     """
     pattern = re.compile(r"\!\[(.+?)\] *\[(.+?)\]")
     def __init__(self, match_obj):
-        super().__init__(match_obj)
-        self.alt = match_obj.group(1)
+        self.children = iter([RawText(match_obj.group(1))])
         self.src = FootnoteAnchor(match_obj.group(2))
 
 class Link(SpanToken):
@@ -148,7 +140,6 @@ class Link(SpanToken):
     pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *\((.+?)\)")
     def __init__(self, match_obj):
         super().__init__(match_obj)
-        self.children = tokenize_inner(match_obj.group(1))
         self.target = match_obj.group(2)
 
 class FootnoteLink(SpanToken):
@@ -162,7 +153,6 @@ class FootnoteLink(SpanToken):
     pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *\[(.+?)\]")
     def __init__(self, match_obj):
         super().__init__(match_obj)
-        self.children = tokenize_inner(match_obj.group(1))
         self.target = FootnoteAnchor(match_obj.group(2))
 
 class AutoLink(SpanToken):
@@ -176,8 +166,7 @@ class AutoLink(SpanToken):
     """
     pattern = re.compile(r"<(.+?)>")
     def __init__(self, match_obj):
-        super().__init__(match_obj)
-        self.name = match_obj.group(1)
+        self.children = iter([RawText(match_obj.group(1))])
         self.target = match_obj.group(1)
 
 class EscapeSequence(SpanToken):
@@ -186,8 +175,7 @@ class EscapeSequence(SpanToken):
     """
     pattern = re.compile(r"\\([\*\(\)\[\]\~])")
     def __init__(self, match_obj):
-        super().__init__(match_obj)
-        self.content = match_obj.group(1)
+        self.children = iter([RawText(match_obj.group(1))])
 
 class RawText(SpanToken):
     """
