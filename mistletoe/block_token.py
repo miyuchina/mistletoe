@@ -6,12 +6,14 @@ from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
 import mistletoe.span_token as span_token
 
+
 """
 The items and ordering of this __all__ matters to mistletoe (see
 tokenize). Don't mess with it unless you know what you are doing!
 """
 __all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table',
            'FootnoteBlock']
+
 
 def tokenize(lines, root=None):
     """
@@ -28,13 +30,16 @@ def tokenize(lines, root=None):
     fallback_token = Paragraph
     return tokenizer.tokenize(lines, token_types, fallback_token, root)
 
+
 def add_token(token_cls):
     globals()[token_cls.__name__] = token_cls
     __all__.insert(1, token_cls.__name__)
 
+
 def remove_token(token_cls):
     del globals()[token_cls.__name__]
     __all__.remove(token_cls.__name__)
+
 
 class BlockToken(object):
     """
@@ -57,6 +62,7 @@ class BlockToken(object):
     def __init__(self, lines, tokenize_func):
         self.children = tokenize_func(lines)
 
+
 class Document(BlockToken):
     """
     Document token.
@@ -66,6 +72,7 @@ class Document(BlockToken):
         # Document tokens have immediate access to first-level block tokens.
         # Useful for footnotes, etc.
         self.children = list(tokenize(lines, root=self))
+
 
 class Heading(BlockToken):
     """
@@ -100,6 +107,7 @@ class Heading(BlockToken):
         return len(lines) > 1 and (lines[-1].startswith('---')
                                    or lines[-1].startswith('==='))
 
+
 class Quote(BlockToken):
     """
     Quote token. (["> # heading\n", "> paragraph\n"])
@@ -117,6 +125,7 @@ class Quote(BlockToken):
     def match(lines):
         return lines[0].startswith('> ')
 
+
 class Paragraph(BlockToken):
     """
     Paragraph token. (["some\n", "continuous\n", "lines\n"])
@@ -132,6 +141,7 @@ class Paragraph(BlockToken):
             if line == '\n':
                 return False
         return True
+
 
 class BlockCode(BlockToken):
     """
@@ -159,6 +169,7 @@ class BlockCode(BlockToken):
             if not line.startswith(' '*4):
                 return False
         return True
+
 
 class List(BlockToken):
     """
@@ -246,6 +257,7 @@ class List(BlockToken):
             return False
         return True
 
+
 class ListItem(BlockToken):
     """
     List item token. (["- item 1\n", "continued\n"])
@@ -257,6 +269,7 @@ class ListItem(BlockToken):
         line = ' '.join([line.strip() for line in lines])
         content = line.split(' ', 1)[1].strip()
         super().__init__(content, span_token.tokenize_inner)
+
 
 class Table(BlockToken):
     """
@@ -312,6 +325,7 @@ class Table(BlockToken):
                 return False
         return True
 
+
 class TableRow(BlockToken):
     """
     Table row token.
@@ -323,6 +337,7 @@ class TableRow(BlockToken):
         cells = line[1:-2].split('|')
         self.children = (TableCell(cell.strip(), align)
                          for cell, align in zip_longest(cells, row_align))
+
 
 class TableCell(BlockToken):
     """
@@ -338,6 +353,7 @@ class TableCell(BlockToken):
     def __init__(self, content, align=None):
         self.align = align
         super().__init__(content, span_token.tokenize_inner)
+
 
 class FootnoteBlock(BlockToken):
     """
@@ -358,6 +374,7 @@ class FootnoteBlock(BlockToken):
                 return False
         return True
 
+
 class FootnoteEntry(BlockToken):
     """
     Footnote entry tokens.
@@ -373,6 +390,7 @@ class FootnoteEntry(BlockToken):
         key, value = line.strip().split(']:')
         self.key = key[1:]
         self.value = value.strip()
+
 
 class Separator(BlockToken):
     """

@@ -5,6 +5,7 @@ Built-in span-level token classes.
 import re
 import mistletoe.span_tokenizer as tokenizer
 
+
 """
 The items and ordering of this __all__ matters to mistletoe (see
 tokenize_inner). Don't mess with it unless you know what you are doing!
@@ -12,6 +13,7 @@ tokenize_inner). Don't mess with it unless you know what you are doing!
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
            'Strikethrough', 'Image', 'FootnoteImage', 'Link',
            'FootnoteLink', 'AutoLink']
+
 
 def tokenize_inner(content):
     """
@@ -28,16 +30,20 @@ def tokenize_inner(content):
     fallback_token = RawText
     yield from tokenizer.tokenize(content, token_types, fallback_token)
 
+
 def add_token(token_cls):
     globals()[token_cls.__name__] = token_cls
     __all__.insert(1, token_cls.__name__)
+
 
 def remove_token(token_cls):
     del globals()[token_cls.__name__]
     __all__.remove(token_cls.__name__)
 
+
 def _first_not_none_group(match_obj):
     return next(group for group in match_obj.groups() if group is not None)
+
 
 class SpanToken(object):
     """
@@ -62,6 +68,7 @@ class SpanToken(object):
     def __init__(self, match_obj):
         self.children = tokenize_inner(match_obj.group(1))
 
+
 class Strong(SpanToken):
     """
     Strong tokens. ("**some text**")
@@ -71,6 +78,7 @@ class Strong(SpanToken):
     pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
     def __init__(self, match_obj):
         self.children = tokenize_inner(_first_not_none_group(match_obj))
+
 
 class Emphasis(SpanToken):
     """
@@ -82,6 +90,7 @@ class Emphasis(SpanToken):
     def __init__(self, match_obj):
         self.children = tokenize_inner(_first_not_none_group(match_obj))
 
+
 class InlineCode(SpanToken):
     """
     Inline code tokens. ("`some code`")
@@ -92,6 +101,7 @@ class InlineCode(SpanToken):
     def __init__(self, match_obj):
         self.children = iter([RawText(match_obj.group(1))])
 
+
 class Strikethrough(SpanToken):
     """
     Strikethrough tokens. ("~~some text~~")
@@ -99,6 +109,7 @@ class Strikethrough(SpanToken):
     raw does not contain enclosing tildas.
     """
     pattern = re.compile(r"~~(.+)~~")
+
 
 class Image(SpanToken):
     """
@@ -116,6 +127,7 @@ class Image(SpanToken):
         self.src = match_obj.group(2)
         self.title = match_obj.group(3)
 
+
 class FootnoteImage(SpanToken):
     """
     Footnote image tokens. ("![alt] [some key]")
@@ -128,6 +140,7 @@ class FootnoteImage(SpanToken):
     def __init__(self, match_obj):
         self.children = iter([RawText(match_obj.group(1))])
         self.src = FootnoteAnchor(match_obj.group(2))
+
 
 class Link(SpanToken):
     """
@@ -142,6 +155,7 @@ class Link(SpanToken):
         super().__init__(match_obj)
         self.target = match_obj.group(2)
 
+
 class FootnoteLink(SpanToken):
     """
     Footnote-style links. ("[name] [some target]")
@@ -154,6 +168,7 @@ class FootnoteLink(SpanToken):
     def __init__(self, match_obj):
         super().__init__(match_obj)
         self.target = FootnoteAnchor(match_obj.group(2))
+
 
 class AutoLink(SpanToken):
     """
@@ -169,6 +184,7 @@ class AutoLink(SpanToken):
         self.children = iter([RawText(match_obj.group(1))])
         self.target = match_obj.group(1)
 
+
 class EscapeSequence(SpanToken):
     """
     Escape sequences. ("\*")
@@ -177,12 +193,14 @@ class EscapeSequence(SpanToken):
     def __init__(self, match_obj):
         self.children = iter([RawText(match_obj.group(1))])
 
+
 class RawText(SpanToken):
     """
     Raw text. A leaf node.
     """
     def __init__(self, raw):
         self.content = raw
+
 
 class FootnoteAnchor(SpanToken):
     """

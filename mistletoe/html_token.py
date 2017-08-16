@@ -9,7 +9,9 @@ import re
 import mistletoe.span_token as span_token
 import mistletoe.block_token as block_token
 
+
 __all__ = ['HTMLBlock', 'HTMLSpan']
+
 
 class HTMLBlock(block_token.BlockToken):
     """
@@ -34,6 +36,7 @@ class HTMLBlock(block_token.BlockToken):
         if open_tag != close_tag:
             return False
         return True
+
 
 class HTMLSpan(span_token.SpanToken):
     """
