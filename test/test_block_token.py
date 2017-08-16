@@ -1,191 +1,142 @@
 import unittest
-import mistletoe.span_token as span_token
+from unittest.mock import patch
 import mistletoe.block_token as block_token
 
 
-class TestHeading(unittest.TestCase):
-    def test_parse_atx(self):
-        token = next(block_token.tokenize(['### heading 3\n']))
-        self.assertIsInstance(token, block_token.Heading)
-        self.assertEqual(token.level, 3)
+class TestToken(unittest.TestCase):
+    def setUp(self):
+        patcher = patch('mistletoe.span_token.RawText')
+        self.mock = patcher.start()
+        self.addCleanup(patcher.stop)
 
-    def test_parse_setext(self):
-        token = next(block_token.tokenize(['some\n', 'heading\n', '---\n']))
-        self.assertIsInstance(token, block_token.Heading)
-        self.assertEqual(token.level, 2)
+    def _test_match(self, token_cls, lines, arg, **kwargs):
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token, token_cls)
+        self._test_token(token, arg, **kwargs)
+
+    def _test_token(self, token, arg, **kwargs):
+        for attr, value in kwargs.items():
+            self.assertEqual(getattr(token, attr), value)
+        next(token.children)
+        self.mock.assert_called_with(arg)
+
+
+class TestHeading(TestToken):
+    def test_match_atx(self):
+        lines = ['### heading 3\n']
+        arg = 'heading 3'
+        self._test_match(block_token.Heading, lines, arg, level=3)
+
+    def test_match_setext(self):
+        lines = ['some\n', 'heading\n', '---\n']
+        arg = 'some heading'
+        self._test_match(block_token.Heading, lines, arg, level=2)
 
     def test_children_with_enclosing_hashes(self):
-        token = next(block_token.tokenize(['### heading 3 #####  \n']))
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'heading 3')
+        lines = ['# heading 3 #####  \n']
+        arg = 'heading 3'
+        self._test_match(block_token.Heading, lines, arg, level=1)
 
 
 class TestQuote(unittest.TestCase):
-    def test_parse(self):
-        token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
-        self.assertIsInstance(token, block_token.Quote)
-
-    def test_children(self):
-        token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
-
-        child = next(token.children)
-        self.assertIsInstance(child, block_token.Paragraph)
-
-        grandchild = next(child.children)
-        self.assertIsInstance(grandchild, span_token.RawText)
-        self.assertEqual(grandchild.content, 'line 1 line 2')
+    def test_match(self):
+        with patch('mistletoe.block_token.Paragraph') as mock:
+            token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
+            self.assertIsInstance(token, block_token.Quote)
+            next(token.children)
+            mock.assert_called_with(['line 1\n', 'line 2\n'])
 
     def test_lazy_continuation(self):
-        token = next(block_token.tokenize(['> line 1\n', 'line 2\n']))
-
-        child = next(token.children)
-        self.assertIsInstance(child, block_token.Paragraph)
-
-        grandchild = next(child.children)
-        self.assertIsInstance(grandchild, span_token.RawText)
-        self.assertEqual(grandchild.content, 'line 1 line 2')
+        with patch('mistletoe.block_token.Paragraph') as mock:
+            token = next(block_token.tokenize(['> line 1\n', 'line 2\n']))
+            self.assertIsInstance(token, block_token.Quote)
+            next(token.children)
+            mock.assert_called_with(['line 1\n', 'line 2\n'])
 
 
-class TestBlockCode(unittest.TestCase):
-    def test_parse_fenced_code(self):
+class TestBlockCode(TestToken):
+    def test_match_fenced_code(self):
         lines = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token, block_token.BlockCode)
-        self.assertEqual(token.language, 'sh')
-
-    def test_children_in_fenced_code(self):
-        lines = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
-        token = next(block_token.tokenize(lines))
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'rm dir\nmkdir test\n')
+        arg = 'rm dir\nmkdir test\n'
+        self._test_match(block_token.BlockCode, lines, arg, language='sh')
 
     def test_fence_code_lazy_continuation(self):
         lines = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token, block_token.BlockCode)
-
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'rm dir\n \nmkdir test\n')
+        arg = 'rm dir\n \nmkdir test\n'
+        self._test_match(block_token.BlockCode, lines, arg, language='sh')
 
     def test_hashes(self):
-        lines = ['```python\n', '# comment\n', '```\n']
-        token = next(block_token.tokenize(lines))
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, '# comment\n')
+        lines = ['```ruby\n', '# comment\n', '```\n']
+        arg = '# comment\n'
+        self._test_match(block_token.BlockCode, lines, arg, language='ruby')
 
     def test_parse_indented_code(self):
         lines = ['    rm dir\n', '    mkdir test\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token, block_token.BlockCode)
-        self.assertEqual(token.language, '')
-
-    def test_children_in_indented_code(self):
-        lines = ['    rm dir\n', '    mkdir test\n']
-        token = next(block_token.tokenize(lines))
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'rm dir\nmkdir test\n')
+        arg = 'rm dir\nmkdir test\n'
+        self._test_match(block_token.BlockCode, lines, arg, language='')
 
 
-class TestParagraph(unittest.TestCase):
+class TestParagraph(TestToken):
     def test_parse(self):
         lines = ['some\n', 'continuous\n', 'lines\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token, block_token.Paragraph)
-
-    def test_children(self):
-        lines = ['some\n', 'continuous\n', 'lines\n']
-        token = next(block_token.tokenize(lines))
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'some continuous lines')
+        arg = 'some continuous lines'
+        self._test_match(block_token.Paragraph, lines, arg)
 
 
-class TestListItem(unittest.TestCase):
+class TestListItem(TestToken):
     def test_children(self):
         token = block_token.ListItem(['- some text\n'])
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'some text')
+        self._test_token(token, 'some text')
 
     def test_lazy_continuation(self):
         token = block_token.ListItem(['- list\n', 'content\n'])
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'list content')
+        self._test_token(token, 'list content')
 
     def test_whitespace(self):
         token = block_token.ListItem(['-   text  \n'])
-        child = next(token.children)
-        self.assertEqual(child.content, 'text')
+        self._test_token(token, 'text')
 
 
-class TestList(unittest.TestCase):
-    def test_parse_unordered_list(self):
-        token = next(block_token.tokenize(['- a list\n', 'continued\n']))
-        self.assertIsInstance(token, block_token.List)
-        self.assertIsNone(token.start)
+class TestList(TestToken):
+    def setUp(self):
+        patcher = patch('mistletoe.block_token.ListItem')
+        self.mock = patcher.start()
+        self.addCleanup(patcher.stop)
 
-    def test_parse_ordered_list(self):
+    def _test_token(self, token, call_count, **kwargs):
+        for attr, value in kwargs.items():
+            self.assertEqual(getattr(token, attr), value)
+        self.assertEqual(self.mock.call_count, call_count)
+
+    def test_match_unordered_list(self):
+        lines = ['- item 1\n', '- item 2\n']
+        self._test_match(block_token.List, lines, 2, start=None)
+
+    def test_match_ordered_list(self):
         lines = ['1) item 1\n',
                  '2) item 2\n',
                  '    * nested item 1\n',
                  '    * nested item 2\n',
                  '3) item 3\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token, block_token.List)
-        self.assertEqual(token.start, 1)
+        self._test_match(block_token.List, lines, 5, start=1)
 
-    def test_children(self):
-        token = next(block_token.tokenize(['- a list\n', 'continued\n']))
-        child = next(token.children)
-        self.assertIsInstance(child, block_token.ListItem)
-
-    def test_parse_nested_lists(self):
+    def test_match_nested_lists(self):
         lines = ['- item 1\n',
                  '- item 2\n',
                  '    * nested item 1\n',
                  '    * nested item 2\n',
                  '- item 3\n']
-        tokens = next(block_token.tokenize(lines)).children
-
-        token1 = next(tokens)
-        self.assertIsInstance(token1, block_token.ListItem)
-
-        token2 = next(tokens)
-        self.assertIsInstance(token2, block_token.ListItem)
-
-        token3 = next(tokens)
-        self.assertIsInstance(token3, block_token.List)
-
-        token4 = next(tokens)
-        self.assertIsInstance(token4, block_token.ListItem)
+        token = next(block_token.tokenize(lines))
+        self._test_token(token, 5)
 
     def test_lazy_continuation(self):
         lines = ['* item 1\n',
                  '* item 2\n',
-                 '  continued with indent\n',
+                 '  w/ indent\n',
                  '* item 3\n',
-                 'with lazy continuation\n',
-                 '    + nested item 1\n',
-                 '    continued\n']
-        tokens = next(block_token.tokenize(lines)).children
-        
-        token1 = next(tokens)
-        self.assertIsInstance(token1, block_token.ListItem)
-
-        token2 = next(tokens)
-        self.assertIsInstance(token2, block_token.ListItem)
-
-        token3 = next(tokens)
-        self.assertIsInstance(token3, block_token.ListItem)
-
-        token4 = next(tokens)
-        self.assertIsInstance(token4, block_token.List)
+                 'w/o indent\n']
+        token = next(block_token.tokenize(lines))
+        self._test_token(token, 3)
 
 
 class TestTable(unittest.TestCase):
@@ -200,52 +151,54 @@ class TestTable(unittest.TestCase):
         self.assertEqual(list(test_func('| :--- | :---: | ---:|\n')),
                 [':---', ':---:', '---:'])
 
-    def test_parse(self):
+    def test_match(self):
         lines = ['| header 1 | header 2 | header 3 |\n',
                  '| --- | --- | --- |\n',
                  '| cell 1 | cell 2 | cell 3 |\n',
                  '| more 1 | more 2 | more 3 |\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token, block_token.Table)
-        self.assertEqual(token.has_header, True)
-        self.assertEqual(token.column_align, [None, None, None])
+        arg = '| header 1 | header 2 | header 3 |\n', [None, None, None]
+        with patch('mistletoe.block_token.TableRow') as mock:
+            token = next(block_token.tokenize(lines))
+            self.assertIsInstance(token, block_token.Table)
+            self.assertEqual(token.has_header, True)
+            self.assertEqual(token.column_align, [None, None, None])
+            next(token.children)
+            mock.assert_called_with(*arg)
 
 
 class TestTableRow(unittest.TestCase):
-    def test_parse(self):
-        lines = ['| cell 1 | cell 2 |\n',
-                 '| more 1 | more 2 |\n']
-        token = next(block_token.Table(lines).children)
-        self.assertIsInstance(token, block_token.TableRow)
-        self.assertEqual(token.row_align, [None])
+    def test_match(self):
+        with patch('mistletoe.block_token.TableCell') as mock:
+            line = '| cell 1 | cell 2 |\n'
+            token = block_token.TableRow(line)
+            self.assertEqual(token.row_align, [None])
+            next(token.children)
+            mock.assert_called_with('cell 1', None)
 
 
-class TestTableCell(unittest.TestCase):
-    def test_parse(self):
-        token = next(block_token.TableRow('| cell 2 |\n').children)
-        self.assertIsInstance(token, block_token.TableCell)
-        self.assertEqual(token.align, None)
-
-    def test_children(self):
-        token = next(block_token.TableRow('| cell 2 |\n').children)
-        child = next(token.children)
-        self.assertIsInstance(child, span_token.RawText)
-        self.assertEqual(child.content, 'cell 2')
+class TestTableCell(TestToken):
+    def test_match(self):
+        token = block_token.TableCell('cell 2')
+        self._test_token(token, 'cell 2', align=None)
 
 
-class TestFootnoteBlock(unittest.TestCase):
-    def test_parse(self):
+class TestFootnoteBlock(TestToken):
+    def setUp(self):
+        patcher = patch('mistletoe.block_token.FootnoteEntry')
+        self.mock = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_match(self):
         lines = ['[key 1]: value 1\n',
                  '[key 2]: value 2\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token, block_token.FootnoteBlock)
+        arg = '[key 2]: value 2\n'  # the last item should be called
+        self._test_match(block_token.FootnoteBlock, lines, arg)
 
 
 class TestFootnoteEntry(unittest.TestCase):
-    def test_parse(self):
-        lines = ['[key]: value\n']
-        token = next(block_token.FootnoteBlock(lines).children)
-        self.assertIsInstance(token, block_token.FootnoteEntry)
+    def test_match(self):
+        line = '[key]: value\n'
+        token = block_token.FootnoteEntry(line)
         self.assertEqual(token.key, 'key')
         self.assertEqual(token.value, 'value')
 
@@ -260,6 +213,6 @@ class TestDocument(unittest.TestCase):
 
 
 class TestSeparator(unittest.TestCase):
-    def test_parse(self):
+    def test_match(self):
         token = next(block_token.tokenize(['---\n']))
         self.assertIsInstance(token, block_token.Separator)

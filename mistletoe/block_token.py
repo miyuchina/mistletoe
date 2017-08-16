@@ -170,7 +170,7 @@ class List(BlockToken):
         start (int): first index of ordered list (undefined if unordered).
     """
     def __init__(self, lines):
-        self.children = iter(list(List._build_list(lines)))
+        self.children = list(List._build_list(lines))
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
