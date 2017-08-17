@@ -37,14 +37,13 @@ class HTMLRenderer(BaseRenderer):
         template = '<del>{}</del>'
         return template.format(self.render_inner(token, footnotes))
 
-    @staticmethod
-    def render_image(token, footnotes):
+    def render_image(self, token, footnotes):
         template = '<img src="{}" title="{}" alt="{}">'
-        return template.format(token.src, token.title, token.alt)
+        inner = self.render_inner(token)
+        return template.format(token.src, token.title, inner)
 
-    @staticmethod
-    def render_footnote_image(token, footnotes):
-        template = '<img src="{src}" title="{title}" alt="{alt}">'
+    def render_footnote_image(self, token, footnotes):
+        template = '<img src="{src}" title="{title}" alt="{inner}">'
         maybe_src = footnotes.get(token.src.key, '')
         if maybe_src.find('"') != -1:
             src = maybe_src[:maybe_src.index(' "')]
@@ -52,7 +51,8 @@ class HTMLRenderer(BaseRenderer):
         else:
             src = maybe_src
             title = ''
-        return template.format(src=src, title=title, alt=token.alt)
+        inner = self.render_inner(token, footnotes)
+        return template.format(src=src, title=title, inner=inner)
 
     def render_link(self, token, footnotes):
         template = '<a href="{target}">{inner}</a>'
@@ -67,12 +67,14 @@ class HTMLRenderer(BaseRenderer):
         inner = self.render_inner(token, footnotes)
         return template.format(target=target, inner=inner)
 
-    @staticmethod
-    def render_auto_link(token, footnotes):
-        template = '<a href="{target}">{name}</a>'
+    def render_auto_link(self, token, footnotes):
+        template = '<a href="{target}">{inner}</a>'
         target = escape_url(token.target)
-        name = html.escape(token.name)
-        return template.format(target=target, name=name)
+        inner = self.render_inner(token, footnotes)
+        return template.format(target=target, inner=inner)
+
+    def render_escape_sequence(self, token, footnotes):
+        return self.render_inner(token, footnotes)
 
     @staticmethod
     def render_raw_text(token, footnotes):
@@ -96,13 +98,16 @@ class HTMLRenderer(BaseRenderer):
 
     def render_block_code(self, token, footnotes):
         template = '<pre>\n<code{attr}>\n{inner}</code>\n</pre>\n'
-        attr = ' class="lang-{}"'.format(token.language) if token.language else ''
+        if token.language:
+            attr = ' class="{}"'.format('lang-{}'.format(token.language))
+        else:
+            attr = ''
         inner = self.render_inner(token, footnotes)
         return template.format(attr=attr, inner=inner)
 
     def render_list(self, token, footnotes):
         template = '<{tag}{attr}>\n{inner}</{tag}>\n'
-        if hasattr(token, 'start'):
+        if token.start:
             tag = 'ol'
             attr = ' start="{}"'.format(token.start)
         else:
@@ -122,7 +127,7 @@ class HTMLRenderer(BaseRenderer):
         template = '<table>\n{inner}</table>\n'
         if token.has_header:
             head_template = '<thead>\n{inner}</thead>\n'
-            header = token.children.send(None)
+            header = next(token.children)
             head_inner = self.render_table_row(header, footnotes, True)
             head_rendered = head_template.format(inner=head_inner)
         else: head_rendered = ''

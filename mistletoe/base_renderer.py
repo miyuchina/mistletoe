@@ -53,7 +53,7 @@ class BaseRenderer(object):
             'Link':           self.render_link,
             'FootnoteLink':   self.render_footnote_link,
             'AutoLink':       self.render_auto_link,
-            'EscapeSequence': self.render_raw_text,
+            'EscapeSequence': self.render_escape_sequence,
             'Heading':        self.render_heading,
             'Quote':          self.render_quote,
             'Paragraph':      self.render_paragraph,

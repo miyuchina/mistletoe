@@ -1,182 +1,145 @@
-import unittest
-import mistletoe.block_token as block_token
-import mistletoe.span_token as span_token
-import mistletoe.html_token as html_token
+from unittest import TestCase, mock
 from mistletoe.html_renderer import HTMLRenderer
 
-class TestHTMLRenderer(unittest.TestCase):
-    def _test_token(self, token_type, raw, target):
-        with HTMLRenderer() as renderer:
-            self.assertEqual(renderer.render(token_type(raw)), target)
 
+class TestRenderer(TestCase):
+    def setUp(self):
+        self.renderer = HTMLRenderer()
+        self.renderer.render_inner = mock.Mock(return_value='inner')
+        self.renderer.__enter__()
+        self.addCleanup(self.renderer.__exit__, None, None, None)
+
+    def _test_token(self, token_path, output, children=True, **kwargs):
+        def mock_render(token_path):
+            def inner(token, footnotes):
+                _, token_name = token_path.split('.')
+                return self.renderer.render_map[token_name](token, footnotes)
+            return inner
+        self.renderer.render = mock_render(token_path)
+
+        path = 'mistletoe.{}'.format(token_path)
+        MockToken = mock.Mock(path, name=token_path)
+        if children:
+            MockToken.return_value = mock.Mock(**kwargs, children=mock.MagicMock())
+        else:
+            MockToken.return_value = mock.Mock(**kwargs)
+
+        self.assertEqual(self.renderer.render(MockToken(), {}), output)
+
+
+class TestHTMLRenderer(TestRenderer):
     def test_strong(self):
-        raw, target = 'some text', '<strong>some text</strong>'
-        self._test_token(span_token.Strong, raw, target)
+        self._test_token('span_token.Strong', '<strong>inner</strong>')
 
     def test_emphasis(self):
-        raw, target = 'some text', '<em>some text</em>'
-        self._test_token(span_token.Emphasis, raw, target)
+        self._test_token('span_token.Emphasis', '<em>inner</em>')
 
     def test_inline_code(self):
-        raw, target = 'some code', '<code>some code</code>'
-        self._test_token(span_token.InlineCode, raw, target)
+        self._test_token('span_token.InlineCode', '<code>inner</code>')
 
     def test_strikethrough(self):
-        raw, target = 'some text', '<del>some text</del>'
-        self._test_token(span_token.Strikethrough, raw, target)
+        self._test_token('span_token.Strikethrough', '<del>inner</del>')
 
     def test_image(self):
-        raw = '![alt](src "title")'
-        target = '<img src="src" title="title" alt="alt">'
-        self._test_token(span_token.Image, raw, target)
-
-    def test_footnote_image(self):
-        raw = ['![alt] [foo]\n', '\n', '[foo]: bar "title"\n']
-        target = '<p><img src="bar" title="title" alt="alt"></p>\n'
-        self._test_token(block_token.Document, raw, target)
+        output = '<img src="src" title="title" alt="inner">'
+        self._test_token('span_token.Image', output, src='src', title='title')
 
     def test_link(self):
-        raw, target = '[name](target)', '<a href="target">name</a>'
-        self._test_token(span_token.Link, raw, target)
-
-    def test_footnote_link(self):
-        raw = ['[name] [key]\n', '\n', '[key]: target\n']
-        target = '<p><a href="target">name</a></p>\n'
-        self._test_token(block_token.Document, raw, target)
+        output = '<a href="target">inner</a>'
+        self._test_token('span_token.Link', output, target='target')
 
     def test_autolink(self):
-        raw, target = 'link', '<a href="link">link</a>'
-        self._test_token(span_token.AutoLink, raw, target)
+        output = '<a href="link">inner</a>'
+        self._test_token('span_token.AutoLink', output, target='link')
 
     def test_escape_sequence(self):
-        raw, target = '\*', '\*'
-        self._test_token(span_token.EscapeSequence, raw, target)
+        self._test_token('span_token.EscapeSequence', 'inner')
 
     def test_raw_text(self):
-        raw, target = 'john & jane', 'john &amp; jane'
-        self._test_token(span_token.RawText, raw, target)
+        self._test_token('span_token.RawText', 'john &amp; jane',
+                         children=False, content='john & jane')
 
     def test_html_span(self):
-        raw = target = '<some>text</some>'
-        self._test_token(html_token.HTMLSpan, raw, target)
+        self._test_token('html_token.HTMLSpan', '<some>text</some>',
+                         children=False, content='<some>text</some>')
 
     def test_heading(self):
-        raw, target = [ '### heading 3\n' ], '<h3>heading 3</h3>\n'
-        self._test_token(block_token.Heading, raw, target)
+        output = '<h3>inner</h3>\n'
+        self._test_token('block_token.Heading', output, level=3)
 
     def test_quote(self):
-        raw = ['> ## heading 2\n', '> a paragraph\n', '> continued\n']
-        target = ('<blockquote>\n<h2>heading 2</h2>\n'
-                  '<p>a paragraph continued</p>\n</blockquote>\n')
-        self._test_token(block_token.Quote, raw, target)
+        output = '<blockquote>\ninner</blockquote>\n'
+        self._test_token('block_token.Quote', output)
 
     def test_paragraph(self):
-        raw = ['a paragraph\n', 'continued\n']
-        target = '<p>a paragraph continued</p>\n'
-        self._test_token(block_token.Paragraph, raw, target)
+        self._test_token('block_token.Paragraph', '<p>inner</p>\n')
 
     def test_block_code(self):
-        raw = ['```sh\n', 'mkdir temp\n', 'rmdir temp\n', '```\n']
-        target = ('<pre>\n<code class="lang-sh">\nmkdir temp\n'
-                  'rmdir temp\n</code>\n</pre>\n')
-        self._test_token(block_token.BlockCode, raw, target)
+        output = '<pre>\n<code class="lang-sh">\ninner</code>\n</pre>\n'
+        self._test_token('block_token.BlockCode', output, language='sh')
+
+    def test_block_code_no_language(self):
+        output = '<pre>\n<code>\ninner</code>\n</pre>\n'
+        self._test_token('block_token.BlockCode', output, language='')
 
     def test_list(self):
-        raw = ['- item 1\n',
-               '- item 2\n',
-               '    2. nested item 1\n',
-               '    3. nested item 2\n',
-               '        * further nested\n',
-               '- item 3\n']
-        target = ('<ul>\n'
-                    '<li>item 1</li>\n'
-                    '<li>item 2</li>\n'
-                    '<ol start="2">\n'
-                      '<li>nested item 1</li>\n'
-                      '<li>nested item 2</li>\n'
-                      '<ul>\n<li>further nested</li>\n</ul>\n'
-                    '</ol>\n'
-                    '<li>item 3</li>\n'
-                  '</ul>\n')
-        self._test_token(block_token.Document, raw, target)
+        output = '<ul>\ninner</ul>\n'
+        self._test_token('block_token.List', output, start=None)
 
     def test_list_item(self):
-        raw = ['    - some **bold** text\n']
-        target = '<li>some <strong>bold</strong> text</li>\n'
-        self._test_token(block_token.ListItem, raw, target)
+        output = '<li>inner</li>\n'
+        self._test_token('block_token.ListItem', output)
 
     def test_table_with_heading(self):
-        raw = ['| header 1 | header 2 | header 3 |\n',
-                 '| :--- | :---: | ---: |\n',
-                 '| cell 1 | cell 2 | cell 3 |\n',
-                 '| more 1 | more 2 | more 3 |\n']
-        target = ('<table>\n'
-                    '<thead>\n'
-                      '<tr>\n'
-                        '<th align="left">header 1</th>\n'
-                        '<th align="center">header 2</th>\n'
-                        '<th align="right">header 3</th>\n'
-                      '</tr>\n'
-                    '</thead>\n'
-                    '<tbody>\n'
-                       '<tr>\n'
-                         '<td align="left">cell 1</td>\n'
-                         '<td align="center">cell 2</td>\n'
-                         '<td align="right">cell 3</td>\n'
-                       '</tr>\n'
-                       '<tr>\n'
-                         '<td align="left">more 1</td>\n'
-                         '<td align="center">more 2</td>\n'
-                         '<td align="right">more 3</td>\n'
-                       '</tr>\n'
-                    '</tbody>\n'
-                  '</table>\n')
-        self._test_token(block_token.Table, raw, target)
+        func_path = 'mistletoe.html_renderer.HTMLRenderer.render_table_row'
+        with mock.patch(func_path, autospec=True) as mock_func:
+            mock_func.return_value = 'row'
+            output = ('<table>\n'
+                        '<thead>\nrow</thead>\n'
+                        '<tbody>\ninner</tbody>\n'
+                      '</table>\n')
+            self._test_token('block_token.Table', output, has_header=True)
 
     def test_table_without_heading(self):
-        raw = ['| cell 1 | cell 2 | cell 3 |\n',
-                 '| more 1 | more 2 | more 3 |\n']
-        target = ('<table>\n'
-                    '<tbody>\n'
-                      '<tr>\n'
-                        '<td align="left">cell 1</td>\n'
-                        '<td align="left">cell 2</td>\n'
-                        '<td align="left">cell 3</td>\n'
-                      '</tr>\n'
-                      '<tr>\n'
-                        '<td align="left">more 1</td>\n'
-                        '<td align="left">more 2</td>\n'
-                        '<td align="left">more 3</td>\n'
-                        '</tr>\n'
-                    '</tbody>\n'
-                  '</table>\n')
-        self._test_token(block_token.Table, raw, target)
+        func_path = 'mistletoe.html_renderer.HTMLRenderer.render_table_row'
+        with mock.patch(func_path, autospec=True) as mock_func:
+            mock_func.return_value = 'row'
+            output = '<table>\n<tbody>\ninner</tbody>\n</table>\n'
+            self._test_token('block_token.Table', output, has_header=False)
 
     def test_table_row(self):
-        raw = '| cell 1 | cell 2 | cell 3 |\n'
-        target = ('<tr>\n'
-                    '<td align="left">cell 1</td>\n'
-                    '<td align="left">cell 2</td>\n'
-                    '<td align="left">cell 3</td>\n'
-                  '</tr>\n')
-        self._test_token(block_token.TableRow, raw, target)
+        self._test_token('block_token.TableRow', '<tr>\n</tr>\n')
 
     def test_table_cell(self):
-        raw, target= 'cell', '<td align="left">cell</td>\n'
-        self._test_token(block_token.TableCell, raw, target)
+        output = '<td align="left">inner</td>\n'
+        self._test_token('block_token.TableCell', output, align=None)
 
     def test_separator(self):
-        raw, target = '***\n', '<hr>\n'
-        self._test_token(block_token.Separator, raw, target)
+        self._test_token('block_token.Separator', '<hr>\n', children=False)
 
     def test_html_block(self):
-        raw = ['# hello\n',
-               '<p>this is\n',
-               'a paragraph</p>\n']
-        target = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'
-        self._test_token(block_token.Document, raw, target)
+        content = output = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'
+        self._test_token('html_token.HTMLBlock', output,
+                         children=False, content=content)
 
     def test_document(self):
-        raw = ['a paragraph\n']
-        target = '<p>a paragraph</p>\n'
-        self._test_token(block_token.Document, raw, target)
+        self._test_token('block_token.Document', 'inner')
+
+
+class TestHTMLRendererFootnotes(TestCase):
+    def setUp(self):
+        self.renderer = HTMLRenderer()
+        self.renderer.__enter__()
+        self.addCleanup(self.renderer.__exit__, None, None, None)
+
+    def test_footnote_image(self):
+        from mistletoe import Document
+        token = Document(['![alt] [foo]\n', '\n', '[foo]: bar "title"\n'])
+        output = '<p><img src="bar" title="title" alt="alt"></p>\n'
+        self.assertEqual(self.renderer.render(token), output)
+
+    def test_footnote_link(self):
+        from mistletoe import Document
+        token = Document(['[name] [foo]\n', '\n', '[foo]: target\n'])
+        output = '<p><a href="target">name</a></p>\n' 
+        self.assertEqual(self.renderer.render(token), output)
