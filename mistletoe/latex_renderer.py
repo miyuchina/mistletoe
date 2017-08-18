@@ -56,6 +56,9 @@ class LaTeXRenderer(BaseRenderer):
     def render_math(token, footnotes):
         return token.content
 
+    def render_escape_sequence(self, token, footnotes):
+        return self.render_inner(token, footnotes)
+
     @staticmethod
     def render_raw_text(token, footnotes):
         return (token.content.replace('$', '\$').replace('#', '\#')
@@ -86,7 +89,7 @@ class LaTeXRenderer(BaseRenderer):
 
     def render_list(self, token, footnotes):
         template = '\\begin{{{tag}}}\n{inner}\\end{{{tag}}}\n'
-        tag = 'enumerate' if hasattr(token, 'start') else 'itemize'
+        tag = 'enumerate' if token.start is not None else 'itemize'
         inner = self.render_inner(token, footnotes)
         return template.format(tag=tag, inner=inner)
 
@@ -116,7 +119,7 @@ class LaTeXRenderer(BaseRenderer):
                     '\\end{{tabular}}\n')
         if token.has_header:
             head_template = '{inner}\\hline\n'
-            header = token.children.send(None)
+            header = next(token.children)
             head_inner = self.render_table_row(header, footnotes)
             head_rendered = head_template.format(inner=head_inner)
         else: head_rendered = ''
