@@ -175,17 +175,20 @@ text, and the second one is the link target.
 Note that alternative text can also contain other span-level tokens.  For
 example, `[[*alt*|link]]` is a GitHub link with an `Emphasis` token as its
 child.  To parse child tokens, simply pass `match_obj` to the `super`
-constructor, and save off all the additional attributes we need:
+constructor (which assumes children to be in `match_obj.group(1)`),
+and save off all the additional attributes we need:
 
 ```python
 from mistletoe.span_token import SpanToken
 
 class GithubWiki(SpanToken):
-    pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
+    pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
     def __init__(self, raw):
         super().__init__(match_obj)
         self.target = match_obj.group(2)
 ```
+
+There you go: a new token in 7 lines of code.
 
 ### A new renderer
 
