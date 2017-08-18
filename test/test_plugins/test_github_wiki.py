@@ -1,27 +1,26 @@
-import unittest
-import test.helpers as helpers
-import mistletoe.span_token as span_token
-from plugins.github_wiki import GithubWikiRenderer
+from unittest import TestCase, mock
+from mistletoe.span_token import tokenize_inner
+from plugins.github_wiki import GithubWiki, GithubWikiRenderer
 
-class TestGithubWiki(unittest.TestCase):
-    def test_context(self):
-        with GithubWikiRenderer():
-            self.assertTrue(hasattr(span_token, 'GithubWiki'))
-        self.assertFalse(hasattr(span_token, 'GithubWiki'))
 
-    def test_parse(self):
-        with GithubWikiRenderer():
-            t = span_token.Strong('text with [[wiki | target]].')
-            c0 = span_token.RawText('text with ')
-            c1 = span_token.GithubWiki('[[wiki|target]]')
-            c2 = span_token.RawText('.')
-            l = list(t.children)
-            helpers.check_equal(self, l[0], c0)
-            helpers.check_equal(self, l[1], c1)
-            helpers.check_equal(self, l[2], c2)
+class TestGithubWiki(TestCase):
+    def setUp(self):
+        self.renderer = GithubWikiRenderer()
+        self.renderer.__enter__()
+        self.addCleanup(self.renderer.__exit__, None, None, None)
+
+    @mock.patch('mistletoe.span_token.RawText')
+    def test_parse(self, MockRawText):
+        tokens = tokenize_inner('text with [[wiki | target]]')
+        next(tokens)
+        MockRawText.assert_called_with('text with ')
+        token = next(tokens)
+        self.assertIsInstance(token, GithubWiki)
+        self.assertEqual(token.target, 'target')
+        next(token.children)
+        MockRawText.assert_called_with('wiki')
 
     def test_render(self):
-        with GithubWikiRenderer() as renderer:
-            t = span_token.GithubWiki('[[wiki|target]]')
-            target = '<a href="target">wiki</a>'
-            self.assertEqual(renderer.render(t), target)
+        token = next(tokenize_inner('[[wiki|target]]'))
+        output = '<a href="target">wiki</a>'
+        self.assertEqual(self.renderer.render(token), output)

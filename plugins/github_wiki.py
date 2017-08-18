@@ -3,16 +3,19 @@ GitHub Wiki support for mistletoe.
 """
 
 import re
-from mistletoe.span_token import SpanToken
+from mistletoe.span_token import SpanToken, tokenize_inner
 from mistletoe.html_renderer import HTMLRenderer, escape_url
+
 
 __all__ = ['GithubWiki', 'GithubWikiRenderer']
 
+
 class GithubWiki(SpanToken):
-    pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
-    def __init__(self, raw):
-        alt, self.target = map(str.strip, raw[2:-2].split('|', 1))
-        super().__init__(alt)
+    pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
+    def __init__(self, match_obj):
+        self.children = tokenize_inner(match_obj.group(1))
+        self.target = match_obj.group(2)
+
 
 class GithubWikiRenderer(HTMLRenderer):
     def __init__(self):
