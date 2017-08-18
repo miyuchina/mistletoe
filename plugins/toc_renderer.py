@@ -5,8 +5,8 @@ See `if __name__ == '__main__'` section for sample usage.
 """
 
 import re
-from mistletoe.block_token import List
 from mistletoe.html_renderer import HTMLRenderer
+
 
 class TOCRenderer(HTMLRenderer):
     """
@@ -31,6 +31,7 @@ class TOCRenderer(HTMLRenderer):
         """
         Returns table of contents as a block_token.List instance.
         """
+        from mistletoe.block_token import List
         def get_indent(level):
             if self.omit_title:
                 level -= 1
@@ -62,10 +63,3 @@ class TOCRenderer(HTMLRenderer):
         Helper method; converts rendered heading to plain text.
         """
         return re.sub(r'<.+?>', '', rendered[4:-6])
-
-if __name__ == '__main__':
-    from mistletoe import Document
-    with open('test/samples/jquery.md', 'r') as fin:
-        with TOCRenderer() as renderer:
-            renderer.render(Document(fin))
-            print(renderer.render(renderer.toc))

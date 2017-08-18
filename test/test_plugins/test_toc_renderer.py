@@ -1,9 +1,8 @@
-import unittest
-import test.helpers as helpers
-from mistletoe.block_token import Document, Heading, List
+from unittest import TestCase, mock
+from mistletoe.block_token import Document, Heading
 from plugins.toc_renderer import TOCRenderer
 
-class TestTOCRenderer(unittest.TestCase):
+class TestTOCRenderer(TestCase):
     def test_parse_rendered_heading(self):
         rendered_heading = '<h3>some <em>text</em></h3>\n'
         content = TOCRenderer.parse_rendered_heading(rendered_heading)
@@ -40,7 +39,8 @@ class TestTOCRenderer(unittest.TestCase):
         renderer.render(token)
         self.assertEqual(renderer._headings, [(4, 'not heading')])
 
-    def test_get_toc(self):
+    @mock.patch('mistletoe.block_token.List')
+    def test_get_toc(self, MockList):
         headings = [(1, 'heading 1'),
                     (2, 'subheading 1'),
                     (2, 'subheading 2'),
@@ -49,10 +49,10 @@ class TestTOCRenderer(unittest.TestCase):
                     (1, 'heading 2')]
         renderer = TOCRenderer(omit_title=False)
         renderer._headings = headings
-        toc = List(['- heading 1\n',
-                    '    - subheading 1\n',
-                    '    - subheading 2\n',
-                    '        - subsubheading 1\n',
-                    '    - subheading 3\n',
-                    '- heading 2\n'])
-        helpers.check_equal(self, renderer.toc, toc)
+        toc = renderer.toc
+        MockList.assert_called_with(['- heading 1\n',
+                                     '    - subheading 1\n',
+                                     '    - subheading 2\n',
+                                     '        - subsubheading 1\n',
+                                     '    - subheading 3\n',
+                                     '- heading 2\n'])
