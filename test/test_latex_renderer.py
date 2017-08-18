@@ -21,7 +21,7 @@ class TestLaTeXRenderer(TestCase):
         path = 'mistletoe.{}'.format(token_path)
         MockToken = mock.Mock(path, name=token_path)
         if children:
-            MockToken.return_value = mock.Mock(**kwargs, children=mock.MagicMock())
+            MockToken.return_value = mock.Mock(children=mock.MagicMock(), **kwargs)
         else:
             MockToken.return_value = mock.Mock(**kwargs)
 
