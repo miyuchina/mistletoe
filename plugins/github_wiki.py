@@ -13,7 +13,7 @@ __all__ = ['GithubWiki', 'GithubWikiRenderer']
 class GithubWiki(SpanToken):
     pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
     def __init__(self, match_obj):
-        self.children = tokenize_inner(match_obj.group(1))
+        super().__init__(match_obj)
         self.target = match_obj.group(2)
 
 

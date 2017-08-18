@@ -32,11 +32,25 @@ def tokenize(lines, root=None):
 
 
 def add_token(token_cls):
+    """
+    Allows external manipulation of this module's namespace.
+    This function is called in BaseRenderer.__enter__.
+
+    Arguments:
+        token_cls (SpanToken): token to be included in the parsing process.
+    """
     globals()[token_cls.__name__] = token_cls
     __all__.insert(1, token_cls.__name__)
 
 
 def remove_token(token_cls):
+    """
+    Allows external manipulation of this module's namespace.
+    This function is called in BaseRenderer.__exit__.
+
+    Arguments:
+        token_cls (SpanToken): token to be removed from the parsing process.
+    """
     del globals()[token_cls.__name__]
     __all__.remove(token_cls.__name__)
 
@@ -149,7 +163,7 @@ class BlockCode(BlockToken):
     Boundary between span-level and block-level tokens.
 
     Attributes:
-        children (generator): contains a single span_token.RawText token.
+        children (iterator): contains a single span_token.RawText token.
         language (str): language of code block (default to empty).
     """
     def __init__(self, lines):
@@ -181,6 +195,10 @@ class List(BlockToken):
         start (int): first index of ordered list (undefined if unordered).
     """
     def __init__(self, lines):
+        # Every codebase needs a line of code that its author
+        # doesn't understand. This is that line of code.
+        # I need to cast this generator into a list because... why?
+        # Someone please open a pull request and enlighten me...
         self.children = list(List._build_list(lines))
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():

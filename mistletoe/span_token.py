@@ -32,11 +32,25 @@ def tokenize_inner(content):
 
 
 def add_token(token_cls):
+    """
+    Allows external manipulation of this module's namespace.
+    This function is called in BaseRenderer.__enter__.
+
+    Arguments:
+        token_cls (SpanToken): token to be included in the parsing process.
+    """
     globals()[token_cls.__name__] = token_cls
     __all__.insert(1, token_cls.__name__)
 
 
 def remove_token(token_cls):
+    """
+    Allows external manipulation of this module's namespace.
+    This function is called in BaseRenderer.__exit__.
+
+    Arguments:
+        token_cls (SpanToken): token to be removed from the parsing process.
+    """
     del globals()[token_cls.__name__]
     __all__.remove(token_cls.__name__)
 
@@ -50,20 +64,21 @@ class SpanToken(object):
     Base class for span-level tokens. Recursively parse inner tokens.
 
     Naming conventions:
-        * raw denotes (possibly unparsed) input string, and is commonly used
-          as the argument name for constructors.
-        * self.children is a generator with all the inner tokens (thus if a
-          token has children attribute, it is not a leaf node);
+        * match_obj is passed in from span_tokenizer.tokenize, and contains
+          user input.
+        * self.children is (usually) a generator with all the inner tokens
+          (thus if a token has children attribute, it is not a leaf node);
         * self.content denotes string stored (and later rendered) as-is,
           without need for extra parsing (thus if a token has content
           attribute, it is a leaf node).
         * pattern is a class variable (regex pattern) used by tokenize_inner
-          to search for the next token. Match group 1 of the pattern gets
-          passed in as raw into the constructor.  Every subclass of
-          SpanToken must define its pattern (see span_tokenizer.tokenize).
+          to search for the next token. Match groups are available for easier
+          separation of different components of the input. Every subclass of
+          SpanToken must define its pattern (see span_tokenizer.tokenize),
+          except RawText.
 
     Attributes:
-        children (generator object): inner tokens.
+        children (generator): inner tokens.
     """
     def __init__(self, match_obj):
         self.children = tokenize_inner(match_obj.group(1))
@@ -72,8 +87,6 @@ class SpanToken(object):
 class Strong(SpanToken):
     """
     Strong tokens. ("**some text**")
-
-    raw does not contain enclosing asterisks or underscores.
     """
     pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
     def __init__(self, match_obj):
@@ -83,8 +96,6 @@ class Strong(SpanToken):
 class Emphasis(SpanToken):
     """
     Emphasis tokens. ("*some text*")
-
-    raw does not contain enclosing asterisks or underscores.
     """
     pattern = re.compile(r"\*((?:\*\*|[^\*])+?)\*(?!\*)|_((?:__|[^_])+?)_")
     def __init__(self, match_obj):
@@ -94,8 +105,6 @@ class Emphasis(SpanToken):
 class InlineCode(SpanToken):
     """
     Inline code tokens. ("`some code`")
-
-    raw does not contain enclosing apostrophes.
     """
     pattern = re.compile(r"`(.+?)`")
     def __init__(self, match_obj):
@@ -105,8 +114,6 @@ class InlineCode(SpanToken):
 class Strikethrough(SpanToken):
     """
     Strikethrough tokens. ("~~some text~~")
-
-    raw does not contain enclosing tildas.
     """
     pattern = re.compile(r"~~(.+)~~")
 
@@ -114,10 +121,9 @@ class Strikethrough(SpanToken):
 class Image(SpanToken):
     """
     Image tokens. ("![alt](src "title")")
-    A leaf node.
 
     Attributes:
-        alt (str): alternative text.
+        children (iterator): a single RawText node for alternative text.
         src (str): image source.
         title (str): image title (default to empty).
     """
@@ -133,7 +139,7 @@ class FootnoteImage(SpanToken):
     Footnote image tokens. ("![alt] [some key]")
 
     Attributes:
-        alt (str): alternative text.
+        children (iterator): a single RawText node for alternative text.
         src (FootnoteAnchor): could point to both src and title.
     """
     pattern = re.compile(r"\!\[(.+?)\] *\[(.+?)\]")
@@ -173,10 +179,9 @@ class FootnoteLink(SpanToken):
 class AutoLink(SpanToken):
     """
     Autolink tokens. ("<http://www.google.com>")
-    A leaf node.
 
     Attributes:
-        name (str): displayed name.
+        children (iterator): a single RawText node for alternative text.
         target (str): link target.
     """
     pattern = re.compile(r"<(.+?)>")
@@ -188,6 +193,9 @@ class AutoLink(SpanToken):
 class EscapeSequence(SpanToken):
     """
     Escape sequences. ("\*")
+
+    Attributes:
+        children (iterator): a single RawText node for alternative text.
     """
     pattern = re.compile(r"\\([\*\(\)\[\]\~])")
     def __init__(self, match_obj):
@@ -197,6 +205,9 @@ class EscapeSequence(SpanToken):
 class RawText(SpanToken):
     """
     Raw text. A leaf node.
+
+    RawText is the only token that accepts a string for its constructor,
+    instead of a match object. Also, all recursions should bottom out here.
     """
     def __init__(self, raw):
         self.content = raw

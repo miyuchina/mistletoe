@@ -78,7 +78,7 @@ mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
 
 ```
-mistletoe [version 0.2] (interactive)
+mistletoe [version 0.3] (interactive)
 Type Ctrl-D to complete input, or Ctrl-C to exit.
 >>> some **bold text**
 ... and some *italics*
@@ -158,8 +158,8 @@ that stores the compiled regex:
 
 ```python
 class GithubWiki(SpanToken):
-    pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
-    def __init__(self, raw):
+    pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
+    def __init__(self, match_obj):
         pass
 ```
 
@@ -168,25 +168,14 @@ actual representation of this author parsing Markdown with regexes, refer
 to this brilliant [meme][meme] by [Greg Hendershott][hendershott].
 
 mistletoe's span-level tokenizer will search for our pattern. When it finds
-a match, it will pass in the first matching group as argument (`raw`). In
-our case, this happens to be the entire link with enclosing brackets, so
-we still need to do some dirty string manipulation:
+a match, it will pass in the match object as argument into our constructor.
+We have defined our regex so that the first match group is the alternative
+text, and the second one is the link target.
 
-```python
-alt, target = raw[2:-2].split('|', 1)
-```
-
-`alt` can also contain other span-level tokens. For example,
-`[[*alt*|link]]` is a GitHub link with an `Emphasis` token as its child.
-To parse child tokens, simply pass it to the `super` constructor, and save
-off all the additional attributes we need:
-
-```python
-super().__init__(alt)
-self.target = target
-```
-
-After some cleaning-up, this is what our new token class looks like:
+Note that alternative text can also contain other span-level tokens.  For
+example, `[[*alt*|link]]` is a GitHub link with an `Emphasis` token as its
+child.  To parse child tokens, simply pass `match_obj` to the `super`
+constructor, and save off all the additional attributes we need:
 
 ```python
 from mistletoe.span_token import SpanToken
@@ -194,9 +183,8 @@ from mistletoe.span_token import SpanToken
 class GithubWiki(SpanToken):
     pattern = re.compile(r"(\[\[(.+?)\|(.+?)\]\])")
     def __init__(self, raw):
-        alt, target = raw[2:-2].split('|', 1)
-        super().__init__(alt.strip())
-        self.target = target.strip()
+        super().__init__(match_obj)
+        self.target = match_obj.group(2)
 ```
 
 ### A new renderer
