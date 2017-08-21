@@ -15,24 +15,24 @@ def tokenize(content, token_types, fallback_token):
     Yields:
         span-level token instances.
     """
-    index = 0
-    # The following loop is critical to mistletoe.
-    # Don't mess with it unless you really know what you are doing!
-    while index < len(content):
-        new_content = content[index:]
-        min_index = len(content)
-        min_match_obj = None
-        min_token_type = None
-        for token_type in token_types:   # search for nearest valid token_type
-            match_obj = token_type.pattern.search(new_content)
-            if match_obj and index + match_obj.start() < min_index:
-                min_index = index + match_obj.start()
-                min_match_obj = match_obj
-                min_token_type = token_type
-        if min_index != index:
-            # there's text between our current position and the next token
-            yield fallback_token(content[index:min_index])
-        if min_match_obj:                # min_match_obj is not None
-            yield min_token_type(min_match_obj)
-            index += min_match_obj.end() # update pointer
-        else: return                     # min_match_obj is None; no more tokens
+    if content:
+        index, match_obj, token_type = _find_nearest_token(content, token_types)
+        if index != 0:
+            yield fallback_token(content[:index])
+        if match_obj is not None:
+            yield token_type(match_obj)
+            yield from tokenize(content[match_obj.end():], token_types, fallback_token)
+
+
+def _find_nearest_token(content, token_types):
+    # accumulator pattern
+    min_index = len(content)
+    min_match_obj = None
+    min_token_type = None
+    for token_type in token_types:
+        match_obj = token_type.pattern.search(content)
+        if match_obj and match_obj.start() < min_index:
+            min_index = match_obj.start()
+            min_match_obj = match_obj
+            min_token_type = token_type
+    return min_index, min_match_obj, min_token_type

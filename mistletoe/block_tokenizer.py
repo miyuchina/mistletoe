@@ -4,6 +4,7 @@ Block-level tokenizer for mistletoe.
 
 import re    # TODO: git rid ov it plz?
 
+
 def normalize(lines):
     """
     Normalizes input stream. Mostly exist because only newlines
@@ -57,19 +58,20 @@ def tokenize(iterable, token_types, fallback_token, root=None):
         if line != '\n':    # not a new block
             line_buffer.append(line)
         elif line_buffer:   # skip multiple empty lines
-            matched = False
-            # tries to match in the order of token_types
-            for token_type in token_types:
-                if token_type.match(line_buffer):
-                    if root and token_type.__name__ == 'FootnoteBlock':
-                        store_footnotes(root, token_type(line_buffer))
-                    else:
-                        yield token_type(line_buffer)
-                    matched = True
-                    break
-            if not matched:
-                yield fallback_token(line_buffer)
+            yield from _match_for_token(line_buffer, token_types, fallback_token, root)
             line_buffer.clear()
+
+
+def _match_for_token(line_buffer, token_types, fallback_token, root):
+    for token_type in token_types:
+        if token_type.match(line_buffer):
+            if root and token_type.__name__ == 'FootnoteBlock':
+                store_footnotes(root, token_type(line_buffer))
+            else:
+                yield token_type(line_buffer)
+            return
+    yield fallback_token(line_buffer)
+
 
 def store_footnotes(root_node, footnote_block):
     for entry in footnote_block.children:
