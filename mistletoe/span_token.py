@@ -83,6 +83,10 @@ class SpanToken(object):
     def __init__(self, match_obj):
         self.children = tokenize_inner(match_obj.group(1))
 
+    @classmethod
+    def search(cls, content):
+        return cls.pattern.search(content)
+
 
 class Strong(SpanToken):
     """

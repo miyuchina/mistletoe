@@ -30,7 +30,7 @@ def _find_nearest_token(content, token_types):
     min_match_obj = None
     min_token_type = None
     for token_type in token_types:
-        match_obj = token_type.pattern.search(content)
+        match_obj = token_type.search(content)
         if match_obj and match_obj.start() < min_index:
             min_index = match_obj.start()
             min_match_obj = match_obj
