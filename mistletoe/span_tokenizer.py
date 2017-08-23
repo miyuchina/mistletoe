@@ -2,6 +2,7 @@
 Inline tokenizer for mistletoe.
 """
 
+
 def tokenize(content, token_types, fallback_token):
     """
     Searches for token_types in content, and applies fallback_token
@@ -15,22 +16,24 @@ def tokenize(content, token_types, fallback_token):
     Yields:
         span-level token instances.
     """
-    if content:
-        index, match_obj, token_type = _find_nearest_token(content, token_types)
-        if index != 0:
-            yield fallback_token(content[:index])
+    start = 0
+    while start != len(content):
+        index, match_obj, token_type = _find_nearest_token(content, token_types, start)
+        if index != start:
+            yield fallback_token(content[start:index])
+            start = index
         if match_obj is not None:
             yield token_type(match_obj)
-            yield from tokenize(content[match_obj.end():], token_types, fallback_token)
+            start = match_obj.end()
 
 
-def _find_nearest_token(content, token_types):
+def _find_nearest_token(content, token_types, start):
     # accumulator pattern
     min_index = len(content)
     min_match_obj = None
     min_token_type = None
     for token_type in token_types:
-        match_obj = token_type.search(content)
+        match_obj = token_type.pattern.search(content, start)
         if match_obj and match_obj.start() < min_index:
             min_index = match_obj.start()
             min_match_obj = match_obj
