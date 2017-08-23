@@ -58,7 +58,9 @@ def tokenize(iterable, token_types, fallback_token, root=None):
         if line != '\n':    # not a new block
             line_buffer.append(line)
         elif line_buffer:   # skip multiple empty lines
-            yield from _match_for_token(line_buffer, token_types, fallback_token, root)
+            token = _match_for_token(line_buffer, token_types, fallback_token, root)
+            if token is not None:
+                yield token
             line_buffer.clear()
 
 
@@ -66,11 +68,10 @@ def _match_for_token(line_buffer, token_types, fallback_token, root):
     for token_type in token_types:
         if token_type.match(line_buffer):
             if root and token_type.__name__ == 'FootnoteBlock':
-                store_footnotes(root, token_type(line_buffer))
+                return store_footnotes(root, token_type(line_buffer))
             else:
-                yield token_type(line_buffer)
-            return
-    yield fallback_token(line_buffer)
+                return token_type(line_buffer)
+    return fallback_token(line_buffer)
 
 
 def store_footnotes(root_node, footnote_block):
