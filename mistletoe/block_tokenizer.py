@@ -36,6 +36,9 @@ def normalize(lines):
             yield line
             yield '\n'
         else: yield line
+    # close all unclosed code fences
+    if code_fence:
+        yield '```\n'
     # end the document with a newline, so that tokenize
     # can yield the last token
     yield '\n'
