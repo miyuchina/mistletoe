@@ -39,7 +39,7 @@ class HTMLRenderer(BaseRenderer):
 
     def render_image(self, token, footnotes):
         template = '<img src="{}" title="{}" alt="{}">'
-        inner = self.render_inner(token)
+        inner = self.render_inner(token, footnotes)
         return template.format(token.src, token.title, inner)
 
     def render_footnote_image(self, token, footnotes):
