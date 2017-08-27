@@ -132,9 +132,6 @@ with open('foo.md', 'r') as fin:
 
 Developer's Guide
 -----------------
-**Note:** mistletoe 0.3 significantly simplifies the process of adding your
-custom tokens, but breaks backwards compatibility. Oh well.
-
 Here's an example to add GitHub-style wiki links to the parsing process,
 and provide a renderer for this new token.
 
