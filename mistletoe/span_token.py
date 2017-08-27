@@ -184,7 +184,7 @@ class AutoLink(SpanToken):
         children (iterator): a single RawText node for alternative text.
         target (str): link target.
     """
-    pattern = re.compile(r"<(.+?)>")
+    pattern = re.compile(r"<([^ ]+?)>")
     def __init__(self, match_obj):
         self.children = iter([RawText(match_obj.group(1))])
         self.target = match_obj.group(1)
