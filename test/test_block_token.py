@@ -96,6 +96,10 @@ class TestListItem(TestToken):
         token = block_token.ListItem(['-   text  \n'])
         self._test_token(token, 'text')
 
+    def test_empty_item(self):
+        token = block_token.ListItem(['-   \n'])
+        self.assertEqual(list(token.children), [])
+
 
 class TestList(TestToken):
     def setUp(self):

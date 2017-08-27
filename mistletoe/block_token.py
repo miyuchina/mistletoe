@@ -285,7 +285,10 @@ class ListItem(BlockToken):
     """
     def __init__(self, lines):
         line = ' '.join([line.strip() for line in lines])
-        content = line.split(' ', 1)[1].strip()
+        try:
+            content = line.split(' ', 1)[1].strip()
+        except IndexError:
+            content = ''
         super().__init__(content, span_token.tokenize_inner)
 
 
