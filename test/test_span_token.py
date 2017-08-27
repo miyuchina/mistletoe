@@ -61,10 +61,15 @@ class TestLink(TestBranchToken):
 
 
 class TestFootnoteLink(TestBranchToken):
-    def test_parse(self):
+    def test_parse_with_key(self):
         with patch('mistletoe.span_token.FootnoteAnchor') as mock:
             self._test_parse(span_token.FootnoteLink, '[alt] [key]', 'alt')
             mock.assert_called_with('key')
+
+    def test_parse_without_key(self):
+        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
+            self._test_parse(span_token.FootnoteLink, '[alt]', 'alt')
+            mock.assert_called_with('alt')
 
 
 class TestAutoLink(TestBranchToken):

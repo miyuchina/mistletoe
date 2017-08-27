@@ -170,10 +170,13 @@ class FootnoteLink(SpanToken):
         children (generator): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
-    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *\[(.+?)\]")
+    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *(?:\[(.+?)\])?")
     def __init__(self, match_obj):
         super().__init__(match_obj)
-        self.target = FootnoteAnchor(match_obj.group(2))
+        if match_obj.group(2) is None:
+            self.target = FootnoteAnchor(match_obj.group(1))
+        else:
+            self.target = FootnoteAnchor(match_obj.group(2))
 
 
 class AutoLink(SpanToken):
