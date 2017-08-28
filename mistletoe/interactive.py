@@ -1,6 +1,11 @@
 import sys
 import mistletoe
 
+try:
+    import readline
+except ImportError:
+    sys.stdout.write('[Warning] readline library not available.')
+
 
 def interactive():
     """
