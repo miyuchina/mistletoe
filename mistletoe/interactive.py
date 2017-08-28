@@ -18,14 +18,13 @@ def interactive():
                 more = True
             else:
                 prompt = '... '
-            sys.stdout.write(prompt)
             try:
-                line = input() + '\n'
+                line = input(prompt) + '\n'
                 contents.append(line)
             except EOFError:
-                sys.stdout.write('\n' + mistletoe.markdown(contents))
+                print('\n' + mistletoe.markdown(contents), end='')
                 more = False
                 contents.clear()
         except KeyboardInterrupt:
-            sys.stdout.write('\nExiting.\n')
+            print('\nExiting.')
             break
