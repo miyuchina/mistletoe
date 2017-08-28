@@ -12,8 +12,11 @@ def interactive():
     Parse user input, dump to stdout, rinse and repeat.
     Python REPL style.
     """
-    print('mistletoe [version {}] (interactive)'.format(mistletoe.__version__))
-    print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
+    if sys.stdout.isatty():
+        print('\033[32;1mmistletoe\033[0m [version {}] '
+              '(interactive)'.format(mistletoe.__version__))
+        print('Type \033[1mCtrl-D\033[0m to complete input, '
+              'or \033[1mCtrl-C\033[0m to exit.')
     contents = []
     more = False
     while True:
