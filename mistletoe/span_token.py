@@ -6,10 +6,6 @@ import re
 import mistletoe.span_tokenizer as tokenizer
 
 
-"""
-The items and ordering of this __all__ matters to mistletoe (see
-tokenize_inner). Don't mess with it unless you know what you are doing!
-"""
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
            'Strikethrough', 'Image', 'FootnoteImage', 'Link',
            'FootnoteLink', 'AutoLink']
@@ -24,11 +20,11 @@ def tokenize_inner(content):
     avoids cyclic dependency issues, and allows for future injections of
     custom token classes.
 
+    _token_types variable is at the bottom of this module.
+
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
-    token_types = [globals()[key] for key in __all__]
-    fallback_token = RawText
-    yield from tokenizer.tokenize(content, token_types, fallback_token)
+    yield from tokenizer.tokenize(content, _token_types, RawText)
 
 
 def add_token(token_cls):
@@ -39,8 +35,7 @@ def add_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be included in the parsing process.
     """
-    globals()[token_cls.__name__] = token_cls
-    __all__.insert(1, token_cls.__name__)
+    _token_types.insert(1, token_cls)
 
 
 def remove_token(token_cls):
@@ -51,8 +46,7 @@ def remove_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be removed from the parsing process.
     """
-    del globals()[token_cls.__name__]
-    __all__.remove(token_cls.__name__)
+    _token_types.remove(token_cls)
 
 
 def _first_not_none_group(match_obj):
@@ -223,3 +217,11 @@ class FootnoteAnchor(SpanToken):
     """
     def __init__(self, raw):
         self.key = raw
+
+
+"""
+Tokens to be included in the parsing process, in the order specified.
+"""
+_token_types = [EscapeSequence, Emphasis, Strong, InlineCode,
+                Strikethrough, Image, FootnoteImage, Link,
+                FootnoteLink, AutoLink]

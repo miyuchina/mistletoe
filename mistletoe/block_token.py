@@ -7,10 +7,6 @@ import mistletoe.block_tokenizer as tokenizer
 import mistletoe.span_token as span_token
 
 
-"""
-The items and ordering of this __all__ matters to mistletoe (see
-tokenize). Don't mess with it unless you know what you are doing!
-"""
 __all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table',
            'FootnoteBlock']
 
@@ -24,11 +20,11 @@ def tokenize(lines, root=None):
     avoids cyclic dependency issues, and allows for future injections of
     custom token classes.
 
+    _token_types variable is at the bottom of this module.
+
     See also: block_tokenizer.tokenize, span_token.tokenize_inner.
     """
-    token_types = [globals()[key] for key in __all__]
-    fallback_token = Paragraph
-    return tokenizer.tokenize(lines, token_types, fallback_token, root)
+    return tokenizer.tokenize(lines, _token_types, Paragraph, root)
 
 
 def add_token(token_cls):
@@ -39,8 +35,7 @@ def add_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be included in the parsing process.
     """
-    globals()[token_cls.__name__] = token_cls
-    __all__.insert(1, token_cls.__name__)
+    _token_types.insert(1, token_cls)
 
 
 def remove_token(token_cls):
@@ -51,8 +46,7 @@ def remove_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be removed from the parsing process.
     """
-    del globals()[token_cls.__name__]
-    __all__.remove(token_cls.__name__)
+    _token_types.remove(token_cls)
 
 
 class BlockToken(object):
@@ -424,3 +418,10 @@ class Separator(BlockToken):
     @staticmethod
     def match(lines):
         return len(lines) == 1 and lines[0] in Separator._acceptable_pattern
+
+
+"""
+Tokens to be included in the parsing process, in the order specified.
+"""
+_token_types = [Heading, Quote, BlockCode, Separator, List,
+                Table, FootnoteBlock]
