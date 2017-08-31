@@ -20,12 +20,9 @@ Features
 * **Fast**: mistletoe is as fast as the [fastest implementation][mistune]
   currently available: that is, over 4 times faster than
   [Python-Markdown][python-markdown], and much faster than
-  [Python-Markdown2][python-markdown2]. Try the benchmarks yourself by
-  running:
+  [Python-Markdown2][python-markdown2].
   
-  ```sh
-  python3 test/benchmark.py
-  ```
+  See the [performance](#performance) section for details.
 
 * **Modular**: mistletoe is designed with modularity in mind. Its initial
   goal is to provide a clear and easy API to extend upon.
@@ -129,6 +126,39 @@ with open('foo.md', 'r') as fin:
     with HTMLRenderer() as renderer:
         rendered = renderer.render(Document(fin))
 ```
+
+Performance
+-----------
+
+mistletoe is the fastest Markdown parser implementation available in pure
+Python; that is, on par with [mistune][mistune]. Try the benchmarks yourself by
+running:
+
+```sh
+python3 test/benchmark.py
+```
+
+One of the significant bottlenecks of mistletoe compared to mistune, however,
+is the function overhead. Because, unlike mistune, mistletoe chooses to split
+functionality into modules, function lookups can take significantly longer than
+mistune.
+
+To boost the performance further, it is suggested to use PyPy with mistletoe.
+Benchmark results show that on PyPy, mistletoe is about **twice as fast** as
+mistune:
+
+```sh
+$ pypy3 test/benchmark.py mistune mistletoe
+Test document: test/samples/syntax.md
+Test iterations: 1000
+Running tests with mistune, mistletoe...
+========================================
+mistune: 13.524028996936977
+mistletoe: 6.477352762129158
+```
+
+The above result was achieved on PyPy 5.8.0-beta0, on a 13-inch Retina MacBook
+Pro (Early 2015).
 
 Developer's Guide
 -----------------
