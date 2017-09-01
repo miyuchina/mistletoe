@@ -75,7 +75,7 @@ mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
 
 ```
-mistletoe [version 0.3.1] (interactive)
+mistletoe [version 0.3.2] (interactive)
 Type Ctrl-D to complete input, or Ctrl-C to exit.
 >>> some **bold text**
 ... and some *italics*
@@ -87,6 +87,8 @@ Type Ctrl-D to complete input, or Ctrl-C to exit.
 </html>
 >>>
 ```
+
+**New in version 0.3.1**: Emacs-style controls are now available.
 
 Typing `Ctrl-D` tells mistletoe to interpret your input. `Ctrl-C` exits the
 program.
@@ -210,12 +212,15 @@ from mistletoe.span_token import SpanToken
 
 class GithubWiki(SpanToken):
     pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
-    def __init__(self, raw):
+    def __init__(self, match_obj):
         super().__init__(match_obj)
         self.target = match_obj.group(2)
 ```
 
 There you go: a new token in 7 lines of code.
+
+**New in version 0.3**: token constructors now accepts match objects, which
+allows us to utilize match groups, instead of doing dirty string manipulations.
 
 ### A new renderer
 
