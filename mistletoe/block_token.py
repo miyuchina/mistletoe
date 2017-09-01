@@ -143,13 +143,6 @@ class Paragraph(BlockToken):
         content = ''.join(lines).replace('\n', ' ').strip()
         self.children = span_token.tokenize_inner(content)
 
-    @staticmethod
-    def match(lines):
-        for line in lines:
-            if line == '\n':
-                return False
-        return True
-
 
 class BlockCode(BlockToken):
     """
