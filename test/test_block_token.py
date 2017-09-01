@@ -62,7 +62,7 @@ class TestBlockCode(TestToken):
 
     def test_fence_code_lazy_continuation(self):
         lines = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
-        arg = 'rm dir\n \nmkdir test\n'
+        arg = 'rm dir\n\nmkdir test\n'
         self._test_match(block_token.BlockCode, lines, arg, language='sh')
 
     def test_hashes(self):

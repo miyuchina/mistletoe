@@ -5,6 +5,17 @@ Block-level tokenizer for mistletoe.
 import re    # TODO: git rid ov it plz?
 
 
+class NonBreakingLine(str):
+    def __new__(cls):
+        return super().__new__(cls, '\n')
+    
+    def __eq__(self, other):
+        return False
+
+    def __ne__(self, other):
+        return True
+
+
 def normalize(lines):
     """
     Normalizes input stream. Mostly exist because only newlines
@@ -29,7 +40,7 @@ def normalize(lines):
                 yield line
                 yield '\n'
             elif line == '\n':
-                yield ' ' + line
+                yield NonBreakingLine()
             else:
                 yield line
         elif heading.match(line):
@@ -80,3 +91,4 @@ def _match_for_token(line_buffer, token_types, fallback_token, root):
 def store_footnotes(root_node, footnote_block):
     for entry in footnote_block.children:
         root_node.footnotes[entry.key] = entry.value
+
