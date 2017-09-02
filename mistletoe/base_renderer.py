@@ -68,8 +68,9 @@ class BaseRenderer(object):
             'Document':       self.render_document,
             }
         self._extras = extras
+        self.footnotes = {}
 
-    def render(self, token, footnotes={}):
+    def render(self, token):
         """
         Grabs the class name from input token and finds its corresponding
         render function.
@@ -80,9 +81,9 @@ class BaseRenderer(object):
             token: whose __class__.__name__ is in self.render_map.
             footnotes (dict): pass down footnote information during recursion.
         """
-        return self.render_map[token.__class__.__name__](token, footnotes)
+        return self.render_map[token.__class__.__name__](token)
 
-    def render_inner(self, token, footnotes):
+    def render_inner(self, token):
         """
         Recursively renders child tokens. Joins the rendered
         strings with no space in between.
@@ -96,7 +97,7 @@ class BaseRenderer(object):
             token: a branch node who has children attribute.
             footnotes (dict): pass down footnote information during recursion.
         """
-        rendered = [self.render(child, footnotes) for child in token.children]
+        rendered = [self.render(child) for child in token.children]
         return ''.join(rendered)
 
     def __enter__(self):

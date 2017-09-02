@@ -12,9 +12,9 @@ class TestLaTeXRenderer(TestCase):
 
     def _test_token(self, token_path, output, children=True, **kwargs):
         def mock_render(token_path):
-            def inner(token, footnotes):
+            def inner(token):
                 _, token_name = token_path.split('.')
-                return self.renderer.render_map[token_name](token, footnotes)
+                return self.renderer.render_map[token_name](token)
             return inner
         self.renderer.render = mock_render(token_path)
 
@@ -25,7 +25,7 @@ class TestLaTeXRenderer(TestCase):
         else:
             MockToken.return_value = mock.Mock(**kwargs)
 
-        self.assertEqual(self.renderer.render(MockToken(), {}), output)
+        self.assertEqual(self.renderer.render(MockToken()), output)
 
     def test_strong(self):
         self._test_token('span_token.Strong', '\\textbf{inner}')
@@ -113,7 +113,7 @@ class TestLaTeXRenderer(TestCase):
                   '\\begin{document}\n'
                   'inner'
                   '\\end{document}\n')
-        self._test_token('block_token.Document', output)
+        self._test_token('block_token.Document', output, footnotes={})
 
 
 class TestLaTeXFootnotes(TestCase):

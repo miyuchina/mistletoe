@@ -11,9 +11,9 @@ class TestRenderer(TestCase):
 
     def _test_token(self, token_path, output, children=True, **kwargs):
         def mock_render(token_path):
-            def inner(token, footnotes):
+            def inner(token):
                 _, token_name = token_path.split('.')
-                return self.renderer.render_map[token_name](token, footnotes)
+                return self.renderer.render_map[token_name](token)
             return inner
         self.renderer.render = mock_render(token_path)
 
@@ -24,7 +24,7 @@ class TestRenderer(TestCase):
         else:
             MockToken.return_value = mock.Mock(**kwargs)
 
-        self.assertEqual(self.renderer.render(MockToken(), {}), output)
+        self.assertEqual(self.renderer.render(MockToken()), output)
 
 
 class TestHTMLRenderer(TestRenderer):
@@ -123,7 +123,7 @@ class TestHTMLRenderer(TestRenderer):
                          children=False, content=content)
 
     def test_document(self):
-        self._test_token('block_token.Document', 'inner')
+        self._test_token('block_token.Document', 'inner', footnotes={})
 
 
 class TestHTMLRendererFootnotes(TestCase):
