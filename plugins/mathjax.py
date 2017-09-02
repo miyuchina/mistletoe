@@ -12,17 +12,16 @@ class MathJaxRenderer(HTMLRenderer, LaTeXRenderer):
     """
     mathjax_src = '<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>\n'
 
-    def render_math(self, token, footnotes):
+    def render_math(self, token):
         """
         Ensure Math tokens are all enclosed in two dollar signs.
         """
         if token.content.startswith('$$'):
-            return self.render_raw_text(token, footnotes)
-        return '${}$'.format(self.render_raw_text(token, footnotes))
+            return self.render_raw_text(token)
+        return '${}$'.format(self.render_raw_text(token))
 
-    def render_document(self, token, footnotes):
+    def render_document(self, token):
         """
         Append CDN link for MathJax to the end of <body>.
         """
-        output = super().render_document(token, footnotes)
-        return output + self.mathjax_src
+        return super().render_document(token) + self.mathjax_src

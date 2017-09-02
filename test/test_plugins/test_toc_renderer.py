@@ -11,7 +11,7 @@ class TestTOCRenderer(TestCase):
     def test_render_heading(self):
         renderer = TOCRenderer()
         token = Heading(['### some *text*\n'])
-        rendered_heading = renderer.render_heading(token, {})
+        rendered_heading = renderer.render_heading(token)
         self.assertEqual(renderer._headings[0], (3, 'some text'))
 
     def test_depth(self):

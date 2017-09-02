@@ -44,12 +44,12 @@ class TOCRenderer(HTMLRenderer):
 
         return List([build_list_item(heading) for heading in self._headings])
 
-    def render_heading(self, token, footnotes):
+    def render_heading(self, token):
         """
         Overrides super().render_heading; stores rendered heading first,
         then returns it.
         """
-        rendered = super().render_heading(token, footnotes)
+        rendered = super().render_heading(token)
         content = self.parse_rendered_heading(rendered)
         if not (self.omit_title and token.level == 1
                 or token.level > self.depth
