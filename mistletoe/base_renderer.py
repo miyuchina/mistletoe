@@ -6,7 +6,6 @@ import re
 import inspect
 
 class BaseRenderer(object):
-    parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
     """
     Base class for renderers.
 
@@ -41,6 +40,8 @@ class BaseRenderer(object):
         _extras (list): a list of custom tokens to be added to the
                         parsing process.
     """
+    parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
+
     def __init__(self, *extras):
         self.render_map = {
             'Strong':         self.render_strong,
