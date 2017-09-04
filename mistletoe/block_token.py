@@ -160,7 +160,7 @@ class BlockCode(BlockToken):
         else:                           # indented code
             content = ''.join([line[4:] for line in lines])
             self.language = ''
-        self.children = iter([span_token.RawText(content)])
+        self.children = (span_token.RawText(content),)
 
     @staticmethod
     def match(lines):
@@ -372,7 +372,7 @@ class FootnoteBlock(BlockToken):
         children (list): footnote entry tokens.
     """
     def __init__(self, lines):
-        self.children = iter([FootnoteEntry(line) for line in lines])
+        self.children = [FootnoteEntry(line) for line in lines]
 
     @staticmethod
     def match(lines):

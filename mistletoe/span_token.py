@@ -102,7 +102,7 @@ class InlineCode(SpanToken):
     """
     pattern = re.compile(r"`(.+?)`")
     def __init__(self, match_obj):
-        self.children = iter([RawText(match_obj.group(1))])
+        self.children = (RawText(match_obj.group(1)),)
 
 
 class Strikethrough(SpanToken):
@@ -123,7 +123,7 @@ class Image(SpanToken):
     """
     pattern = re.compile(r'\!\[(.+?)\] *\((.+?)(?: *"(.+?)")?\)')
     def __init__(self, match_obj):
-        self.children = iter([RawText(match_obj.group(1))])
+        self.children = (RawText(match_obj.group(1)),)
         self.src = match_obj.group(2)
         self.title = match_obj.group(3)
 
@@ -138,7 +138,7 @@ class FootnoteImage(SpanToken):
     """
     pattern = re.compile(r"\!\[(.+?)\] *\[(.+?)\]")
     def __init__(self, match_obj):
-        self.children = iter([RawText(match_obj.group(1))])
+        self.children = (RawText(match_obj.group(1)),)
         self.src = FootnoteAnchor(match_obj.group(2))
 
 
@@ -183,7 +183,7 @@ class AutoLink(SpanToken):
     """
     pattern = re.compile(r"<([^ ]+?)>")
     def __init__(self, match_obj):
-        self.children = iter([RawText(match_obj.group(1))])
+        self.children = (RawText(match_obj.group(1)),)
         self.target = match_obj.group(1)
 
 
@@ -196,7 +196,7 @@ class EscapeSequence(SpanToken):
     """
     pattern = re.compile(r"\\([\*\(\)\[\]\~])")
     def __init__(self, match_obj):
-        self.children = iter([RawText(match_obj.group(1))])
+        self.children = (RawText(match_obj.group(1)),)
 
 
 class RawText(SpanToken):

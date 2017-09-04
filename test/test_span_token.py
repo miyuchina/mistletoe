@@ -14,10 +14,11 @@ class TestBranchToken(unittest.TestCase):
         self.assertIsInstance(token, token_cls)
         self._test_token(token, arg, **kwargs)
 
-    def _test_token(self, token, arg, **kwargs):
+    def _test_token(self, token, arg, children=True, **kwargs):
         for attr, value in kwargs.items():
             self.assertEqual(getattr(token, attr), value)
-        next(token.children)
+        if children:
+            next(iter(token.children))
         self.mock.assert_called_with(arg)
 
 
@@ -51,7 +52,7 @@ class TestLink(TestBranchToken):
     def test_parse_multi_links(self):
         tokens = span_token.tokenize_inner('[n1](t1) & [n2](t2)')
         self._test_token(next(tokens), 'n1', target='t1')
-        self._test_token(next(tokens), ' & ')
+        self._test_token(next(tokens), ' & ', children=False)
         self._test_token(next(tokens), 'n2', target='t2')
 
     def test_parse_children(self):
@@ -97,9 +98,9 @@ class TestEscapeSequence(TestBranchToken):
 
     def test_parse_in_text(self):
         tokens = span_token.tokenize_inner('some \*text*')
-        self._test_token(next(tokens), 'some ')
+        self._test_token(next(tokens), 'some ', children=False)
         self._test_token(next(tokens), '*')
-        self._test_token(next(tokens), 'text*')
+        self._test_token(next(tokens), 'text*', children=False)
 
 
 class TestRawText(unittest.TestCase):

@@ -17,7 +17,7 @@ class TestToken(unittest.TestCase):
     def _test_token(self, token, arg, **kwargs):
         for attr, value in kwargs.items():
             self.assertEqual(getattr(token, attr), value)
-        next(token.children)
+        next(iter(token.children))
         self.mock.assert_called_with(arg)
 
 
