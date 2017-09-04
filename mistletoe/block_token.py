@@ -186,7 +186,7 @@ class List(BlockToken):
         # doesn't understand. This is that line of code.
         # I need to cast this generator into a list because... why?
         # Someone please open a pull request and enlighten me...
-        self.children = list(List._build_list(lines))
+        self.children = list(List.build_list(lines))
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
@@ -194,14 +194,9 @@ class List(BlockToken):
             self.start = None
 
     @staticmethod
-    def _build_list(lines):
+    def build_list(lines):
         """
         Constructor helper; builds a list from lines.
-
-        Welcome to the messiest function of code base. Have cute
-        kitten pictures handy if you want to comb through this:
-
-        https://www.pinterest.com/explore/cute-kittens/
 
         The basic control structure looks something like this:
 
@@ -220,47 +215,45 @@ class List(BlockToken):
         """
         line_buffer = []
         nested = False
-        for line in lines:
-            if List._has_valid_leader(line):
-                # yield everything in the line_buffer
-                if line_buffer:
-                    if nested:
-                        yield List(line_buffer)
-                        nested = False
-                    else:
-                        yield ListItem(line_buffer)
-                    line_buffer.clear()
-                line_buffer.append(line)
-            elif line.startswith(' '*4):
-                if not nested and List._has_valid_leader(line[4:]):
-                    # yield everything in the line_buffer
-                    if line_buffer:
-                        yield ListItem(line_buffer)
-                        line_buffer.clear()
-                    nested = True
-                line_buffer.append(line[4:])
-            else:
-                line_buffer.append(line)
-        # yield the last block of lines
-        if line_buffer:
+
+        def clear_buffer():
+            """
+            After each clear_buffer() call, nested is always False,
+            and line_buffer is always empty.
+            """
+            nonlocal nested, line_buffer
+            if not line_buffer:
+                # start of the list; nested = False
+                return
             yield List(line_buffer) if nested else ListItem(line_buffer)
-            line_buffer.clear()     # recursion magic; critical
+            nested = False
+            line_buffer.clear()
+
+        for line in lines:
+            if List.has_valid_leader(line):
+                yield from clear_buffer()
+            elif line.startswith(' '*4):
+                line = line[4:]
+                if List.has_valid_leader(line):
+                    if not nested:
+                        yield from clear_buffer()
+                    nested = True
+            line_buffer.append(line)
+        yield from clear_buffer()
 
     @staticmethod
-    def _has_valid_leader(line):
+    def has_valid_leader(line):
         """
         Helper function; mainly because _build_list is gross enough.
 
         Note: returns False if line starts with spaces.
         """
-        return (line.startswith(('+ ', '- ', '* '))      # unordered
-                or (line.split(' ')[0][:-1].isdigit()))  # ordered
+        return (line.startswith(('+ ', '- ', '* '))         # unordered
+                or (line.split(' ', 1)[0][:-1].isdigit()))  # ordered
 
     @staticmethod
     def match(lines):
-        if not List._has_valid_leader(lines[0].strip()):
-            return False
-        return True
+        return List.has_valid_leader(lines[0].strip())
 
 
 class ListItem(BlockToken):
@@ -404,13 +397,13 @@ class Separator(BlockToken):
     """
     Separator token (a.k.a. horizontal rule.)
     """
-    _acceptable_pattern = {'---\n', '* * *\n', '***\n', '===\n'}
+    _acceptable_patterns = frozenset(('---\n', '* * *\n', '***\n', '===\n'))
     def __init__(self, lines):
         self.lines = lines
 
     @staticmethod
     def match(lines):
-        return len(lines) == 1 and lines[0] in Separator._acceptable_pattern
+        return len(lines) == 1 and lines[0] in Separator._acceptable_patterns
 
 
 """
