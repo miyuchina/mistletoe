@@ -29,7 +29,7 @@ def tokenize_inner(content):
 
 def add_token(token_cls):
     """
-    Allows external manipulation of this module's namespace.
+    Allows external manipulation of the parsing process.
     This function is called in BaseRenderer.__enter__.
 
     Arguments:
@@ -40,7 +40,7 @@ def add_token(token_cls):
 
 def remove_token(token_cls):
     """
-    Allows external manipulation of this module's namespace.
+    Allows external manipulation of the parsing process.
     This function is called in BaseRenderer.__exit__.
 
     Arguments:
