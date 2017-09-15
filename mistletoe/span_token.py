@@ -24,7 +24,7 @@ def tokenize_inner(content):
 
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
-    yield from tokenizer.tokenize(content, _token_types, RawText)
+    return tokenizer.tokenize(content, _token_types, RawText)
 
 
 def add_token(token_cls):
