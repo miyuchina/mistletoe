@@ -334,7 +334,7 @@ class TableRow(BlockToken):
     Should only be called by Table.__init__().
     """
     def __init__(self, line, row_align=None):
-        self.row_align = [None] if row_align is None else row_align
+        self.row_align = row_align or [None]
         cells = line[1:-2].split('|')
         self.children = (TableCell(cell.strip(), align)
                          for cell, align in zip_longest(cells, self.row_align))
