@@ -266,10 +266,10 @@ class GithubWikiRenderer(HTMLRenderer):
 
 ```python
 from mistletoe import Document
-from plugins.github_wiki import GitHubWikiRenderer
+from plugins.github_wiki import GithubWikiRenderer
 
 with open('foo.md', 'r') as fin:
-    with GitHubWikiRenderer() as renderer:
+    with GithubWikiRenderer() as renderer:
         rendered = renderer.render(Document(fin))
 ```
 
