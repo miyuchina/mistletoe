@@ -40,7 +40,7 @@ class BaseRenderer(object):
         _extras (list): a list of custom tokens to be added to the
                         parsing process.
     """
-    parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
+    _parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
 
     def __init__(self, *extras):
         self.render_map = {
@@ -68,6 +68,12 @@ class BaseRenderer(object):
             'Document':       self.render_document,
             }
         self._extras = extras
+
+        for token in extras:
+            inspect.getmodule(token.__bases__[0]).add_token(token)
+            render_func = getattr(self, self._cls_to_func(token.__name__))
+            self.render_map[token.__name__] = render_func
+
         self.footnotes = {}
 
     def render(self, token):
@@ -103,21 +109,7 @@ class BaseRenderer(object):
     def __enter__(self):
         """
         Make renderer classes into context managers.
-
-        Takes self._extras and inserts the tokens into the parsing process;
-        also adds respective render functions to self.render_map.
-
-        For better performance, custom renderers can override this function
-        and do injections manually. Regexes and inspect.getmodule can be
-        expensive when executed significant number of times.
         """
-        def cls_to_func(cls_name):
-            snake = '_'.join(map(str.lower, self.parse_name.findall(cls_name)))
-            return 'render_{}'.format(snake)
-
-        for token in self._extras:
-            inspect.getmodule(token.__bases__[0]).add_token(token)
-            self.render_map[token.__name__] = getattr(self, cls_to_func(token.__name__))
         return self
 
     def __exit__(self, exception_type, exception_val, traceback):
@@ -131,6 +123,11 @@ class BaseRenderer(object):
             inspect.getmodule(token.__bases__[0]).remove_token(token)
             del self.render_map[token.__name__]
 
+    @classmethod
+    def _cls_to_func(self, cls_name):
+        snake = '_'.join(map(str.lower, self._parse_name.findall(cls_name)))
+        return 'render_{}'.format(snake)
+
     @staticmethod
     def _tokens_from_module(module):
         """
@@ -139,3 +136,4 @@ class BaseRenderer(object):
         separate module.
         """
         return [getattr(module, name) for name in module.__all__]
+
