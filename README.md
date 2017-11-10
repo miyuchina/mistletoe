@@ -264,6 +264,16 @@ class GithubWikiRenderer(HTMLRenderer):
 
 ### Take it for a spin?
 
+It is preferred that all mistletoe's renderers be used as context managers.
+This is to ensure that your custom tokens are cleaned up properly, so that
+you can parse other Markdown documents with different token types in the
+same program.
+
+**New in version 0.4**: custom tokens are included in the parsing process
+even when the renderer is initialized as a normal constructor (i.e. not as
+a context manager). This is primarily for ease of use. Your custom tokens and
+their render functions, however, won't be cleaned up, so be careful!
+
 ```python
 from mistletoe import Document
 from plugins.github_wiki import GithubWikiRenderer
