@@ -54,6 +54,42 @@ See the [contributing][contributing] doc for how to contribute to mistletoe.
 Usage
 -----
 
+### Basic usage
+
+Here's how you can use mistletoe in a Python script:
+
+```python
+import mistletoe
+
+with open('foo.md', 'r') as fin:
+    rendered = mistletoe.markdown(fin)
+```
+
+`mistletoe.markdown()` uses mistletoe's default settings: allowing HTML mixins
+and rendering to HTML. The function also accepts an additional argument
+`renderer`. To produce LaTeX output:
+
+```python
+import mistletoe
+from mistletoe.latex_renderer import LaTeXRenderer
+
+with open('foo.md', 'r') as fin:
+    rendered = mistletoe.markdown(fin, LaTeXRenderer)
+```
+
+Finally, here's how you would manually specify extra tokens and a renderer
+for mistletoe. In the following example, we use `HTMLRenderer` to render
+the AST, which adds `HTMLBlock` and `HTMLSpan` to the normal parsing
+process.
+
+```python
+from mistletoe import Document, HTMLRenderer
+
+with open('foo.md', 'r') as fin:
+    with HTMLRenderer() as renderer:
+        rendered = renderer.render(Document(fin))
+```
+
 ### From the command-line
 
 pip installation enables mistletoe's commandline utility. Type the following
@@ -92,42 +128,6 @@ Type Ctrl-D to complete input, or Ctrl-C to exit.
 
 Typing `Ctrl-D` tells mistletoe to interpret your input. `Ctrl-C` exits the
 program.
-
-### Basic usage
-
-Here's how you can use mistletoe in a Python script:
-
-```python
-import mistletoe
-
-with open('foo.md', 'r') as fin:
-    rendered = mistletoe.markdown(fin)
-```
-
-`mistletoe.markdown()` uses mistletoe's default settings: allowing HTML mixins
-and rendering to HTML. The function also accepts an additional argument
-`renderer`. To produce LaTeX output:
-
-```python
-import mistletoe
-from mistletoe.latex_renderer import LaTeXRenderer
-
-with open('foo.md', 'r') as fin:
-    rendered = mistletoe.markdown(fin, LaTeXRenderer)
-```
-
-Finally, here's how you would manually specify extra tokens and a renderer
-for mistletoe. In the following example, we use `HTMLRenderer` to render
-the AST, which adds `HTMLBlock` and `HTMLSpan` to the normal parsing
-process.
-
-```python
-from mistletoe import Document, HTMLRenderer
-
-with open('foo.md', 'r') as fin:
-    with HTMLRenderer() as renderer:
-        rendered = renderer.render(Document(fin))
-```
 
 Performance
 -----------
