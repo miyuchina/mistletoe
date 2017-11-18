@@ -85,7 +85,6 @@ class BaseRenderer(object):
 
         Arguments:
             token: whose __class__.__name__ is in self.render_map.
-            footnotes (dict): pass down footnote information during recursion.
         """
         return self.render_map[token.__class__.__name__](token)
 
@@ -101,7 +100,6 @@ class BaseRenderer(object):
 
         Arguments:
             token: a branch node who has children attribute.
-            footnotes (dict): pass down footnote information during recursion.
         """
         rendered = [self.render(child) for child in token.children]
         return ''.join(rendered)
