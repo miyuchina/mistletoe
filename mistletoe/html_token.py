@@ -45,6 +45,6 @@ class HTMLSpan(span_token.SpanToken):
     Attributes:
         content (str): literal strings rendered as-is.
     """
-    pattern = re.compile(r"<([A-z0-9]+?)(?: .+?)?(:?/>|>.*?<\/\1>))
+    pattern = re.compile(r"<([A-z0-9]+?)(?: .+?)?(:?/>|>.*?<\/\1>)")
     def __init__(self, match_obj):
         self.content = match_obj.group(0)
