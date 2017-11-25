@@ -46,3 +46,15 @@ class TestHTMLToken(TestCase):
         token = next(tokenize(lines))
         content = '<p class="bar">a paragraph\nwithin an html block\n</p>\n'
         self._test_html_token(token, html_token.HTMLBlock, content)
+
+    def test_empty_span(self):
+        raw = '<span></span>'
+        token = next(tokenize_inner(raw))
+        content = '<span></span>'
+        self._test_html_token(token, html_token.HTMLSpan, content)
+
+    def test_self_closing_span(self):
+        raw = '<span />'
+        token = next(tokenize_inner(raw))
+        content = '<span />'
+        self._test_html_token(token, html_token.HTMLSpan, content)
