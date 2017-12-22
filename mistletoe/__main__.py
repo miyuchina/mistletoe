@@ -12,7 +12,7 @@ def main():
     Entry point. Select mode based on len(sys.argv).
     """
     if len(sys.argv) > 1:
-        convert(*sys.argv[1:])
+        convert(sys.argv[1:])
     else:
         interactive()
 
