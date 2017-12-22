@@ -106,6 +106,13 @@ the HTML, direct the output into a file:
 mistletoe foo.md > out.html
 ```
 
+You can pass in custom renderers by including the full path to your renderer
+class after a `-r` or `--renderer` flag:
+
+```sh
+mistletoe foo.md --renderer custom_renderer.CustomRenderer
+```
+
 Running `mistletoe` without specifying a file will land you in interactive
 mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
