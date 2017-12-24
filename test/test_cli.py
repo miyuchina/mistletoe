@@ -1,0 +1,92 @@
+from unittest import TestCase
+from unittest.mock import call, patch, sentinel, mock_open, Mock
+from mistletoe import cli
+
+
+class TestCLI(TestCase):
+    @patch('mistletoe.cli._parse', return_value=([], sentinel.RendererCls))
+    @patch('mistletoe.cli.interactive')
+    def test_main_to_interactive(self, mock_interactive, mock_parse):
+        cli.main(None)
+        mock_interactive.assert_called_with(sentinel.RendererCls)
+
+    @patch('mistletoe.cli._parse', return_value=(['foo', 'bar'], sentinel.RendererCls))
+    @patch('mistletoe.cli.convert')
+    def test_main_to_convert(self, mock_convert, mock_parse):
+        cli.main(None)
+        mock_convert.assert_called_with(['foo', 'bar'], sentinel.RendererCls)
+
+    @patch('mistletoe.cli.convert_file')
+    def test_convert(self, mock_convert_file):
+        filenames = ['foo', 'bar']
+        cli.convert(filenames, sentinel.RendererCls)
+        calls = [call(filename, sentinel.RendererCls) for filename in filenames]
+        mock_convert_file.assert_has_calls(calls)
+
+    @patch('mistletoe.markdown', return_value='rendered text')
+    @patch('builtins.print')
+    @patch('builtins.open', new_callable=mock_open)
+    def test_convert_file_success(self, mock_open_, mock_print, mock_markdown):
+        filename = 'foo'
+        cli.convert_file(filename, sentinel.RendererCls)
+        mock_open_.assert_called_with(filename, 'r')
+        mock_print.assert_called_with('rendered text', end='')
+
+    @patch('builtins.open', side_effect=OSError)
+    @patch('sys.exit')
+    def test_convert_file_fail(self, mock_exit, mock_open_):
+        filename = 'foo'
+        cli.convert_file(filename, sentinel.RendererCls)
+        mock_open_.assert_called_with(filename, 'r')
+        mock_exit.assert_called_with('Cannot open file "foo".')
+
+    @patch('mistletoe.cli._import', return_value=sentinel.RendererCls)
+    def test_parse_to_interactive(self, mock_import):
+        filenames, renderer = cli._parse(['-r', 'foo.Renderer'])
+        self.assertEqual([], filenames)
+        self.assertEqual(sentinel.RendererCls, renderer)
+
+    @patch('mistletoe.cli._import', return_value=sentinel.RendererCls)
+    def test_parse_to_convert(self, mock_import):
+        filenames, renderer = cli._parse(['bar', '-r', 'foo.Renderer'])
+        self.assertEqual(['bar'], filenames)
+        self.assertEqual(sentinel.RendererCls, renderer)
+
+    @patch('importlib.import_module', return_value=Mock(Renderer=sentinel.RendererCls))
+    def test_import_success(self, mock_import_module):
+        self.assertEqual(sentinel.RendererCls, cli._import('foo.Renderer'))
+
+    @patch('importlib.import_module', side_effect=ImportError)
+    @patch('sys.exit')
+    def test_import_module_error(self, mock_exit, mock_import_module):
+        cli._import('foo.Renderer')
+        mock_exit.assert_called_with('Cannot import module "foo".')
+
+    @patch('importlib.import_module', return_value=Mock(spec=[]))
+    @patch('sys.exit')
+    def test_import_class_error(self, mock_exit, mock_import_module):
+        cli._import('foo.Renderer')
+        error_msg = 'Cannot find renderer "Renderer" from module "foo".'
+        mock_exit.assert_called_with(error_msg)
+
+    @patch('builtins.__import__')
+    @patch('builtins.print')
+    def test_import_readline_success(self, mock_print, mock_import):
+        cli._import_readline()
+        mock_print.assert_not_called()
+
+    @patch('builtins.__import__', side_effect=ImportError)
+    @patch('builtins.print')
+    def test_import_readline_fail(self, mock_print, mock_import):
+        cli._import_readline()
+        mock_print.assert_called_with('[warning] readline library not available.')
+
+    @patch('builtins.print')
+    def test_print_heading(self, mock_print):
+        cli._print_heading(Mock(__name__='Renderer'))
+        version = cli.mistletoe.__version__
+        msgs = ['mistletoe [version {}] (interactive)'.format(version),
+                'Type Ctrl-D to complete input, or Ctrl-C to exit.', 
+                'Using renderer: Renderer']
+        calls = [call(msg) for msg in msgs]
+        mock_print.assert_has_calls(calls)
