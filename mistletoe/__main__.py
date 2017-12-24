@@ -3,18 +3,15 @@ Make mistletoe runnable as a script with default settings.
 """
 
 import sys
-from mistletoe.convert import convert
-from mistletoe.interactive import interactive
+from mistletoe import cli
 
 
 def main():
     """
-    Entry point. Select mode based on len(sys.argv).
+    Entry point.
     """
-    if len(sys.argv) > 1:
-        convert(sys.argv[1:])
-    else:
-        interactive()
+    cli.main(sys.argv[1:])
+
 
 if __name__ == "__main__":
     main()

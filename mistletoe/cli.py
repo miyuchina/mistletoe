@@ -2,8 +2,15 @@ import sys
 import mistletoe
 
 
-def convert(args):
+def main(args):
     filenames, renderer = _parse(args)
+    if filenames:
+        convert(filenames, renderer)
+    else:
+        interactive(renderer)
+
+
+def convert(filenames, renderer):
     for filename in filenames:
         convert_file(filename, renderer)
 
@@ -18,6 +25,28 @@ def convert_file(filename, renderer):
             print(rendered, end='')
     except OSError:
         sys.exit('Cannot open file "{}".'.format(filename))
+
+
+def interactive(renderer):
+    """
+    Parse user input, dump to stdout, rinse and repeat.
+    Python REPL style.
+    """
+    _import_readline()
+    _print_heading(renderer)
+    contents = []
+    more = False
+    while True:
+        try:
+            prompt, more = ('... ', True) if more else ('>>> ', True)
+            contents.append(input(prompt) + '\n')
+        except EOFError:
+            print('\n' + mistletoe.markdown(contents, renderer), end='')
+            more = False
+            contents.clear()
+        except KeyboardInterrupt:
+            print('\nExiting.')
+            break
 
 
 def _parse(args):
@@ -47,3 +76,17 @@ def _import(arg):
     except AttributeError:
         sys.exit('Cannot find renderer "{}" from module "{}"'.format(cls_name, path))
     return renderer
+
+
+def _import_readline():
+    try:
+        import readline
+    except ImportError:
+        print('[warning] readline library not available.')
+
+
+def _print_heading(renderer):
+    print('mistletoe [version {}] (interactive)'.format(mistletoe.__version__))
+    print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
+    if renderer is not mistletoe.HTMLRenderer:
+        print('Using renderer: {}'.format(renderer.__name__))
