@@ -131,11 +131,6 @@ Type Ctrl-D to complete input, or Ctrl-C to exit.
 >>>
 ```
 
-**New in version 0.3.1**: Emacs-style controls are now available.
-
-Typing `Ctrl-D` tells mistletoe to interpret your input. `Ctrl-C` exits the
-program.
-
 Performance
 -----------
 
@@ -226,9 +221,6 @@ class GithubWiki(SpanToken):
 
 There you go: a new token in 7 lines of code.
 
-**New in version 0.3**: token constructors now accepts match objects, which
-allows us to utilize match groups, instead of doing dirty string manipulations.
-
 ### A new renderer
 
 Adding a custom token to the parsing process usually involves a lot
@@ -275,11 +267,6 @@ It is preferred that all mistletoe's renderers be used as context managers.
 This is to ensure that your custom tokens are cleaned up properly, so that
 you can parse other Markdown documents with different token types in the
 same program.
-
-**New in version 0.4**: custom tokens are included in the parsing process
-even when the renderer is initialized as a normal constructor (i.e. not as
-a context manager). This is primarily for ease of use. Your custom tokens and
-their render functions, however, won't be cleaned up, so be careful!
 
 ```python
 from mistletoe import Document
