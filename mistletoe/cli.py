@@ -43,7 +43,7 @@ def interactive(renderer):
         except EOFError:
             print('\n' + mistletoe.markdown(contents, renderer), end='')
             more = False
-            contents.clear()
+            contents = []
         except KeyboardInterrupt:
             print('\nExiting.')
             break

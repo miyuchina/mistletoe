@@ -40,6 +40,36 @@ class TestCLI(TestCase):
         mock_open_.assert_called_with(filename, 'r')
         mock_exit.assert_called_with('Cannot open file "foo".')
 
+    @patch('mistletoe.cli._import_readline')
+    @patch('mistletoe.cli._print_heading')
+    @patch('mistletoe.markdown', return_value='rendered text')
+    @patch('builtins.print')
+    def test_interactive(self, mock_print, mock_markdown,
+                         mock_print_heading, mock_import_readline):
+        def MockInputFactory(return_values):
+            _counter = -1
+            def mock_input(prompt=''):
+                nonlocal _counter
+                _counter += 1
+                if _counter < len(return_values):
+                    return return_values[_counter]
+                elif _counter == len(return_values):
+                    raise EOFError
+                else:
+                    raise KeyboardInterrupt
+            return mock_input
+
+        return_values = ['foo', 'bar', 'baz']
+        with patch('builtins.input', MockInputFactory(return_values)):
+            cli.interactive(sentinel.RendererCls)
+
+        mock_import_readline.assert_called()
+        mock_print_heading.assert_called_with(sentinel.RendererCls)
+        mock_markdown.assert_called_with(['foo\n', 'bar\n', 'baz\n'],
+                sentinel.RendererCls)
+        calls = [call('\nrendered text', end=''), call('\nExiting.')]
+        mock_print.assert_has_calls(calls)
+
     @patch('mistletoe.cli._import', return_value=sentinel.RendererCls)
     def test_parse_to_interactive(self, mock_import):
         filenames, renderer = cli._parse(['-r', 'foo.Renderer'])
