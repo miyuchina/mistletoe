@@ -70,12 +70,11 @@ def _import(arg):
     path = '.'.join(path)
     try:
         module = importlib.import_module(path)
-        renderer = getattr(module, cls_name)
+        return getattr(module, cls_name)
     except ImportError:
         sys.exit('Cannot import module "{}".'.format(path))
     except AttributeError:
-        sys.exit('Cannot find renderer "{}" from module "{}"'.format(cls_name, path))
-    return renderer
+        sys.exit('Cannot find renderer "{}" from module "{}".'.format(cls_name, path))
 
 
 def _import_readline():
