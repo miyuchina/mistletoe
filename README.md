@@ -131,6 +131,8 @@ Type Ctrl-D to complete input, or Ctrl-C to exit.
 >>>
 ```
 
+The interactive mode also accepts the `--renderer` flag.
+
 Performance
 -----------
 
