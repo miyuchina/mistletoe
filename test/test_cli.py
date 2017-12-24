@@ -63,7 +63,7 @@ class TestCLI(TestCase):
         with patch('builtins.input', MockInputFactory(return_values)):
             cli.interactive(sentinel.RendererCls)
 
-        mock_import_readline.assert_called()
+        mock_import_readline.assert_called_with()
         mock_print_heading.assert_called_with(sentinel.RendererCls)
         mock_markdown.assert_called_with(['foo\n', 'bar\n', 'baz\n'],
                 sentinel.RendererCls)
