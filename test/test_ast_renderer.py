@@ -4,6 +4,7 @@ import mistletoe.ast_renderer as renderer
 
 class TestASTRenderer(unittest.TestCase):
     def test(self):
+        self.maxDiff = None
         d = token.Document(['# heading 1', '\n', 'hello\n', 'world\n'])
         output = renderer.get_ast(d)
         target = {'type': 'Document',
