@@ -61,6 +61,8 @@ def _parse(args):
             flag = 'renderer'
         else:
             filenames.append(arg)
+    if flag:
+        print('[warning] unspecified flag: "{}". Ignoring.'.format(flag))
     return filenames, renderer
 
 

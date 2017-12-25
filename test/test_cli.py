@@ -82,6 +82,13 @@ class TestCLI(TestCase):
         self.assertEqual(['bar'], filenames)
         self.assertEqual(sentinel.RendererCls, renderer)
 
+    @patch('mistletoe.cli._import', return_value=sentinel.RendererCls)
+    @patch('builtins.print')
+    def test_parse_unspecified_flag(self, mock_print, mock_import):
+        filenames, renderer = cli._parse(['-r'])
+        warning_msg = '[warning] unspecified flag: "renderer". Ignoring.'
+        mock_print.assert_called_with(warning_msg)
+
     @patch('importlib.import_module', return_value=Mock(Renderer=sentinel.RendererCls))
     def test_import_success(self, mock_import_module):
         self.assertEqual(sentinel.RendererCls, cli._import('foo.Renderer'))
