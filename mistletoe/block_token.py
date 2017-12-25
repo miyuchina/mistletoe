@@ -2,6 +2,7 @@
 Built-in block-level token classes.
 """
 
+from types import GeneratorType
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
 import mistletoe.span_token as span_token
@@ -56,7 +57,7 @@ class BlockToken(object):
     Naming conventions:
         * lines denotes a list of (possibly unparsed) input lines, and is
           commonly used as the argument name for constructors.
-        * self.children is a generator with all the inner tokens (thus if a
+        * self.children is a tuple with all the inner tokens (thus if a
           token has children attribute, it is not a leaf node; if a token
           calls span_token.tokenize_inner, it is the boundary between
           span-level tokens and block-level tokens);
@@ -65,10 +66,23 @@ class BlockToken(object):
           define a match function (see block_tokenizer.tokenize).
 
     Attributes:
-        children (generator object): inner tokens.
+        children (tuple): inner tokens.
     """
     def __init__(self, lines, tokenize_func):
-        self.children = tokenize_func(lines)
+        self._children = tokenize_func(lines)
+
+    @property
+    def children(self):
+        """
+        Actual children attribute.
+
+        If self.children is never accessed, the generator is never actually
+        run. This allows for lazy-parsing of the input, while still maintaining
+        idempotent behavior for tokens.
+        """
+        if isinstance(self._children, GeneratorType):
+            self._children = tuple(self._children)
+        return self._children
 
 
 class Document(BlockToken):
@@ -79,7 +93,7 @@ class Document(BlockToken):
         self.footnotes = {}
         # Document tokens have immediate access to first-level block tokens.
         # Useful for footnotes, etc.
-        self.children = list(tokenize(lines, root=self))
+        self._children = tuple(tokenize(lines, root=self))
 
 
 class Heading(BlockToken):
@@ -89,7 +103,7 @@ class Heading(BlockToken):
 
     Attributes:
         level (int): heading level.
-        children (generator): inner tokens.
+        children (tuple): inner tokens.
     """
     def __init__(self, lines):
         if len(lines) == 1:    # ATX heading
@@ -141,7 +155,7 @@ class Paragraph(BlockToken):
     """
     def __init__(self, lines):
         content = ''.join(lines).replace('\n', ' ').strip()
-        self.children = span_token.tokenize_inner(content)
+        super().__init__(content, span_token.tokenize_inner)
 
 
 class BlockCode(BlockToken):
@@ -160,7 +174,7 @@ class BlockCode(BlockToken):
         else:                           # indented code
             content = ''.join([line[4:] for line in lines])
             self.language = ''
-        self.children = (span_token.RawText(content),)
+        self._children = (span_token.RawText(content),)
 
     @staticmethod
     def match(lines):
@@ -186,7 +200,7 @@ class List(BlockToken):
         # doesn't understand. This is that line of code.
         # I need to cast this generator into a list because... why?
         # Someone please open a pull request and enlighten me...
-        self.children = list(List.build_list(lines))
+        self._children = list(List.build_list(lines))
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
@@ -279,7 +293,7 @@ class Table(BlockToken):
     Attributes:
         has_header (bool): whether table has header row.
         column_align (list): align options for each column (default to [None]).
-        children (generator): inner tokens (TableRows).
+        children (tuple): inner tokens (TableRows).
     """
     def __init__(self, lines):
         self.has_header = lines[1].find('---') != -1
@@ -288,7 +302,7 @@ class Table(BlockToken):
                     for column in self.split_delimiter(lines.pop(1))]
         else:
             self.column_align = [None]
-        self.children = (TableRow(line, self.column_align) for line in lines)
+        self._children = (TableRow(line, self.column_align) for line in lines)
 
     @staticmethod
     def split_delimiter(delimiter):
@@ -336,8 +350,8 @@ class TableRow(BlockToken):
     def __init__(self, line, row_align=None):
         self.row_align = row_align or [None]
         cells = line[1:-2].split('|')
-        self.children = (TableCell(cell.strip(), align)
-                         for cell, align in zip_longest(cells, self.row_align))
+        self._children = (TableCell(cell.strip(), align)
+                          for cell, align in zip_longest(cells, self.row_align))
 
 
 class TableCell(BlockToken):
@@ -349,7 +363,7 @@ class TableCell(BlockToken):
 
     Attributes:
         align (bool): align option for current cell (default to None).
-        children (generator): inner (span-)tokens.
+        children (tuple): inner (span-)tokens.
     """
     def __init__(self, content, align=None):
         self.align = align
@@ -365,7 +379,7 @@ class FootnoteBlock(BlockToken):
         children (list): footnote entry tokens.
     """
     def __init__(self, lines):
-        self.children = [FootnoteEntry(line) for line in lines]
+        self._children = (FootnoteEntry(line) for line in lines)
 
     @staticmethod
     def match(lines):

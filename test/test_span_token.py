@@ -57,7 +57,7 @@ class TestLink(TestBranchToken):
 
     def test_parse_children(self):
         token = next(span_token.tokenize_inner('[![alt](src)](target)'))
-        child = next(token.children)
+        child = next(iter(token.children))
         self._test_token(child, 'alt', src='src')
 
 

@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, call
 import mistletoe.block_token as block_token
 
 
@@ -43,15 +43,15 @@ class TestQuote(unittest.TestCase):
         with patch('mistletoe.block_token.Paragraph') as mock:
             token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
             self.assertIsInstance(token, block_token.Quote)
-            next(token.children)
-            mock.assert_called_with(['line 1\n', 'line 2\n'])
+            token.children
+            mock.assert_called()
 
     def test_lazy_continuation(self):
         with patch('mistletoe.block_token.Paragraph') as mock:
             token = next(block_token.tokenize(['> line 1\n', 'line 2\n']))
             self.assertIsInstance(token, block_token.Quote)
-            next(token.children)
-            mock.assert_called_with(['line 1\n', 'line 2\n'])
+            token.children
+            mock.assert_called()
 
 
 class TestBlockCode(TestToken):
@@ -160,14 +160,14 @@ class TestTable(unittest.TestCase):
                  '| --- | --- | --- |\n',
                  '| cell 1 | cell 2 | cell 3 |\n',
                  '| more 1 | more 2 | more 3 |\n']
-        arg = '| header 1 | header 2 | header 3 |\n', [None, None, None]
         with patch('mistletoe.block_token.TableRow') as mock:
             token = next(block_token.tokenize(lines))
             self.assertIsInstance(token, block_token.Table)
             self.assertEqual(token.has_header, True)
             self.assertEqual(token.column_align, [None, None, None])
-            next(token.children)
-            mock.assert_called_with(*arg)
+            token.children
+            calls = [call(line, [None, None, None]) for line in lines[:1]+lines[2:]]
+            mock.assert_has_calls(calls)
 
 
 class TestTableRow(unittest.TestCase):
@@ -176,8 +176,8 @@ class TestTableRow(unittest.TestCase):
             line = '| cell 1 | cell 2 |\n'
             token = block_token.TableRow(line)
             self.assertEqual(token.row_align, [None])
-            next(token.children)
-            mock.assert_called_with('cell 1', None)
+            token.children
+            mock.assert_has_calls([call('cell 1', None), call('cell 2', None)])
 
 
 class TestTableCell(TestToken):

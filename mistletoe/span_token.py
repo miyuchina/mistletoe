@@ -3,6 +3,7 @@ Built-in span-level token classes.
 """
 
 import re
+from types import GeneratorType
 import mistletoe.span_tokenizer as tokenizer
 
 
@@ -60,7 +61,7 @@ class SpanToken(object):
     Naming conventions:
         * match_obj is passed in from span_tokenizer.tokenize, and contains
           user input.
-        * self.children is (usually) a generator with all the inner tokens
+        * self.children is (usually) a tuple with all the inner tokens
           (thus if a token has children attribute, it is not a leaf node);
         * self.content denotes string stored (and later rendered) as-is,
           without need for extra parsing (thus if a token has content
@@ -72,10 +73,23 @@ class SpanToken(object):
           except RawText.
 
     Attributes:
-        children (generator): inner tokens.
+        children (tuple): inner tokens.
     """
     def __init__(self, match_obj):
-        self.children = tokenize_inner(match_obj.group(1))
+        self._children = tokenize_inner(match_obj.group(1))
+
+    @property
+    def children(self):
+        """
+        Actual children attribute.
+
+        If self.children is never accessed, the generator is never actually
+        run. This allows for lazy-parsing of the input, while still maintaining
+        idempotent behavior for tokens.
+        """
+        if isinstance(self._children, GeneratorType):
+            self._children = tuple(self._children)
+        return self._children
 
 
 class Strong(SpanToken):
@@ -84,7 +98,7 @@ class Strong(SpanToken):
     """
     pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
     def __init__(self, match_obj):
-        self.children = tokenize_inner(_first_not_none_group(match_obj))
+        self._children = tokenize_inner(_first_not_none_group(match_obj))
 
 
 class Emphasis(SpanToken):
@@ -93,7 +107,7 @@ class Emphasis(SpanToken):
     """
     pattern = re.compile(r"\*((?:\*\*|[^\*])+?)\*(?!\*)|_((?:__|[^_])+?)_")
     def __init__(self, match_obj):
-        self.children = tokenize_inner(_first_not_none_group(match_obj))
+        self._children = tokenize_inner(_first_not_none_group(match_obj))
 
 
 class InlineCode(SpanToken):
@@ -102,7 +116,7 @@ class InlineCode(SpanToken):
     """
     pattern = re.compile(r"`(.+?)`")
     def __init__(self, match_obj):
-        self.children = (RawText(match_obj.group(1)),)
+        self._children = (RawText(match_obj.group(1)),)
 
 
 class Strikethrough(SpanToken):
@@ -123,7 +137,7 @@ class Image(SpanToken):
     """
     pattern = re.compile(r'\!\[(.+?)\] *\((.+?)(?: *"(.+?)")?\)')
     def __init__(self, match_obj):
-        self.children = (RawText(match_obj.group(1)),)
+        self._children = (RawText(match_obj.group(1)),)
         self.src = match_obj.group(2)
         self.title = match_obj.group(3)
 
@@ -138,7 +152,7 @@ class FootnoteImage(SpanToken):
     """
     pattern = re.compile(r"\!\[(.+?)\] *\[(.+?)\]")
     def __init__(self, match_obj):
-        self.children = (RawText(match_obj.group(1)),)
+        self._children = (RawText(match_obj.group(1)),)
         self.src = FootnoteAnchor(match_obj.group(2))
 
 
@@ -147,7 +161,7 @@ class Link(SpanToken):
     Link tokens. ("[name](target)")
 
     Attributes:
-        children (generator): link name still needs further parsing.
+        children (tuple): link name still needs further parsing.
         target (str): link target.
     """
     pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *\((.+?)\)")
@@ -161,7 +175,7 @@ class FootnoteLink(SpanToken):
     Footnote-style links. ("[name] [some target]")
 
     Attributes:
-        children (generator): link name still needs further parsing.
+        children (tuple): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
     pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *(?:\[(.+?)\])?")
@@ -183,7 +197,7 @@ class AutoLink(SpanToken):
     """
     pattern = re.compile(r"<([^ ]+?)>")
     def __init__(self, match_obj):
-        self.children = (RawText(match_obj.group(1)),)
+        self._children = (RawText(match_obj.group(1)),)
         self.target = match_obj.group(1)
 
 
@@ -196,7 +210,7 @@ class EscapeSequence(SpanToken):
     """
     pattern = re.compile(r"\\([\*\(\)\[\]\~])")
     def __init__(self, match_obj):
-        self.children = (RawText(match_obj.group(1)),)
+        self._children = (RawText(match_obj.group(1)),)
 
 
 class RawText(SpanToken):
