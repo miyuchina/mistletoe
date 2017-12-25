@@ -73,6 +73,8 @@ def _import(arg):
     try:
         module = importlib.import_module(path)
         return getattr(module, cls_name)
+    except ValueError:
+        sys.exit('Please supply full path to your custom renderer.')
     except ImportError:
         sys.exit('Cannot import module "{}".'.format(path))
     except AttributeError:

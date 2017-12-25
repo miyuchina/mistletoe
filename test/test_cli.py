@@ -93,6 +93,12 @@ class TestCLI(TestCase):
     def test_import_success(self, mock_import_module):
         self.assertEqual(sentinel.RendererCls, cli._import('foo.Renderer'))
 
+    @patch('sys.exit')
+    def test_import_incomplete_path(self, mock_exit):
+        cli._import('foo')
+        error_msg = 'Please supply full path to your custom renderer.'
+        mock_exit.assert_called_with(error_msg)
+
     @patch('importlib.import_module', side_effect=ImportError)
     @patch('sys.exit')
     def test_import_module_error(self, mock_exit, mock_import_module):
