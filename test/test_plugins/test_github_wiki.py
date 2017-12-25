@@ -17,7 +17,7 @@ class TestGithubWiki(TestCase):
         token = next(tokens)
         self.assertIsInstance(token, GithubWiki)
         self.assertEqual(token.target, 'target')
-        next(token.children)
+        next(iter(token.children))
         MockRawText.assert_called_with('wiki')
 
     def test_render(self):
