@@ -43,15 +43,11 @@ class TestQuote(unittest.TestCase):
         with patch('mistletoe.block_token.Paragraph') as mock:
             token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
             self.assertIsInstance(token, block_token.Quote)
-            token.children
-            mock.assert_called()
 
     def test_lazy_continuation(self):
         with patch('mistletoe.block_token.Paragraph') as mock:
             token = next(block_token.tokenize(['> line 1\n', 'line 2\n']))
             self.assertIsInstance(token, block_token.Quote)
-            token.children
-            mock.assert_called()
 
 
 class TestBlockCode(TestToken):
