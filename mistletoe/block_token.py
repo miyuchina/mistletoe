@@ -36,7 +36,7 @@ def add_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be included in the parsing process.
     """
-    _token_types.insert(1, token_cls)
+    _token_types.insert(0, token_cls)
 
 
 def remove_token(token_cls):
