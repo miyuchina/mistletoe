@@ -66,6 +66,16 @@ class TestBlockCode(TestToken):
         arg = '# comment\n'
         self._test_match(block_token.BlockCode, lines, arg, language='ruby')
 
+    def test_no_wrapping_newlines_code_fence(self):
+        lines = ['```\n', 'hey', '```\n', 'paragraph\n']
+        arg = 'hey'
+        self._test_match(block_token.BlockCode, lines, arg, language='')
+
+    def test_unclosed_code_fence(self):
+        lines = ['```\n', 'hey']
+        arg = 'hey'
+        self._test_match(block_token.BlockCode, lines, arg, language='')
+
     def test_parse_indented_code(self):
         lines = ['    rm dir\n', '    mkdir test\n']
         arg = 'rm dir\nmkdir test\n'
