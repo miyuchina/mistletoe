@@ -5,49 +5,34 @@ Block-level tokenizer for mistletoe.
 import re    # TODO: git rid ov it plz?
 
 
-class NonBreakingLine(str):
-    def __new__(cls):
-        return super().__new__(cls, '\n')
-    
-    def __eq__(self, other):
-        return False
-
-    def __ne__(self, other):
-        return True
+class NeedMoreLines(Exception): pass
 
 
 def normalize(lines):
     """
     Normalizes input stream. Mostly exist because only newlines
     can trigger block-level token matching in tokenize.
-
-    This function is embarrasing, gross, and looks like a spaghetti.
     """
     heading = re.compile(r'#+ |=+$|-+$')
     code_fence = False
     for line in lines:
         # normalize tabs
         line = line.replace('\t', '    ')
-        # append headings with a newline
-        # enclose code fence with newlines.
-        if not code_fence and line.startswith('```'):
-            code_fence = True
-            yield '\n'
-            yield line
-        elif code_fence:
-            if line == '```\n':
-                code_fence = False
+        if line.startswith('```'):
+            if code_fence:
                 yield line
                 yield '\n'
-            elif line == '\n':
-                yield NonBreakingLine()
+                code_fence = False
             else:
+                yield '\n'
                 yield line
-        elif heading.match(line):
+                code_fence = True
+        # append headings with a newline
+        elif not code_fence and heading.match(line):
             yield line
             yield '\n'
-        else: yield line
-    # close all unclosed code fences
+        else:
+            yield line
     if code_fence:
         yield '```\n'
     # end the document with a newline, so that tokenize
@@ -72,10 +57,14 @@ def tokenize(iterable, token_types, fallback_token, root=None):
         if line != '\n':    # not a new block
             line_buffer.append(line)
         elif line_buffer:   # skip multiple empty lines
-            token = _match_for_token(line_buffer, token_types, fallback_token, root)
-            if token is not None:
-                yield token
-            line_buffer.clear()
+            try:
+                token = _match_for_token(line_buffer, token_types, fallback_token, root)
+                if token is not None:
+                    yield token
+                line_buffer.clear()
+            except NeedMoreLines:
+                line_buffer.append('\n')
+                continue
 
 
 def _match_for_token(line_buffer, token_types, fallback_token, root):

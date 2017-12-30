@@ -178,8 +178,11 @@ class BlockCode(BlockToken):
 
     @staticmethod
     def match(lines):
-        if lines[0].startswith('```') and lines[-1] == '```\n':
-            return True
+        if lines[0].startswith('```'):
+            if lines[-1] == '```\n':
+                return True
+            else:
+                raise tokenizer.NeedMoreLines()
         for line in lines:
             if not line.startswith(' '*4):
                 return False
