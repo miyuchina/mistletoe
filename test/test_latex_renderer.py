@@ -94,11 +94,6 @@ class TestLaTeXRenderer(TestCase):
 
     def test_document(self):
         output = ('\\documentclass{article}\n'
-                  '\\usepackage{csquotes}\n'
-                  '\\usepackage{hyperref}\n'
-                  '\\usepackage{graphicx}\n'
-                  '\\usepackage{listings}\n'
-                  '\\usepackage[normalem]{ulem}\n'
                   '\\begin{document}\n'
                   'inner'
                   '\\end{document}\n')
@@ -115,11 +110,7 @@ class TestLaTeXFootnotes(TestCase):
         from mistletoe import Document
         raw = ['![alt] [foo]\n', '\n', '[foo]: bar "title"\n']
         target = ('\\documentclass{article}\n'
-                  '\\usepackage{csquotes}\n'
-                  '\\usepackage{hyperref}\n'
                   '\\usepackage{graphicx}\n'
-                  '\\usepackage{listings}\n'
-                  '\\usepackage[normalem]{ulem}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\n\\includegraphics{bar}\n'
@@ -131,11 +122,7 @@ class TestLaTeXFootnotes(TestCase):
         from mistletoe import Document
         raw = ['[name] [key]\n', '\n', '[key]: target\n']
         target = ('\\documentclass{article}\n'
-                  '\\usepackage{csquotes}\n'
                   '\\usepackage{hyperref}\n'
-                  '\\usepackage{graphicx}\n'
-                  '\\usepackage{listings}\n'
-                  '\\usepackage[normalem]{ulem}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\\href{target}{name}'

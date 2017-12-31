@@ -13,6 +13,7 @@ class LaTeXRenderer(BaseRenderer):
             extras (list): allows subclasses to add even more custom tokens.
         """
         tokens = self._tokens_from_module(latex_token)
+        self.packages = {}
         super().__init__(*chain(tokens, extras))
 
     def render_strong(self, token):
@@ -25,30 +26,34 @@ class LaTeXRenderer(BaseRenderer):
         return '\\verb|{}|'.format(self.render_inner(token))
 
     def render_strikethrough(self, token):
+        self.packages['ulem'] = ['normalem']
         return '\\sout{{{}}}'.format(self.render_inner(token))
 
-    @staticmethod
-    def render_image(token):
+    def render_image(self, token):
+        self.packages['graphicx'] = []
         return '\n\\includegraphics{{{}}}\n'.format(token.src)
 
     def render_footnote_image(self, token):
+        self.packages['graphicx'] = []
         maybe_src = self.footnotes.get(token.src.key, '')
         src = maybe_src.split(' "', 1)[0]
         return '\n\\includegraphics{{{}}}\n'.format(src)
 
     def render_link(self, token):
+        self.packages['hyperref'] = []
         template = '\\href{{{target}}}{{{inner}}}'
         inner = self.render_inner(token)
         return template.format(target=token.target, inner=inner)
 
     def render_footnote_link(self, token):
+        self.packages['hyperref'] = []
         template = '\\href{{{target}}}{{{inner}}}'
         inner = self.render_inner(token)
         target = self.footnotes.get(token.target.key, '')
         return template.format(target=target, inner=inner)
 
-    @staticmethod
-    def render_auto_link(token):
+    def render_auto_link(self, token):
+        self.packages['hyperref'] = []
         return '\\url{{{}}}'.format(token.target)
 
     @staticmethod
@@ -73,6 +78,7 @@ class LaTeXRenderer(BaseRenderer):
         return '\n\\subsubsection{{{}}}\n'.format(inner)
 
     def render_quote(self, token):
+        self.packages['csquotes'] = []
         template = '\\begin{{displayquote}}\n{inner}\\end{{displayquote}}\n'
         return template.format(inner=self.render_inner(token))
 
@@ -80,6 +86,7 @@ class LaTeXRenderer(BaseRenderer):
         return '\n{}\n'.format(self.render_inner(token))
 
     def render_block_code(self, token):
+        self.packages['listings'] = []
         template = ('\n\\begin{{lstlisting}}[language={}]\n'
                     '{}'
                     '\\end{{lstlisting}}\n')
@@ -87,6 +94,7 @@ class LaTeXRenderer(BaseRenderer):
         return template.format(token.language, inner)
 
     def render_list(self, token):
+        self.packages['listings'] = []
         template = '\\begin{{{tag}}}\n{inner}\\end{{{tag}}}\n'
         tag = 'enumerate' if token.start is not None else 'itemize'
         inner = self.render_inner(token)
@@ -137,17 +145,17 @@ class LaTeXRenderer(BaseRenderer):
     def render_separator(token):
         return '\\hrulefill\n'
 
+    def render_packages(self):
+        pattern = '\\usepackage{options}{{{package}}}\n'
+        return ''.join(pattern.format(options=options or '', package=package)
+                         for package, options in self.packages.items())
+
     def render_document(self, token):
-        # I probably should import those packages iff the document
-        # is actually using them... oh well.
         template = ('\\documentclass{{article}}\n'
-                    '\\usepackage{{csquotes}}\n'
-                    '\\usepackage{{hyperref}}\n'
-                    '\\usepackage{{graphicx}}\n'
-                    '\\usepackage{{listings}}\n'
-                    '\\usepackage[normalem]{{ulem}}\n'
+                    '{packages}'
                     '\\begin{{document}}\n'
                     '{inner}'
                     '\\end{{document}}\n')
         self.footnotes.update(token.footnotes)
-        return template.format(inner=self.render_inner(token))
+        return template.format(inner=self.render_inner(token),
+                               packages=self.render_packages())
