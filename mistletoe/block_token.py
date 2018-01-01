@@ -28,7 +28,7 @@ def tokenize(lines, root=None):
     return tokenizer.tokenize(lines, _token_types, Paragraph, root)
 
 
-def add_token(token_cls):
+def add_token(token_cls, position=0):
     """
     Allows external manipulation of the parsing process.
     This function is called in BaseRenderer.__enter__.
@@ -36,7 +36,7 @@ def add_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be included in the parsing process.
     """
-    _token_types.insert(0, token_cls)
+    _token_types.insert(position, token_cls)
 
 
 def remove_token(token_cls):
