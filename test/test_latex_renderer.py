@@ -115,6 +115,7 @@ class TestLaTeXFootnotes(TestCase):
                   '\n'
                   '\n\\includegraphics{bar}\n'
                   '\n'
+                  '\n'
                   '\\end{document}\n')
         self.assertEqual(self.renderer.render(Document(raw)), target)
 
@@ -126,6 +127,7 @@ class TestLaTeXFootnotes(TestCase):
                   '\\begin{document}\n'
                   '\n'
                   '\\href{target}{name}'
+                  '\n'
                   '\n'
                   '\\end{document}\n')
         self.assertEqual(self.renderer.render(Document(raw)), target)

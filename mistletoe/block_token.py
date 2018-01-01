@@ -154,7 +154,7 @@ class Paragraph(BlockToken):
     Boundary between span-level and block-level tokens.
     """
     def __init__(self, lines):
-        content = ''.join(lines).replace('\n', ' ').strip()
+        content = ''.join(lines)
         super().__init__(content, span_token.tokenize_inner)
 
 

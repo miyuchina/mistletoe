@@ -85,7 +85,7 @@ class TestBlockCode(TestToken):
 class TestParagraph(TestToken):
     def test_parse(self):
         lines = ['some\n', 'continuous\n', 'lines\n']
-        arg = 'some continuous lines'
+        arg = 'some\ncontinuous\nlines\n'
         self._test_match(block_token.Paragraph, lines, arg)
 
 
