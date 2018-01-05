@@ -78,6 +78,12 @@ class SpanToken(object):
     def __init__(self, match_obj):
         self._children = tokenize_inner(match_obj.group(1))
 
+    def __contains__(self, text):
+        if hasattr(self, 'children'):
+            return any(text in child for child in self.children)
+        else:
+            return text in self.content
+
     @property
     def children(self):
         """

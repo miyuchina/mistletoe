@@ -71,6 +71,10 @@ class BlockToken(object):
     def __init__(self, lines, tokenize_func):
         self._children = tokenize_func(lines)
 
+    def __contains__(self, text):
+        return any(text in child for child in self.children)
+
+
     @property
     def children(self):
         """

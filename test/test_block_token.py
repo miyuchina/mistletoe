@@ -226,3 +226,12 @@ class TestSeparator(unittest.TestCase):
     def test_match(self):
         token = next(block_token.tokenize(['---\n']))
         self.assertIsInstance(token, block_token.Separator)
+
+
+class TestContains(unittest.TestCase):
+    def test_contains(self):
+        lines = ['# heading\n', '\n', 'paragraph\n', 'with\n', '`code`\n']
+        token = block_token.Document(lines)
+        self.assertTrue('heading' in token)
+        self.assertTrue('code' in token)
+        self.assertFalse('foo' in token)

@@ -107,3 +107,11 @@ class TestRawText(unittest.TestCase):
     def test_attribute(self):
         token = span_token.RawText('some text')
         self.assertEqual(token.content, 'some text')
+
+
+class TestContains(unittest.TestCase):
+    def test_contains(self):
+        token = next(span_token.tokenize_inner('**with some *emphasis* text**'))
+        self.assertTrue('text' in token)
+        self.assertTrue('emphasis' in token)
+        self.assertFalse('foo' in token)
