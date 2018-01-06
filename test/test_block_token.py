@@ -21,21 +21,23 @@ class TestToken(unittest.TestCase):
         self.mock.assert_called_with(arg)
 
 
-class TestHeading(TestToken):
-    def test_match_atx(self):
+class TestATXHeading(TestToken):
+    def test_match(self):
         lines = ['### heading 3\n']
         arg = 'heading 3'
         self._test_match(block_token.Heading, lines, arg, level=3)
-
-    def test_match_setext(self):
-        lines = ['some\n', 'heading\n', '---\n']
-        arg = 'some heading'
-        self._test_match(block_token.Heading, lines, arg, level=2)
 
     def test_children_with_enclosing_hashes(self):
         lines = ['# heading 3 #####  \n']
         arg = 'heading 3'
         self._test_match(block_token.Heading, lines, arg, level=1)
+
+
+class TestSetextHeading(TestToken):
+    def test_match(self):
+        lines = ['some\n', 'heading\n', '---\n']
+        arg = 'some\nheading\n'
+        self._test_match(block_token.SetextHeading, lines, arg, level=2)
 
 
 class TestQuote(unittest.TestCase):
@@ -50,32 +52,29 @@ class TestQuote(unittest.TestCase):
             self.assertIsInstance(token, block_token.Quote)
 
 
-class TestBlockCode(TestToken):
+class TestCodeFence(TestToken):
     def test_match_fenced_code(self):
         lines = ['```sh\n', 'rm dir\n', 'mkdir test\n', '```\n']
         arg = 'rm dir\nmkdir test\n'
-        self._test_match(block_token.BlockCode, lines, arg, language='sh')
+        self._test_match(block_token.CodeFence, lines, arg, language='sh')
 
     def test_fence_code_lazy_continuation(self):
         lines = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
         arg = 'rm dir\n\nmkdir test\n'
-        self._test_match(block_token.BlockCode, lines, arg, language='sh')
-
-    def test_hashes(self):
-        lines = ['```ruby\n', '# comment\n', '```\n']
-        arg = '# comment\n'
-        self._test_match(block_token.BlockCode, lines, arg, language='ruby')
+        self._test_match(block_token.CodeFence, lines, arg, language='sh')
 
     def test_no_wrapping_newlines_code_fence(self):
         lines = ['```\n', 'hey', '```\n', 'paragraph\n']
         arg = 'hey'
-        self._test_match(block_token.BlockCode, lines, arg, language='')
+        self._test_match(block_token.CodeFence, lines, arg, language='')
 
     def test_unclosed_code_fence(self):
         lines = ['```\n', 'hey']
         arg = 'hey'
-        self._test_match(block_token.BlockCode, lines, arg, language='')
+        self._test_match(block_token.CodeFence, lines, arg, language='')
 
+
+class TestBlockCode(TestToken):
     def test_parse_indented_code(self):
         lines = ['    rm dir\n', '    mkdir test\n']
         arg = 'rm dir\nmkdir test\n'

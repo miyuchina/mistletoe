@@ -9,7 +9,7 @@ import mistletoe.span_token as span_token
 
 
 __all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table',
-           'FootnoteBlock']
+           'FootnoteBlock', 'Paragraph']
 
 
 def tokenize(lines, root=None):
@@ -25,7 +25,7 @@ def tokenize(lines, root=None):
 
     See also: block_tokenizer.tokenize, span_token.tokenize_inner.
     """
-    return tokenizer.tokenize(lines, _token_types, Paragraph, root)
+    return tokenizer.tokenize(lines, _token_types, root)
 
 
 def add_token(token_cls, position=0):
@@ -87,6 +87,10 @@ class BlockToken(object):
         if isinstance(self._children, GeneratorType):
             self._children = tuple(self._children)
         return self._children
+    
+    @staticmethod
+    def read(lines):
+        return until('\n', lines)
 
 
 class Document(BlockToken):
@@ -110,28 +114,41 @@ class Heading(BlockToken):
         children (tuple): inner tokens.
     """
     def __init__(self, lines):
-        if len(lines) == 1:    # ATX heading
-            hashes, content = lines[0].split('# ', 1)
-            content = content.split(' #', 1)[0].strip()
-            self.level = len(hashes) + 1
-        else:                  # setext heading
-            if lines[-1][0] == '=':
-                self.level = 1
-            elif lines[-1][0] == '-':
-                self.level = 2
-            content = ' '.join([line.strip() for line in lines[:-1]])
+        hashes, content = lines[0].split('# ', 1)
+        content = content.split(' #', 1)[0].strip()
+        self.level = len(hashes) + 1
         super().__init__(content, span_token.tokenize_inner)
 
     @staticmethod
-    def match(lines):
-        # ATX heading
-        if (len(lines) == 1
-                and lines[0].startswith('#')
-                and lines[0].find('# ') != -1):
-            return True
-        # setext heading
-        return len(lines) > 1 and (lines[-1].startswith('---')
-                                   or lines[-1].startswith('==='))
+    def start(line):
+        return line.startswith('#') and line.find('# ') != -1
+
+    @staticmethod
+    def read(line):
+        return []
+
+class SetextHeading(BlockToken):
+    def __init__(self, lines):
+        self.level = 1 if lines[-1].startswith('=') else 2
+        content = ''.join(lines[:-1])
+        super().__init__(content, span_token.tokenize_inner)
+
+    @staticmethod
+    def start(line):
+        return True
+
+    @staticmethod
+    def read(lines):
+        line_buffer = []
+        lines.anchor()
+        for line in lines:
+            line_buffer.append(line)
+            if line == '\n':
+                break
+            elif line.startswith(('===', '---')):
+                return line_buffer
+        lines.reset()
+        raise tokenizer.MismatchException()
 
 
 class Quote(BlockToken):
@@ -148,8 +165,8 @@ class Quote(BlockToken):
         super().__init__(content, tokenize)
 
     @staticmethod
-    def match(lines):
-        return lines[0].startswith('> ')
+    def start(line):
+        return line.startswith('> ')
 
 
 class Paragraph(BlockToken):
@@ -161,10 +178,28 @@ class Paragraph(BlockToken):
         content = ''.join(lines)
         super().__init__(content, span_token.tokenize_inner)
 
+    @staticmethod
+    def start(line):
+        return line != '\n'
+
 
 class BlockCode(BlockToken):
+    def __init__(self, lines):
+        self.language = ''
+        self._children = (span_token.RawText(''.join(line[4:] for line in lines)),)
+
+    @staticmethod
+    def start(line):
+        return line.startswith('    ')
+
+    @staticmethod
+    def read(lines):
+        return until('\n', lines)
+
+
+class CodeFence(BlockToken):
     """
-    Block code. (["```sh\n", "rm -rf /", ..., "```"])
+    Code fence. (["```sh\n", "rm -rf /", ..., "```"])
     Boundary between span-level and block-level tokens.
 
     Attributes:
@@ -172,25 +207,16 @@ class BlockCode(BlockToken):
         language (str): language of code block (default to empty).
     """
     def __init__(self, lines):
-        if lines[0].startswith('```'):  # code fence
-            content = ''.join(lines[1:-1])
-            self.language = lines[0].strip()[3:]
-        else:                           # indented code
-            content = ''.join([line[4:] for line in lines])
-            self.language = ''
-        self._children = (span_token.RawText(content),)
+        self.language = lines[0].strip()[3:]
+        self._children = (span_token.RawText(''.join(lines[1:])),)
 
     @staticmethod
-    def match(lines):
-        if lines[0].startswith('```'):
-            if lines[-1] == '```\n':
-                return True
-            else:
-                raise tokenizer.NeedMoreLines()
-        for line in lines:
-            if not line.startswith(' '*4):
-                return False
-        return True
+    def start(line):
+        return line.startswith('```')
+
+    @staticmethod
+    def read(lines):
+        return until('```\n', lines)
 
 
 class List(BlockToken):
@@ -273,8 +299,8 @@ class List(BlockToken):
                 or (line.split(' ', 1)[0][:-1].isdigit()))  # ordered
 
     @staticmethod
-    def match(lines):
-        return List.has_valid_leader(lines[0].strip())
+    def start(line):
+        return List.has_valid_leader(line.strip())
 
 
 class ListItem(BlockToken):
@@ -341,11 +367,19 @@ class Table(BlockToken):
         return None
 
     @staticmethod
-    def match(lines):
+    def start(line):
+        return line.startswith('|') and line.endswith('|\n')
+
+    @staticmethod
+    def read(lines):
+        line_buffer = []
         for line in lines:
-            if line[0] != '|' or line[-2] != '|':
-                return False
-        return True
+            if (not (line.startswith('|') and line.endswith('|\n'))
+                    or line == '\n'):
+                break
+            else:
+                line_buffer.append(line)
+        return line_buffer
 
 
 class TableRow(BlockToken):
@@ -388,13 +422,23 @@ class FootnoteBlock(BlockToken):
     def __init__(self, lines):
         self._children = (FootnoteEntry(line) for line in lines)
 
-    @staticmethod
-    def match(lines):
-        for line in lines:
-            content = line.strip()
-            if not (content.startswith('[') and content.find(']:') != -1):
-                return False
-        return True
+    @classmethod
+    def _is_legal(cls, line):
+        return line.strip().startswith('[') and ']:' in line
+
+    @classmethod
+    def start(cls, line):
+        return cls._is_legal(line)
+
+    @classmethod
+    def read(cls, lines):
+        line_buffer = []
+        try:
+            while cls._is_legal(lines.peek()) and lines.peek() != '\n':
+                line_buffer.append(next(lines))
+        except StopIteration:
+            pass
+        return line_buffer
 
 
 class FootnoteEntry(BlockToken):
@@ -423,12 +467,25 @@ class Separator(BlockToken):
         self.lines = lines
 
     @staticmethod
-    def match(lines):
-        return len(lines) == 1 and lines[0] in Separator._acceptable_patterns
+    def start(line):
+        return line in Separator._acceptable_patterns
+
+    @staticmethod
+    def read(lines):
+        return []
+
+
+def until(stop_line, lines):
+    line_buffer = []
+    for line in lines:
+        if line == stop_line:
+            break
+        line_buffer.append(line)
+    return line_buffer
 
 
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-_token_types = [Heading, Quote, BlockCode, Separator, List,
-                Table, FootnoteBlock]
+_token_types = [Heading, Quote, CodeFence, BlockCode, Separator, List,
+                Table, FootnoteBlock, SetextHeading, Paragraph]
