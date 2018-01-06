@@ -20,22 +20,33 @@ class HTMLBlock(block_token.BlockToken):
     Attributes:
         content (str): literal strings rendered as-is.
     """
+    _last_tag = ''
     def __init__(self, lines):
         self.content = ''.join(lines) # implicit newlines
 
-    @staticmethod
-    def match(lines):
-        open_tag_end = lines[0].find('>')
-        close_tag_start = lines[-1].find('</')
-        if (not lines[0].strip().startswith('<')
-            or open_tag_end == -1
-            or close_tag_start == -1):
+    @classmethod
+    def start(cls, line):
+        open_tag_end = line.find('>')
+        if not line.startswith('<') or open_tag_end == -1:
             return False
-        open_tag = lines[0][1:open_tag_end].split(' ')[0]
-        close_tag = lines[-1][close_tag_start+2:-2]
-        if open_tag != close_tag:
-            return False
+        if HTMLSpan.pattern.match(line.strip()):
+            _last_tag = ''
+        else:
+            cls._last_tag = line[1:open_tag_end].split(' ')[0]
         return True
+
+    @classmethod
+    def read(cls, lines):
+        if not cls._last_tag:
+            return []
+        line_buffer = []
+        for line in lines:
+            line_buffer.append(line)
+            start = line.find('</')
+            end = line[start:].find('>')
+            if start != -1 and end != -1 and line[start+2:end] == cls._last_tag:
+                break
+        return line_buffer
 
 
 class HTMLSpan(span_token.SpanToken):

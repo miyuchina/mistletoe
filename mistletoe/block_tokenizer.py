@@ -2,44 +2,38 @@
 Block-level tokenizer for mistletoe.
 """
 
-import re    # TODO: git rid ov it plz?
+
+class MismatchException(Exception): pass
 
 
-class NeedMoreLines(Exception): pass
+class FileWrapper:
+    def __init__(self, lines):
+        self.lines = [line.replace('\t', '    ') for line in lines]
+        self._index = -1
+        self._anchor = 0
+
+    def __next__(self):
+        self._index += 1
+        if self._index < len(self.lines):
+            return self.lines[self._index]
+        raise StopIteration
+
+    def __iter__(self):
+        return self
+
+    def anchor(self):
+        self._anchor = self._index
+
+    def reset(self):
+        self._index = self._anchor
+
+    def peek(self):
+        if self._index + 1 < len(self.lines):
+            return self.lines[self._index+1]
+        raise StopIteration
 
 
-def normalize(lines):
-    """
-    Normalizes input stream. Mostly exist because only newlines
-    can trigger block-level token matching in tokenize.
-    """
-    heading = re.compile(r'#+ |=+$|-+$')
-    code_fence = False
-    for line in lines:
-        # normalize tabs
-        line = line.replace('\t', '    ')
-        if line.startswith('```'):
-            if code_fence:
-                yield line
-                yield '\n'
-                code_fence = False
-            else:
-                yield '\n'
-                yield line
-                code_fence = True
-        # append headings with a newline
-        elif not code_fence and heading.match(line):
-            yield line
-            yield '\n'
-        else:
-            yield line
-    if code_fence:
-        yield '```\n'
-    # end the document with a newline, so that tokenize
-    # can yield the last token
-    yield '\n'
-
-def tokenize(iterable, token_types, fallback_token, root=None):
+def tokenize(iterable, token_types, root=None):
     """
     Searches for token_types in iterable, and applies fallback_token
     to lines in between.
@@ -52,29 +46,23 @@ def tokenize(iterable, token_types, fallback_token, root=None):
     Yields:
         block-level token instances.
     """
-    line_buffer = []
-    for line in normalize(iterable):
-        if line != '\n':    # not a new block
-            line_buffer.append(line)
-        elif line_buffer:   # skip multiple empty lines
+    lines = FileWrapper(iterable)
+    while True:
+        try:
+            line = next(lines)
+        except StopIteration:
+            break
+        for token_type in token_types:
             try:
-                token = _match_for_token(line_buffer, token_types, fallback_token, root)
-                if token is not None:
-                    yield token
-                line_buffer.clear()
-            except NeedMoreLines:
-                line_buffer.append('\n')
+                if token_type.start(line):
+                    token = token_type([line] + token_type.read(lines))
+                    if root and token.__class__.__name__ == 'FootnoteBlock':
+                        store_footnotes(root, token)
+                    else:
+                        yield token
+                    break
+            except MismatchException:
                 continue
-
-
-def _match_for_token(line_buffer, token_types, fallback_token, root):
-    for token_type in token_types:
-        if token_type.match(line_buffer):
-            if root and token_type.__name__ == 'FootnoteBlock':
-                return store_footnotes(root, token_type(line_buffer))
-            else:
-                return token_type(line_buffer)
-    return fallback_token(line_buffer)
 
 
 def store_footnotes(root_node, footnote_block):
