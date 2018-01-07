@@ -30,7 +30,7 @@ class HTMLBlock(block_token.BlockToken):
         if not line.startswith('<') or open_tag_end == -1:
             return False
         if HTMLSpan.pattern.match(line.strip()):
-            _last_tag = ''
+            cls._last_tag = ''
         else:
             cls._last_tag = line[1:open_tag_end].split(' ')[0]
         return True
