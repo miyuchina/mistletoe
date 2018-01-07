@@ -53,11 +53,7 @@ def tokenize(iterable, token_types, root=None):
         block-level token instances.
     """
     lines = FileWrapper(iterable)
-    while True:
-        try:
-            line = next(lines)
-        except StopIteration:
-            break
+    for line in lines:
         for token_type in token_types:
             try:
                 if token_type.start(line):
