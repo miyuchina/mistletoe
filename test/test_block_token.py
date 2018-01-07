@@ -39,6 +39,21 @@ class TestSetextHeading(TestToken):
         arg = 'some\nheading\n'
         self._test_match(block_token.SetextHeading, lines, arg, level=2)
 
+    def test_next(self):
+        with patch('mistletoe.span_token.RawText') as mock:
+            lines = ['some\n', 'heading\n', '---\n', '\n', 'foobar\n']
+            tokens = block_token.tokenize(lines)
+            token = next(tokens)
+            self.assertIsInstance(token, block_token.SetextHeading)
+            token.children
+            mock.assert_called_with('some\nheading\n')
+            token = next(tokens)
+            self.assertIsInstance(token, block_token.Paragraph)
+            token.children
+            mock.assert_called_with('foobar\n')
+            with self.assertRaises(StopIteration) as e:
+                token = next(tokens)
+
 
 class TestQuote(unittest.TestCase):
     def test_match(self):

@@ -135,20 +135,18 @@ class SetextHeading(BlockToken):
 
     @staticmethod
     def start(line):
-        return True
+        return line != '\n'
 
     @staticmethod
     def read(lines):
         line_buffer = []
-        lines.anchor()
         for line in lines:
-            line_buffer.append(line)
             if line == '\n':
                 break
-            elif line.startswith(('===', '---')):
+            line_buffer.append(line)
+            if line.startswith(('===', '---')):
                 return line_buffer
-        lines.reset()
-        raise tokenizer.MismatchException()
+        raise tokenizer.MismatchException(line_buffer)
 
 
 class Quote(BlockToken):
