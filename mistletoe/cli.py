@@ -59,6 +59,9 @@ def _parse(args):
             flag = None
         elif arg in ('-r', '--renderer'):
             flag = 'renderer'
+        elif arg in ('-v', '--version'):
+            print('mistletoe [version {}]'.format(mistletoe.__version__))
+            sys.exit(0)
         else:
             filenames.append(arg)
     if flag:
