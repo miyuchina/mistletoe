@@ -1,12 +1,11 @@
 import unittest
-import mistletoe.block_token as token
-import mistletoe.ast_renderer as renderer
+from mistletoe import Document, ast_renderer 
 
 class TestASTRenderer(unittest.TestCase):
     def test(self):
         self.maxDiff = None
-        d = token.Document(['# heading 1', '\n', 'hello\n', 'world\n'])
-        output = renderer.get_ast(d)
+        d = Document(['# heading 1', '\n', 'hello\n', 'world\n'])
+        output = ast_renderer.get_ast(d)
         target = {'type': 'Document',
                   'footnotes': {},
                   'children': [{
@@ -23,4 +22,31 @@ class TestASTRenderer(unittest.TestCase):
                           'content': 'hello\nworld\n'
                       }]
                  }]}
+        self.assertEqual(output, target)
+
+    def test_footnotes(self):
+        self.maxDiff = None
+        d = Document(['[bar][baz]\n',
+                      '\n',
+                      '[baz]: spam\n'])
+        target = {'type': 'Document',
+                  'footnotes': {'baz': 'spam'},
+                  'children': [{
+                      'type': 'Paragraph',
+                      'children': [{
+                          'type': 'FootnoteLink',
+                          'target': {
+                              'type': 'FootnoteAnchor',
+                              'key': 'baz'
+                          },
+                          'children': [{
+                              'type': 'RawText',
+                              'content': 'bar'
+                          }]
+                      }, {
+                          'type': 'RawText',
+                          'content': '\n'}
+                      ]
+                 }]}
+        output = ast_renderer.get_ast(d)
         self.assertEqual(output, target)

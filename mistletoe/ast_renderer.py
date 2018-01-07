@@ -34,6 +34,8 @@ def get_ast(token):
     #   [2]: https://github.com/syntax-tree/mdast
     node['type'] = token.__class__.__name__
     node.update({key: token.__dict__[key] for key in token.__dict__})
+    if 'target' in node and node['target'].__class__.__name__ == 'FootnoteAnchor':
+        node['target'] = {'type': 'FootnoteAnchor', 'key': node['target'].key}
     if '_children' in node:
         node['children'] = [get_ast(child) for child in node['_children']]
         del node['_children']
