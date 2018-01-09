@@ -36,7 +36,7 @@ class FileWrapper:
     def peek(self):
         if self._index + 1 < len(self.lines):
             return self.lines[self._index+1]
-        raise StopIteration
+        return None
 
 
 def tokenize(iterable, token_types, root=None):

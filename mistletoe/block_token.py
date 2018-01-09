@@ -431,11 +431,10 @@ class FootnoteBlock(BlockToken):
     @classmethod
     def read(cls, lines):
         line_buffer = []
-        try:
-            while cls._is_legal(lines.peek()) and lines.peek() != '\n':
-                line_buffer.append(next(lines))
-        except StopIteration:
-            pass
+        while (lines.peek() is not None
+                and cls._is_legal(lines.peek())
+                and lines.peek() != '\n'):
+            line_buffer.append(next(lines))
         return line_buffer
 
 
