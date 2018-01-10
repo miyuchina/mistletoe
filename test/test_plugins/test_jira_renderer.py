@@ -43,12 +43,16 @@ class TestJIRARenderer(TestCase):
     #     next(iter(token.children))
     #     MockRawText.assert_called_with('wiki')
 
-    def genRandomString(self, n):
-        result = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits + ' \t') for _ in range(n))
+    def genRandomString(self, n, hasWhitespace=False):
+        source = string.ascii_letters + string.digits
+        if hasWhitespace:
+            source = source + ' \t'
+        
+        result = ''.join(random.SystemRandom().choice(source) for _ in range(n))
         return result
 
     def textFormatTest(self, inputTemplate, outputTemplate):
-        input = self.genRandomString(80)
+        input = self.genRandomString(80, True)
         token = next(tokenize_inner(inputTemplate.format(input)))
         expected = outputTemplate.format(input)
         actual = self.renderer.render(token)
@@ -66,4 +70,84 @@ class TestJIRARenderer(TestCase):
     def test_render_strikethrough(self):
         self.textFormatTest('-{}-', '-{}-')
 
+    def test_render_image(self):
+        token = next(tokenize_inner('![image](foo.jpg)'))
+        expected = '!foo.jpg!'
+        actual = self.renderer.render(token)
+        self.assertEqual(expected, actual)
+    
+    def test_render_footnote_image(self):
+        # token = next(tokenize_inner('![image]\n\n[image]: foo.jpg'))
+        # expected = '!foo.jpg!'
+        # actual = self.renderer.render(token)
+        # self.assertEqual(expected, actual)
+        pass
+
+    def test_render_link(self):
+        url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
+        body = self.genRandomString(80, True)
+        token = next(tokenize_inner('[{body}]({url})'.format(url=url, body=body)))
+        expected = '[{body}|{url}]'.format(url=url, body=body)
+        actual = self.renderer.render(token)
+        self.assertEqual(expected, actual)
+    
+    def test_render_footnote_link(self):
+        pass
+
+    def test_render_auto_link(self):
+        url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
+        token = next(tokenize_inner('<{url}>'.format(url=url)))
+        expected = '[{url}]'.format(url=url)
+        actual = self.renderer.render(token)
+        self.assertEqual(expected, actual)
         
+    def test_render_escape_sequence(self):
+        pass
+
+    def test_render_html_span(self):
+        pass
+
+    def test_render_heading(self):
+        pass
+        
+    def test_render_quote(self):
+        pass
+
+    def test_render_paragraph(self):
+        pass
+
+    def test_render_block_code(self):
+        pass
+
+    def test_render_list(self):
+        pass
+
+    def test_render_list_item(self):
+        pass
+
+    def test_render_inner(self):
+        pass
+
+    def test_render_table(self):
+        pass
+
+    def test_render_table_row(self):
+        pass
+
+    def test_render_table_cell(self):
+        pass
+
+    def test_render_separator(self):
+        pass
+
+    def test_render_html_block(self):
+        pass
+
+    def test_render_document(self):
+        pass
+    
+    
+
+
+    
+    
