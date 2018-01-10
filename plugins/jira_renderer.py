@@ -1,3 +1,25 @@
+# Copyright 2018 Tile, Inc.  All Rights Reserved.
+#
+# The MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of
+# this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+# of the Software, and to permit persons to whom the Software is furnished to do
+# so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+#
 
 import html
 from itertools import chain
@@ -38,21 +60,23 @@ class JIRARenderer(BaseRenderer):
         return template.format(self.render_inner(token))
 
     def render_image(self, token):
-        template = '![{inner}]({src})'
+        template = '!{src}!'
         inner = self.render_inner(token)
-        return template.format(src=token.src, inner=inner)
+        return template.format(src=token.src)
 
     def render_footnote_image(self, token):
-        template = '![{inner}]({src})'        
+        template = '!{src}'
         maybe_src = self.footnotes.get(token.src.key, '')
+
+        # sys.stderr.write(maybe_src)
         if maybe_src.find('"') != -1:
             src = maybe_src[:maybe_src.index(' "')]
             title = maybe_src[maybe_src.index(' "')+2:-1]
         else:
             src = maybe_src
             title = ''
-        inner = self.render_inner(token)
-        return template.format(src=token.src, inner=inner)
+
+        return template.format(src=token.src)
 
     def render_link(self, token):
         template = '[{inner}|{target}]'
@@ -68,10 +92,10 @@ class JIRARenderer(BaseRenderer):
         return template.format(target=target, inner=inner)
 
     def render_auto_link(self, token):
-        template = '[{inner}|{target}]'
+        template = '[{target}]'
         target = escape_url(token.target)
-        inner = self.render_inner(token)
-        return template.format(target=target, inner=inner)
+        #inner = self.render_inner(token)
+        return template.format(target=target)
 
     def render_escape_sequence(self, token):
         return self.render_inner(token)
