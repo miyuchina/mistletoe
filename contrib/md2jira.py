@@ -32,9 +32,17 @@ from plugins.jira_renderer import JIRARenderer
 
 usageString = '%s <markdownfile>' % os.path.basename(sys.argv[0])
 helpString = """
+Convert Markdown (CommonMark) to JIRA wiki markup
 -h, --help                        help
 -v, --version                     version
 -o <outfile>, --output=<outfile>  output file, use '-' for stdout (default: stdout)
+"""
+
+"""
+Command-line utility to convert Markdown (CommonMark) to JIRA markup.
+
+JIRA markup spec: https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all
+CommonMark spec: http://spec.commonmark.org/0.28/#introduction
 """
 
 class CommandLineParser:
