@@ -125,10 +125,9 @@ class HTMLRenderer(BaseRenderer):
         # The primary difficulty seems to be passing down alignment options to
         # reach individual cells.
         template = '<table>\n{inner}</table>\n'
-        if token.has_header:
+        if hasattr(token, 'header'):
             head_template = '<thead>\n{inner}</thead>\n'
-            header = next(token.children)
-            head_inner = self.render_table_row(header, True)
+            head_inner = self.render_table_row(token.header, is_header=True)
             head_rendered = head_template.format(inner=head_inner)
         else: head_rendered = ''
         body_template = '<tbody>\n{inner}</tbody>\n'
