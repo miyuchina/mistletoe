@@ -9,10 +9,14 @@ class TestRenderer(TestCase):
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
-    def _test_token(self, token_name, output, children=True, **kwargs):
+    def _test_token(self, token_name, output, children=True,
+                    without_attrs=None, **kwargs):
         render_func = self.renderer.render_map[token_name]
-        children = mock.MagicMock() if children else None
+        children = mock.MagicMock(spec=list) if children else None
         mock_token = mock.Mock(children=children, **kwargs)
+        without_attrs = without_attrs or []
+        for attr in without_attrs:
+            delattr(mock_token, attr)
         self.assertEqual(render_func(mock_token), output)
 
 
@@ -79,7 +83,7 @@ class TestHTMLRenderer(TestRenderer):
         output = '<li>inner</li>\n'
         self._test_token('ListItem', output)
 
-    def test_table_with_heading(self):
+    def test_table_with_header(self):
         func_path = 'mistletoe.html_renderer.HTMLRenderer.render_table_row'
         with mock.patch(func_path, autospec=True) as mock_func:
             mock_func.return_value = 'row'
@@ -87,14 +91,14 @@ class TestHTMLRenderer(TestRenderer):
                         '<thead>\nrow</thead>\n'
                         '<tbody>\ninner</tbody>\n'
                       '</table>\n')
-            self._test_token('Table', output, has_header=True)
+            self._test_token('Table', output)
 
-    def test_table_without_heading(self):
+    def test_table_without_header(self):
         func_path = 'mistletoe.html_renderer.HTMLRenderer.render_table_row'
         with mock.patch(func_path, autospec=True) as mock_func:
             mock_func.return_value = 'row'
             output = '<table>\n<tbody>\ninner</tbody>\n</table>\n'
-            self._test_token('Table', output, has_header=False)
+            self._test_token('Table', output, without_attrs=['header',])
 
     def test_table_row(self):
         self._test_token('TableRow', '<tr>\n</tr>\n')

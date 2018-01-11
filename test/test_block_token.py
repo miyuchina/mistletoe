@@ -183,7 +183,7 @@ class TestTable(unittest.TestCase):
         with patch('mistletoe.block_token.TableRow') as mock:
             token = next(block_token.tokenize(lines))
             self.assertIsInstance(token, block_token.Table)
-            self.assertEqual(token.has_header, True)
+            self.assertTrue(hasattr(token, 'header'))
             self.assertEqual(token.column_align, [None, None, None])
             token.children
             calls = [call(line, [None, None, None]) for line in lines[:1]+lines[2:]]

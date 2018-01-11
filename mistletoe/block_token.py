@@ -327,13 +327,14 @@ class Table(BlockToken):
         children (tuple): inner tokens (TableRows).
     """
     def __init__(self, lines):
-        self.has_header = lines[1].find('---') != -1
-        if self.has_header:
+        if lines[1].find('---') != -1:
             self.column_align = [self.parse_align(column)
-                    for column in self.split_delimiter(lines.pop(1))]
+                    for column in self.split_delimiter(lines[1])]
+            self.header = TableRow(lines[0], self.column_align)
+            self._children = (TableRow(line, self.column_align) for line in lines[2:])
         else:
             self.column_align = [None]
-        self._children = (TableRow(line, self.column_align) for line in lines)
+            self._children = (TableRow(line) for line in lines)
 
     @staticmethod
     def split_delimiter(delimiter):
