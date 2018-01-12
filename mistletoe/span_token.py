@@ -156,7 +156,7 @@ class FootnoteImage(SpanToken):
         children (iterator): a single RawText node for alternative text.
         src (FootnoteAnchor): could point to both src and title.
     """
-    pattern = re.compile(r"\!\[(.+?)\] *\[(.+?)\]")
+    pattern = re.compile(r"\!\[(.+?)\] *?\[(.+?)\]")
     def __init__(self, match_obj):
         self._children = (RawText(match_obj.group(1)),)
         self.src = FootnoteAnchor(match_obj.group(2))
@@ -170,7 +170,7 @@ class Link(SpanToken):
         children (tuple): link name still needs further parsing.
         target (str): link target.
     """
-    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *\((.+?)\)")
+    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *?\((.+?)\)")
     def __init__(self, match_obj):
         super().__init__(match_obj)
         self.target = match_obj.group(2)
@@ -184,7 +184,7 @@ class FootnoteLink(SpanToken):
         children (tuple): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
-    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\] *(?:\[(.+?)\])?")
+    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\](?: *?\[(.+?)\])?")
     def __init__(self, match_obj):
         super().__init__(match_obj)
         if match_obj.group(2) is None:

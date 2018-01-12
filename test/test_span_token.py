@@ -72,6 +72,14 @@ class TestFootnoteLink(TestBranchToken):
             self._test_parse(span_token.FootnoteLink, '[alt]', 'alt')
             mock.assert_called_with('alt')
 
+    def test_trailing_empty_space(self):
+        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
+            tokens = span_token.tokenize_inner('[alt] foo')
+            next(tokens)
+            mock.assert_called_with('alt')
+            next(tokens)
+            self.mock.assert_called_with(' foo')
+
 
 class TestAutoLink(TestBranchToken):
     def test_parse(self):
