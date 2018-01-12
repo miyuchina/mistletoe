@@ -137,56 +137,25 @@ class JIRARenderer(BaseRenderer):
         return template.format(attr=attr, inner=inner)
 
     def render_list(self, token):
-        # template = '<{tag}{attr}>\n{inner}</{tag}>\n'
-        # if token.start:
-        #     tag = 'ol'
-        #     attr = ' start="{}"'.format(token.start)
-        # else:
-        #     tag = 'ul'
-        #     attr = ''
-        # inner = self.render_inner(token)
-
-        # if token.start:
-        #     self.tagType = '#'
-            
-        # else:
-        #     self.tagType = '*'
-
-            
-        
         inner = self.render_inner(token)
         return inner
 
     def render_list_item(self, token):
-        
         template = '{prefix} {inner}\n'
-        #prefix = self.tagType * self.listLevel
         prefix = ''.join(self.listTokens)
         result = template.format(prefix=prefix, inner=self.render_inner(token))
         return result
         
-        
-    #return '<li>{}</li>\n'.format(self.render_inner(token))
-
     def render_inner(self, token):
-
-        #print('###{}###'.format(token))
-
         if isinstance(token, mistletoe.block_token.List):
-            # This needs to be a level
-            #self.listLevel += 1
             if token.start:
                 self.listTokens.append('#')
             else:
                 self.listTokens.append('*')
-            
-            #print('###{0} {1}###'.format(token, self.listLevel))
 
         rendered = [self.render(child) for child in token.children]
 
         if isinstance(token, mistletoe.block_token.List):
-            #self.listLevel -= 1
-            #print('###EXIT {0} {1}###'.format(token, self.listLevel))
             del (self.listTokens[-1])
         
         
@@ -199,14 +168,12 @@ class JIRARenderer(BaseRenderer):
         # The primary difficulty seems to be passing down alignment options to
         # reach individual cells.
         template = '{inner}\n'
-        if token.has_header:
+        if hasattr(token, 'header'):
             head_template = '{inner}'
-            #print ('hey', token.children)
             header = token.children[0]
             head_inner = self.render_table_row(header, True)
             head_rendered = head_template.format(inner=head_inner)
-            token._children = token._children[1:]
-            
+             
         else:
             head_rendered = ''
             
@@ -216,9 +183,6 @@ class JIRARenderer(BaseRenderer):
         return template.format(inner=head_rendered+body_rendered)
 
     def render_table_row(self, token, is_header=False):
-        #template = '<tr>\n{inner}</tr>\n'
-        #inner = ''.join([self.render_table_cell(child, is_header)
-        #                 for child in token.children])
         if is_header:
             template = '{inner}||\n'
         else:
@@ -230,16 +194,6 @@ class JIRARenderer(BaseRenderer):
         return template.format(inner=inner)
 
     def render_table_cell(self, token, in_header=False):
-        # template = '<{tag}{attr}>{inner}</{tag}>\n'
-        # tag = 'th' if in_header else 'td'
-        # if token.align is None:
-        #     align = 'left'
-        # elif token.align == 0:
-        #     align = 'center'
-        # elif token.align == 1:
-        #     align = 'right'
-        # attr = ' align="{}"'.format(align)
-
         if in_header:
             template = '||{inner}'
         else:
