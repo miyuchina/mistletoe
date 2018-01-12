@@ -32,17 +32,6 @@ class TestJIRARenderer(TestCase):
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
-    # @mock.patch('mistletoe.span_token.RawText')
-    # def test_parse(self, MockRawText):
-    #     tokens = tokenize_inner('text with [[wiki | target]]')
-    #     next(tokens)
-    #     MockRawText.assert_called_with('text with ')
-    #     token = next(tokens)
-    #     self.assertIsInstance(token, GithubWiki)
-    #     self.assertEqual(token.target, 'target')
-    #     next(iter(token.children))
-    #     MockRawText.assert_called_with('wiki')
-
     def genRandomString(self, n, hasWhitespace=False):
         source = string.ascii_letters + string.digits
         if hasWhitespace:
