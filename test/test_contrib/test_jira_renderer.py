@@ -22,7 +22,7 @@
 
 from unittest import TestCase, mock
 from mistletoe.span_token import tokenize_inner
-from plugins.jira_renderer import JIRARenderer
+from contrib.jira_renderer import JIRARenderer
 import random
 import string
 

@@ -1,6 +1,6 @@
 from unittest import TestCase, mock
 from mistletoe.span_token import tokenize_inner
-from plugins.github_wiki import GithubWiki, GithubWikiRenderer
+from contrib.github_wiki import GithubWiki, GithubWikiRenderer
 
 
 class TestGithubWiki(TestCase):

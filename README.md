@@ -272,7 +272,7 @@ same program.
 
 ```python
 from mistletoe import Document
-from plugins.github_wiki import GithubWikiRenderer
+from contrib.github_wiki import GithubWikiRenderer
 
 with open('foo.md', 'r') as fin:
     with GithubWikiRenderer() as renderer:
