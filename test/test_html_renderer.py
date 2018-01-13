@@ -108,7 +108,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('TableCell', output, align=None)
 
     def test_separator(self):
-        self._test_token('Separator', '<hr>\n', children=False)
+        self._test_token('Separator', '<hr />\n', children=False)
 
     def test_html_block(self):
         content = output = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'

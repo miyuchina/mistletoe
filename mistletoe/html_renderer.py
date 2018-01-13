@@ -156,7 +156,7 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def render_separator(token):
-        return '<hr>\n'
+        return '<hr />\n'
 
     @staticmethod
     def render_html_block(token):

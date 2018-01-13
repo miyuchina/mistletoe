@@ -460,13 +460,13 @@ class Separator(BlockToken):
     """
     Separator token (a.k.a. horizontal rule.)
     """
-    _acceptable_patterns = frozenset(('---\n', '* * *\n', '***\n', '===\n'))
     def __init__(self, lines):
         self.lines = lines
 
-    @staticmethod
-    def start(line):
-        return line in Separator._acceptable_patterns
+    @classmethod
+    def start(cls, line):
+        chars = set(line.strip().replace(' ', ''))
+        return len(chars) == 1 and chars.pop() in {'-', '_', '*'}
 
     @staticmethod
     def read(lines):
