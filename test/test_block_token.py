@@ -102,6 +102,16 @@ class TestParagraph(TestToken):
         arg = 'some\ncontinuous\nlines\n'
         self._test_match(block_token.Paragraph, lines, arg)
 
+    def test_read(self):
+        lines = ['this\n', '```\n', 'is some\n', '```\n', 'code\n']
+        try:
+            token1, token2, token3 = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch.") from e
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertIsInstance(token2, block_token.CodeFence)
+        self.assertIsInstance(token3, block_token.Paragraph)
+
 
 class TestListItem(TestToken):
     def test_children(self):
