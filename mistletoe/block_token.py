@@ -121,7 +121,9 @@ class Heading(BlockToken):
 
     @staticmethod
     def start(line):
-        return line.startswith('#') and line.find('# ') != -1
+        return (line.startswith('#')
+                and line.find('# ') != -1
+                and len(line.split(' ', 1)[0]) <= 6)
 
     @staticmethod
     def read(line):
