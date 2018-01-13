@@ -97,7 +97,7 @@ class HTMLRenderer(BaseRenderer):
         return '<p>{}</p>\n'.format(self.render_inner(token))
 
     def render_block_code(self, token):
-        template = '<pre>\n<code{attr}>\n{inner}</code>\n</pre>\n'
+        template = '<pre><code{attr}>{inner}</code></pre>\n'
         if token.language:
             attr = ' class="{}"'.format('lang-{}'.format(token.language))
         else:
