@@ -41,14 +41,14 @@ class FileWrapper:
     @staticmethod
     def normalize(lines):
         line_buffer = []
-        code_fence = False
+        code_fence = ''
         for line in lines:
-            if line.startswith('```'):
-                if code_fence:
-                    code_fence = False
-                else:
+            if line.startswith(('```', '~~~')):
+                if not code_fence:
                     line_buffer.append('\n')
-                    code_fence = True
+                    code_fence = line[:3]
+                elif line.startswith(code_fence):
+                    code_fence = ''
             line_buffer.append(line.replace('\t', '    '))
         return line_buffer
 

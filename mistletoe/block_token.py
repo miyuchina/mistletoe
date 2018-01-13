@@ -206,17 +206,24 @@ class CodeFence(BlockToken):
         children (iterator): contains a single span_token.RawText token.
         language (str): language of code block (default to empty).
     """
+    _open_line = ''
     def __init__(self, lines):
         self.language = lines[0].strip()[3:]
         self._children = (span_token.RawText(''.join(lines[1:])),)
 
-    @staticmethod
-    def start(line):
-        return line.startswith('```')
+    @classmethod
+    def start(cls, line):
+        if line.startswith('```'):
+            cls._open_line = '```\n'
+            return True
+        if line.startswith('~~~'):
+            cls._open_line = '~~~\n'
+            return True
+        return False
 
-    @staticmethod
-    def read(lines):
-        return until('```\n', lines)
+    @classmethod
+    def read(cls, lines):
+        return until(cls._open_line, lines)
 
 
 class List(BlockToken):
