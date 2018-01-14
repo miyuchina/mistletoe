@@ -48,10 +48,10 @@ class TestJIRARenderer(TestCase):
         self.assertEqual(expected, actual)
 
     def test_render_strong(self):
-        self.textFormatTest('**{}**', '*{}*')
+        self.textFormatTest('**a{}**', '*a{}*')
 
     def test_render_emphasis(self):
-        self.textFormatTest('*{}*', '_{}_')
+        self.textFormatTest('*a{}*', '_a{}_')
         
     def test_render_inline_code(self):
         self.textFormatTest('`{}`', '{{{{{}}}}}')
