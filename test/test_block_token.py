@@ -258,8 +258,12 @@ class TestDocument(unittest.TestCase):
 
 class TestSeparator(unittest.TestCase):
     def test_match(self):
-        token = next(block_token.tokenize(['---\n']))
-        self.assertIsInstance(token, block_token.Separator)
+        def test_case(line):
+            token = next(block_token.tokenize([line]))
+            self.assertIsInstance(token, block_token.Separator)
+        cases = ['---\n', '* * *\n', '_    _    _\n']
+        for case in cases:
+            test_case(case)
 
 
 class TestContains(unittest.TestCase):
