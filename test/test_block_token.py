@@ -73,6 +73,16 @@ class TestCodeFence(TestToken):
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.CodeFence, lines, arg, language='sh')
 
+    def test_match_fenced_code_with_tilda(self):
+        lines = ['~~~sh\n', 'rm dir\n', 'mkdir test\n', '~~~\n']
+        arg = 'rm dir\nmkdir test\n'
+        self._test_match(block_token.CodeFence, lines, arg, language='sh')
+
+    def test_mixed_code_fence(self):
+        lines = ['~~~markdown\n', '```sh\n', 'some code\n', '```\n', '~~~\n']
+        arg = '```sh\nsome code\n```\n'
+        self._test_match(block_token.CodeFence, lines, arg, language='markdown')
+
     def test_fence_code_lazy_continuation(self):
         lines = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
         arg = 'rm dir\n\nmkdir test\n'
