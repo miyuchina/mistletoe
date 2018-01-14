@@ -32,6 +32,11 @@ class TestATXHeading(TestToken):
         arg = 'heading 3'
         self._test_match(block_token.Heading, lines, arg, level=1)
 
+    def test_not_heading(self):
+        lines = ['####### paragraph\n']
+        arg = '####### paragraph\n'
+        self._test_match(block_token.Paragraph, lines, arg)
+
 
 class TestSetextHeading(TestToken):
     def test_match(self):
