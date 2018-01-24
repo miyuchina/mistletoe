@@ -293,7 +293,7 @@ of reasons I created mistletoe in the first place:
 * I am interested in a Markdown-to-LaTeX transpiler in Python.
 * I want to write more Python.
 * "How hard could it be?"
-* "For fun," says David Beasley.
+* "For fun," says David Beazley.
 
 Here's two things mistune inspired mistletoe to do:
 
