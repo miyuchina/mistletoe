@@ -64,7 +64,7 @@ class CommandLineParser:
 
 class MarkdownToJIRA:
     def __init__(self):
-        self.version = "1.0.1"
+        self.version = "1.0.2"
         self.options = {}
         self.options['output'] = '-'
         
