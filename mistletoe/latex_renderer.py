@@ -124,10 +124,9 @@ class LaTeXRenderer(BaseRenderer):
         template = ('\\begin{{tabular}}{align}\n'
                     '{inner}'
                     '\\end{{tabular}}\n')
-        if token.has_header:
+        if hasattr(token, 'header'):
             head_template = '{inner}\\hline\n'
-            header = next(token.children)
-            head_inner = self.render_table_row(header)
+            head_inner = self.render_table_row(token.header)
             head_rendered = head_template.format(inner=head_inner)
         else: head_rendered = ''
         inner = self.render_inner(token)

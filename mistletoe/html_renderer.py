@@ -97,7 +97,7 @@ class HTMLRenderer(BaseRenderer):
         return '<p>{}</p>\n'.format(self.render_inner(token))
 
     def render_block_code(self, token):
-        template = '<pre>\n<code{attr}>\n{inner}</code>\n</pre>\n'
+        template = '<pre><code{attr}>{inner}</code></pre>\n'
         if token.language:
             attr = ' class="{}"'.format('lang-{}'.format(token.language))
         else:
@@ -125,10 +125,9 @@ class HTMLRenderer(BaseRenderer):
         # The primary difficulty seems to be passing down alignment options to
         # reach individual cells.
         template = '<table>\n{inner}</table>\n'
-        if token.has_header:
+        if hasattr(token, 'header'):
             head_template = '<thead>\n{inner}</thead>\n'
-            header = next(token.children)
-            head_inner = self.render_table_row(header, True)
+            head_inner = self.render_table_row(token.header, is_header=True)
             head_rendered = head_template.format(inner=head_inner)
         else: head_rendered = ''
         body_template = '<tbody>\n{inner}</tbody>\n'
@@ -157,7 +156,7 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def render_separator(token):
-        return '<hr>\n'
+        return '<hr />\n'
 
     @staticmethod
     def render_html_block(token):

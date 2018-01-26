@@ -1,11 +1,4 @@
-SKIPPED_TESTS = {1: "internal tabs are expanded",
-                 2: "internal tabs are expanded",
-                 3: "internal tabs are expanded",
-                 100: "not supporting smart indented code blocks",
-                 101: "not supporting smart indented code blocks",
-                 102: "not supporting smart indented code blocks",
-                 181: "not supporting FootnoteBlock inside other BlockTokens",
-                 }
+SKIPPED_TESTS = {2: 'only four spaces are chopped off from BlockCode', }
 
 
 def run_tests(test_entries, runnable):
@@ -17,7 +10,7 @@ def run_test(test_entry, runnable):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
         output = runnable(test_case)
-        success = compare(test_entry['html'], output)
+        success = compare(test_entry['html'].replace('\t', '    '), output)
         if not success:
             print_test_entry(test_entry, 'html', 'markdown', 'example')
             print('output:', repr(output), '\n')
@@ -50,7 +43,7 @@ def print_test_entry(test_entry, *keywords):
 def main():
     import json
     import mistletoe
-    with open('test/commonmark/commonmark.json', 'r') as fin:
+    with open('commonmark.json', 'r') as fin:
         test_entries = json.load(fin)
     return run_tests(test_entries, mistletoe.markdown)
 

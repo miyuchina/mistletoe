@@ -121,7 +121,9 @@ class Heading(BlockToken):
 
     @staticmethod
     def start(line):
-        return line.startswith('#') and line.find('# ') != -1
+        return (line.startswith('#')
+                and line.find('# ') != -1
+                and len(line.split(' ', 1)[0]) <= 6)
 
     @staticmethod
     def read(line):
@@ -204,17 +206,24 @@ class CodeFence(BlockToken):
         children (iterator): contains a single span_token.RawText token.
         language (str): language of code block (default to empty).
     """
+    _open_line = ''
     def __init__(self, lines):
         self.language = lines[0].strip()[3:]
         self._children = (span_token.RawText(''.join(lines[1:])),)
 
-    @staticmethod
-    def start(line):
-        return line.startswith('```')
+    @classmethod
+    def start(cls, line):
+        if line.startswith('```'):
+            cls._open_line = '```\n'
+            return True
+        if line.startswith('~~~'):
+            cls._open_line = '~~~\n'
+            return True
+        return False
 
-    @staticmethod
-    def read(lines):
-        return until('```\n', lines)
+    @classmethod
+    def read(cls, lines):
+        return until(cls._open_line, lines)
 
 
 class List(BlockToken):
@@ -327,13 +336,14 @@ class Table(BlockToken):
         children (tuple): inner tokens (TableRows).
     """
     def __init__(self, lines):
-        self.has_header = lines[1].find('---') != -1
-        if self.has_header:
+        if lines[1].find('---') != -1:
             self.column_align = [self.parse_align(column)
-                    for column in self.split_delimiter(lines.pop(1))]
+                    for column in self.split_delimiter(lines[1])]
+            self.header = TableRow(lines[0], self.column_align)
+            self._children = (TableRow(line, self.column_align) for line in lines[2:])
         else:
             self.column_align = [None]
-        self._children = (TableRow(line, self.column_align) for line in lines)
+            self._children = (TableRow(line) for line in lines)
 
     @staticmethod
     def split_delimiter(delimiter):
@@ -459,13 +469,13 @@ class Separator(BlockToken):
     """
     Separator token (a.k.a. horizontal rule.)
     """
-    _acceptable_patterns = frozenset(('---\n', '* * *\n', '***\n', '===\n'))
     def __init__(self, lines):
         self.lines = lines
 
-    @staticmethod
-    def start(line):
-        return line in Separator._acceptable_patterns
+    @classmethod
+    def start(cls, line):
+        chars = set(line.strip().replace(' ', ''))
+        return len(chars) == 1 and chars.pop() in {'-', '_', '*'}
 
     @staticmethod
     def read(lines):

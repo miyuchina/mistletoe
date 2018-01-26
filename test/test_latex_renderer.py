@@ -10,10 +10,14 @@ class TestLaTeXRenderer(TestCase):
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
-    def _test_token(self, token_name, output, children=True, **kwargs):
+    def _test_token(self, token_name, output, children=True,
+                    without_attrs=None, **kwargs):
         render_func = self.renderer.render_map[token_name]
-        children = mock.MagicMock() if children else None
+        children = mock.MagicMock(spec=list) if children else None
         mock_token = mock.Mock(children=children, **kwargs)
+        without_attrs = without_attrs or []
+        for attr in without_attrs:
+            delattr(mock_token, attr)
         self.assertEqual(render_func(mock_token), output)
 
     def test_strong(self):
@@ -73,15 +77,16 @@ class TestLaTeXRenderer(TestCase):
     def test_list_item(self):
         self._test_token('ListItem', '\\item inner\n')
 
-    def test_table_with_heading(self):
-        output = '\\begin{tabular}{l c r}\n\n\\hline\ninner\\end{tabular}\n'
-        self._test_token('Table', output,
-                         has_header=True, column_align=[None, 0, 1])
+    def test_table_with_header(self):
+        func_path = 'mistletoe.latex_renderer.LaTeXRenderer.render_table_row'
+        with mock.patch(func_path, autospec=True, return_value='row\n'):
+            output = '\\begin{tabular}{l c r}\nrow\n\\hline\ninner\\end{tabular}\n'
+            self._test_token('Table', output, column_align=[None, 0, 1])
 
-    def test_table_without_heading(self):
+    def test_table_without_header(self):
         output = ('\\begin{tabular}\ninner\\end{tabular}\n')
-        self._test_token('Table', output,
-                         has_header=False, column_align=[None])
+        self._test_token('Table', output, without_attrs=['header'],
+                         column_align=[None])
 
     def test_table_row(self):
         self._test_token('TableRow', '\n')

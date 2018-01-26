@@ -28,7 +28,7 @@ import getopt
 import subprocess
 import shutil
 import mistletoe
-from plugins.jira_renderer import JIRARenderer
+from jira_renderer import JIRARenderer
 
 usageString = '%s <markdownfile>' % os.path.basename(sys.argv[0])
 helpString = """
@@ -64,7 +64,7 @@ class CommandLineParser:
 
 class MarkdownToJIRA:
     def __init__(self):
-        self.version = 1.0
+        self.version = "1.0.1"
         self.options = {}
         self.options['output'] = '-'
         
@@ -77,7 +77,7 @@ class MarkdownToJIRA:
                 sys.exit(1)
 
             elif o in ('-v', '--version'):
-                sys.stdout.write('%s\n' % str(self.version))
+                sys.stdout.write('%s\n' % self.version)
                 sys.exit(0)
 
             elif o in ('-o', '--output'):
