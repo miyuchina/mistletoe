@@ -68,11 +68,11 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('Paragraph', '<p>inner</p>\n')
 
     def test_block_code(self):
-        output = '<pre>\n<code class="lang-sh">\ninner</code>\n</pre>\n'
+        output = '<pre><code class="lang-sh">inner</code></pre>\n'
         self._test_token('BlockCode', output, language='sh')
 
     def test_block_code_no_language(self):
-        output = '<pre>\n<code>\ninner</code>\n</pre>\n'
+        output = '<pre><code>inner</code></pre>\n'
         self._test_token('BlockCode', output, language='')
 
     def test_list(self):
@@ -108,7 +108,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('TableCell', output, align=None)
 
     def test_separator(self):
-        self._test_token('Separator', '<hr>\n', children=False)
+        self._test_token('Separator', '<hr />\n', children=False)
 
     def test_html_block(self):
         content = output = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'

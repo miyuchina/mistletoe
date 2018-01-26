@@ -89,6 +89,14 @@ class TestCLI(TestCase):
         warning_msg = '[warning] unspecified flag: "renderer". Ignoring.'
         mock_print.assert_called_with(warning_msg)
 
+    @patch('__main__.sys.exit')
+    @patch('builtins.print')
+    def test_parse_version_number(self, mock_print, mock_exit):
+        cli._parse(['-v'])
+        version_text = 'mistletoe [version {}]'.format(cli.mistletoe.__version__)
+        mock_print.assert_called_with(version_text)
+        mock_exit.assert_called_with(0)
+
     @patch('importlib.import_module', return_value=Mock(Renderer=sentinel.RendererCls))
     def test_import_success(self, mock_import_module):
         self.assertEqual(sentinel.RendererCls, cli._import('foo.Renderer'))

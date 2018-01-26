@@ -1,6 +1,6 @@
 from unittest import TestCase, mock
 from mistletoe.block_token import Document, Heading
-from plugins.toc_renderer import TOCRenderer
+from contrib.toc_renderer import TOCRenderer
 
 class TestTOCRenderer(TestCase):
     def test_parse_rendered_heading(self):

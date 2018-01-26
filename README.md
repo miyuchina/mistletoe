@@ -272,7 +272,7 @@ same program.
 
 ```python
 from mistletoe import Document
-from plugins.github_wiki import GithubWikiRenderer
+from contrib.github_wiki import GithubWikiRenderer
 
 with open('foo.md', 'r') as fin:
     with GithubWikiRenderer() as renderer:
@@ -291,23 +291,16 @@ motivation really has nothing to do with starting a competition. Here's a list
 of reasons I created mistletoe in the first place:
 
 * I am interested in a Markdown-to-LaTeX transpiler in Python.
-* I want to write more Python. Specifically, I want to try out some bleeding
-  edge features in Python 3.6, which, in turn, makes me love the language even
-  more.
-* I am stuck at home during summer vacation without an internship, which, in
-  turn, makes me realize how much I love banging out software from scratch, all
-  by myself. Also, global warming keeps me indoors.
-* I have long wanted to write a static site generator, *from scratch,
-  by myself.* One key piece of the puzzle is my own Markdown parser. "How hard
-  could it be?" (well, quite a lot harder than I expected.)
-* "For fun," says David Beasley.
+* I want to write more Python.
+* "How hard could it be?"
+* "For fun," says David Beazley.
 
 Here's two things mistune inspired mistletoe to do:
 
 * Markdown parsers should be fast, and other parser implementations in Python
   leaves much to be desired.
 * A parser implementation for Markdown does not need to restrict itself to one
-  flavor (or, "standard") of Markdown.
+  flavor of Markdown.
 
 Here's two things mistletoe does differently from mistune:
 
@@ -315,22 +308,13 @@ Here's two things mistletoe does differently from mistune:
   mistletoe breaks its functionality into modules.
 * mistune, as of now, can only render Markdown into HTML. It is relatively
   trivial to write a new renderer for mistletoe.
-    - This might make mistletoe look a bit closer to [MobileDoc][mobiledoc],
-      in that it gives simple Markdown additional power to deal with a variety
-      of additional input and output demands.
+* Unlike mistune, mistletoe is pushing for some extent of spec compliance with
+  CommonMark.
 
 The implications of these are quite profound, and there's no definite
 this-is-better-than-that answer. Mistune is near perfect if one wants what
 it provides: I have used mistune extensively in the past, and had a great
 experience. If you want more control, however, give mistletoe a try.
-
-Finally, to quote [Raymond Hettinger][hettinger]:
-
-> If you make something successful, you don't have to make something else
-> unsuccessful.
-
-Messing around in Python and rebuilding tools that I personally use and love
-is an immensely more rewarding experience than competition.
 
 Copyright & License
 -------------------
@@ -352,7 +336,5 @@ Copyright & License
 [xkcd]: https://xkcd.com/208/
 [meme]: http://www.greghendershott.com/img/grumpy-regexp-parser.png
 [hendershott]: http://www.greghendershott.com/2013/11/markdown-parser-redesign.html
-[mobiledoc]: https://github.com/bustle/mobiledoc-kit
-[hettinger]: https://www.youtube.com/watch?v=voXVTjwnn-U
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
 [license]: LICENSE

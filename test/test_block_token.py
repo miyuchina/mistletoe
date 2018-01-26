@@ -32,6 +32,11 @@ class TestATXHeading(TestToken):
         arg = 'heading 3'
         self._test_match(block_token.Heading, lines, arg, level=1)
 
+    def test_not_heading(self):
+        lines = ['####### paragraph\n']
+        arg = '####### paragraph\n'
+        self._test_match(block_token.Paragraph, lines, arg)
+
 
 class TestSetextHeading(TestToken):
     def test_match(self):
@@ -73,6 +78,16 @@ class TestCodeFence(TestToken):
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.CodeFence, lines, arg, language='sh')
 
+    def test_match_fenced_code_with_tilda(self):
+        lines = ['~~~sh\n', 'rm dir\n', 'mkdir test\n', '~~~\n']
+        arg = 'rm dir\nmkdir test\n'
+        self._test_match(block_token.CodeFence, lines, arg, language='sh')
+
+    def test_mixed_code_fence(self):
+        lines = ['~~~markdown\n', '```sh\n', 'some code\n', '```\n', '~~~\n']
+        arg = '```sh\nsome code\n```\n'
+        self._test_match(block_token.CodeFence, lines, arg, language='markdown')
+
     def test_fence_code_lazy_continuation(self):
         lines = ['```sh\n', 'rm dir\n', '\n', 'mkdir test\n', '```\n']
         arg = 'rm dir\n\nmkdir test\n'
@@ -101,6 +116,16 @@ class TestParagraph(TestToken):
         lines = ['some\n', 'continuous\n', 'lines\n']
         arg = 'some\ncontinuous\nlines\n'
         self._test_match(block_token.Paragraph, lines, arg)
+
+    def test_read(self):
+        lines = ['this\n', '```\n', 'is some\n', '```\n', 'code\n']
+        try:
+            token1, token2, token3 = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch.") from e
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertIsInstance(token2, block_token.CodeFence)
+        self.assertIsInstance(token3, block_token.Paragraph)
 
 
 class TestListItem(TestToken):
@@ -238,8 +263,12 @@ class TestDocument(unittest.TestCase):
 
 class TestSeparator(unittest.TestCase):
     def test_match(self):
-        token = next(block_token.tokenize(['---\n']))
-        self.assertIsInstance(token, block_token.Separator)
+        def test_case(line):
+            token = next(block_token.tokenize([line]))
+            self.assertIsInstance(token, block_token.Separator)
+        cases = ['---\n', '* * *\n', '_    _    _\n']
+        for case in cases:
+            test_case(case)
 
 
 class TestContains(unittest.TestCase):

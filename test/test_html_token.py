@@ -58,3 +58,7 @@ class TestHTMLToken(TestCase):
         token = next(tokenize_inner(raw))
         content = '<span />'
         self._test_html_token(token, html_token.HTMLSpan, content)
+
+    def test_autolink(self):
+        from mistletoe.span_token import AutoLink
+        self.assertIsInstance(next(tokenize_inner('<autolink>')), AutoLink)

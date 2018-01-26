@@ -102,7 +102,7 @@ class Strong(SpanToken):
     """
     Strong tokens. ("**some text**")
     """
-    pattern = re.compile(r"\*\*(.+?)\*\*(?!\*)|__(.+)__(?!_)")
+    pattern = re.compile(r"\*\*([^\s*].*?)\*\*|\b__([^\s_].*?)__\b")
     def __init__(self, match_obj):
         self._children = tokenize_inner(_first_not_none_group(match_obj))
 
@@ -111,7 +111,7 @@ class Emphasis(SpanToken):
     """
     Emphasis tokens. ("*some text*")
     """
-    pattern = re.compile(r"\*((?:\*\*|[^\*])+?)\*(?!\*)|_((?:__|[^_])+?)_")
+    pattern = re.compile(r"\*([^\s*].*?)\*|\b_([^\s_].*?)_\b")
     def __init__(self, match_obj):
         self._children = tokenize_inner(_first_not_none_group(match_obj))
 
@@ -214,7 +214,7 @@ class EscapeSequence(SpanToken):
     Attributes:
         children (iterator): a single RawText node for alternative text.
     """
-    pattern = re.compile(r"\\([\*\(\)\[\]\~])")
+    pattern = re.compile(r"\\([\*\(\)\[\]\~\#\>\`])")
     def __init__(self, match_obj):
         self._children = (RawText(match_obj.group(1)),)
 
