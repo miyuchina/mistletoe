@@ -19,7 +19,8 @@ class TestASTRenderer(unittest.TestCase):
                       'type': 'Paragraph',
                       'children': [{
                           'type': 'RawText',
-                          'content': 'hello\nworld\n'
+                          'content': 'hello\nworld\n',
+                          'escape': True
                       }]
                  }]}
         self.assertEqual(output, target)
