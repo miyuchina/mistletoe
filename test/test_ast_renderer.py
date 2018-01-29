@@ -42,11 +42,13 @@ class TestASTRenderer(unittest.TestCase):
                           },
                           'children': [{
                               'type': 'RawText',
-                              'content': 'bar'
+                              'content': 'bar',
+                              'escape': True
                           }]
                       }, {
                           'type': 'RawText',
-                          'content': '\n'}
+                          'content': '\n',
+                          'esacpe': True }
                       ]
                  }]}
         output = ast_renderer.get_ast(d)
