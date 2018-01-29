@@ -122,7 +122,7 @@ class InlineCode(SpanToken):
     """
     pattern = re.compile(r"`(.+?)`")
     def __init__(self, match_obj):
-        self._children = (RawText(match_obj.group(1)),)
+        self._children = (RawText(match_obj.group(1), False),)
 
 
 class Strikethrough(SpanToken):
@@ -225,9 +225,16 @@ class RawText(SpanToken):
 
     RawText is the only token that accepts a string for its constructor,
     instead of a match object. Also, all recursions should bottom out here.
+    A second argument, escape has been added to allow representation of non-escapable
+    raw text such as block of codes.
+    
+    Attributes:
+        raw: the string consisting of the raw text
+        escape: a boolean stating whether the text could/should be escaped or not
     """
-    def __init__(self, raw):
+    def __init__(self, raw, escape=True):
         self.content = raw
+        self.escape = escape
 
 
 class FootnoteAnchor(SpanToken):

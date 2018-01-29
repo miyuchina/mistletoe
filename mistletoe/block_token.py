@@ -186,7 +186,7 @@ class Paragraph(BlockToken):
 class BlockCode(BlockToken):
     def __init__(self, lines):
         self.language = ''
-        self._children = (span_token.RawText(''.join(line[4:] for line in lines)),)
+        self._children = (span_token.RawText(''.join(line[4:] for line in lines), False),)
 
     @staticmethod
     def start(line):
@@ -209,7 +209,7 @@ class CodeFence(BlockToken):
     _open_line = ''
     def __init__(self, lines):
         self.language = lines[0].strip()[3:]
-        self._children = (span_token.RawText(''.join(lines[1:])),)
+        self._children = (span_token.RawText(''.join(lines[1:]), False),)
 
     @classmethod
     def start(cls, line):
