@@ -78,7 +78,10 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def render_raw_text(token):
-        return html.escape(token.content)
+        if token.escape:
+            return html.escape(token.content)
+        else:
+            return token.content
 
     @staticmethod
     def render_html_span(token):
