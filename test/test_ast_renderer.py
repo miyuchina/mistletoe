@@ -48,7 +48,7 @@ class TestASTRenderer(unittest.TestCase):
                       }, {
                           'type': 'RawText',
                           'content': '\n',
-                          'esacpe': True }
+                          'escape': True }
                       ]
                  }]}
         output = ast_renderer.get_ast(d)
