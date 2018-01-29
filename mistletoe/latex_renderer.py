@@ -65,7 +65,7 @@ class LaTeXRenderer(BaseRenderer):
 
     @staticmethod
     def render_raw_text(token):
-        if token.escape:
+        if getattr(token, 'escape', True):
             return (token.content.replace('$', '\$').replace('#', '\#')
                                  .replace('{', '\{').replace('}', '\}')
                                  .replace('&', '\&'))
