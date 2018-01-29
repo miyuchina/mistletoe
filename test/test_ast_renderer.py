@@ -13,7 +13,8 @@ class TestASTRenderer(unittest.TestCase):
                       'level': 1,
                       'children': [{
                           'type': 'RawText',
-                          'content': 'heading 1'
+                          'content': 'heading 1',
+                          'escape': True
                       }]
                   }, {
                       'type': 'Paragraph',
