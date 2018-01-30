@@ -162,6 +162,7 @@ class TestList(TestToken):
     def _test_token(self, token, call_count, **kwargs):
         for attr, value in kwargs.items():
             self.assertEqual(getattr(token, attr), value)
+        token.children
         self.assertEqual(self.mock.call_count, call_count)
 
     def test_match_unordered_list(self):
@@ -174,7 +175,7 @@ class TestList(TestToken):
                  '    * nested item 1\n',
                  '    * nested item 2\n',
                  '3) item 3\n']
-        self._test_match(block_token.List, lines, 5, start=1)
+        self._test_match(block_token.List, lines, 3, start=1)
 
     def test_match_nested_lists(self):
         lines = ['- item 1\n',
@@ -183,7 +184,7 @@ class TestList(TestToken):
                  '    * nested item 2\n',
                  '- item 3\n']
         token = next(block_token.tokenize(lines))
-        self._test_token(token, 5)
+        self._test_token(token, 3)
 
     def test_lazy_continuation(self):
         lines = ['* item 1\n',

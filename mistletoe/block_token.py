@@ -236,11 +236,7 @@ class List(BlockToken):
         start (int): first index of ordered list (undefined if unordered).
     """
     def __init__(self, lines):
-        # Every codebase needs a line of code that its author
-        # doesn't understand. This is that line of code.
-        # I need to cast this generator into a list because... why?
-        # Someone please open a pull request and enlighten me...
-        self._children = list(self.build_list(lines))
+        self._children = self.build_list(lines)
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
@@ -286,11 +282,10 @@ class List(BlockToken):
         for line in lines:
             if cls.has_valid_leader(line):
                 yield from clear_buffer()
-            elif line.startswith(' '*4):
+            elif line.startswith('    '):
                 line = line[4:]
-                if cls.has_valid_leader(line):
-                    if not nested:
-                        yield from clear_buffer()
+                if cls.has_valid_leader(line) and not nested:
+                    yield from clear_buffer()
                     nested = True
             line_buffer.append(line)
         yield from clear_buffer()
