@@ -281,7 +281,7 @@ class List(BlockToken):
                 return
             yield List(line_buffer) if nested else ListItem(line_buffer)
             nested = False
-            line_buffer.clear()
+            line_buffer = []
 
         for line in lines:
             if cls.has_valid_leader(line):
@@ -309,21 +309,33 @@ class List(BlockToken):
     def start(cls, line):
         return cls.has_valid_leader(line.strip())
 
+    @classmethod
+    def read(cls, lines):
+        line_buffer = []
+        for line in lines:
+            if line == '\n' and not cls.has_valid_leader(lines.peek() or ''):
+                break
+            line_buffer.append(line)
+        return line_buffer
+
 
 class ListItem(BlockToken):
     """
     List item token. (["- item 1\n", "continued\n"])
-    Boundary between span-level and block-level tokens.
 
     Should only be called by List._build_list().
     """
     def __init__(self, lines):
-        line = ' '.join([line.strip() for line in lines])
-        try:
-            content = line.split(' ', 1)[1].strip()
-        except IndexError:
-            content = ''
-        super().__init__(content, span_token.tokenize_inner)
+        if lines[-1].strip() == '':
+            lines[0] = lines[0].split(' ', 1)[1]
+            super().__init__(lines, tokenize)
+        else:
+            line = ' '.join([line.strip() for line in lines])
+            try:
+                content = line.split(' ', 1)[1].strip()
+            except IndexError:
+                content = ''
+            super().__init__(content, span_token.tokenize_inner)
 
 
 class Table(BlockToken):

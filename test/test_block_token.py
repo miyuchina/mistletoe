@@ -145,6 +145,13 @@ class TestListItem(TestToken):
         token = block_token.ListItem(['-   \n'])
         self.assertEqual(list(token.children), [])
 
+    def test_item_with_paragraph(self):
+        token = block_token.ListItem(['- foobar\n', 'baz\n', '\n'])
+        child = token.children[0]
+        self.assertIsInstance(child, block_token.Paragraph)
+        child.children
+        self.mock.assert_called_with('foobar\nbaz\n')
+
 
 class TestList(TestToken):
     def setUp(self):
