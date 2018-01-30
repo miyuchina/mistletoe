@@ -240,15 +240,15 @@ class List(BlockToken):
         # doesn't understand. This is that line of code.
         # I need to cast this generator into a list because... why?
         # Someone please open a pull request and enlighten me...
-        self._children = list(List.build_list(lines))
+        self._children = list(self.build_list(lines))
         leader = lines[0].split(' ', 1)[0]
         if leader[:-1].isdigit():
             self.start = int(leader[:-1])
         else:
             self.start = None
 
-    @staticmethod
-    def build_list(lines):
+    @classmethod
+    def build_list(cls, lines):
         """
         Constructor helper; builds a list from lines.
 
@@ -284,19 +284,19 @@ class List(BlockToken):
             line_buffer.clear()
 
         for line in lines:
-            if List.has_valid_leader(line):
+            if cls.has_valid_leader(line):
                 yield from clear_buffer()
             elif line.startswith(' '*4):
                 line = line[4:]
-                if List.has_valid_leader(line):
+                if cls.has_valid_leader(line):
                     if not nested:
                         yield from clear_buffer()
                     nested = True
             line_buffer.append(line)
         yield from clear_buffer()
 
-    @staticmethod
-    def has_valid_leader(line):
+    @classmethod
+    def has_valid_leader(cls, line):
         """
         Helper function; mainly because _build_list is gross enough.
 
@@ -305,9 +305,9 @@ class List(BlockToken):
         return (line.startswith(('+ ', '- ', '* '))         # unordered
                 or (line.split(' ', 1)[0][:-1].isdigit()))  # ordered
 
-    @staticmethod
-    def start(line):
-        return List.has_valid_leader(line.strip())
+    @classmethod
+    def start(cls, line):
+        return cls.has_valid_leader(line.strip())
 
 
 class ListItem(BlockToken):
