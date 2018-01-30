@@ -13,13 +13,15 @@ class TestASTRenderer(unittest.TestCase):
                       'level': 1,
                       'children': [{
                           'type': 'RawText',
-                          'content': 'heading 1'
+                          'content': 'heading 1',
+                          'escape': True
                       }]
                   }, {
                       'type': 'Paragraph',
                       'children': [{
                           'type': 'RawText',
-                          'content': 'hello\nworld\n'
+                          'content': 'hello\nworld\n',
+                          'escape': True
                       }]
                  }]}
         self.assertEqual(output, target)
@@ -41,11 +43,13 @@ class TestASTRenderer(unittest.TestCase):
                           },
                           'children': [{
                               'type': 'RawText',
-                              'content': 'bar'
+                              'content': 'bar',
+                              'escape': True
                           }]
                       }, {
                           'type': 'RawText',
-                          'content': '\n'}
+                          'content': '\n',
+                          'escape': True }
                       ]
                  }]}
         output = ast_renderer.get_ast(d)
