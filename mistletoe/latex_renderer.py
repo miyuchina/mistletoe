@@ -63,11 +63,10 @@ class LaTeXRenderer(BaseRenderer):
     def render_escape_sequence(self, token):
         return self.render_inner(token)
 
-    @staticmethod
-    def render_raw_text(token):
+    def render_raw_text(self, token, escape=True):
         return (token.content.replace('$', '\$').replace('#', '\#')
                              .replace('{', '\{').replace('}', '\}')
-                             .replace('&', '\&'))
+                             .replace('&', '\&')) if escape else token.content
 
     def render_heading(self, token):
         inner = self.render_inner(token)
@@ -90,7 +89,7 @@ class LaTeXRenderer(BaseRenderer):
         template = ('\n\\begin{{lstlisting}}[language={}]\n'
                     '{}'
                     '\\end{{lstlisting}}\n')
-        inner = self.render_inner(token)
+        inner = self.render_raw_text(token.children[0], False)
         return template.format(token.language, inner)
 
     def render_list(self, token):
