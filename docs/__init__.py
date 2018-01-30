@@ -1,6 +1,7 @@
-from mistletoe import markdown, HTMLRenderer
+from mistletoe import Document, HTMLRenderer
 
-INCLUDE = ['README.md', 'CONTRIBUTING.md',]
+INCLUDE = {'README.md': 'index.html',
+           'CONTRIBUTING.md': 'contributing.html'}
 
 METADATA = """
 <head>
@@ -11,20 +12,38 @@ METADATA = """
   <meta name="author" content="Mi Yu" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" type="text/css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
 </head>
 """
 
+
 class DocRenderer(HTMLRenderer):
+    def render_link(self, token):
+        return super().render_link(self._replace_link(token))
+
     def render_document(self, token):
         pattern = "<html>{}<body>{}</body></html>"
-        inner = super().render_document(token)
-        return pattern.format(METADATA, inner)
+        self.footnotes.update(token.footnotes)
+        for filename, new_link in getattr(self, 'files', {}).items():
+            for k, v in self.footnotes.items():
+                if v == filename:
+                    self.footnotes[k] = new_link
+        return pattern.format(METADATA, self.render_inner(token))
+
+    def _replace_link(self, token):
+        token.target = getattr(self, 'files', {}).get(token.target, token.target)
+        return token
+
 
 def build(files=None):
     files = files or INCLUDE
     for f in files:
         with open(f, 'r') as fin:
-            rendered_file = 'docs/' + f.split('.')[0] + '.html'
+            rendered_file = 'docs/' + files[f]
             with open(rendered_file, 'w+') as fout:
-                print(markdown(fin, DocRenderer), file=fout)
+                with DocRenderer() as renderer:
+                    renderer.files = files
+                    print(renderer.render(Document(fin)), file=fout)
 

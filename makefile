@@ -1,6 +1,6 @@
 PYTHON_EXEC=python3
 
-.PHONY: run test coverage integration benchmark
+.PHONY: run test coverage integration benchmark docs
 
 run:
 	${PYTHON_EXEC} -m mistletoe
@@ -19,3 +19,7 @@ integration:
 
 benchmark:
 	${PYTHON_EXEC} test/benchmark.py
+
+docs:
+	${PYTHON_EXEC} -m docs
+
