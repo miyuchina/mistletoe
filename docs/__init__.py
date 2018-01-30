@@ -1,11 +1,11 @@
-from mistletoe import Document, HTMLRenderer
+from mistletoe import Document, HTMLRenderer, __version__
 
 INCLUDE = {'README.md': 'index.html',
            'CONTRIBUTING.md': 'contributing.html'}
 
 METADATA = """
 <head>
-  <title>mistletoe</title>
+  <title>mistletoe{}</title>
   <meta charset="UTF-8" />
   <meta name="description" content="A fast, extensible Markdown parser in Python." />
   <meta name="keywords" content="Markdown,Python,LaTeX,HTML" />
@@ -23,14 +23,15 @@ class DocRenderer(HTMLRenderer):
     def render_link(self, token):
         return super().render_link(self._replace_link(token))
 
-    def render_document(self, token):
+    def render_document(self, token, name="README.md"):
         pattern = "<html>{}<body>{}</body></html>"
         self.footnotes.update(token.footnotes)
         for filename, new_link in getattr(self, 'files', {}).items():
             for k, v in self.footnotes.items():
                 if v == filename:
                     self.footnotes[k] = new_link
-        return pattern.format(METADATA, self.render_inner(token))
+        subtitle = ' | {}'.format('version ' + __version__ if name == 'README.md' else name.split('.')[0].lower())
+        return pattern.format(METADATA.format(subtitle), self.render_inner(token))
 
     def _replace_link(self, token):
         token.target = getattr(self, 'files', {}).get(token.target, token.target)
@@ -45,5 +46,5 @@ def build(files=None):
             with open(rendered_file, 'w+') as fout:
                 with DocRenderer() as renderer:
                     renderer.files = files
-                    print(renderer.render(Document(fin)), file=fout)
+                    print(renderer.render_document(Document(fin), f), file=fout)
 
