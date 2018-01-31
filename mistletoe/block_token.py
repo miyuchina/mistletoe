@@ -214,16 +214,16 @@ class CodeFence(BlockToken):
     @classmethod
     def start(cls, line):
         if line.startswith('```'):
-            cls._open_line = '```\n'
+            cls._open_line = '```'
             return True
         if line.startswith('~~~'):
-            cls._open_line = '~~~\n'
+            cls._open_line = '~~~'
             return True
         return False
 
     @classmethod
     def read(cls, lines):
-        return until(cls._open_line, lines)
+        return until(cls._open_line, lines, func=str.startswith)
 
 
 class List(BlockToken):
@@ -489,10 +489,10 @@ class Separator(BlockToken):
         return []
 
 
-def until(stop_line, lines):
+def until(stop_line, lines, func=None):
     line_buffer = []
     for line in lines:
-        if line == stop_line:
+        if (line == stop_line if func is None else func(line, stop_line)):
             break
         line_buffer.append(line)
     return line_buffer
