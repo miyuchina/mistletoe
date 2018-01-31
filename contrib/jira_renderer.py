@@ -109,7 +109,7 @@ class JIRARenderer(BaseRenderer):
         return token.content
 
     def render_heading(self, token):
-        template = '\nh{level}. {inner}\n'
+        template = 'h{level}. {inner}\n'
         inner = self.render_inner(token)
         return template.format(level=token.level, inner=inner)
 
