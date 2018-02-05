@@ -2,6 +2,7 @@
 Built-in block-level token classes.
 """
 
+import re
 from types import GeneratorType
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
@@ -214,16 +215,16 @@ class CodeFence(BlockToken):
     @classmethod
     def start(cls, line):
         if line.startswith('```'):
-            cls._open_line = '```\n'
+            cls._open_line = '```'
             return True
         if line.startswith('~~~'):
-            cls._open_line = '~~~\n'
+            cls._open_line = '~~~'
             return True
         return False
 
     @classmethod
     def read(cls, lines):
-        return until(cls._open_line, lines)
+        return until(cls._open_line, lines, func=str.startswith)
 
 
 class List(BlockToken):
@@ -343,7 +344,7 @@ class Table(BlockToken):
         children (tuple): inner tokens (TableRows).
     """
     def __init__(self, lines):
-        if lines[1].find('---') != -1:
+        if '---' in lines[1]:
             self.column_align = [self.parse_align(column)
                     for column in self.split_delimiter(lines[1])]
             self.header = TableRow(lines[0], self.column_align)
@@ -363,7 +364,7 @@ class Table(BlockToken):
         Returns:
             a list of align options (None, 0 or 1).
         """
-        return (column.strip() for column in delimiter[1:-2].split('|'))
+        return re.findall(r':?---+:?', delimiter)
 
     @staticmethod
     def parse_align(column):
@@ -375,25 +376,19 @@ class Table(BlockToken):
             0    if align = center;
             1    if align = right.
         """
-        if column[:4] == ':---' and column[-4:] == '---:':
-            return 0
-        if column[-4:] == '---:':
-            return 1
-        return None
+        return (0 if column[0] == ':' else 1) if column[-1] == ':' else None
 
     @staticmethod
     def start(line):
-        return line.startswith('|') and line.endswith('|\n')
+        return '|' in line
 
     @staticmethod
     def read(lines):
         line_buffer = []
-        for line in lines:
-            if (not (line.startswith('|') and line.endswith('|\n'))
-                    or line == '\n'):
-                break
-            else:
-                line_buffer.append(line)
+        while lines.peek() is not None and '|' in lines.peek():
+            line_buffer.append(next(lines))
+        if len(line_buffer) < 1 or '---' not in line_buffer[0]:
+            raise tokenizer.MismatchException()
         return line_buffer
 
 
@@ -489,10 +484,10 @@ class Separator(BlockToken):
         return []
 
 
-def until(stop_line, lines):
+def until(stop_line, lines, func=None):
     line_buffer = []
     for line in lines:
-        if line == stop_line:
+        if (line == stop_line if func is None else func(line, stop_line)):
             break
         line_buffer.append(line)
     return line_buffer

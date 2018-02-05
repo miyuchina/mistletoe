@@ -222,6 +222,25 @@ class TestTable(unittest.TestCase):
             calls = [call(line, [None, None, None]) for line in lines[:1]+lines[2:]]
             mock.assert_has_calls(calls)
 
+    def test_easy_table(self):
+        lines = ['header 1 | header 2\n',
+                 '    ---: | :---\n',
+                 '  cell 1 | cell 2\n']
+        with patch('mistletoe.block_token.TableRow') as mock:
+            token, = block_token.tokenize(lines)
+            self.assertIsInstance(token, block_token.Table)
+            self.assertTrue(hasattr(token, 'header'))
+            self.assertEqual(token.column_align, [1, None])
+            token.children
+            calls = [call(line, [1, None]) for line in lines[:1] + lines[2:]]
+            mock.assert_has_calls(calls)
+
+    def test_not_easy_table(self):
+        lines = ['not header 1 | not header 2\n',
+                 'foo | bar\n']
+        token, = block_token.tokenize(lines)
+        self.assertIsInstance(token, block_token.Paragraph)
+
 
 class TestTableRow(unittest.TestCase):
     def test_match(self):
