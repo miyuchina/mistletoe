@@ -400,7 +400,7 @@ class TableRow(BlockToken):
     """
     def __init__(self, line, row_align=None):
         self.row_align = row_align or [None]
-        cells = line[1:-2].split('|')
+        cells = filter(None, line.strip().split('|'))
         self._children = (TableCell(cell.strip(), align)
                           for cell, align in zip_longest(cells, self.row_align))
 

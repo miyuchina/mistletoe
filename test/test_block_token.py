@@ -251,6 +251,14 @@ class TestTableRow(unittest.TestCase):
             token.children
             mock.assert_has_calls([call('cell 1', None), call('cell 2', None)])
 
+    def test_easy_table_row(self):
+        with patch('mistletoe.block_token.TableCell') as mock:
+            line = 'cell 1 | cell 2\n'
+            token = block_token.TableRow(line)
+            self.assertEqual(token.row_align, [None])
+            token.children
+            mock.assert_has_calls([call('cell 1', None), call('cell 2', None)])
+
 
 class TestTableCell(TestToken):
     def test_match(self):
