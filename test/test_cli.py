@@ -4,17 +4,29 @@ from mistletoe import cli
 
 
 class TestCLI(TestCase):
-    @patch('mistletoe.cli._parse', return_value=([], sentinel.RendererCls))
+    @patch('mistletoe.cli.parse', return_value=Mock(filenames=[], renderer=sentinel.Renderer))
     @patch('mistletoe.cli.interactive')
     def test_main_to_interactive(self, mock_interactive, mock_parse):
         cli.main(None)
-        mock_interactive.assert_called_with(sentinel.RendererCls)
+        mock_interactive.assert_called_with(sentinel.Renderer)
 
-    @patch('mistletoe.cli._parse', return_value=(['foo', 'bar'], sentinel.RendererCls))
+    @patch('mistletoe.cli.parse', return_value=Mock(filenames=['foo.md'], renderer=sentinel.Renderer))
     @patch('mistletoe.cli.convert')
     def test_main_to_convert(self, mock_convert, mock_parse):
         cli.main(None)
-        mock_convert.assert_called_with(['foo', 'bar'], sentinel.RendererCls)
+        mock_convert.assert_called_with(['foo.md'], sentinel.Renderer)
+
+
+    @patch('importlib.import_module', return_value=Mock(Renderer=sentinel.RendererCls))
+    def test_parse_renderer(self, mock_import_module):
+        namespace = cli.parse(['-r', 'foo.Renderer'])
+        mock_import_module.assert_called_with('foo')
+        self.assertEqual(namespace.renderer, sentinel.RendererCls)
+
+    def test_parse_filenames(self):
+        filenames = ['foo.md', 'bar.md']
+        namespace = cli.parse(filenames)
+        self.assertEqual(namespace.filenames, filenames)
 
     @patch('mistletoe.cli.convert_file')
     def test_convert(self, mock_convert_file):
@@ -70,33 +82,6 @@ class TestCLI(TestCase):
         calls = [call('\nrendered text', end=''), call('\nExiting.')]
         mock_print.assert_has_calls(calls)
 
-    @patch('mistletoe.cli._import', return_value=sentinel.RendererCls)
-    def test_parse_to_interactive(self, mock_import):
-        filenames, renderer = cli._parse(['-r', 'foo.Renderer'])
-        self.assertEqual([], filenames)
-        self.assertEqual(sentinel.RendererCls, renderer)
-
-    @patch('mistletoe.cli._import', return_value=sentinel.RendererCls)
-    def test_parse_to_convert(self, mock_import):
-        filenames, renderer = cli._parse(['bar', '-r', 'foo.Renderer'])
-        self.assertEqual(['bar'], filenames)
-        self.assertEqual(sentinel.RendererCls, renderer)
-
-    @patch('mistletoe.cli._import', return_value=sentinel.RendererCls)
-    @patch('builtins.print')
-    def test_parse_unspecified_flag(self, mock_print, mock_import):
-        filenames, renderer = cli._parse(['-r'])
-        warning_msg = '[warning] unspecified flag: "renderer". Ignoring.'
-        mock_print.assert_called_with(warning_msg)
-
-    @patch('__main__.sys.exit')
-    @patch('builtins.print')
-    def test_parse_version_number(self, mock_print, mock_exit):
-        cli._parse(['-v'])
-        version_text = 'mistletoe [version {}]'.format(cli.mistletoe.__version__)
-        mock_print.assert_called_with(version_text)
-        mock_exit.assert_called_with(0)
-
     @patch('importlib.import_module', return_value=Mock(Renderer=sentinel.RendererCls))
     def test_import_success(self, mock_import_module):
         self.assertEqual(sentinel.RendererCls, cli._import('foo.Renderer'))
@@ -141,3 +126,4 @@ class TestCLI(TestCase):
                 'Using renderer: Renderer']
         calls = [call(msg) for msg in msgs]
         mock_print.assert_has_calls(calls)
+

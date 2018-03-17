@@ -1,13 +1,17 @@
 import sys
 import mistletoe
+from argparse import ArgumentParser
+
+
+version_str = 'mistletoe [version {}]'.format(mistletoe.__version__)
 
 
 def main(args):
-    filenames, renderer = _parse(args)
-    if filenames:
-        convert(filenames, renderer)
+    namespace = parse(args)
+    if namespace.filenames:
+        convert(namespace.filenames, namespace.renderer)
     else:
-        interactive(renderer)
+        interactive(namespace.renderer)
 
 
 def convert(filenames, renderer):
@@ -49,24 +53,15 @@ def interactive(renderer):
             break
 
 
-def _parse(args):
-    flag = None
-    filenames = []
-    renderer = mistletoe.HTMLRenderer
-    for arg in args:
-        if flag == 'renderer':
-            renderer = _import(arg)
-            flag = None
-        elif arg in ('-r', '--renderer'):
-            flag = 'renderer'
-        elif arg in ('-v', '--version'):
-            print('mistletoe [version {}]'.format(mistletoe.__version__))
-            sys.exit(0)
-        else:
-            filenames.append(arg)
-    if flag:
-        print('[warning] unspecified flag: "{}". Ignoring.'.format(flag))
-    return filenames, renderer
+def parse(args):
+    parser = ArgumentParser()
+    parser.add_argument('-r', '--renderer', type=_import,
+                        default='mistletoe.HTMLRenderer',
+                        help='specify an importable renderer class')
+    parser.add_argument('-v', '--version', action='version', version=version_str)
+    parser.add_argument('filenames', nargs='*',
+                        help='specify an optional list of files to convert')
+    return parser.parse_args(args)
 
 
 def _import(arg):
@@ -92,7 +87,8 @@ def _import_readline():
 
 
 def _print_heading(renderer):
-    print('mistletoe [version {}] (interactive)'.format(mistletoe.__version__))
+    print('{} (interactive)'.format(version_str))
     print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
     if renderer is not mistletoe.HTMLRenderer:
         print('Using renderer: {}'.format(renderer.__name__))
+
