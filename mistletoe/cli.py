@@ -66,9 +66,8 @@ def parse(args):
 
 def _import(arg):
     import importlib
-    *path, cls_name = arg.split('.')
-    path = '.'.join(path)
     try:
+        cls_name, path = map(lambda s: s[::-1], arg[::-1].split('.', 1))
         module = importlib.import_module(path)
         return getattr(module, cls_name)
     except ValueError:
