@@ -89,20 +89,20 @@ class TestCLI(TestCase):
     @patch('sys.exit')
     def test_import_incomplete_path(self, mock_exit):
         cli._import('foo')
-        error_msg = 'Please supply full path to your custom renderer.'
+        error_msg = '[error] please supply full path to your custom renderer.'
         mock_exit.assert_called_with(error_msg)
 
     @patch('importlib.import_module', side_effect=ImportError)
     @patch('sys.exit')
     def test_import_module_error(self, mock_exit, mock_import_module):
         cli._import('foo.Renderer')
-        mock_exit.assert_called_with('Cannot import module "foo".')
+        mock_exit.assert_called_with('[error] cannot import module "foo".')
 
     @patch('importlib.import_module', return_value=Mock(spec=[]))
     @patch('sys.exit')
     def test_import_class_error(self, mock_exit, mock_import_module):
         cli._import('foo.Renderer')
-        error_msg = 'Cannot find renderer "Renderer" from module "foo".'
+        error_msg = '[error] cannot find renderer "Renderer" from module "foo".'
         mock_exit.assert_called_with(error_msg)
 
     @patch('builtins.__import__')

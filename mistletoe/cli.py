@@ -71,11 +71,11 @@ def _import(arg):
         module = importlib.import_module(path)
         return getattr(module, cls_name)
     except ValueError:
-        sys.exit('Please supply full path to your custom renderer.')
+        sys.exit('[error] please supply full path to your custom renderer.')
     except ImportError:
-        sys.exit('Cannot import module "{}".'.format(path))
+        sys.exit('[error] cannot import module "{}".'.format(path))
     except AttributeError:
-        sys.exit('Cannot find renderer "{}" from module "{}".'.format(cls_name, path))
+        sys.exit('[error] cannot find renderer "{}" from module "{}".'.format(cls_name, path))
 
 
 def _import_readline():
