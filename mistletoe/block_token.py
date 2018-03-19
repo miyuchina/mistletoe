@@ -99,6 +99,8 @@ class Document(BlockToken):
     Document token.
     """
     def __init__(self, lines):
+        if isinstance(lines, str):
+            lines = lines.splitlines(keepends=True)
         self.footnotes = {}
         # Document tokens have immediate access to first-level block tokens.
         # Useful for footnotes, etc.

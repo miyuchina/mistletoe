@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, call
-import mistletoe.block_token as block_token
+from mistletoe import block_token
 
 
 class TestToken(unittest.TestCase):
@@ -294,6 +294,12 @@ class TestDocument(unittest.TestCase):
         document = block_token.Document(lines)
         self.assertEqual(document.footnotes['key 1'], 'value 1')
         self.assertEqual(document.footnotes['key 2'], 'value 2')
+
+    def test_auto_splitlines(self):
+        lines = "some\ncontinual\nlines\n"
+        document = block_token.Document(lines)
+        self.assertIsInstance(document.children[0], block_token.Paragraph)
+        self.assertEqual(len(document.children), 1)
 
 
 class TestSeparator(unittest.TestCase):
