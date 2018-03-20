@@ -25,7 +25,7 @@ def tokenize_inner(content):
 
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
-    return tokenizer.tokenize(content, _token_types, RawText)
+    return tokenizer.tokenize(content, _token_types)
 
 
 def add_token(token_cls, position=1):
@@ -244,4 +244,4 @@ Tokens to be included in the parsing process, in the order specified.
 """
 _token_types = [EscapeSequence, Emphasis, Strong, InlineCode,
                 Strikethrough, Image, FootnoteImage, Link,
-                FootnoteLink, AutoLink]
+                FootnoteLink, AutoLink, RawText]

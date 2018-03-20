@@ -1,12 +1,15 @@
 import unittest
 from unittest.mock import patch, call
 from mistletoe import block_token
+from mistletoe import span_token
 
 
 class TestToken(unittest.TestCase):
     def setUp(self):
+        self.addCleanup(lambda: span_token._token_types.__setitem__(-1, span_token.RawText))
         patcher = patch('mistletoe.span_token.RawText')
         self.mock = patcher.start()
+        span_token._token_types[-1] = self.mock
         self.addCleanup(patcher.stop)
 
     def _test_match(self, token_cls, lines, arg, **kwargs):
@@ -45,19 +48,18 @@ class TestSetextHeading(TestToken):
         self._test_match(block_token.SetextHeading, lines, arg, level=2)
 
     def test_next(self):
-        with patch('mistletoe.span_token.RawText') as mock:
-            lines = ['some\n', 'heading\n', '---\n', '\n', 'foobar\n']
-            tokens = block_token.tokenize(lines)
+        lines = ['some\n', 'heading\n', '---\n', '\n', 'foobar\n']
+        tokens = block_token.tokenize(lines)
+        token = next(tokens)
+        self.assertIsInstance(token, block_token.SetextHeading)
+        token.children
+        self.mock.assert_called_with('some\nheading\n')
+        token = next(tokens)
+        self.assertIsInstance(token, block_token.Paragraph)
+        token.children
+        self.mock.assert_called_with('foobar\n')
+        with self.assertRaises(StopIteration) as e:
             token = next(tokens)
-            self.assertIsInstance(token, block_token.SetextHeading)
-            token.children
-            mock.assert_called_with('some\nheading\n')
-            token = next(tokens)
-            self.assertIsInstance(token, block_token.Paragraph)
-            token.children
-            mock.assert_called_with('foobar\n')
-            with self.assertRaises(StopIteration) as e:
-                token = next(tokens)
 
 
 class TestQuote(unittest.TestCase):

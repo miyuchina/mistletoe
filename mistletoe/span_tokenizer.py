@@ -3,7 +3,7 @@ Inline tokenizer for mistletoe.
 """
 
 
-def tokenize(content, token_types, fallback_token):
+def tokenize(content, token_types):
     """
     Searches for token_types in content, and applies fallback_token
     to texts in between.
@@ -16,6 +16,7 @@ def tokenize(content, token_types, fallback_token):
     Yields:
         span-level token instances.
     """
+    *token_types, fallback_token = token_types
     start = 0
     while start != len(content):
         index, match_obj, token_type = _find_nearest_token(content, token_types, start)

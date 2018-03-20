@@ -1,12 +1,15 @@
 import unittest
 from unittest.mock import patch
-import mistletoe.span_token as span_token
+from mistletoe import span_token
+from functools import wraps
 
 
 class TestBranchToken(unittest.TestCase):
     def setUp(self):
+        self.addCleanup(lambda: span_token._token_types.__setitem__(-1, span_token.RawText))
         patcher = patch('mistletoe.span_token.RawText')
         self.mock = patcher.start()
+        span_token._token_types[-1] = self.mock
         self.addCleanup(patcher.stop)
 
     def _test_parse(self, token_cls, raw, arg, **kwargs):
@@ -123,3 +126,4 @@ class TestContains(unittest.TestCase):
         self.assertTrue('text' in token)
         self.assertTrue('emphasis' in token)
         self.assertFalse('foo' in token)
+
