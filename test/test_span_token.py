@@ -30,16 +30,25 @@ class TestStrong(TestBranchToken):
         self._test_parse(span_token.Strong, '**some text**', 'some text')
         self._test_parse(span_token.Strong, '__some text__', 'some text')
 
+    def test_multiline(self):
+        self._test_parse(span_token.Strong, '**some\ntext**', 'some\ntext')
+
 
 class TestEmphasis(TestBranchToken):
     def test_parse(self):
         self._test_parse(span_token.Emphasis, '*some text*', 'some text')
         self._test_parse(span_token.Emphasis, '_some text_', 'some text')
 
+    def test_multiline(self):
+        self._test_parse(span_token.Emphasis, '*some\ntext*', 'some\ntext')
+
 
 class TestInlineCode(TestBranchToken):
     def test_parse(self):
         self._test_parse(span_token.InlineCode, '`some text`', 'some text')
+
+    def test_multiline(self):
+        self._test_parse(span_token.InlineCode, '`some\ntext`', 'some\ntext')
 
 
 class TestStrikethrough(TestBranchToken):
@@ -63,6 +72,9 @@ class TestLink(TestBranchToken):
         child = next(iter(token.children))
         self._test_token(child, 'alt', src='src')
 
+    def test_multiline(self):
+        self._test_parse(span_token.Link, '[name]\n(target)', 'name', target='target')
+
 
 class TestFootnoteLink(TestBranchToken):
     def test_parse_with_key(self):
@@ -82,6 +94,11 @@ class TestFootnoteLink(TestBranchToken):
             mock.assert_called_with('alt')
             next(tokens)
             self.mock.assert_called_with(' foo')
+
+    def test_multiline(self):
+        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
+            self._test_parse(span_token.FootnoteLink, '[alt]\n[key]', 'alt')
+            mock.assert_called_with('key')
 
 
 class TestAutoLink(TestBranchToken):
