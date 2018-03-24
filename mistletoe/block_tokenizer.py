@@ -72,8 +72,8 @@ def tokenize(iterable, token_types, root=None):
             try:
                 if token_type.start(line):
                     token = token_type([line] + token_type.read(lines))
-                    if root and token.__class__.__name__ == 'FootnoteBlock':
-                        store_footnotes(root, token)
+                    if root and hasattr(token, 'store_footnotes'):
+                        token.store_footnotes(root)
                     else:
                         yield token
                     break
@@ -81,9 +81,4 @@ def tokenize(iterable, token_types, root=None):
                 if e.lines is not None:
                     yield token_types[-1]([line] + e.lines)
                     break
-
-
-def store_footnotes(root_node, footnote_block):
-    for entry in footnote_block.children:
-        root_node.footnotes[entry.key] = entry.value
 

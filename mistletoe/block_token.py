@@ -446,6 +446,10 @@ class FootnoteBlock(BlockToken):
             line_buffer.append(next(lines))
         return line_buffer
 
+    def store_footnotes(self, root):
+        for entry in self.children:
+            root.footnotes[entry.key] = entry.value
+
 
 class FootnoteEntry(BlockToken):
     """
