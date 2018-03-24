@@ -159,12 +159,7 @@ class Quote(BlockToken):
     Quote token. (["> # heading\n", "> paragraph\n"])
     """
     def __init__(self, lines):
-        content = []
-        for line in lines:
-            if line.startswith('> '):
-                content.append(line[2:])
-            else:  # lazy continuation
-                content.append(line)
+        content = [line[2:] if line.startswith('> ') else line for line in lines]
         super().__init__(content, tokenize)
 
     @staticmethod
