@@ -49,7 +49,7 @@ class FileWrapper:
                     code_fence = line[:3]
                 elif line.startswith(code_fence):
                     code_fence = ''
-            line_buffer.append(line.replace('\t', '    '))
+            line_buffer.append(line.replace('\t', '    ').replace('\r\n', '\n'))
         return line_buffer
 
 
