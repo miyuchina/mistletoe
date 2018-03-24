@@ -187,10 +187,7 @@ class FootnoteLink(SpanToken):
     pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\](?:\s*?\[(.+?)\])?", re.DOTALL)
     def __init__(self, match_obj):
         super().__init__(match_obj)
-        if match_obj.group(2) is None:
-            self.target = FootnoteAnchor(match_obj.group(1))
-        else:
-            self.target = FootnoteAnchor(match_obj.group(2))
+        self.target = FootnoteAnchor(match_obj.group(2) or match_obj.group(1))
 
 
 class AutoLink(SpanToken):
