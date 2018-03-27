@@ -3,14 +3,17 @@ Built-in block-level token classes.
 """
 
 import re
+import sys
 from types import GeneratorType
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
 import mistletoe.span_token as span_token
 
-
-__all__ = ['Heading', 'Quote', 'BlockCode', 'Separator', 'List', 'Table',
-           'FootnoteBlock', 'Paragraph']
+"""
+Tokens to be included in the parsing process, in the order specified.
+"""
+__all__ = ['Heading', 'Quote', 'CodeFence', 'BlockCode', 'Separator',
+           'List', 'Table', 'FootnoteBlock', 'SetextHeading', 'Paragraph']
 
 
 def tokenize(lines, root=None):
@@ -32,7 +35,7 @@ def tokenize(lines, root=None):
 def add_token(token_cls, position=0):
     """
     Allows external manipulation of the parsing process.
-    This function is called in BaseRenderer.__enter__.
+    This function is usually called in BaseRenderer.__enter__.
 
     Arguments:
         token_cls (SpanToken): token to be included in the parsing process.
@@ -43,12 +46,20 @@ def add_token(token_cls, position=0):
 def remove_token(token_cls):
     """
     Allows external manipulation of the parsing process.
-    This function is called in BaseRenderer.__exit__.
+    This function is usually called in BaseRenderer.__exit__.
 
     Arguments:
         token_cls (SpanToken): token to be removed from the parsing process.
     """
     _token_types.remove(token_cls)
+
+
+def reset_tokens():
+    """
+    Returns a list of tokens with the original tokens.
+    """
+    global _token_types
+    _token_types = [globals()[cls_name] for cls_name in __all__]
 
 
 class BlockToken(object):
@@ -494,8 +505,6 @@ def until(stop_line, lines, func=None):
     return line_buffer
 
 
-"""
-Tokens to be included in the parsing process, in the order specified.
-"""
-_token_types = [Heading, Quote, CodeFence, BlockCode, Separator, List,
-                Table, FootnoteBlock, SetextHeading, Paragraph]
+_token_types = []
+reset_tokens()
+

@@ -5,6 +5,7 @@ Base class for renderers.
 import re
 import sys
 import inspect
+from mistletoe import block_token, span_token
 
 class BaseRenderer(object):
     """
@@ -117,12 +118,10 @@ class BaseRenderer(object):
         """
         Make renderer classes into context managers.
 
-        Removes self._extras from their respective name space;
-        also removes respective render functions from self.render_map.
+        Reset block_token._token_types and span_token._token_types.
         """
-        for token in self._extras:
-            inspect.getmodule(token.__bases__[0]).remove_token(token)
-            del self.render_map[token.__name__]
+        block_token.reset_tokens()
+        span_token.reset_tokens()
 
     @classmethod
     def _cls_to_func(self, cls_name):

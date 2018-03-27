@@ -15,20 +15,12 @@ class TestHTMLToken(TestCase):
         self.assertEqual(token.content, content)
 
     def test_span(self):
-        MockRawText = mock.Mock(autospec='mistletoe.span_token.RawText')
-        RawText = _token_types.pop()
-        _token_types.append(MockRawText)
-        try:
-            raw = 'some <span>more</span> text'
-            tokens = tokenize_inner(raw)
-            next(tokens)
-            MockRawText.assert_called_with('some ')
-            content = '<span>more</span>'
-            self._test_html_token(next(tokens), html_token.HTMLSpan, content)
-            next(tokens)
-            MockRawText.assert_called_with(' text')
-        finally:
-            _token_types[-1] = RawText
+        raw = 'some <span>more</span> text'
+        tokens = tokenize_inner(raw)
+        next(tokens)
+        content = '<span>more</span>'
+        self._test_html_token(next(tokens), html_token.HTMLSpan, content)
+        next(tokens)
 
     def test_block(self):
         lines = ['<p>a paragraph\n',

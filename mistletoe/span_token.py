@@ -6,10 +6,12 @@ import re
 from types import GeneratorType
 import mistletoe.span_tokenizer as tokenizer
 
-
+"""
+Tokens to be included in the parsing process, in the order specified.
+"""
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
            'Strikethrough', 'Image', 'FootnoteImage', 'Link',
-           'FootnoteLink', 'AutoLink']
+           'FootnoteLink', 'AutoLink', 'RawText']
 
 
 def tokenize_inner(content):
@@ -48,6 +50,14 @@ def remove_token(token_cls):
         token_cls (SpanToken): token to be removed from the parsing process.
     """
     _token_types.remove(token_cls)
+
+
+def reset_tokens():
+    """
+    Returns a list of tokens with the original tokens.
+    """
+    global _token_types
+    _token_types = [globals()[cls_name] for cls_name in __all__]
 
 
 def _first_not_none_group(match_obj):
@@ -235,10 +245,6 @@ class FootnoteAnchor(SpanToken):
     def __init__(self, raw):
         self.key = raw
 
+_token_types = []
+reset_tokens()
 
-"""
-Tokens to be included in the parsing process, in the order specified.
-"""
-_token_types = [EscapeSequence, Emphasis, Strong, InlineCode,
-                Strikethrough, Image, FootnoteImage, Link,
-                FootnoteLink, AutoLink, RawText]
