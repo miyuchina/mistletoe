@@ -3,6 +3,7 @@ Base class for renderers.
 """
 
 import re
+import sys
 import inspect
 
 class BaseRenderer(object):
@@ -136,4 +137,31 @@ class BaseRenderer(object):
         separate module.
         """
         return [getattr(module, name) for name in module.__all__]
+
+    def render_raw_text(self, token):
+        """
+        Default render method for RawText. Simply return token.content.
+        """
+        return token.content
+
+    def __getattr__(self, name):
+        """
+        Provides a default render method for all tokens.
+
+        Any token without a custom render method will simply be rendered by
+        self.render_inner.
+
+        If name does not start with 'render_', raise AttributeError as normal,
+        for less magic during debugging.
+
+        This method would only be called if the attribute requested has not
+        been defined. Defined attributes will not be overridden.
+
+        I still think this is heavy wizardry.
+        Let me know if you would like this method removed.
+        """
+        if not name.startswith('render_'):
+            msg = '{cls} object has no attribute {name}'.format(cls=type(self).__name__, name=name)
+            raise AttributeError(msg).with_traceback(sys.exc_info()[2])
+        return self.render_inner
 
