@@ -71,7 +71,7 @@ def tokenize(iterable, token_types, root=None):
         for token_type in token_types:
             try:
                 if token_type.start(line):
-                    token = token_type([line] + token_type.read(lines))
+                    token = token_type([line, *token_type.read(lines)])
                     if root and hasattr(token, 'store_footnotes'):
                         token.store_footnotes(root)
                     else:
