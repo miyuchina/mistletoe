@@ -136,6 +136,11 @@ class TestRawText(unittest.TestCase):
         token = span_token.RawText('some text')
         self.assertEqual(token.content, 'some text')
 
+    def test_no_children(self):
+        token = span_token.RawText('some text')
+        with self.assertRaises(AttributeError):
+            token.children
+
 
 class TestContains(unittest.TestCase):
     def test_contains(self):

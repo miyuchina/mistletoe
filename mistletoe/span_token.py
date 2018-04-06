@@ -236,6 +236,10 @@ class RawText(SpanToken):
     def __init__(self, raw):
         self.content = raw
 
+    @property
+    def children(self):
+        raise AttributeError("'RawText' object has no attribute children. Perhaps you mean 'RawText.content'?")
+
 
 class FootnoteAnchor(SpanToken):
     """
