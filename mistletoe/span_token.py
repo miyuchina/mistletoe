@@ -151,7 +151,7 @@ class Image(SpanToken):
         src (str): image source.
         title (str): image title (default to empty).
     """
-    pattern = re.compile(r'\!\[(.+?)\]\s*\((.+?)(?:\s*\"(.+?)\")?\)', re.DOTALL)
+    pattern = re.compile(r'\!\[(.*?)\]\s*\((.+?)(?:\s*\"(.+?)\")?\)', re.DOTALL)
     def __init__(self, match_obj):
         self._children = (RawText(match_obj.group(1)),)
         self.src = match_obj.group(2)
@@ -166,7 +166,7 @@ class FootnoteImage(SpanToken):
         children (iterator): a single RawText node for alternative text.
         src (FootnoteAnchor): could point to both src and title.
     """
-    pattern = re.compile(r"\!\[(.+?)\]\s*?\[(.+?)\]", re.DOTALL)
+    pattern = re.compile(r"\!\[(.*?)\]\s*?\[(.+?)\]", re.DOTALL)
     def __init__(self, match_obj):
         self._children = (RawText(match_obj.group(1)),)
         self.src = FootnoteAnchor(match_obj.group(2))
