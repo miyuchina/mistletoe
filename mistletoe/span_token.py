@@ -180,7 +180,7 @@ class Link(SpanToken):
         children (tuple): link name still needs further parsing.
         target (str): link target.
     """
-    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\]\s*?\((.+?)\)", re.DOTALL)
+    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\]\s*?\((\S+)\)", re.DOTALL)
     def __init__(self, match_obj):
         super().__init__(match_obj)
         self.target = match_obj.group(2)
