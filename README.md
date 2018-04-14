@@ -28,7 +28,7 @@ Features
   goal is to provide a clear and easy API to extend upon.
 
 * **Customizable**: writing a new renderer for mistletoe is a relatively
-  trivial task.
+  trivial task. You can even write [a Lisp][scheme] in it.
 
 **Supported Syntax**
 
@@ -36,6 +36,7 @@ Features
 * LaTeX
 * Jira Markdown ([contrib][contrib])
 * Mathjax ([contrib][contrib])
+* Scheme ([contrib][contrib])
 
 Installation
 ------------
@@ -339,6 +340,7 @@ Copyright & License
 [python-markdown]: https://github.com/waylan/Python-Markdown
 [python-markdown2]: https://github.com/trentm/python-markdown2
 [contrib]: https://github.com/miyuchina/mistletoe/tree/master/contrib
+[scheme]: https://github.com/miyuchina/mistletoe/blob/dev/contrib/scheme.py
 [contributing]: CONTRIBUTING.md
 [xkcd]: https://xkcd.com/208/
 [meme]: http://www.greghendershott.com/img/grumpy-regexp-parser.png
