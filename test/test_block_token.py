@@ -197,6 +197,15 @@ class TestList(TestToken):
         token = next(block_token.tokenize(lines))
         self._test_token(token, 3)
 
+    def test_less_spaces(self):
+        lines = ['* item 1\n',
+                 '* item 2\n',
+                 '  - nested item 1\n',
+                 '  - nested item 2\n',
+                 '* item 3\n']
+        token = next(block_token.tokenize(lines))
+        self.assertIsInstance(token.children[2], block_token.List)
+
 
 class TestTable(unittest.TestCase):
     def test_parse_align(self):

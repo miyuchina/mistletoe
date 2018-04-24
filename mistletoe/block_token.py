@@ -274,11 +274,14 @@ class List(BlockToken):
         """
         line_buffer = []
         nested = False
+        spaces = 0
 
         def clear_buffer():
             """
-            After each clear_buffer() call, nested is always False,
-            and line_buffer is always empty.
+            After each clear_buffer() call,
+            nested is always False,
+            line_buffer is always empty,
+            and spaces is always 0.
             """
             nonlocal nested, line_buffer
             if not line_buffer:
@@ -287,12 +290,14 @@ class List(BlockToken):
             yield List(line_buffer) if nested else ListItem(line_buffer)
             nested = False
             line_buffer = []
+            spaces = 0
 
         for line in lines:
             if cls.has_valid_leader(line):
                 yield from clear_buffer()
-            elif line.startswith('    '):
-                line = line[4:]
+            elif line.startswith('  '):
+                spaces = spaces or len(line) - len(line.lstrip())
+                line = line[spaces:]
                 if cls.has_valid_leader(line) and not nested:
                     yield from clear_buffer()
                     nested = True
