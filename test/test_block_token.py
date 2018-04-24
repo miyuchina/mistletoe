@@ -206,6 +206,14 @@ class TestList(TestToken):
         token = next(block_token.tokenize(lines))
         self.assertIsInstance(token.children[2], block_token.List)
 
+    def test_with_paragraph(self):
+        lines = ['paragraph\n',
+                 '1. item 1\n',
+                 '2. item 2\n']
+        p_token, l_token = block_token.tokenize(lines)
+        self.assertIsInstance(p_token, block_token.Paragraph)
+        self._test_token(l_token, 2)
+
 
 class TestTable(unittest.TestCase):
     def test_parse_align(self):

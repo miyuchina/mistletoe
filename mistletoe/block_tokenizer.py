@@ -49,6 +49,9 @@ class FileWrapper:
                     code_fence = line[:3]
                 elif line.startswith(code_fence):
                     code_fence = ''
+            elif (line.startswith(('* ', '- ', '+ '))
+                    or line.split(' ', 1)[0][:-1].isdigit()):
+                line_buffer.append('\n')
             line_buffer.append(line.replace('\t', '    ').replace('\r\n', '\n'))
         return line_buffer
 
