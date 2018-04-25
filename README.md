@@ -37,6 +37,7 @@ Features
 * Jira Markdown ([contrib][contrib])
 * Mathjax ([contrib][contrib])
 * Scheme ([contrib][contrib])
+* HTML + code highlighting ([contrib][contrib])
 
 Installation
 ------------
