@@ -40,6 +40,13 @@ class TestATXHeading(TestToken):
         arg = '####### paragraph\n'
         self._test_match(block_token.Paragraph, lines, arg)
 
+    def test_heading_in_paragraph(self):
+        lines = ['foo\n', '# heading\n', 'bar\n']
+        token1, token2, token3 = block_token.tokenize(lines)
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertIsInstance(token2, block_token.Heading)
+        self.assertIsInstance(token3, block_token.Paragraph)
+
 
 class TestSetextHeading(TestToken):
     def test_match(self):

@@ -159,6 +159,7 @@ class SetextHeading(BlockToken):
         next_line = lines.peek()
         while (next_line is not None
                 and next_line != '\n'
+                and not Heading.start(next_line)
                 and not BlockCode.start(next_line)
                 and not CodeFence.start(next_line)
                 and not List.start(next_line)):
@@ -201,6 +202,7 @@ class Paragraph(BlockToken):
         line_buffer = []
         next_line = lines.peek()
         while (next_line is not None
+                and not Heading.start(next_line)
                 and not BlockCode.start(next_line)
                 and not CodeFence.start(next_line)
                 and not List.start(next_line)):
