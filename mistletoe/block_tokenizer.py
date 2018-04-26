@@ -11,7 +11,7 @@ class MismatchException(Exception):
 
 class FileWrapper:
     def __init__(self, lines):
-        self.lines = self.normalize(lines)
+        self.lines = [line.replace('\t', '    ').replace('\r\n', '\n') for line in lines]
         self._index = -1
         self._anchor = 0
 
@@ -37,23 +37,6 @@ class FileWrapper:
         if self._index + 1 < len(self.lines):
             return self.lines[self._index+1]
         return None
-
-    @staticmethod
-    def normalize(lines):
-        line_buffer = []
-        code_fence = ''
-        for line in lines:
-            if line.startswith(('```', '~~~')):
-                if not code_fence:
-                    line_buffer.append('\n')
-                    code_fence = line[:3]
-                elif line.startswith(code_fence):
-                    code_fence = ''
-            elif (line.startswith(('* ', '- ', '+ '))
-                    or line.split(' ', 1)[0][:-1].isdigit()):
-                line_buffer.append('\n')
-            line_buffer.append(line.replace('\t', '    ').replace('\r\n', '\n'))
-        return line_buffer
 
 
 def tokenize(iterable, token_types, root=None):

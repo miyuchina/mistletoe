@@ -156,12 +156,17 @@ class SetextHeading(BlockToken):
     @staticmethod
     def read(lines):
         line_buffer = []
-        for line in lines:
-            if line == '\n':
-                break
+        next_line = lines.peek()
+        while (next_line is not None
+                and next_line != '\n'
+                and not BlockCode.start(next_line)
+                and not CodeFence.start(next_line)
+                and not List.start(next_line)):
+            line = next(lines)
             line_buffer.append(line)
             if line.startswith(('===', '---')):
                 return line_buffer
+            next_line = lines.peek()
         raise tokenizer.MismatchException(line_buffer)
 
 
@@ -190,6 +195,18 @@ class Paragraph(BlockToken):
     @staticmethod
     def start(line):
         return line != '\n'
+
+    @classmethod
+    def read(cls, lines):
+        line_buffer = []
+        next_line = lines.peek()
+        while (next_line is not None
+                and not BlockCode.start(next_line)
+                and not CodeFence.start(next_line)
+                and not List.start(next_line)):
+            line_buffer.append(next(line))
+            next_line = lines.peek()
+        return line_buffer
 
 
 class BlockCode(BlockToken):
