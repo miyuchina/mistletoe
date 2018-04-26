@@ -311,8 +311,10 @@ class List(BlockToken):
 
         Note: returns False if line starts with spaces.
         """
-        return (line.startswith(('+ ', '- ', '* '))         # unordered
-                or (line.split(' ', 1)[0][:-1].isdigit()))  # ordered
+        if line.startswith(('+ ', '- ', '* ')):
+            return True
+        index = line.find(' ')
+        return False if index == -1 else line[:index-1].isdigit()
 
     @classmethod
     def start(cls, line):
