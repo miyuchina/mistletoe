@@ -11,7 +11,7 @@ class MismatchException(Exception):
 
 class FileWrapper:
     def __init__(self, lines):
-        self.lines = [line.replace('\t', '    ').replace('\r\n', '\n') for line in lines]
+        self.lines = [line.replace('\t', '    ') for line in lines]
         self._index = -1
         self._anchor = 0
 
