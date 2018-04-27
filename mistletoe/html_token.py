@@ -21,19 +21,22 @@ class HTMLBlock(block_token.BlockToken):
         content (str): literal strings rendered as-is.
     """
     _last_tag = ''
+    pattern = re.compile(r'<(\S+).*?>')
     def __init__(self, lines):
         self.content = ''.join(lines) # implicit newlines
 
     @classmethod
     def start(cls, line):
-        open_tag_end = line.find('>')
-        if not line.startswith('<') or open_tag_end == -1:
-            return False
+        # single-line html token?
         if HTMLSpan.pattern.match(line.strip()):
             cls._last_tag = ''
-        else:
-            cls._last_tag = line[1:open_tag_end].split(' ')[0]
-        return True
+            return True
+        # multi-line html token?
+        match_obj = cls.pattern.match(line)
+        if match_obj:
+            cls._last_tag = match_obj.group(1)
+            return True
+        return False
 
     @classmethod
     def read(cls, lines):
