@@ -44,6 +44,14 @@ class TestHTMLToken(TestCase):
         content = '<p class="bar">a paragraph\nwithin an html block\n</p>\n'
         self._test_html_token(token, html_token.HTMLBlock, content)
 
+    def test_comment(self):
+        from mistletoe.block_token import Heading
+        lines = ['<!-- hello -->\n', '\n', '# heading 1\n']
+        token1, token2 = tokenize(lines)
+        content = '<!-- hello -->\n'
+        self._test_html_token(token1, html_token.HTMLBlock, content)
+        self.assertIsInstance(token2, Heading)
+
     def test_empty_span(self):
         raw = '<span></span>'
         token = next(tokenize_inner(raw))
@@ -59,3 +67,4 @@ class TestHTMLToken(TestCase):
     def test_autolink(self):
         from mistletoe.span_token import AutoLink
         self.assertIsInstance(next(tokenize_inner('<autolink>')), AutoLink)
+
