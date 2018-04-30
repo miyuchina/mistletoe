@@ -302,7 +302,7 @@ class List(BlockToken):
             line_buffer is always empty,
             and spaces is always 0.
             """
-            nonlocal nested, line_buffer
+            nonlocal nested, line_buffer, spaces
             if not line_buffer:
                 # start of the list; nested = False
                 return
