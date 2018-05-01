@@ -326,7 +326,7 @@ experience. If you want more control, however, give mistletoe a try.
 
 Copyright & License
 -------------------
-* mistletoe's logo uses artwork by Daniele De Santis, under
+* mistletoe's logo uses artwork by [Freepik][icon], under
   [CC BY 3.0][cc-by].
 * mistletoe is released under [MIT][license].
 
@@ -346,5 +346,6 @@ Copyright & License
 [xkcd]: https://xkcd.com/208/
 [meme]: http://www.greghendershott.com/img/grumpy-regexp-parser.png
 [hendershott]: http://www.greghendershott.com/2013/11/markdown-parser-redesign.html
+[icon]: https://www.freepik.com
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
 [license]: LICENSE
