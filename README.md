@@ -1,4 +1,4 @@
-<h1>mistletoe<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right'></h1>
+<h1>mistletoe<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right' width='128' height='128'></h1>
 
 [![Build Status][build-badge]][travis]
 [![Coverage Status][cover-badge]][coveralls]
