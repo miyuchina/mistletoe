@@ -19,7 +19,7 @@ class TestASTRenderer(unittest.TestCase):
                       'type': 'Paragraph',
                       'children': [{
                           'type': 'RawText',
-                          'content': 'hello\nworld\n'
+                          'content': 'hello\nworld'
                       }]
                  }]}
         self.assertEqual(output, target)
@@ -43,10 +43,7 @@ class TestASTRenderer(unittest.TestCase):
                               'type': 'RawText',
                               'content': 'bar'
                           }]
-                      }, {
-                          'type': 'RawText',
-                          'content': '\n'}
-                      ]
+                      }]
                  }]}
         output = ast_renderer.get_ast(d)
         self.assertEqual(output, target)

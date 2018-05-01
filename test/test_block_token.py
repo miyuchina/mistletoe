@@ -37,7 +37,7 @@ class TestATXHeading(TestToken):
 
     def test_not_heading(self):
         lines = ['####### paragraph\n']
-        arg = '####### paragraph\n'
+        arg = '####### paragraph'
         self._test_match(block_token.Paragraph, lines, arg)
 
     def test_heading_in_paragraph(self):
@@ -64,7 +64,7 @@ class TestSetextHeading(TestToken):
         token = next(tokens)
         self.assertIsInstance(token, block_token.Paragraph)
         token.children
-        self.mock.assert_called_with('foobar\n')
+        self.mock.assert_called_with('foobar')
         with self.assertRaises(StopIteration) as e:
             token = next(tokens)
 
@@ -123,7 +123,7 @@ class TestBlockCode(TestToken):
 class TestParagraph(TestToken):
     def test_parse(self):
         lines = ['some\n', 'continuous\n', 'lines\n']
-        arg = 'some\ncontinuous\nlines\n'
+        arg = 'some\ncontinuous\nlines'
         self._test_match(block_token.Paragraph, lines, arg)
 
     def test_read(self):
@@ -184,7 +184,7 @@ class TestListItem(unittest.TestCase):
         f = FileWrapper(lines)
         token1, token2 = block_token.ListItem(block_token.ListItem.read(f)).children
         self.assertIsInstance(token1, block_token.Paragraph)
-        self.assertTrue('foo\nbar\n' in token1)
+        self.assertTrue('foo\nbar' in token1)
         self.assertIsInstance(token2, block_token.BlockCode)
 
     def test_sublist(self):
@@ -202,7 +202,7 @@ class TestListItem(unittest.TestCase):
         self.assertEqual(list_item.loose, False)
         token, = list_item.children
         self.assertIsInstance(token, span_token.RawText)
-        self.assertEqual(token.content, 'foo\n')
+        self.assertEqual(token.content, 'foo')
 
 
 class TestTable(unittest.TestCase):

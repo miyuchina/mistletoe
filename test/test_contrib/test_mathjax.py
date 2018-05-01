@@ -9,7 +9,7 @@ class TestMathJaxRenderer(unittest.TestCase):
         with MathJaxRenderer() as renderer:
             token = Document(['# heading 1\n', 'paragraph\n'])
             output = renderer.render(token)
-            target = '<h1>heading 1</h1>\n<p>paragraph\n</p>\n'
+            target = '<h1>heading 1</h1>\n<p>paragraph</p>\n'
             target += self.mathjax_src
             self.assertEqual(output, target)
 
@@ -18,6 +18,6 @@ class TestMathJaxRenderer(unittest.TestCase):
             raw = ['# heading 1\n', '$$paragraph$$\n', 'with $ math $\n']
             token = Document(raw)
             output = renderer.render(token)
-            target = '<h1>heading 1</h1>\n<p>$$paragraph$$\nwith $$ math $$\n</p>\n'
+            target = '<h1>heading 1</h1>\n<p>$$paragraph$$\nwith $$ math $$</p>\n'
             target += self.mathjax_src
             self.assertEqual(output, target)
