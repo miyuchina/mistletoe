@@ -140,8 +140,8 @@ class Heading(BlockToken):
                 and len(line.split(' ', 1)[0]) <= 6)
 
     @staticmethod
-    def read(line):
-        return []
+    def read(lines):
+        return [next(lines)]
 
 class SetextHeading(BlockToken):
     def __init__(self, lines):
@@ -155,7 +155,7 @@ class SetextHeading(BlockToken):
 
     @staticmethod
     def read(lines):
-        line_buffer = []
+        line_buffer = [next(lines)]
         next_line = lines.peek()
         while (next_line is not None
                 and next_line != '\n'
@@ -199,7 +199,7 @@ class Paragraph(BlockToken):
 
     @classmethod
     def read(cls, lines):
-        line_buffer = []
+        line_buffer = [next(lines)]
         next_line = lines.peek()
         while (next_line is not None
                 and not Heading.start(next_line)
@@ -341,7 +341,7 @@ class List(BlockToken):
 
     @classmethod
     def read(cls, lines):
-        line_buffer = []
+        line_buffer = [next(lines)]
         for line in lines:
             if line == '\n' and not cls.has_valid_leader(lines.peek() or ''):
                 break
@@ -418,10 +418,10 @@ class Table(BlockToken):
 
     @staticmethod
     def read(lines):
-        line_buffer = []
+        line_buffer = [next(lines)]
         while lines.peek() is not None and '|' in lines.peek():
             line_buffer.append(next(lines))
-        if len(line_buffer) < 1 or '---' not in line_buffer[0]:
+        if len(line_buffer) < 2 or '---' not in line_buffer[1]:
             raise tokenizer.MismatchException()
         return line_buffer
 
@@ -476,7 +476,7 @@ class FootnoteBlock(BlockToken):
 
     @classmethod
     def read(cls, lines):
-        line_buffer = []
+        line_buffer = [next(lines)]
         while (lines.peek() is not None
                 and cls._is_legal(lines.peek())
                 and lines.peek() != '\n'):
@@ -519,11 +519,11 @@ class Separator(BlockToken):
 
     @staticmethod
     def read(lines):
-        return []
+        return [next(lines)]
 
 
 def until(stop_line, lines, func=None):
-    line_buffer = []
+    line_buffer = [next(lines)]
     for line in lines:
         if (line == stop_line if func is None else func(line, stop_line)):
             break

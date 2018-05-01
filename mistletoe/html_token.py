@@ -40,9 +40,9 @@ class HTMLBlock(block_token.BlockToken):
 
     @classmethod
     def read(cls, lines):
+        line_buffer = [next(lines)]
         if not cls._last_tag:
-            return []
-        line_buffer = []
+            return line_buffer
         for line in lines:
             line_buffer.append(line)
             start = line.find('</')
