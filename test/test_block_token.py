@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, call
-from mistletoe import block_token
-from mistletoe import span_token
+from mistletoe import block_token, span_token
+from mistletoe.block_tokenizer import FileWrapper
 
 
 class TestToken(unittest.TestCase):
@@ -137,89 +137,72 @@ class TestParagraph(TestToken):
         self.assertIsInstance(token3, block_token.Paragraph)
 
 
-class TestListItem(TestToken):
-    def test_children(self):
-        token = block_token.ListItem(['- some text\n'])
-        self._test_token(token, 'some text')
-
-    def test_lazy_continuation(self):
-        token = block_token.ListItem(['- list\n', 'content\n'])
-        self._test_token(token, 'list content')
-
-    def test_whitespace(self):
-        token = block_token.ListItem(['-   text  \n'])
-        self._test_token(token, 'text')
-
-    def test_empty_item(self):
-        token = block_token.ListItem(['-   \n'])
-        self.assertEqual(list(token.children), [])
-
-    def test_item_with_paragraph(self):
-        token = block_token.ListItem(['- foobar\n', 'baz\n', '\n'])
-        child = token.children[0]
-        self.assertIsInstance(child, block_token.Paragraph)
-        child.children
-        self.mock.assert_called_with('foobar\nbaz\n')
-
-
-class TestList(TestToken):
-    def setUp(self):
-        patcher = patch('mistletoe.block_token.ListItem')
-        self.mock = patcher.start()
-        self.addCleanup(patcher.stop)
-
-    def _test_token(self, token, call_count, **kwargs):
-        for attr, value in kwargs.items():
-            self.assertEqual(getattr(token, attr), value)
-        token.children
-        self.assertEqual(self.mock.call_count, call_count)
-
-    def test_match_unordered_list(self):
-        lines = ['- item 1\n', '- item 2\n']
-        self._test_match(block_token.List, lines, 2, start=None)
-
-    def test_match_ordered_list(self):
-        lines = ['1) item 1\n',
-                 '2) item 2\n',
-                 '    * nested item 1\n',
-                 '    * nested item 2\n',
-                 '3) item 3\n']
-        self._test_match(block_token.List, lines, 3, start=1)
-
-    def test_match_nested_lists(self):
-        lines = ['- item 1\n',
-                 '- item 2\n',
-                 '    * nested item 1\n',
-                 '    * nested item 2\n',
-                 '- item 3\n']
-        token = next(block_token.tokenize(lines))
-        self._test_token(token, 3)
-
-    def test_lazy_continuation(self):
-        lines = ['* item 1\n',
-                 '* item 2\n',
-                 '  w/ indent\n',
-                 '* item 3\n',
-                 'w/o indent\n']
-        token = next(block_token.tokenize(lines))
-        self._test_token(token, 3)
-
-    def test_less_spaces(self):
-        lines = ['* item 1\n',
-                 '* item 2\n',
-                 '  - nested item 1\n',
-                 '  - nested item 2\n',
-                 '* item 3\n']
-        token = next(block_token.tokenize(lines))
-        self.assertIsInstance(token.children[2], block_token.List)
-
-    def test_with_paragraph(self):
-        lines = ['paragraph\n',
+class TestListItem(unittest.TestCase):
+    def test_parse_leader(self):
+        lines = ['- foo\n',
+                 '*    bar\n',
+                 ' + baz\n',
                  '1. item 1\n',
-                 '2. item 2\n']
-        p_token, l_token = block_token.tokenize(lines)
-        self.assertIsInstance(p_token, block_token.Paragraph)
-        self._test_token(l_token, 2)
+                 '2) item 2\n',
+                 '123456789. item x\n']
+        for line in lines:
+            self.assertTrue(block_token.ListItem.parse_leader(line))
+        bad_lines = ['> foo\n',
+                 '1.item 1\n',
+                 '2| item 2\n',
+                 '1234567890. item x\n']
+        for line in bad_lines:
+            self.assertFalse(block_token.ListItem.parse_leader(line))
+
+    def test_read(self):
+        lines = ['- foo\n',
+                 'foo\n',
+                 '- bar\n',
+                 '\n',
+                 '  bar\n',
+                 ' -    baz\n',
+                 '\n',
+                 '      baz\n',
+                 'baz\n']
+        f = FileWrapper(lines)
+        result = []
+        while True:
+            item_lines = block_token.ListItem.read(f)
+            if item_lines is None:
+                break
+            result.append(item_lines)
+        expected = [['- foo\n', 'foo\n'],
+                    ['- bar\n', '\n', 'bar\n'],
+                    [' -    baz\n', '\n', 'baz\n', 'baz\n']]
+        self.assertEqual(result, expected)
+
+    def test_tokenize(self):
+        lines = [' -    foo\n',
+                 '   bar\n',
+                 '\n',
+                 '          baz\n']
+        f = FileWrapper(lines)
+        token1, token2 = block_token.ListItem(block_token.ListItem.read(f)).children
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertTrue('foo\nbar\n' in token1)
+        self.assertIsInstance(token2, block_token.BlockCode)
+
+    def test_sublist(self):
+        lines = ['- foo\n',
+                 '  - bar\n']
+        f = FileWrapper(lines)
+        token1, token2 = block_token.ListItem(block_token.ListItem.read(f)).children
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertIsInstance(token2, block_token.List)
+
+    def test_tight_list(self):
+        lines = ['- foo\n']
+        f = FileWrapper(lines)
+        list_item = block_token.ListItem(block_token.ListItem.read(f))
+        self.assertEqual(list_item.loose, False)
+        token, = list_item.children
+        self.assertIsInstance(token, span_token.RawText)
+        self.assertEqual(token.content, 'foo\n')
 
 
 class TestTable(unittest.TestCase):

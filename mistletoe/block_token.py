@@ -255,117 +255,87 @@ class CodeFence(BlockToken):
 
 
 class List(BlockToken):
-    """
-    List tokens. (["- item\n", "    - nested item\n", "- item\n" ])
-    Boundary between span-level and block-level tokens.
-
-    Attributes:
-        children (list): inner tokens (ListItem or List).
-        start (int): first index of ordered list (undefined if unordered).
-    """
-    def __init__(self, lines):
-        self._children = self.build_list(lines)
-        leader = lines[0].split(' ', 1)[0]
-        if leader[:-1].isdigit():
-            self.start = int(leader[:-1])
-        else:
-            self.start = None
-
-    @classmethod
-    def build_list(cls, lines):
-        """
-        Constructor helper; builds a list from lines.
-
-        The basic control structure looks something like this:
-
-        - Does the current line have a valid leader?
-            * yes: we are in a normal line
-            * no:
-                + Does it start with four spaces?
-                    - yes:
-                        * Does it have a valid leader?
-                            + yes: we are in a nested list
-                            - no:  we are in a lazy-continuation line
-                    - no: we are in a lazy-continuation line
-
-        Yields:
-            a stream of ListItems or sub-Lists.
-        """
-        line_buffer = []
-        nested = False
-        spaces = 0
-
-        def clear_buffer():
-            """
-            After each clear_buffer() call,
-            nested is always False,
-            line_buffer is always empty,
-            and spaces is always 0.
-            """
-            nonlocal nested, line_buffer, spaces
-            if not line_buffer:
-                # start of the list; nested = False
-                return
-            yield List(line_buffer) if nested else ListItem(line_buffer)
-            nested = False
-            line_buffer = []
-            spaces = 0
-
-        for line in lines:
-            if cls.has_valid_leader(line):
-                yield from clear_buffer()
-            elif line.startswith('  '):
-                spaces = spaces or len(line) - len(line.lstrip())
-                line = line[spaces:]
-                if cls.has_valid_leader(line) and not nested:
-                    yield from clear_buffer()
-                    nested = True
-            line_buffer.append(line)
-        yield from clear_buffer()
-
-    @classmethod
-    def has_valid_leader(cls, line):
-        """
-        Helper function; mainly because _build_list is gross enough.
-
-        Note: returns False if line starts with spaces.
-        """
-        if line.startswith(('+ ', '- ', '* ')):
-            return True
-        index = line.find(' ')
-        return False if index == -1 else line[:index-1].isdigit()
+    def __init__(self, items):
+        self._children = items
+        self.loose = self.__class__.loose
+        first_leader = self.children[0].leader
+        self.start = first_leader if isinstance(first_leader, int) else None
 
     @classmethod
     def start(cls, line):
-        return cls.has_valid_leader(line.strip())
+        return ListItem.parse_leader(line)
 
     @classmethod
     def read(cls, lines):
-        line_buffer = [next(lines)]
-        for line in lines:
-            if line == '\n' and not cls.has_valid_leader(lines.peek() or ''):
+        cls.loose = False
+        item_buffer = []
+        while True:
+            while lines.peek() == '\n':
+                next(lines)
+            item_lines = ListItem.read(lines)
+            if item_lines is None:
                 break
+            item = ListItem(item_lines)
+            cls.loose |= item.loose
+            item_buffer.append(item)
+        return item_buffer
+
+
+class ListItem:
+    pattern = re.compile(r' {0,3}(\d{1,9}[.)]|[+\-*]) {1,4}')
+    leader = None
+    prepend = -1
+
+    def __init__(self, lines):
+        self.leader = self.__class__.leader
+        self.prepend = self.__class__.prepend
+        lines[0] = lines[0][self.prepend:]
+        self.loose = True
+        self.children = tuple(tokenize(lines))
+        if len(self.children) == 1 and isinstance(self.children[0], Paragraph):
+            self.children = self.children[0].children
+            self.loose = False
+
+    @classmethod
+    def in_continuation(cls, line):
+        return len(line) - len(line.lstrip()) >= cls.prepend
+
+    @classmethod
+    def parse_leader(cls, line):
+        pos = 0 if cls.prepend == -1 else cls.prepend
+        match_obj = cls.pattern.match(line)
+        if match_obj is None:
+            return False
+        content = match_obj.group(0)
+        if cls.prepend != -1 and len(content) - len(content.lstrip()) >= cls.prepend:
+            return False
+        leader = match_obj.group(1)
+        cls.leader = leader if len(leader) == 1 else int(leader[:-1])
+        cls.prepend = len(content)
+        return True
+
+    @classmethod
+    def read(cls, lines):
+        cls.leader = None
+        cls.prepend = -1
+        newline = False
+        line_buffer = []
+        next_line = lines.peek()
+        if next_line is not None and cls.parse_leader(next_line):
+            line_buffer.append(next(lines))
+            next_line = lines.peek()
+        else:
+            return None
+        while (next_line is not None
+                and (not cls.parse_leader(next_line))
+                and (not newline or cls.in_continuation(next_line))):
+            line = next(lines)
+            line = line[cls.prepend:] if newline else line.lstrip(' ')
             line_buffer.append(line)
+            newline = next_line == '\n'
+            next_line = lines.peek()
         return line_buffer
 
-
-class ListItem(BlockToken):
-    """
-    List item token. (["- item 1\n", "continued\n"])
-
-    Should only be called by List._build_list().
-    """
-    def __init__(self, lines):
-        if lines[-1].strip() == '':
-            lines[0] = lines[0].split(' ', 1)[1]
-            super().__init__(lines, tokenize)
-        else:
-            line = ' '.join([line.strip() for line in lines])
-            try:
-                content = line.split(' ', 1)[1].strip()
-            except IndexError:
-                content = ''
-            super().__init__(content, span_token.tokenize_inner)
 
 
 class Table(BlockToken):
