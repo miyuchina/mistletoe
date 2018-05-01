@@ -86,7 +86,6 @@ class BlockToken(object):
     def __contains__(self, text):
         return any(text in child for child in self.children)
 
-
     @property
     def children(self):
         """
@@ -258,16 +257,19 @@ class List(BlockToken):
     def __init__(self, items):
         self._children = items
         self.loose = self.__class__.loose
-        first_leader = self.children[0].leader
-        self.start = first_leader if isinstance(first_leader, int) else None
+        leader = self.children[0].leader
+        self.start = None
+        if len(leader) != 1:
+            self.start = int(leader[:-1])
 
     @classmethod
     def start(cls, line):
-        return ListItem.parse_leader(line)
+        return ListItem.parse_marker(line)
 
     @classmethod
     def read(cls, lines):
         cls.loose = False
+        cls.leader = None
         item_buffer = []
         while True:
             while lines.peek() == '\n':
@@ -276,12 +278,23 @@ class List(BlockToken):
             if output is None:
                 break
             item = ListItem(*output)
+            if cls.leader is None:
+                cls.leader = item.leader
+            elif not cls.same_marker_type(cls.leader, item.leader):
+                lines.reset()
+                break
             cls.loose |= item.loose
             item_buffer.append(item)
         return item_buffer
 
+    @staticmethod
+    def same_marker_type(leader, other):
+        if len(leader) == 1:
+            return leader == other
+        return leader[:-1].isdigit() and other[:-1].isdigit() and leader[-1] == other[-1]
 
-class ListItem:
+
+class ListItem(BlockToken):
     pattern = re.compile(r' *(\d{1,9}[.)]|[+\-*]) {1,4}')
 
     def __init__(self, lines, prepend, leader):
@@ -289,9 +302,9 @@ class ListItem:
         self.prepend = prepend
         lines[0] = lines[0][prepend:]
         self.loose = True
-        self.children = tuple(tokenize(lines))
-        if len(self.children) == 1 and isinstance(self.children[0], Paragraph):
-            self.children = self.children[0].children
+        self._children = tuple(tokenize(lines))
+        if len(self._children) == 1 and isinstance(self._children[0], Paragraph):
+            self._children = self._children[0].children
             self.loose = False
 
     @staticmethod
@@ -299,7 +312,7 @@ class ListItem:
         return len(line) - len(line.lstrip()) >= prepend
 
     @classmethod
-    def parse_leader(cls, line, prepend=-1):
+    def parse_marker(cls, line, prepend=-1, leader=None):
         """
         Returns a pair (prepend, leader) iff:
 
@@ -312,14 +325,14 @@ class ListItem:
         content = match_obj.group(0)
         if prepend != -1 and len(content) - len(content.lstrip()) >= prepend:
             return None        # is sublist
+        # reassign prepend and leader
         prepend = len(content)
         leader = match_obj.group(1)
-        if len(leader) != 1:
-            leader = int(leader[:-1])
         return prepend, leader
 
     @classmethod
     def read(cls, lines):
+        lines.anchor()
         prepend = -1
         leader = None
         newline = False
@@ -328,14 +341,14 @@ class ListItem:
         # first line in list item
         if next_line is None:
             return None
-        pair = cls.parse_leader(next_line)
+        pair = cls.parse_marker(next_line)
         if pair is None:
             return None
         prepend, leader = pair
         line_buffer.append(next(lines))
         next_line = lines.peek()
         while (next_line is not None
-                and not cls.parse_leader(next_line, prepend)
+                and not cls.parse_marker(next_line, prepend, leader)
                 and (not newline or cls.in_continuation(next_line, prepend))):
             line = next(lines)
             line = line[prepend:] if newline else line.lstrip(' ')

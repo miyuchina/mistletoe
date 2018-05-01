@@ -138,7 +138,7 @@ class TestParagraph(TestToken):
 
 
 class TestListItem(unittest.TestCase):
-    def test_parse_leader(self):
+    def test_parse_marker(self):
         lines = ['- foo\n',
                  '*    bar\n',
                  ' + baz\n',
@@ -146,13 +146,13 @@ class TestListItem(unittest.TestCase):
                  '2) item 2\n',
                  '123456789. item x\n']
         for line in lines:
-            self.assertTrue(block_token.ListItem.parse_leader(line))
+            self.assertTrue(block_token.ListItem.parse_marker(line))
         bad_lines = ['> foo\n',
                  '1.item 1\n',
                  '2| item 2\n',
                  '1234567890. item x\n']
         for line in bad_lines:
-            self.assertFalse(block_token.ListItem.parse_leader(line))
+            self.assertFalse(block_token.ListItem.parse_marker(line))
 
     def test_read(self):
         lines = ['- foo\n',
@@ -181,8 +181,7 @@ class TestListItem(unittest.TestCase):
                  '   bar\n',
                  '\n',
                  '          baz\n']
-        f = FileWrapper(lines)
-        token1, token2 = next(block_token.tokenize(f)).children[0].children
+        token1, token2 = next(block_token.tokenize(lines)).children[0].children
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertTrue('foo\nbar' in token1)
         self.assertIsInstance(token2, block_token.BlockCode)
@@ -203,6 +202,23 @@ class TestListItem(unittest.TestCase):
         token, = list_item.children
         self.assertIsInstance(token, span_token.RawText)
         self.assertEqual(token.content, 'foo')
+
+
+class TestList(unittest.TestCase):
+    def test_different_markers(self):
+        lines = ['- foo\n',
+                 '* bar\n',
+                 '1. baz\n',
+                 '2) spam\n']
+        l1, l2, l3, l4 = block_token.tokenize(lines)
+        self.assertIsInstance(l1, block_token.List)
+        self.assertTrue('foo' in l1)
+        self.assertIsInstance(l2, block_token.List)
+        self.assertTrue('bar' in l2)
+        self.assertIsInstance(l3, block_token.List)
+        self.assertTrue('baz' in l3)
+        self.assertIsInstance(l4, block_token.List)
+        self.assertTrue('spam' in l4)
 
 
 class TestTable(unittest.TestCase):
