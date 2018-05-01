@@ -171,9 +171,9 @@ class TestListItem(unittest.TestCase):
             if item_lines is None:
                 break
             result.append(item_lines)
-        expected = [['- foo\n', 'foo\n'],
-                    ['- bar\n', '\n', 'bar\n'],
-                    [' -    baz\n', '\n', 'baz\n', 'baz\n']]
+        expected = [(['- foo\n', 'foo\n'], 2, '-'),
+                    (['- bar\n', '\n', 'bar\n'], 2, '-'),
+                    ([' -    baz\n', '\n', 'baz\n', 'baz\n'], 6, '-'),]
         self.assertEqual(result, expected)
 
     def test_tokenize(self):
@@ -182,7 +182,7 @@ class TestListItem(unittest.TestCase):
                  '\n',
                  '          baz\n']
         f = FileWrapper(lines)
-        token1, token2 = block_token.ListItem(block_token.ListItem.read(f)).children
+        token1, token2 = next(block_token.tokenize(f)).children[0].children
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertTrue('foo\nbar' in token1)
         self.assertIsInstance(token2, block_token.BlockCode)
@@ -191,14 +191,14 @@ class TestListItem(unittest.TestCase):
         lines = ['- foo\n',
                  '  - bar\n']
         f = FileWrapper(lines)
-        token1, token2 = block_token.ListItem(block_token.ListItem.read(f)).children
+        token1, token2 = block_token.ListItem(*block_token.ListItem.read(f)).children
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertIsInstance(token2, block_token.List)
 
     def test_tight_list(self):
         lines = ['- foo\n']
         f = FileWrapper(lines)
-        list_item = block_token.ListItem(block_token.ListItem.read(f))
+        list_item = block_token.ListItem(*block_token.ListItem.read(f))
         self.assertEqual(list_item.loose, False)
         token, = list_item.children
         self.assertIsInstance(token, span_token.RawText)

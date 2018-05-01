@@ -272,70 +272,77 @@ class List(BlockToken):
         while True:
             while lines.peek() == '\n':
                 next(lines)
-            item_lines = ListItem.read(lines)
-            if item_lines is None:
+            output = ListItem.read(lines)
+            if output is None:
                 break
-            item = ListItem(item_lines)
+            item = ListItem(*output)
             cls.loose |= item.loose
             item_buffer.append(item)
         return item_buffer
 
 
 class ListItem:
-    pattern = re.compile(r' {0,3}(\d{1,9}[.)]|[+\-*]) {1,4}')
-    leader = None
-    prepend = -1
+    pattern = re.compile(r' *(\d{1,9}[.)]|[+\-*]) {1,4}')
 
-    def __init__(self, lines):
-        self.leader = self.__class__.leader
-        self.prepend = self.__class__.prepend
-        lines[0] = lines[0][self.prepend:]
+    def __init__(self, lines, prepend, leader):
+        self.leader = leader
+        self.prepend = prepend
+        lines[0] = lines[0][prepend:]
         self.loose = True
         self.children = tuple(tokenize(lines))
         if len(self.children) == 1 and isinstance(self.children[0], Paragraph):
             self.children = self.children[0].children
             self.loose = False
 
-    @classmethod
-    def in_continuation(cls, line):
-        return len(line) - len(line.lstrip()) >= cls.prepend
+    @staticmethod
+    def in_continuation(line, prepend):
+        return len(line) - len(line.lstrip()) >= prepend
 
     @classmethod
-    def parse_leader(cls, line):
-        pos = 0 if cls.prepend == -1 else cls.prepend
+    def parse_leader(cls, line, prepend=-1):
+        """
+        Returns a pair (prepend, leader) iff:
+
+          - the line has a valid leader, and
+          - the line is not a sublist of a previous list item
+        """
         match_obj = cls.pattern.match(line)
         if match_obj is None:
-            return False
+            return None        # no valid leader
         content = match_obj.group(0)
-        if cls.prepend != -1 and len(content) - len(content.lstrip()) >= cls.prepend:
-            return False
+        if prepend != -1 and len(content) - len(content.lstrip()) >= prepend:
+            return None        # is sublist
+        prepend = len(content)
         leader = match_obj.group(1)
-        cls.leader = leader if len(leader) == 1 else int(leader[:-1])
-        cls.prepend = len(content)
-        return True
+        if len(leader) != 1:
+            leader = int(leader[:-1])
+        return prepend, leader
 
     @classmethod
     def read(cls, lines):
-        cls.leader = None
-        cls.prepend = -1
+        prepend = -1
+        leader = None
         newline = False
         line_buffer = []
         next_line = lines.peek()
-        if next_line is not None and cls.parse_leader(next_line):
-            line_buffer.append(next(lines))
-            next_line = lines.peek()
-        else:
+        # first line in list item
+        if next_line is None:
             return None
+        pair = cls.parse_leader(next_line)
+        if pair is None:
+            return None
+        prepend, leader = pair
+        line_buffer.append(next(lines))
+        next_line = lines.peek()
         while (next_line is not None
-                and (not cls.parse_leader(next_line))
-                and (not newline or cls.in_continuation(next_line))):
+                and not cls.parse_leader(next_line, prepend)
+                and (not newline or cls.in_continuation(next_line, prepend))):
             line = next(lines)
-            line = line[cls.prepend:] if newline else line.lstrip(' ')
+            line = line[prepend:] if newline else line.lstrip(' ')
             line_buffer.append(line)
             newline = next_line == '\n'
             next_line = lines.peek()
-        return line_buffer
-
+        return line_buffer, prepend, leader
 
 
 class Table(BlockToken):
