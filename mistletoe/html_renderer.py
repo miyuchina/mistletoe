@@ -102,7 +102,7 @@ class HTMLRenderer(BaseRenderer):
             attr = ' class="{}"'.format('lang-{}'.format(token.language))
         else:
             attr = ''
-        inner = self.render_inner(token).rstrip()
+        inner = self.render_inner(token)
         return template.format(attr=attr, inner=inner)
 
     def render_list(self, token):
