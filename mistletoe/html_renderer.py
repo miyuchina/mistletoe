@@ -109,7 +109,7 @@ class HTMLRenderer(BaseRenderer):
         template = '<{tag}{attr}>\n{inner}</{tag}>\n'
         if token.start:
             tag = 'ol'
-            attr = ' start="{}"'.format(token.start)
+            attr = ' start="{}"'.format(token.start) if token.start != 1 else ''
         else:
             tag = 'ul'
             attr = ''
