@@ -504,7 +504,11 @@ class Separator(BlockToken):
 
     @classmethod
     def start(cls, line):
-        chars = set(line.strip().replace(' ', ''))
+        line = line.strip()
+        if len(line) < 3:
+            return False
+        chars = set(line)
+        chars.discard(' ')
         return len(chars) == 1 and chars.pop() in {'-', '_', '*'}
 
     @staticmethod
