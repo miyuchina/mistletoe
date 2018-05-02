@@ -250,7 +250,12 @@ class CodeFence(BlockToken):
 
     @classmethod
     def read(cls, lines):
-        return until(cls._open_line, lines, func=str.startswith)
+        line_buffer = [next(lines)]
+        for line in lines:
+            if line.startswith(cls._open_line):
+                break
+            line_buffer.append(line)
+        return line_buffer
 
 
 class List(BlockToken):
@@ -516,12 +521,9 @@ class Separator(BlockToken):
         return [next(lines)]
 
 
-def until(stop_line, lines, func=None):
+def until(stop_line, lines):
     line_buffer = [next(lines)]
-    for line in lines:
-        if (line == stop_line if func is None else func(line, stop_line)):
-            break
-        line_buffer.append(line)
+    line_buffer.extend([line for line in lines if line != stop_line])
     return line_buffer
 
 
