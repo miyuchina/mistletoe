@@ -240,6 +240,7 @@ class CodeFence(BlockToken):
 
     @classmethod
     def start(cls, line):
+        line = line.strip()
         if line.startswith('```'):
             cls._open_line = '```'
             return True
