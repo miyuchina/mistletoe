@@ -159,7 +159,6 @@ class SetextHeading(BlockToken):
         while (next_line is not None
                 and next_line != '\n'
                 and not Heading.start(next_line)
-                and not BlockCode.start(next_line)
                 and not CodeFence.start(next_line)
                 and not List.start(next_line)):
             line = next(lines)
@@ -202,7 +201,6 @@ class Paragraph(BlockToken):
         next_line = lines.peek()
         while (next_line is not None
                 and not Heading.start(next_line)
-                and not BlockCode.start(next_line)
                 and not CodeFence.start(next_line)
                 and not List.start(next_line)):
             line_buffer.append(next(line))
@@ -221,7 +219,12 @@ class BlockCode(BlockToken):
 
     @staticmethod
     def read(lines):
-        return until('\n', lines)
+        line_buffer = []
+        for line in lines:
+            if not line.startswith('    '):
+                break
+            line_buffer.append(line)
+        return line_buffer
 
 
 class CodeFence(BlockToken):
