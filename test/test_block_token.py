@@ -220,6 +220,12 @@ class TestList(unittest.TestCase):
         self.assertIsInstance(l4, block_token.List)
         self.assertTrue('spam' in l4)
 
+    def test_sublist(self):
+        lines = ['- foo\n',
+                 '  + bar\n']
+        token, = block_token.tokenize(lines)
+        self.assertIsInstance(token, block_token.List)
+
 
 class TestTable(unittest.TestCase):
     def test_parse_align(self):

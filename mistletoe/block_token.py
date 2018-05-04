@@ -264,8 +264,7 @@ class CodeFence(BlockToken):
 
 class List(BlockToken):
     def __init__(self, items):
-        self._children = items
-        self.loose = self.__class__.loose
+        self._children, self.loose = items
         leader = self.children[0].leader
         self.start = None
         if len(leader) != 1:
@@ -277,8 +276,8 @@ class List(BlockToken):
 
     @classmethod
     def read(cls, lines):
-        cls.loose = False
-        cls.leader = None
+        loose = False
+        leader = None
         item_buffer = []
         while True:
             while lines.peek() == '\n':
@@ -287,14 +286,14 @@ class List(BlockToken):
             if output is None:
                 break
             item = ListItem(*output)
-            if cls.leader is None:
-                cls.leader = item.leader
-            elif not cls.same_marker_type(cls.leader, item.leader):
+            if leader is None:
+                leader = item.leader
+            elif not cls.same_marker_type(leader, item.leader):
                 lines.reset()
                 break
-            cls.loose |= item.loose
+            loose |= item.loose
             item_buffer.append(item)
-        return item_buffer
+        return item_buffer, loose
 
     @staticmethod
     def same_marker_type(leader, other):
