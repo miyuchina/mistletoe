@@ -236,29 +236,36 @@ class CodeFence(BlockToken):
         children (iterator): contains a single span_token.RawText token.
         language (str): language of code block (default to empty).
     """
-    _open_line = ''
+    pattern = re.compile(r'( {0,3})((?:`|~){3,}) *(\S*)')
+    _open_info = None
     def __init__(self, lines):
-        self.language = lines[0].strip()[3:]
-        self._children = (span_token.RawText(''.join(lines[1:])),)
+        self.language = self.__class__._open_info[2]
+        self._children = (span_token.RawText(''.join(lines)),)
+        self.__class__._open_info = None
 
     @classmethod
     def start(cls, line):
-        line = line.strip()
-        if line.startswith('```'):
-            cls._open_line = '```'
-            return True
-        if line.startswith('~~~'):
-            cls._open_line = '~~~'
-            return True
-        return False
+        match_obj = cls.pattern.match(line)
+        if not match_obj:
+            return False
+        prepend, leader, lang = match_obj.groups()
+        if leader[0] in lang:
+            return False
+        cls._open_info = len(prepend), leader, lang
+        return True
 
     @classmethod
     def read(cls, lines):
-        line_buffer = [next(lines)]
+        next(lines)
+        line_buffer = []
         for line in lines:
-            if line.startswith(cls._open_line):
+            stripped_line = line.lstrip(' ')
+            diff = len(line) - len(stripped_line)
+            if stripped_line.startswith(cls._open_info[1]) and diff < 4:
                 break
-            line_buffer.append(line)
+            if diff > cls._open_info[0]:
+                stripped_line = ' ' * (diff - cls._open_info[0]) + stripped_line
+            line_buffer.append(stripped_line)
         return line_buffer
 
 
