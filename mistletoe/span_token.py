@@ -130,9 +130,9 @@ class InlineCode(SpanToken):
     """
     Inline code tokens. ("`some code`")
     """
-    pattern = re.compile(r"`(.+?)`", re.DOTALL)
+    pattern = re.compile(r"(`+)(.+?)\1", re.DOTALL)
     def __init__(self, match_obj):
-        self._children = (RawText(match_obj.group(1)),)
+        self._children = (RawText(match_obj.group(2).strip()),)
 
 
 class Strikethrough(SpanToken):
