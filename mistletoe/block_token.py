@@ -101,7 +101,12 @@ class BlockToken(object):
     
     @staticmethod
     def read(lines):
-        return until('\n', lines)
+        line_buffer = [next(lines)]
+        for line in lines:
+            if line == '\n':
+                break
+            line_buffer.append(line)
+        return line_buffer
 
 
 class Document(BlockToken):
@@ -529,12 +534,6 @@ class Separator(BlockToken):
     @staticmethod
     def read(lines):
         return [next(lines)]
-
-
-def until(stop_line, lines):
-    line_buffer = [next(lines)]
-    line_buffer.extend([line for line in lines if line != stop_line])
-    return line_buffer
 
 
 _token_types = []
