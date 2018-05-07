@@ -1,4 +1,4 @@
-SKIPPED_TESTS = {2: 'only four spaces are chopped off from BlockCode', }
+SKIPPED_TESTS = {}
 
 
 def run_tests(test_entries, runnable):
