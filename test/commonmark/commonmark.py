@@ -1,11 +1,15 @@
+import sys
 import json
 import mistletoe
 from pprint import pprint
 from traceback import print_tb
 
 
-def run_tests(test_entries, runnable):
-    return [run_test(test_entry, runnable) for test_entry in test_entries]
+def run_tests(test_entries, runnable, start=None, end=None):
+    start = start or 0
+    end = end or sys.maxsize
+    return [run_test(test_entry, runnable) for test_entry in test_entries
+            if test_entry['example'] >= start and test_entry['example'] < end]
 
 
 def run_test(test_entry, runnable):
@@ -41,14 +45,19 @@ def print_test_entry(test_entry, *keywords):
         pprint(test_entry)
 
 
-def main():
+def main(start, end):
     with open('commonmark.json', 'r') as fin:
         test_entries = json.load(fin)
-    return run_tests(test_entries, mistletoe.markdown)
+    return run_tests(test_entries, mistletoe.markdown, start, end)
 
 
 if __name__ == '__main__':
-    results = main()
+    start, end = None, None
+    if len(sys.argv) > 1:
+        start = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        end = int(sys.argv[2])
+    results = main(start, end)
     print('failed:', len(list(filter(lambda x: not x, results))))
     print(' total:', len(results))
 
