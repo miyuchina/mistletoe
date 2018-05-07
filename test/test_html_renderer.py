@@ -68,7 +68,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('Paragraph', '<p>inner</p>\n')
 
     def test_block_code(self):
-        output = '<pre><code class="lang-sh">inner</code></pre>\n'
+        output = '<pre><code class="language-sh">inner</code></pre>\n'
         self._test_token('BlockCode', output, language='sh')
 
     def test_block_code_no_language(self):
