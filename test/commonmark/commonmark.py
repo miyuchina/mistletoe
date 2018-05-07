@@ -1,9 +1,11 @@
-SKIPPED_TESTS = {}
+import json
+import mistletoe
+from pprint import pprint
+from traceback import print_tb
 
 
 def run_tests(test_entries, runnable):
-    return [run_test(test_entry, runnable) for test_entry in test_entries
-            if test_entry['example'] not in SKIPPED_TESTS]
+    return [run_test(test_entry, runnable) for test_entry in test_entries]
 
 
 def run_test(test_entry, runnable):
@@ -17,6 +19,7 @@ def run_test(test_entry, runnable):
         return success
     except Exception as exception:
         print_exception(exception, test_entry)
+        return False
 
 
 def compare(expected, output):
@@ -24,7 +27,6 @@ def compare(expected, output):
 
 
 def print_exception(exception, test_entry):
-    from traceback import print_tb
     print(exception.__class__.__name__ + ':', exception)
     print('\nTraceback: ')
     print_tb(exception.__traceback__)
@@ -33,7 +35,6 @@ def print_exception(exception, test_entry):
 
 
 def print_test_entry(test_entry, *keywords):
-    from pprint import pprint
     if keywords:
         pprint({keyword: test_entry[keyword] for keyword in keywords})
     else:
@@ -41,8 +42,6 @@ def print_test_entry(test_entry, *keywords):
 
 
 def main():
-    import json
-    import mistletoe
     with open('commonmark.json', 'r') as fin:
         test_entries = json.load(fin)
     return run_tests(test_entries, mistletoe.markdown)
