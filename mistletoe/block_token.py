@@ -208,7 +208,7 @@ class Paragraph(BlockToken):
                 and not Heading.start(next_line)
                 and not CodeFence.start(next_line)
                 and not List.start(next_line)):
-            line_buffer.append(next(line))
+            line_buffer.append(next(lines))
             next_line = lines.peek()
         return line_buffer
 
