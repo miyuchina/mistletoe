@@ -54,7 +54,7 @@ class TestJIRARenderer(TestCase):
         self.textFormatTest('*a{}*', '_a{}_')
         
     def test_render_inline_code(self):
-        self.textFormatTest('`a{}`', '{{{{a{}}}}}')
+        self.textFormatTest('`a{}b`', '{{{{a{}b}}}}')
 
     def test_render_strikethrough(self):
         self.textFormatTest('-{}-', '-{}-')
