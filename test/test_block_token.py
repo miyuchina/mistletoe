@@ -199,9 +199,6 @@ class TestListItem(unittest.TestCase):
         f = FileWrapper(lines)
         list_item = block_token.ListItem(*block_token.ListItem.read(f))
         self.assertEqual(list_item.loose, False)
-        token, = list_item.children
-        self.assertIsInstance(token, span_token.RawText)
-        self.assertEqual(token.content, 'foo')
 
 
 class TestList(unittest.TestCase):

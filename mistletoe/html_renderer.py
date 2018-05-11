@@ -19,6 +19,7 @@ class HTMLRenderer(BaseRenderer):
             extras (list): allows subclasses to add even more custom tokens.
         """
         tokens = self._tokens_from_module(html_token)
+        self._suppress_ptag = False
         super().__init__(*chain(tokens, extras))
 
     def render_strong(self, token):
@@ -94,6 +95,8 @@ class HTMLRenderer(BaseRenderer):
         return template.format(inner=self.render_inner(token))
 
     def render_paragraph(self, token):
+        if self._suppress_ptag:
+            return '{}\n'.format(self.render_inner(token))
         return '<p>{}</p>\n'.format(self.render_inner(token))
 
     def render_block_code(self, token):
@@ -113,7 +116,10 @@ class HTMLRenderer(BaseRenderer):
         else:
             tag = 'ul'
             attr = ''
+        if not token.loose:
+            self._suppress_ptag = True
         inner = self.render_inner(token)
+        self._suppress_ptag = False
         return template.format(tag=tag, attr=attr, inner=inner)
 
     def render_list_item(self, token):

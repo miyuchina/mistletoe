@@ -321,11 +321,8 @@ class ListItem(BlockToken):
         self.leader = leader
         self.prepend = prepend
         lines[0] = lines[0][prepend:]
-        self.loose = True
+        self.loose = '\n' in lines
         self._children = tuple(tokenize(lines))
-        if len(self._children) == 1 and isinstance(self._children[0], Paragraph):
-            self._children = self._children[0].children
-            self.loose = False
 
     @staticmethod
     def in_continuation(line, prepend):
