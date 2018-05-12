@@ -370,8 +370,10 @@ class ListItem(BlockToken):
             line = next(lines)
             line = line[prepend:] if newline else line.lstrip(' ')
             line_buffer.append(line)
-            newline = next_line == '\n'
+            newline = next_line.strip() == ''
             next_line = lines.peek()
+        if line_buffer[-1] == '\n':
+            line_buffer.pop()
         return line_buffer, prepend, leader
 
 
