@@ -196,18 +196,16 @@ class Paragraph(BlockToken):
 
     @classmethod
     def read(cls, lines):
-        newline = False
         line_buffer = [next(lines)]
         next_line = lines.peek()
         while (next_line is not None
-                and not (newline and next_line.strip() != '')
+                and next_line.strip() != ''
                 and not Heading.start(next_line)
                 and not CodeFence.start(next_line)
                 and not List.start(next_line)):
             line_buffer.append(next(lines))
             if cls.is_setext_heading(next_line):
                 return SetextHeading(line_buffer)
-            newline = next_line.strip() == ''
             next_line = lines.peek()
         return line_buffer
 
