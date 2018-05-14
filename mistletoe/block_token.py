@@ -431,11 +431,13 @@ class Table(BlockToken):
 
     @staticmethod
     def read(lines):
+        lines.anchor()
         line_buffer = [next(lines)]
         while lines.peek() is not None and '|' in lines.peek():
             line_buffer.append(next(lines))
         if len(line_buffer) < 2 or '---' not in line_buffer[1]:
-            raise tokenizer.MismatchException()
+            lines.reset()
+            return None
         return line_buffer
 
 

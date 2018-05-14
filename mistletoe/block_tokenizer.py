@@ -3,12 +3,6 @@ Block-level tokenizer for mistletoe.
 """
 
 
-class MismatchException(Exception):
-    def __init__(self, lines=None):
-        super().__init__()
-        self.lines = lines
-
-
 class FileWrapper:
     def __init__(self, lines):
         self.lines = [line.replace('\t', '    ') for line in lines]
@@ -25,7 +19,7 @@ class FileWrapper:
         return self
 
     def __repr__(self):
-        return repr(self.lines[self._index:])
+        return repr(self.lines[self._index+1:])
 
     def anchor(self):
         self._anchor = self._index
@@ -55,17 +49,14 @@ def tokenize(iterable, token_types, root=None):
     lines = FileWrapper(iterable)
     for line in lines:
         for token_type in token_types:
-            try:
-                if token_type.start(line):
-                    lines._index -= 1
-                    token = token_type(token_type.read(lines))
+            if token_type.start(line):
+                lines._index -= 1
+                result = token_type.read(lines)
+                if result is not None:
+                    token = token_type(result)
                     if root and hasattr(token, 'store_footnotes'):
                         token.store_footnotes(root)
                     else:
                         yield token
-                    break
-            except MismatchException as e:
-                if e.lines is not None:
-                    yield token_types[-1](e.lines)
                     break
 
