@@ -116,11 +116,9 @@ class HTMLRenderer(BaseRenderer):
         else:
             tag = 'ul'
             attr = ''
-        if not token.loose:
-            self._suppress_ptag_stack.append(True)
+        self._suppress_ptag_stack.append(not token.loose)
         inner = self.render_inner(token)
-        if not token.loose:
-            self._suppress_ptag_stack.pop()
+        self._suppress_ptag_stack.pop()
         return template.format(tag=tag, attr=attr, inner=inner)
 
     def render_list_item(self, token):
