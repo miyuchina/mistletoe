@@ -13,7 +13,7 @@ import mistletoe.span_token as span_token
 Tokens to be included in the parsing process, in the order specified.
 """
 __all__ = ['Heading', 'Quote', 'CodeFence', 'BlockCode', 'Separator',
-           'List', 'Table', 'FootnoteBlock', 'SetextHeading', 'Paragraph']
+           'List', 'Table', 'FootnoteBlock', 'Paragraph']
 
 
 def tokenize(lines, root=None):
@@ -149,29 +149,17 @@ class Heading(BlockToken):
 
 class SetextHeading(BlockToken):
     def __init__(self, lines):
-        self.level = 1 if lines[-1].startswith('=') else 2
-        content = ''.join(lines[:-1])
+        self.level = 1 if lines.pop().lstrip().startswith('=') else 2
+        content = '\n'.join([line.strip() for line in lines])
         super().__init__(content, span_token.tokenize_inner)
 
-    @staticmethod
-    def start(line):
-        return line != '\n'
+    @classmethod
+    def start(cls, line):
+        raise NotImplementedError()
 
-    @staticmethod
-    def read(lines):
-        line_buffer = [next(lines)]
-        next_line = lines.peek()
-        while (next_line is not None
-                and next_line != '\n'
-                and not Heading.start(next_line)
-                and not CodeFence.start(next_line)
-                and not List.start(next_line)):
-            line = next(lines)
-            line_buffer.append(line)
-            if line.startswith(('===', '---')):
-                return line_buffer
-            next_line = lines.peek()
-        raise tokenizer.MismatchException(line_buffer)
+    @classmethod
+    def read(cls, lines):
+        raise NotImplementedError()
 
 
 class Quote(BlockToken):
@@ -192,6 +180,12 @@ class Paragraph(BlockToken):
     Paragraph token. (["some\n", "continuous\n", "lines\n"])
     Boundary between span-level and block-level tokens.
     """
+
+    def __new__(cls, lines):
+        if not isinstance(lines, list):
+            return lines
+        return super().__new__(cls)
+
     def __init__(self, lines):
         content = ''.join(lines).strip()
         super().__init__(content, span_token.tokenize_inner)
@@ -202,15 +196,25 @@ class Paragraph(BlockToken):
 
     @classmethod
     def read(cls, lines):
+        newline = False
         line_buffer = [next(lines)]
         next_line = lines.peek()
         while (next_line is not None
+                and not (newline and next_line.strip() != '')
                 and not Heading.start(next_line)
                 and not CodeFence.start(next_line)
                 and not List.start(next_line)):
             line_buffer.append(next(lines))
+            if cls.is_setext_heading(next_line):
+                return SetextHeading(line_buffer)
+            newline = next_line.strip() == ''
             next_line = lines.peek()
         return line_buffer
+
+    @classmethod
+    def is_setext_heading(cls, line):
+        charset = set(line.strip())
+        return len(charset) == 1 and charset.issubset({'=', '-'})
 
 
 class BlockCode(BlockToken):

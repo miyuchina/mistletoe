@@ -51,7 +51,7 @@ class TestATXHeading(TestToken):
 class TestSetextHeading(TestToken):
     def test_match(self):
         lines = ['some\n', 'heading\n', '---\n']
-        arg = 'some\nheading\n'
+        arg = 'some\nheading'
         self._test_match(block_token.SetextHeading, lines, arg, level=2)
 
     def test_next(self):
@@ -60,7 +60,7 @@ class TestSetextHeading(TestToken):
         token = next(tokens)
         self.assertIsInstance(token, block_token.SetextHeading)
         token.children
-        self.mock.assert_called_with('some\nheading\n')
+        self.mock.assert_called_with('some\nheading')
         token = next(tokens)
         self.assertIsInstance(token, block_token.Paragraph)
         token.children
