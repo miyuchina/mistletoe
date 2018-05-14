@@ -212,7 +212,7 @@ class Paragraph(BlockToken):
     @classmethod
     def is_setext_heading(cls, line):
         charset = set(line.strip())
-        return len(charset) == 1 and charset.issubset({'=', '-'})
+        return len(charset) == 1 and charset.pop() in {'=', '-'}
 
 
 class BlockCode(BlockToken):
