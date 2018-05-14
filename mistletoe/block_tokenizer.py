@@ -35,13 +35,11 @@ class FileWrapper:
 
 def tokenize(iterable, token_types, root=None):
     """
-    Searches for token_types in iterable, and applies fallback_token
-    to lines in between.
+    Searches for token_types in iterable.
 
     Args:
         content (list[str]): user input lines to be parsed.
         token_types (list): a list of block-level token constructors.
-        fallback_token (block_token.BlockToken): token for unmatched lines.
 
     Yields:
         block-level token instances.
@@ -59,4 +57,7 @@ def tokenize(iterable, token_types, root=None):
                     else:
                         yield token
                     break
+        else:  # unmatched newlines
+            if root and hasattr(root, 'loose'):
+                root.loose = True
 

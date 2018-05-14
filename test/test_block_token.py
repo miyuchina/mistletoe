@@ -194,8 +194,13 @@ class TestListItem(unittest.TestCase):
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertIsInstance(token2, block_token.List)
 
-    def test_tight_list(self):
-        lines = ['- foo\n']
+    def test_loose_list(self):
+        lines = ['- foo\n',
+                 '  ~~~\n',
+                 '  bar\n',
+                 '  \n',
+                 '  baz\n'
+                 '  ~~~\n']
         f = FileWrapper(lines)
         list_item = block_token.ListItem(*block_token.ListItem.read(f))
         self.assertEqual(list_item.loose, False)

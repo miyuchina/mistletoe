@@ -323,8 +323,8 @@ class ListItem(BlockToken):
         self.leader = leader
         self.prepend = prepend
         lines[0] = lines[0][prepend:]
-        self.loose = '\n' in lines
-        self._children = tuple(tokenize(lines))
+        self.loose = False
+        self._children = tuple(tokenize(lines, self))
 
     @staticmethod
     def in_continuation(line, prepend):
@@ -374,8 +374,6 @@ class ListItem(BlockToken):
             line_buffer.append(line)
             newline = next_line.strip() == ''
             next_line = lines.peek()
-        if line_buffer[-1] == '\n':
-            line_buffer.pop()
         return line_buffer, prepend, leader
 
 
