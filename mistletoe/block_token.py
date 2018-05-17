@@ -256,7 +256,7 @@ class CodeFence(BlockToken):
         if not match_obj:
             return False
         prepend, leader, lang = match_obj.groups()
-        if leader[0] in lang:
+        if leader[0] in lang or leader[0] in line[match_obj.end():]:
             return False
         cls._open_info = len(prepend), leader, lang
         return True
@@ -268,7 +268,9 @@ class CodeFence(BlockToken):
         for line in lines:
             stripped_line = line.lstrip(' ')
             diff = len(line) - len(stripped_line)
-            if stripped_line.startswith(cls._open_info[1]) and diff < 4:
+            if (stripped_line.startswith(cls._open_info[1])
+                    and len(stripped_line.split(maxsplit=1)) == 1
+                    and diff < 4):
                 break
             if diff > cls._open_info[0]:
                 stripped_line = ' ' * (diff - cls._open_info[0]) + stripped_line
