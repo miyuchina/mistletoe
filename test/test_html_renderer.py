@@ -43,7 +43,7 @@ class TestHTMLRenderer(TestRenderer):
 
     def test_autolink(self):
         output = '<a href="link">inner</a>'
-        self._test_token('AutoLink', output, target='link')
+        self._test_token('AutoLink', output, target='link', mailto=False)
 
     def test_escape_sequence(self):
         self._test_token('EscapeSequence', 'inner')

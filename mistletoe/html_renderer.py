@@ -70,7 +70,10 @@ class HTMLRenderer(BaseRenderer):
 
     def render_auto_link(self, token):
         template = '<a href="{target}">{inner}</a>'
-        target = escape_url(token.target)
+        if token.mailto:
+            target = 'mailto:{}'.format(token.target)
+        else:
+            target = html.escape(token.target)
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)
 

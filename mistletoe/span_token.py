@@ -208,10 +208,11 @@ class AutoLink(SpanToken):
         children (iterator): a single RawText node for alternative text.
         target (str): link target.
     """
-    pattern = re.compile(r"<(\S+?)>", re.DOTALL)
+    pattern = re.compile(r"<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
     def __init__(self, match_obj):
         self._children = (RawText(match_obj.group(1)),)
         self.target = match_obj.group(1)
+        self.mailto = '@' in self.target and 'mailto' not in self.target.casefold()
 
 
 class EscapeSequence(SpanToken):

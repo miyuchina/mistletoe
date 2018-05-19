@@ -103,7 +103,7 @@ class TestFootnoteLink(TestBranchToken):
 
 class TestAutoLink(TestBranchToken):
     def test_parse(self):
-        self._test_parse(span_token.AutoLink, '<link>', 'link', target='link')
+        self._test_parse(span_token.AutoLink, '<ftp://foo.com>', 'ftp://foo.com', target='ftp://foo.com')
 
 
 class TestImage(TestBranchToken):
