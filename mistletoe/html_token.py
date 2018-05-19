@@ -13,6 +13,16 @@ import mistletoe.block_token as block_token
 __all__ = ['HTMLBlock', 'HTMLSpan']
 
 
+_tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
+        'body', 'caption', 'center', 'col', 'colgroup', 'dd', 'details',
+        'dialog', 'dir', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure',
+        'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5',
+        'h6', 'head', 'header', 'hr', 'html', 'iframe', 'legend', 'li', 'link',
+        'main', 'menu', 'menuitem', 'meta', 'nav', 'noframes', 'ol',
+        'optgroup', 'option', 'p', 'param', 'section', 'source', 'summary',
+        'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'title', 'tr', 'track', 'ul'}
+
+
 class HTMLBlock(block_token.BlockToken):
     """
     Block-level HTML tokens.
@@ -20,34 +30,61 @@ class HTMLBlock(block_token.BlockToken):
     Attributes:
         content (str): literal strings rendered as-is.
     """
-    _last_tag = ''
-    pattern = re.compile(r'<(\S+).*?>')
+    _end_cond = None
+    multiblock = re.compile(r'<(script|pre|style)[ >\n]')
+    predefined = re.compile(r'<\/?(.+?)(?:\/?>|[ \n])')
+    custom_tag = re.compile(r'^(?:<[A-z][A-z0-9-]*(?: .+?)? *?/?>|</[A-z][A-z0-9-]* *?>) *$')
     def __init__(self, lines):
         self.content = ''.join(lines) # implicit newlines
 
     @classmethod
     def start(cls, line):
-        # single-line html token?
-        if HTMLSpan.pattern.match(line.strip()):
-            cls._last_tag = ''
+        stripped = line.lstrip()
+        if len(line) - len(stripped) >= 4:
+            return False
+        # rule 1: <pre>, <script> or <style> tags, allow newlines in block
+        match_obj = cls.multiblock.match(stripped)
+        if match_obj is not None:
+            cls._end_cond = '</{}>'.format(match_obj.group(1).casefold())
             return True
-        # multi-line html token?
-        match_obj = cls.pattern.match(line)
-        if match_obj:
-            cls._last_tag = match_obj.group(1)
+        # rule 2: html comment tags, allow newlines in block
+        if stripped.startswith('<!--'):
+            cls._end_cond = '-->'
+            return True
+        # rule 3: tags that starts with <?, allow newlines in block
+        if stripped.startswith('<?'):
+            cls._end_cond = '?>'
+            return True
+        # rule 4: tags that starts with <!, allow newlines in block
+        if stripped.startswith('<!') and stripped[2].isupper():
+            cls._end_cond = '>'
+            return True
+        # rule 5: CDATA declaration, allow newlines in block
+        if stripped.startswith('<![CDATA['):
+            cls._end_cond = ']]>'
+            return True
+        # rule 6: predefined tags (see html_token._tags), read until newline
+        match_obj = cls.predefined.match(stripped)
+        if match_obj is not None and match_obj.group(1).casefold() in _tags:
+            cls._end_cond = None
+            return True
+        # rule 7: custom tags, read until newline
+        match_obj = cls.custom_tag.match(stripped)
+        if match_obj is not None:
+            cls._end_cond = None
             return True
         return False
 
     @classmethod
     def read(cls, lines):
-        line_buffer = [next(lines)]
-        if not cls._last_tag:
-            return line_buffer
+        # note: stop condition can trigger on the starting line
+        line_buffer = []
         for line in lines:
             line_buffer.append(line)
-            start = line.find('</')
-            end = line[start:].find('>')
-            if start != -1 and end != -1 and line[start+2:end] == cls._last_tag:
+            if cls._end_cond is not None:
+                if cls._end_cond in line.casefold():
+                    break
+            elif line.strip() == '':
                 break
         return line_buffer
 
