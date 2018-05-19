@@ -372,8 +372,11 @@ class ListItem(BlockToken):
                 and not cls.parse_marker(next_line, prepend, leader)
                 and (not newline or cls.in_continuation(next_line, prepend))):
             line = next(lines)
-            line = line[prepend:] if newline else line.lstrip(' ')
-            line_buffer.append(line)
+            stripped = line.lstrip(' ')
+            diff = len(line) - len(stripped)
+            if diff > prepend:
+                stripped = ' ' * (diff - prepend) + stripped
+            line_buffer.append(stripped)
             newline = next_line.strip() == ''
             next_line = lines.peek()
         return line_buffer, prepend, leader

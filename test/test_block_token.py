@@ -194,6 +194,21 @@ class TestListItem(unittest.TestCase):
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertIsInstance(token2, block_token.List)
 
+    def test_deep_list(self):
+        lines = ['- foo\n',
+                 '  - bar\n',
+                 '    - baz\n']
+        f = FileWrapper(lines)
+        ptoken, ltoken = block_token.ListItem(*block_token.ListItem.read(f)).children
+        self.assertIsInstance(ptoken, block_token.Paragraph)
+        self.assertIsInstance(ltoken, block_token.List)
+        self.assertTrue('foo' in ptoken)
+        ptoken, ltoken = ltoken.children[0].children
+        self.assertIsInstance(ptoken, block_token.Paragraph)
+        self.assertTrue('bar' in ptoken)
+        self.assertIsInstance(ltoken, block_token.List)
+        self.assertTrue('baz' in ltoken)
+
     def test_loose_list(self):
         lines = ['- foo\n',
                  '  ~~~\n',
