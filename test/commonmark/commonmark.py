@@ -9,7 +9,7 @@ def run_tests(test_entries, runnable, start=None, end=None):
     start = start or 0
     end = end or sys.maxsize
     return [run_test(test_entry, runnable) for test_entry in test_entries
-            if test_entry['example'] >= start and test_entry['example'] < end]
+            if test_entry['example'] >= start and test_entry['example'] <= end]
 
 
 def run_test(test_entry, runnable):
