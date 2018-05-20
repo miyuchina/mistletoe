@@ -150,6 +150,12 @@ class TestRawText(unittest.TestCase):
             token.children
 
 
+class TestLineBreak(unittest.TestCase):
+    def test_parse(self):
+        token, = span_token.tokenize_inner('  \n')
+        self.assertIsInstance(token, span_token.LineBreak)
+
+
 class TestContains(unittest.TestCase):
     def test_contains(self):
         token = next(span_token.tokenize_inner('**with some *emphasis* text**'))

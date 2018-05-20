@@ -143,6 +143,10 @@ class LaTeXRenderer(BaseRenderer):
     def render_separator(token):
         return '\\hrulefill\n'
 
+    @staticmethod
+    def render_line_break(token):
+        return '\\newline\n'
+
     def render_packages(self):
         pattern = '\\usepackage{options}{{{package}}}\n'
         return ''.join(pattern.format(options=options or '', package=package)

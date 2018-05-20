@@ -167,6 +167,10 @@ class HTMLRenderer(BaseRenderer):
         return '<hr />\n'
 
     @staticmethod
+    def render_line_break(token):
+        return '<br />\n'
+
+    @staticmethod
     def render_html_block(token):
         return token.content
 

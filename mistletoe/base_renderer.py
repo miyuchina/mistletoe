@@ -69,6 +69,7 @@ class BaseRenderer(object):
             'TableRow':       self.render_table_row,
             'TableCell':      self.render_table_cell,
             'Separator':      self.render_separator,
+            'LineBreak':      self.render_line_break,
             'Document':       self.render_document,
             }
         self._extras = extras

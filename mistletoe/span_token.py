@@ -11,7 +11,7 @@ Tokens to be included in the parsing process, in the order specified.
 """
 __all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
            'Strikethrough', 'Image', 'FootnoteImage', 'Link',
-           'FootnoteLink', 'AutoLink', 'RawText']
+           'FootnoteLink', 'AutoLink', 'LineBreak', 'RawText']
 
 
 def tokenize_inner(content):
@@ -225,6 +225,19 @@ class EscapeSequence(SpanToken):
     pattern = re.compile(r"\\([\*\(\)\[\]\~\#\>\`])")
     def __init__(self, match_obj):
         self._children = (RawText(match_obj.group(1)),)
+
+
+class LineBreak(SpanToken):
+    """
+    Hard line breaks. Two spaces at the end of a line, or a backslash.
+    """
+    pattern = re.compile(r'(?: {2,}|\\)\n')
+    def __init__(self, _):
+        self.content = ''
+
+    @property
+    def children(self):
+        raise AttributeError("'LineBreak' object has no attribute children. Perhaps you mean 'RawText.content'?")
 
 
 class RawText(SpanToken):

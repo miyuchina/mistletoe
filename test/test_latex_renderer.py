@@ -99,6 +99,9 @@ class TestLaTeXRenderer(TestCase):
     def test_separator(self):
         self._test_token('Separator', '\\hrulefill\n')
 
+    def test_line_break(self):
+        self._test_token('LineBreak', '\\newline\n')
+
     def test_document(self):
         output = ('\\documentclass{article}\n'
                   '\\begin{document}\n'

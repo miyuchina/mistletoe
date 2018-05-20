@@ -207,6 +207,10 @@ class JIRARenderer(BaseRenderer):
         return '----\n'
 
     @staticmethod
+    def render_line_break(token):
+        return '\\\\\n'
+
+    @staticmethod
     def render_html_block(token):
         return token.content
 

@@ -115,6 +115,9 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('HTMLBlock', output,
                          children=False, content=content)
 
+    def test_line_break(self):
+        self._test_token('LineBreak', '<br />\n', children=False)
+
     def test_document(self):
         self._test_token('Document', 'inner', footnotes={})
 
