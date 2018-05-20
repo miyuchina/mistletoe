@@ -41,7 +41,7 @@ class TestJIRARenderer(TestCase):
         return result
 
     def textFormatTest(self, inputTemplate, outputTemplate):
-        input = self.genRandomString(80, True)
+        input = self.genRandomString(80, False)
         token = next(tokenize_inner(inputTemplate.format(input)))
         expected = outputTemplate.format(input)
         actual = self.renderer.render(token)

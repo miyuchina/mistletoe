@@ -48,7 +48,7 @@ class TestInlineCode(TestBranchToken):
         self._test_parse(span_token.InlineCode, '`some text`', 'some text')
 
     def test_multiline(self):
-        self._test_parse(span_token.InlineCode, '`some\ntext`', 'some\ntext')
+        self._test_parse(span_token.InlineCode, '`some\ntext`', 'some text')
 
 
 class TestStrikethrough(TestBranchToken):
