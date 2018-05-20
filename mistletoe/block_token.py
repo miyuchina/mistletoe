@@ -188,7 +188,7 @@ class Paragraph(BlockToken):
         return super().__new__(cls)
 
     def __init__(self, lines):
-        content = ''.join(lines).strip()
+        content = ''.join([line.lstrip() for line in lines]).strip()
         super().__init__(content, span_token.tokenize_inner)
 
     @staticmethod
