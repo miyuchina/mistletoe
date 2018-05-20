@@ -12,7 +12,7 @@ import mistletoe.span_token as span_token
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-__all__ = ['Heading', 'Quote', 'CodeFence', 'BlockCode', 'Separator',
+__all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'Separator',
            'List', 'Table', 'FootnoteBlock', 'Paragraph']
 
 
@@ -140,8 +140,7 @@ class Heading(BlockToken):
     @staticmethod
     def start(line):
         stripped = line.lstrip()
-        return (len(line) - len(stripped) < 4
-                and stripped.startswith('#')
+        return (stripped.startswith('#')
                 and stripped.find('# ') != -1
                 and len(stripped.split(' ', 1)[0]) <= 6)
 
@@ -220,7 +219,7 @@ class Paragraph(BlockToken):
 class BlockCode(BlockToken):
     def __init__(self, lines):
         self.language = ''
-        self._children = (span_token.RawText(''.join(line[4:] for line in lines)),)
+        self._children = (span_token.RawText(''.join(lines)),)
 
     @staticmethod
     def start(line):
@@ -230,9 +229,13 @@ class BlockCode(BlockToken):
     def read(lines):
         line_buffer = []
         for line in lines:
+            if line.strip() == '':
+                line_buffer.append(line.lstrip(' ') if len(line) < 5 else line[4:])
+                continue
             if not line.startswith('    '):
+                lines._index -= 1
                 break
-            line_buffer.append(line)
+            line_buffer.append(line[4:])
         return line_buffer
 
 
