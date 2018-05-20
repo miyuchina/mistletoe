@@ -139,13 +139,15 @@ class Heading(BlockToken):
 
     @staticmethod
     def start(line):
-        return (line.startswith('#')
-                and line.find('# ') != -1
-                and len(line.split(' ', 1)[0]) <= 6)
+        stripped = line.lstrip()
+        return (len(line) - len(stripped) < 4
+                and stripped.startswith('#')
+                and stripped.find('# ') != -1
+                and len(stripped.split(' ', 1)[0]) <= 6)
 
     @staticmethod
     def read(lines):
-        return [next(lines)]
+        return [next(lines).strip()]
 
 class SetextHeading(BlockToken):
     def __init__(self, lines):
