@@ -31,11 +31,10 @@ def compare(expected, output):
 
 
 def print_exception(exception, test_entry):
-    print(exception.__class__.__name__ + ':', exception)
-    print('\nTraceback: ')
+    print("Failed entry:", test_entry['example'], file=sys.stderr)
+    print(exception.__class__.__name__ + ':', exception, file=sys.stderr)
+    print('Traceback: ', file=sys.stderr)
     print_tb(exception.__traceback__)
-    print_test_entry(test_entry)
-    print('='*80)
 
 
 def print_test_entry(test_entry, *keywords):
