@@ -86,26 +86,13 @@ class SpanToken(object):
         children (tuple): inner tokens.
     """
     def __init__(self, match_obj):
-        self._children = tokenize_inner(match_obj.group(1))
+        self.children = tokenize_inner(match_obj.group(1))
 
     def __contains__(self, text):
         if hasattr(self, 'children'):
             return any(text in child for child in self.children)
         else:
             return text in self.content
-
-    @property
-    def children(self):
-        """
-        Actual children attribute.
-
-        If self.children is never accessed, the generator is never actually
-        run. This allows for lazy-parsing of the input, while still maintaining
-        idempotent behavior for tokens.
-        """
-        if isinstance(self._children, GeneratorType):
-            self._children = tuple(self._children)
-        return self._children
 
 
 class Strong(SpanToken):
@@ -114,7 +101,7 @@ class Strong(SpanToken):
     """
     pattern = re.compile(r"\*\*([^\s*].*?)\*\*|\b__([^\s_].*?)__\b", re.DOTALL)
     def __init__(self, match_obj):
-        self._children = tokenize_inner(_first_not_none_group(match_obj))
+        self.children = tokenize_inner(_first_not_none_group(match_obj))
 
 
 class Emphasis(SpanToken):
@@ -123,7 +110,7 @@ class Emphasis(SpanToken):
     """
     pattern = re.compile(r"\*([^\s*].*?)\*|\b_([^\s_].*?)_\b", re.DOTALL)
     def __init__(self, match_obj):
-        self._children = tokenize_inner(_first_not_none_group(match_obj))
+        self.children = tokenize_inner(_first_not_none_group(match_obj))
 
 
 class InlineCode(SpanToken):
@@ -132,7 +119,7 @@ class InlineCode(SpanToken):
     """
     pattern = re.compile(r"(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
     def __init__(self, match_obj):
-        self._children = (RawText(' '.join(match_obj.group(2).split())),)
+        self.children = (RawText(' '.join(match_obj.group(2).split())),)
 
 
 class Strikethrough(SpanToken):
@@ -153,7 +140,7 @@ class Image(SpanToken):
     """
     pattern = re.compile(r'\!\[(.*?)\]\s*\((.+?)(?:\s*\"(.+?)\")?\)', re.DOTALL)
     def __init__(self, match_obj):
-        self._children = (RawText(match_obj.group(1)),)
+        self.children = (RawText(match_obj.group(1)),)
         self.src = match_obj.group(2)
         self.title = match_obj.group(3)
 
@@ -168,7 +155,7 @@ class FootnoteImage(SpanToken):
     """
     pattern = re.compile(r"\!\[(.*?)\]\s*?\[(.+?)\]", re.DOTALL)
     def __init__(self, match_obj):
-        self._children = (RawText(match_obj.group(1)),)
+        self.children = (RawText(match_obj.group(1)),)
         self.src = FootnoteAnchor(match_obj.group(2))
 
 
@@ -210,7 +197,7 @@ class AutoLink(SpanToken):
     """
     pattern = re.compile(r"<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
     def __init__(self, match_obj):
-        self._children = (RawText(match_obj.group(1)),)
+        self.children = (RawText(match_obj.group(1)),)
         self.target = match_obj.group(1)
         self.mailto = '@' in self.target and 'mailto' not in self.target.casefold()
 
@@ -224,7 +211,7 @@ class EscapeSequence(SpanToken):
     """
     pattern = re.compile(r"\\([\*\(\)\[\]\~\#\>\`])")
     def __init__(self, match_obj):
-        self._children = (RawText(match_obj.group(1)),)
+        self.children = (RawText(match_obj.group(1)),)
 
 
 class LineBreak(SpanToken):
@@ -234,10 +221,6 @@ class LineBreak(SpanToken):
     pattern = re.compile(r'(?: {2,}|\\)\n')
     def __init__(self, _):
         self.content = ''
-
-    @property
-    def children(self):
-        raise AttributeError("'LineBreak' object has no attribute children. Perhaps you mean 'RawText.content'?")
 
 
 class RawText(SpanToken):
@@ -249,10 +232,6 @@ class RawText(SpanToken):
     """
     def __init__(self, raw):
         self.content = raw
-
-    @property
-    def children(self):
-        raise AttributeError("'RawText' object has no attribute children. Perhaps you mean 'RawText.content'?")
 
 
 class FootnoteAnchor(SpanToken):

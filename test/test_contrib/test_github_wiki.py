@@ -15,18 +15,15 @@ class TestGithubWiki(TestCase):
         _token_types.append(MockRawText)
         try:
             tokens = tokenize_inner('text with [[wiki | target]]')
-            next(tokens)
-            MockRawText.assert_called_with('text with ')
-            token = next(tokens)
+            token = tokens[1]
             self.assertIsInstance(token, GithubWiki)
             self.assertEqual(token.target, 'target')
-            next(iter(token.children))
-            MockRawText.assert_called_with('wiki')
+            MockRawText.assert_has_calls([mock.call('text with '), mock.call('wiki')])
         finally:
             _token_types[-1] = RawText
 
     def test_render(self):
-        token = next(tokenize_inner('[[wiki|target]]'))
+        token = next(iter(tokenize_inner('[[wiki|target]]')))
         output = '<a href="target">wiki</a>'
         self.assertEqual(self.renderer.render(token), output)
 

@@ -13,16 +13,14 @@ class TestBranchToken(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def _test_parse(self, token_cls, raw, arg, **kwargs):
-        token = next(span_token.tokenize_inner(raw))
+        token = next(iter(span_token.tokenize_inner(raw)))
         self.assertIsInstance(token, token_cls)
         self._test_token(token, arg, **kwargs)
 
     def _test_token(self, token, arg, children=True, **kwargs):
         for attr, value in kwargs.items():
             self.assertEqual(getattr(token, attr), value)
-        if children:
-            next(iter(token.children))
-        self.mock.assert_called_with(arg)
+        self.mock.assert_any_call(arg)
 
 
 class TestStrong(TestBranchToken):
@@ -62,13 +60,13 @@ class TestLink(TestBranchToken):
                          target='target1')
 
     def test_parse_multi_links(self):
-        tokens = span_token.tokenize_inner('[n1](t1) & [n2](t2)')
+        tokens = iter(span_token.tokenize_inner('[n1](t1) & [n2](t2)'))
         self._test_token(next(tokens), 'n1', target='t1')
         self._test_token(next(tokens), ' & ', children=False)
         self._test_token(next(tokens), 'n2', target='t2')
 
     def test_parse_children(self):
-        token = next(span_token.tokenize_inner('[![alt](src)](target)'))
+        token = next(iter(span_token.tokenize_inner('[![alt](src)](target)')))
         child = next(iter(token.children))
         self._test_token(child, 'alt', src='src')
 
@@ -89,7 +87,7 @@ class TestFootnoteLink(TestBranchToken):
 
     def test_trailing_empty_space(self):
         with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            tokens = span_token.tokenize_inner('[alt] foo')
+            tokens = iter(span_token.tokenize_inner('[alt] foo'))
             next(tokens)
             mock.assert_called_with('alt')
             next(tokens)
@@ -133,7 +131,7 @@ class TestEscapeSequence(TestBranchToken):
         self._test_parse(span_token.EscapeSequence, '\*', '*')
 
     def test_parse_in_text(self):
-        tokens = span_token.tokenize_inner('some \*text*')
+        tokens = iter(span_token.tokenize_inner('some \*text*'))
         self._test_token(next(tokens), 'some ', children=False)
         self._test_token(next(tokens), '*')
         self._test_token(next(tokens), 'text*', children=False)
@@ -158,7 +156,7 @@ class TestLineBreak(unittest.TestCase):
 
 class TestContains(unittest.TestCase):
     def test_contains(self):
-        token = next(span_token.tokenize_inner('**with some *emphasis* text**'))
+        token = next(iter(span_token.tokenize_inner('**with some *emphasis* text**')))
         self.assertTrue('text' in token)
         self.assertTrue('emphasis' in token)
         self.assertFalse('foo' in token)

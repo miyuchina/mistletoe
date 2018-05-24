@@ -81,23 +81,10 @@ class BlockToken(object):
         children (tuple): inner tokens.
     """
     def __init__(self, lines, tokenize_func):
-        self._children = tokenize_func(lines)
+        self.children = tokenize_func(lines)
 
     def __contains__(self, text):
         return any(text in child for child in self.children)
-
-    @property
-    def children(self):
-        """
-        Actual children attribute.
-
-        If self.children is never accessed, the generator is never actually
-        run. This allows for lazy-parsing of the input, while still maintaining
-        idempotent behavior for tokens.
-        """
-        if isinstance(self._children, GeneratorType):
-            self._children = tuple(self._children)
-        return self._children
     
     @staticmethod
     def read(lines):
@@ -119,7 +106,7 @@ class Document(BlockToken):
         self.footnotes = {}
         # Document tokens have immediate access to first-level block tokens.
         # Useful for footnotes, etc.
-        self._children = tuple(tokenize(lines, root=self))
+        self.children = tuple(tokenize(lines, root=self))
 
 
 class Heading(BlockToken):
@@ -219,7 +206,7 @@ class Paragraph(BlockToken):
 class BlockCode(BlockToken):
     def __init__(self, lines):
         self.language = ''
-        self._children = (span_token.RawText(''.join(lines)),)
+        self.children = (span_token.RawText(''.join(lines)),)
 
     @staticmethod
     def start(line):
@@ -252,7 +239,7 @@ class CodeFence(BlockToken):
     _open_info = None
     def __init__(self, lines):
         self.language = self.__class__._open_info[2]
-        self._children = (span_token.RawText(''.join(lines)),)
+        self.children = (span_token.RawText(''.join(lines)),)
         self.__class__._open_info = None
 
     @classmethod
@@ -285,7 +272,7 @@ class CodeFence(BlockToken):
 
 class List(BlockToken):
     def __init__(self, items):
-        self._children, self.loose = items
+        self.children, self.loose = items
         leader = self.children[0].leader
         self.start = None
         if len(leader) != 1:
@@ -331,7 +318,7 @@ class ListItem(BlockToken):
         self.prepend = prepend
         lines[0] = lines[0][prepend:]
         self.loose = False
-        self._children = tuple(tokenize(lines, self))
+        self.children = tuple(tokenize(lines, self))
 
     @staticmethod
     def in_continuation(line, prepend):
@@ -401,10 +388,10 @@ class Table(BlockToken):
             self.column_align = [self.parse_align(column)
                     for column in self.split_delimiter(lines[1])]
             self.header = TableRow(lines[0], self.column_align)
-            self._children = (TableRow(line, self.column_align) for line in lines[2:])
+            self.children = [TableRow(line, self.column_align) for line in lines[2:]]
         else:
             self.column_align = [None]
-            self._children = (TableRow(line) for line in lines)
+            self.children = [TableRow(line) for line in lines]
 
     @staticmethod
     def split_delimiter(delimiter):
@@ -456,8 +443,8 @@ class TableRow(BlockToken):
     def __init__(self, line, row_align=None):
         self.row_align = row_align or [None]
         cells = filter(None, line.strip().split('|'))
-        self._children = (TableCell(cell.strip(), align)
-                          for cell, align in zip_longest(cells, self.row_align))
+        self.children = [TableCell(cell.strip(), align)
+                         for cell, align in zip_longest(cells, self.row_align)]
 
 
 class TableCell(BlockToken):
@@ -485,7 +472,7 @@ class FootnoteBlock(BlockToken):
         children (list): footnote entry tokens.
     """
     def __init__(self, lines):
-        self._children = (FootnoteEntry(line) for line in lines)
+        self.children = [FootnoteEntry(line) for line in lines]
 
     @classmethod
     def _is_legal(cls, line):

@@ -11,6 +11,6 @@ class TestLaTeXToken(unittest.TestCase):
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
     def test_span(self):
-        token = next(tokenize_inner('$ 1 + 2 = 3 $'))
+        token = next(iter(tokenize_inner('$ 1 + 2 = 3 $')))
         self.assertIsInstance(token, Math)
         self.assertEqual(token.content, '$ 1 + 2 = 3 $')

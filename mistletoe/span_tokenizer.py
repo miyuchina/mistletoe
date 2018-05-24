@@ -17,15 +17,17 @@ def tokenize(content, token_types):
         span-level token instances.
     """
     *token_types, fallback_token = token_types
+    tokens = []
     start = 0
     while start != len(content):
         index, match_obj, token_type = _find_nearest_token(content, token_types, start)
         if index != start:
-            yield fallback_token(content[start:index])
+            tokens.append(fallback_token(content[start:index]))
             start = index
         if match_obj is not None:
-            yield token_type(match_obj)
+            tokens.append(token_type(match_obj))
             start = match_obj.end()
+    return tokens
 
 
 def _find_nearest_token(content, token_types, start):

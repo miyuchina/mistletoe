@@ -45,10 +45,11 @@ def tokenize(iterable, token_types, root=None):
         content (list[str]): user input lines to be parsed.
         token_types (list): a list of block-level token constructors.
 
-    Yields:
+    Returns:
         block-level token instances.
     """
     lines = FileWrapper(iterable)
+    tokens = []
     for line in lines:
         for token_type in token_types:
             if token_type.start(line):
@@ -59,9 +60,10 @@ def tokenize(iterable, token_types, root=None):
                     if root and hasattr(token, 'store_footnotes'):
                         token.store_footnotes(root)
                     else:
-                        yield token
+                        tokens.append(token)
                     break
         else:  # unmatched newlines
             if root and hasattr(root, 'loose'):
                 root.loose = True
+    return tokens
 

@@ -13,15 +13,14 @@ class TestToken(unittest.TestCase):
         self.addCleanup(patcher.stop)
 
     def _test_match(self, token_cls, lines, arg, **kwargs):
-        token = next(block_token.tokenize(lines))
+        token = next(iter(block_token.tokenize(lines)))
         self.assertIsInstance(token, token_cls)
         self._test_token(token, arg, **kwargs)
 
     def _test_token(self, token, arg, **kwargs):
         for attr, value in kwargs.items():
             self.assertEqual(getattr(token, attr), value)
-        next(iter(token.children))
-        self.mock.assert_called_with(arg)
+        self.mock.assert_any_call(arg)
 
 
 class TestATXHeading(TestToken):
@@ -56,15 +55,10 @@ class TestSetextHeading(TestToken):
 
     def test_next(self):
         lines = ['some\n', 'heading\n', '---\n', '\n', 'foobar\n']
-        tokens = block_token.tokenize(lines)
-        token = next(tokens)
-        self.assertIsInstance(token, block_token.SetextHeading)
-        token.children
-        self.mock.assert_called_with('some\nheading')
-        token = next(tokens)
-        self.assertIsInstance(token, block_token.Paragraph)
-        token.children
-        self.mock.assert_called_with('foobar')
+        tokens = iter(block_token.tokenize(lines))
+        self.assertIsInstance(next(tokens), block_token.SetextHeading)
+        self.assertIsInstance(next(tokens), block_token.Paragraph)
+        self.mock.assert_has_calls([call('some\nheading'), call('foobar')])
         with self.assertRaises(StopIteration) as e:
             token = next(tokens)
 
@@ -72,12 +66,12 @@ class TestSetextHeading(TestToken):
 class TestQuote(unittest.TestCase):
     def test_match(self):
         with patch('mistletoe.block_token.Paragraph') as mock:
-            token = next(block_token.tokenize(['> line 1\n', '> line 2\n']))
+            token = next(iter(block_token.tokenize(['> line 1\n', '> line 2\n'])))
             self.assertIsInstance(token, block_token.Quote)
 
     def test_lazy_continuation(self):
         with patch('mistletoe.block_token.Paragraph') as mock:
-            token = next(block_token.tokenize(['> line 1\n', 'line 2\n']))
+            token = next(iter(block_token.tokenize(['> line 1\n', 'line 2\n'])))
             self.assertIsInstance(token, block_token.Quote)
 
 
@@ -181,7 +175,7 @@ class TestListItem(unittest.TestCase):
                  '   bar\n',
                  '\n',
                  '          baz\n']
-        token1, token2 = next(block_token.tokenize(lines)).children[0].children
+        token1, token2 = next(iter(block_token.tokenize(lines))).children[0].children
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertTrue('foo\nbar' in token1)
         self.assertIsInstance(token2, block_token.BlockCode)
@@ -262,7 +256,7 @@ class TestTable(unittest.TestCase):
                  '| cell 1 | cell 2 | cell 3 |\n',
                  '| more 1 | more 2 | more 3 |\n']
         with patch('mistletoe.block_token.TableRow') as mock:
-            token = next(block_token.tokenize(lines))
+            token = next(iter(block_token.tokenize(lines)))
             self.assertIsInstance(token, block_token.Table)
             self.assertTrue(hasattr(token, 'header'))
             self.assertEqual(token.column_align, [None, None, None])
@@ -353,7 +347,7 @@ class TestDocument(unittest.TestCase):
 class TestSeparator(unittest.TestCase):
     def test_match(self):
         def test_case(line):
-            token = next(block_token.tokenize([line]))
+            token = next(iter(block_token.tokenize([line])))
             self.assertIsInstance(token, block_token.Separator)
         cases = ['---\n', '* * *\n', '_    _    _\n']
         for case in cases:

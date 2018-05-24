@@ -16,7 +16,7 @@ class TestHTMLToken(TestCase):
 
     def test_span(self):
         raw = 'some <span>more</span> text'
-        tokens = tokenize_inner(raw)
+        tokens = iter(tokenize_inner(raw))
         next(tokens)
         content = '<span>more</span>'
         self._test_html_token(next(tokens), html_token.HTMLSpan, content)
@@ -26,13 +26,13 @@ class TestHTMLToken(TestCase):
         lines = ['<p>a paragraph\n',
                  'within an html block\n',
                  '</p>\n']
-        token = next(tokenize(lines))
+        token = next(iter(tokenize(lines)))
         content = '<p>a paragraph\nwithin an html block\n</p>\n'
         self._test_html_token(token, html_token.HTMLBlock, content)
 
     def test_span_attrs(self):
         raw = '<span class="foo">more</span>'
-        token = next(tokenize_inner(raw))
+        token = next(iter(tokenize_inner(raw)))
         content = '<span class="foo">more</span>'
         self._test_html_token(token, html_token.HTMLSpan, content)
 
@@ -40,7 +40,7 @@ class TestHTMLToken(TestCase):
         lines = ['<p class="bar">a paragraph\n',
                  'within an html block\n',
                  '</p>\n']
-        token = next(tokenize(lines))
+        token = next(iter(tokenize(lines)))
         content = '<p class="bar">a paragraph\nwithin an html block\n</p>\n'
         self._test_html_token(token, html_token.HTMLBlock, content)
 
@@ -54,17 +54,17 @@ class TestHTMLToken(TestCase):
 
     def test_empty_span(self):
         raw = '<span></span>'
-        token = next(tokenize_inner(raw))
+        token = next(iter(tokenize_inner(raw)))
         content = '<span></span>'
         self._test_html_token(token, html_token.HTMLSpan, content)
 
     def test_self_closing_span(self):
         raw = '<span />'
-        token = next(tokenize_inner(raw))
+        token = next(iter(tokenize_inner(raw)))
         content = '<span />'
         self._test_html_token(token, html_token.HTMLSpan, content)
 
     def test_autolink(self):
         from mistletoe.span_token import AutoLink
-        self.assertIsInstance(next(tokenize_inner('<http://foo.com>')), AutoLink)
+        self.assertIsInstance(next(iter(tokenize_inner('<http://foo.com>'))), AutoLink)
 
