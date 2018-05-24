@@ -233,7 +233,7 @@ class BlockCode(BlockToken):
                 line_buffer.append(line.lstrip(' ') if len(line) < 5 else line[4:])
                 continue
             if not line.startswith('    '):
-                lines._index -= 1
+                lines.backstep()
                 break
             line_buffer.append(line[4:])
         return line_buffer

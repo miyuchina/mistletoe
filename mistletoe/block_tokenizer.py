@@ -32,6 +32,10 @@ class FileWrapper:
             return self.lines[self._index+1]
         return None
 
+    def backstep(self):
+        if self._index != -1:
+            self._index -= 1
+
 
 def tokenize(iterable, token_types, root=None):
     """
@@ -48,7 +52,7 @@ def tokenize(iterable, token_types, root=None):
     for line in lines:
         for token_type in token_types:
             if token_type.start(line):
-                lines._index -= 1
+                lines.backstep()
                 result = token_type.read(lines)
                 if result is not None:
                     token = token_type(result)
