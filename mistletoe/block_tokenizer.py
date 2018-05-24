@@ -50,10 +50,10 @@ def tokenize(iterable, token_types, root=None):
     """
     lines = FileWrapper(iterable)
     tokens = []
-    for line in lines:
+    line = lines.peek()
+    while line is not None:
         for token_type in token_types:
             if token_type.start(line):
-                lines.backstep()
                 result = token_type.read(lines)
                 if result is not None:
                     token = token_type(result)
@@ -63,7 +63,9 @@ def tokenize(iterable, token_types, root=None):
                         tokens.append(token)
                     break
         else:  # unmatched newlines
+            next(lines)
             if root and hasattr(root, 'loose'):
                 root.loose = True
+        line = lines.peek()
     return tokens
 
