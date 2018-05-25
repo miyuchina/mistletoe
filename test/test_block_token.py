@@ -308,25 +308,13 @@ class TestTableCell(TestToken):
         self._test_token(token, 'cell 2', align=None)
 
 
-class TestFootnoteBlock(TestToken):
-    def setUp(self):
-        patcher = patch('mistletoe.block_token.FootnoteEntry')
-        self.mock = patcher.start()
-        self.addCleanup(patcher.stop)
-
-    def test_match(self):
+class TestFootnoteBlock(unittest.TestCase):
+    def test_store(self):
         lines = ['[key 1]: value 1\n',
                  '[key 2]: value 2\n']
         arg = '[key 2]: value 2\n'  # the last item should be called
-        self._test_match(block_token.FootnoteBlock, lines, arg)
-
-
-class TestFootnoteEntry(unittest.TestCase):
-    def test_match(self):
-        line = '[key]: value\n'
-        token = block_token.FootnoteEntry(line)
-        self.assertEqual(token.key, 'key')
-        self.assertEqual(token.value, 'value')
+        token = block_token.Document(lines)
+        self.assertEqual(token.footnotes, {"key 1": "value 1", "key 2": "value 2"})
 
 
 class TestDocument(unittest.TestCase):

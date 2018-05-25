@@ -16,7 +16,10 @@ __all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'Separator',
            'List', 'Table', 'FootnoteBlock', 'Paragraph']
 
 
-def tokenize(lines, root=None):
+_root_node = None
+
+
+def tokenize(lines, parent=None):
     """
     A wrapper around block_tokenizer.tokenize. Pass in all block-level
     token constructors as arguments to block_tokenizer.tokenize.
@@ -29,7 +32,7 @@ def tokenize(lines, root=None):
 
     See also: block_tokenizer.tokenize, span_token.tokenize_inner.
     """
-    return tokenizer.tokenize(lines, _token_types, root)
+    return tokenizer.tokenize(lines, _token_types, parent)
 
 
 def add_token(token_cls, position=0):
@@ -106,7 +109,10 @@ class Document(BlockToken):
         self.footnotes = {}
         # Document tokens have immediate access to first-level block tokens.
         # Useful for footnotes, etc.
-        self.children = tuple(tokenize(lines, root=self))
+        global _root_node
+        _root_node = self
+        self.children = tuple(tokenize(lines))
+        _root_node = None
 
 
 class Heading(BlockToken):
@@ -318,7 +324,7 @@ class ListItem(BlockToken):
         self.prepend = prepend
         lines[0] = lines[0][prepend:]
         self.loose = False
-        self.children = tuple(tokenize(lines, self))
+        self.children = tuple(tokenize(lines, parent=self))
 
     @staticmethod
     def in_continuation(line, prepend):
@@ -471,8 +477,13 @@ class FootnoteBlock(BlockToken):
     Attributes:
         children (list): footnote entry tokens.
     """
-    def __init__(self, lines):
-        self.children = [FootnoteEntry(line) for line in lines]
+    def __new__(cls, lines):
+        for line in lines:
+            key, value = line.strip().split(']:')
+            key = key[1:]
+            value = value.strip()
+            _root_node.footnotes[key] = value
+        return None
 
     @classmethod
     def _is_legal(cls, line):
@@ -490,27 +501,6 @@ class FootnoteBlock(BlockToken):
                 and lines.peek() != '\n'):
             line_buffer.append(next(lines))
         return line_buffer
-
-    def store_footnotes(self, root):
-        for entry in self.children:
-            root.footnotes[entry.key] = entry.value
-
-
-class FootnoteEntry(BlockToken):
-    """
-    Footnote entry tokens.
-    Special tokens that aren't really boundaries (but kind of are).
-
-    Should only be called by FootnoteBlock.__init__().
-
-    Attributes:
-        key (str): key of footnote entry.
-        value (str): value of footnote entry.
-    """
-    def __init__(self, line):
-        key, value = line.strip().split(']:')
-        self.key = key[1:]
-        self.value = value.strip()
 
 
 class Separator(BlockToken):

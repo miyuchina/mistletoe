@@ -37,7 +37,7 @@ class FileWrapper:
             self._index -= 1
 
 
-def tokenize(iterable, token_types, root=None):
+def tokenize(iterable, token_types, parent=None):
     """
     Searches for token_types in iterable.
 
@@ -57,15 +57,13 @@ def tokenize(iterable, token_types, root=None):
                 result = token_type.read(lines)
                 if result is not None:
                     token = token_type(result)
-                    if root and hasattr(token, 'store_footnotes'):
-                        token.store_footnotes(root)
-                    else:
+                    if token is not None:
                         tokens.append(token)
                     break
         else:  # unmatched newlines
             next(lines)
-            if root and hasattr(root, 'loose'):
-                root.loose = True
+            if parent and hasattr(parent, "loose"):
+                parent.loose = True
         line = lines.peek()
     return tokens
 
