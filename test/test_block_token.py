@@ -308,7 +308,7 @@ class TestTableCell(TestToken):
         self._test_token(token, 'cell 2', align=None)
 
 
-class TestFootnoteBlock(unittest.TestCase):
+class TestFootnote(unittest.TestCase):
     def test_store(self):
         lines = ['[key 1]: value 1\n',
                  '[key 2]: value 2\n']

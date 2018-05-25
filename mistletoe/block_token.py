@@ -12,7 +12,7 @@ import mistletoe.span_token as span_token
 Tokens to be included in the parsing process, in the order specified.
 """
 __all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'Separator',
-           'List', 'Table', 'FootnoteBlock', 'Paragraph']
+           'List', 'Table', 'Footnote', 'Paragraph']
 
 
 _root_node = None
@@ -106,8 +106,6 @@ class Document(BlockToken):
         if isinstance(lines, str):
             lines = lines.splitlines(keepends=True)
         self.footnotes = {}
-        # Document tokens have immediate access to first-level block tokens.
-        # Useful for footnotes, etc.
         global _root_node
         _root_node = self
         self.children = tuple(tokenize(lines))
@@ -468,7 +466,7 @@ class TableCell(BlockToken):
         super().__init__(content, span_token.tokenize_inner)
 
 
-class FootnoteBlock(BlockToken):
+class Footnote(BlockToken):
     """
     Footnote tokens.
     A collection of footnote entries.
