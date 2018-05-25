@@ -214,7 +214,7 @@ class Paragraph(BlockToken):
 
     @staticmethod
     def start(line):
-        return line != '\n'
+        return line.strip() != ''
 
     @classmethod
     def read(cls, lines):
