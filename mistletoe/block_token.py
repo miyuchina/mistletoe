@@ -226,9 +226,12 @@ class Paragraph(BlockToken):
                 and not CodeFence.start(next_line)
                 and not Quote.start(next_line)
                 and not List.start(next_line)):
-            line_buffer.append(next(lines))
             if cls.is_setext_heading(next_line):
+                line_buffer.append(next(lines))
                 return SetextHeading(line_buffer)
+            if ThematicBreak.start(next_line):
+                break
+            line_buffer.append(next(lines))
             next_line = lines.peek()
         return line_buffer
 
@@ -535,17 +538,13 @@ class ThematicBreak(BlockToken):
     """
     Thematic break token (a.k.a. horizontal rule.)
     """
-    def __init__(self, lines):
-        self.lines = lines
+    pattern = re.compile(r' {0,3}(?:([-_*]) *?)(?:\1 *?){2,}$')
+    def __init__(self, _):
+        pass
 
     @classmethod
     def start(cls, line):
-        line = line.strip()
-        if len(line) < 3:
-            return False
-        chars = set(line)
-        chars.discard(' ')
-        return len(chars) == 1 and chars.pop() in {'-', '_', '*'}
+        return cls.pattern.match(line)
 
     @staticmethod
     def read(lines):
