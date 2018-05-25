@@ -20,6 +20,9 @@ integration:
 benchmark:
 	${PYTHON_EXEC} test/benchmark.py
 
+commonmark:
+	(cd test/commonmark; ${PYTHON_EXEC} commonmark.py)
+
 docs:
 	${PYTHON_EXEC} -m docs
 
