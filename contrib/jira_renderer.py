@@ -66,7 +66,7 @@ class JIRARenderer(BaseRenderer):
 
     def render_footnote_image(self, token):
         template = '!{src}'
-        maybe_src = self.footnotes.get(token.src.key, '')
+        maybe_src = self.footnotes.get(token.src.key.casefold(), '')
 
         # sys.stderr.write(maybe_src)
         if maybe_src.find('"') != -1:
@@ -86,7 +86,7 @@ class JIRARenderer(BaseRenderer):
 
     def render_footnote_link(self, token):
         template = '[{inner}|{target}]'
-        raw_target = self.footnotes.get(token.target.key, '')
+        raw_target = self.footnotes.get(token.target.key.casefold(), '')
         target = escape_url(raw_target)
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)

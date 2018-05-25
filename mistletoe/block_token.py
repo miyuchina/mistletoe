@@ -520,7 +520,7 @@ class Footnote(BlockToken):
     def __new__(cls, lines):
         for line in lines:
             key, value = line.strip().split(']:')
-            key = key[1:]
+            key = key[1:].casefold()
             value = value.strip()
             _root_node.footnotes[key] = value
         return None
