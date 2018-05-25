@@ -29,7 +29,7 @@ def run_test(test_entry, runnable):
 
 
 def compare(expected, output):
-    return ''.join(expected.splitlines()) == ''.join(output.splitlines())
+    return ''.join(expected.splitlines()) == ''.join(output.splitlines()).replace('&#x27;', '\'')
 
 
 def print_exception(exception, test_entry):
