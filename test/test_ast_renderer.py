@@ -4,7 +4,7 @@ from mistletoe import Document, ast_renderer
 class TestASTRenderer(unittest.TestCase):
     def test(self):
         self.maxDiff = None
-        d = Document(['# heading 1', '\n', 'hello\n', 'world\n'])
+        d = Document(['# heading 1\n', '\n', 'hello\n', 'world\n'])
         output = ast_renderer.get_ast(d)
         target = {'type': 'Document',
                   'footnotes': {},

@@ -121,22 +121,28 @@ class Heading(BlockToken):
         level (int): heading level.
         children (tuple): inner tokens.
     """
-    def __init__(self, lines):
-        hashes, content = lines[0].split('# ', 1)
-        content = content.split(' #', 1)[0].strip()
-        self.level = len(hashes) + 1
+    pattern = re.compile(r' {0,3}(#{1,6})(?:\n| +?(.*?)(?:\n| +?#+ *?$))')
+    level = 0
+    content = ''
+    def __init__(self, _):
+        self.level = self.__class__.level
+        content = self.__class__.content
         super().__init__(content, span_token.tokenize_inner)
 
-    @staticmethod
-    def start(line):
-        stripped = line.lstrip()
-        return (stripped.startswith('#')
-                and stripped.find('# ') != -1
-                and len(stripped.split(' ', 1)[0]) <= 6)
+    @classmethod
+    def start(cls, line):
+        match_obj = cls.pattern.match(line)
+        if match_obj is None:
+            return False
+        cls.level = len(match_obj.group(1))
+        cls.content = (match_obj.group(2) or '').strip()
+        if set(cls.content) == {'#'}:
+            cls.content = ''
+        return True
 
     @staticmethod
     def read(lines):
-        return [next(lines).strip()]
+        return [next(lines)]
 
 class SetextHeading(BlockToken):
     def __init__(self, lines):
