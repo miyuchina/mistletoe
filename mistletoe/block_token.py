@@ -168,23 +168,30 @@ class Quote(BlockToken):
 
     @staticmethod
     def start(line):
-        return line.startswith('> ')
+        stripped = line.lstrip(' ')
+        if len(line) - len(stripped) > 3:
+            return False
+        return stripped.startswith('>')
 
     @staticmethod
     def read(lines):
-        line_buffer = [next(lines)[2:]]
+        line_buffer = []
         next_line = lines.peek()
         while next_line is not None:
-            if next_line.startswith('> '):
-                line_buffer.append(next(lines)[2:])
-            elif (next_line.strip() == ''
+            if (next_line.strip() == ''
+                    or BlockCode.start(next_line)
                     or Heading.start(next_line)
                     or CodeFence.start(next_line)
                     or Separator.start(next_line)
                     or List.start(next_line)):
                 break
-            else:
-                line_buffer.append(next(lines))
+            stripped = next(lines).lstrip()
+            prepend = 0
+            if stripped[0] == '>':
+                prepend += 1
+                if stripped[1] == ' ':
+                    prepend += 1
+            line_buffer.append(stripped[prepend:])
             next_line = lines.peek()
         return line_buffer
 
@@ -217,6 +224,7 @@ class Paragraph(BlockToken):
                 and next_line.strip() != ''
                 and not Heading.start(next_line)
                 and not CodeFence.start(next_line)
+                and not Quote.start(next_line)
                 and not List.start(next_line)):
             line_buffer.append(next(lines))
             if cls.is_setext_heading(next_line):
@@ -337,7 +345,7 @@ class List(BlockToken):
 
 
 class ListItem(BlockToken):
-    pattern = re.compile(r' *(\d{1,9}[.)]|[+\-*]) {1,4}')
+    pattern = re.compile(r' {0,3}(\d{1,9}[.)]|[+\-*]) {1,4}')
 
     def __init__(self, lines, prepend, leader):
         self.leader = leader
