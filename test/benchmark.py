@@ -47,6 +47,12 @@ def run_mistune(package):
         return package.markdown(fin.read())
 
 
+@benchmark('CommonMark')
+def run_commonmark(package):
+    with open(TEST_FILE, 'r') as fin:
+        return package.commonmark(fin.read())
+
+
 @benchmark('mistletoe')
 def run_mistletoe(package):
     with open(TEST_FILE, 'r') as fin:
@@ -72,7 +78,7 @@ def main(*args):
     if args[1:]:
         run_all(args[1:])
     else:
-        run_all(['markdown', 'markdown2', 'mistune', 'mistletoe'])
+        run_all(['markdown', 'markdown2', 'mistune', 'commonmark', 'mistletoe'])
 
 
 if __name__ == '__main__':
