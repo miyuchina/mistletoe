@@ -19,7 +19,9 @@ def run_test(test_entry, runnable):
         success = compare(test_entry['html'].replace('\t', '    '), output)
         if not success:
             print_test_entry(test_entry, 'html', 'markdown', 'example')
-            print('output:', repr(output), '\n')
+            print('output: ', end='')
+            pprint(output)
+            print()
         return success
     except Exception as exception:
         print_exception(exception, test_entry)

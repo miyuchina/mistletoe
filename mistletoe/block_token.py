@@ -164,12 +164,29 @@ class Quote(BlockToken):
     Quote token. (["> # heading\n", "> paragraph\n"])
     """
     def __init__(self, lines):
-        content = [line[2:] if line.startswith('> ') else line for line in lines]
-        super().__init__(content, tokenize)
+        super().__init__(lines, tokenize)
 
     @staticmethod
     def start(line):
         return line.startswith('> ')
+
+    @staticmethod
+    def read(lines):
+        line_buffer = [next(lines)[2:]]
+        next_line = lines.peek()
+        while next_line is not None:
+            if next_line.startswith('> '):
+                line_buffer.append(next(lines)[2:])
+            elif (next_line.strip() == ''
+                    or Heading.start(next_line)
+                    or CodeFence.start(next_line)
+                    or Separator.start(next_line)
+                    or List.start(next_line)):
+                break
+            else:
+                line_buffer.append(next(lines))
+            next_line = lines.peek()
+        return line_buffer
 
 
 class Paragraph(BlockToken):
