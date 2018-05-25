@@ -22,6 +22,16 @@ _tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
         'optgroup', 'option', 'p', 'param', 'section', 'source', 'summary',
         'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'title', 'tr', 'track', 'ul'}
 
+_tag   = r'[A-Za-z][A-Za-z0-9-]*'
+_attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
+
+_open_tag    = r'<' + _tag + _attrs + r'\s*/?>'
+_closing_tag = r'</' + _tag + r'\s*>'
+_comment     = r'<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'
+_instruction = r'<\?.+?\?>'
+_declaration = r'<![A-Z].+?>'
+_cdata       = r'<!\[CDATA.+?\]\]>'
+
 
 class HTMLBlock(block_token.BlockToken):
     """
@@ -33,7 +43,7 @@ class HTMLBlock(block_token.BlockToken):
     _end_cond = None
     multiblock = re.compile(r'<(script|pre|style)[ >\n]')
     predefined = re.compile(r'<\/?(.+?)(?:\/?>|[ \n])')
-    custom_tag = re.compile(r'^(?:<[A-z][A-z0-9-]*(?: .+?)? *?/?>|</[A-z][A-z0-9-]* *?>) *$')
+    custom_tag = re.compile(r'(?:' + '|'.join((_open_tag, _closing_tag)) + r')\s*$')
     def __init__(self, lines):
         self.content = ''.join(lines) # implicit newlines
 
@@ -96,6 +106,9 @@ class HTMLSpan(span_token.SpanToken):
     Attributes:
         content (str): literal strings rendered as-is.
     """
-    pattern = re.compile(r"<([A-z0-9]+?)(?: .+?)?(?: ?/>|>.*?<\/\1>)|<!--.*?-->")
+    pattern = re.compile('|'.join([_open_tag, _closing_tag, _comment,
+                                   _instruction, _declaration, _cdata]),
+                                   re.DOTALL)
+
     def __init__(self, match_obj):
         self.content = match_obj.group(0)

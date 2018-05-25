@@ -18,7 +18,7 @@ class TestHTMLToken(TestCase):
         raw = 'some <span>more</span> text'
         tokens = iter(tokenize_inner(raw))
         next(tokens)
-        content = '<span>more</span>'
+        content = '<span>'
         self._test_html_token(next(tokens), html_token.HTMLSpan, content)
         next(tokens)
 
@@ -33,7 +33,7 @@ class TestHTMLToken(TestCase):
     def test_span_attrs(self):
         raw = '<span class="foo">more</span>'
         token = next(iter(tokenize_inner(raw)))
-        content = '<span class="foo">more</span>'
+        content = '<span class="foo">'
         self._test_html_token(token, html_token.HTMLSpan, content)
 
     def test_block_attrs(self):
@@ -55,7 +55,7 @@ class TestHTMLToken(TestCase):
     def test_empty_span(self):
         raw = '<span></span>'
         token = next(iter(tokenize_inner(raw)))
-        content = '<span></span>'
+        content = '<span>'
         self._test_html_token(token, html_token.HTMLSpan, content)
 
     def test_self_closing_span(self):
