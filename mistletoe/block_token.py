@@ -177,6 +177,7 @@ class Paragraph(BlockToken):
     Paragraph token. (["some\n", "continuous\n", "lines\n"])
     Boundary between span-level and block-level tokens.
     """
+    setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
 
     def __new__(cls, lines):
         if not isinstance(lines, list):
@@ -208,8 +209,7 @@ class Paragraph(BlockToken):
 
     @classmethod
     def is_setext_heading(cls, line):
-        charset = set(line.strip())
-        return len(charset) == 1 and charset.pop() in {'=', '-'}
+        return cls.setext_pattern.match(line)
 
 
 class BlockCode(BlockToken):
