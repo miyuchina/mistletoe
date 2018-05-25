@@ -1,31 +1,53 @@
 import sys
 import json
-import mistletoe
-from pprint import pprint
+from mistletoe import markdown
 from traceback import print_tb
+from argparse import ArgumentParser
 
 
-def run_tests(test_entries, runnable, start=None, end=None):
+def run_tests(test_entries, start=None, end=None, quiet=False, verbose=False):
     start = start or 0
     end = end or sys.maxsize
-    return [run_test(test_entry, runnable) for test_entry in test_entries
+    results = [run_test(test_entry, quiet) for test_entry in test_entries
             if test_entry['example'] >= start and test_entry['example'] <= end]
+    if not quiet:
+        print('=' * 80)
+    if verbose:
+        print_failure_in_sections(results)
+    print('failed:', len(list(filter(lambda x: not x[0], results))))
+    print(' total:', len(results))
 
 
-def run_test(test_entry, runnable):
+def run_test(test_entry, quiet=False):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
-        output = runnable(test_case)
+        output = markdown(test_case)
         success = compare(test_entry['html'].replace('\t', '    '), output)
-        if not success:
-            print_test_entry(test_entry, 'html', 'markdown', 'example')
-            print('output: ', end='')
-            pprint(output)
-            print()
-        return success
+        if not success and not quiet:
+            print_test_entry(test_entry, output)
+        return success, test_entry['section']
     except Exception as exception:
-        print_exception(exception, test_entry)
-        return False
+        if not quiet:
+            print_exception(exception, test_entry)
+        return False, test_entry['section']
+
+
+def load_tests(specfile):
+    with open(specfile, 'r') as fin:
+        return json.load(fin)
+
+
+def locate_section(section, tests):
+    start = None
+    end = None
+    for test in tests:
+        if test['section'] == section:
+            if start is None:
+                start = test['example']
+        elif start is not None and end is None:
+            end = test['example'] - 1
+            return start, end
+    raise RuntimeError("Section '{}' not found, aborting.".format(section))
 
 
 def compare(expected, output):
@@ -39,26 +61,60 @@ def print_exception(exception, test_entry):
     print_tb(exception.__traceback__)
 
 
-def print_test_entry(test_entry, *keywords):
-    if keywords:
-        pprint({keyword: test_entry[keyword] for keyword in keywords})
-    else:
-        pprint(test_entry)
+def print_test_entry(test_entry, output):
+    print('example: ', repr(test_entry['example']))
+    print('markdown:', repr(test_entry['markdown']))
+    print('html:    ', repr(test_entry['html']))
+    print('output:  ', repr(output))
+    print()
 
 
-def main(start, end):
-    with open('commonmark.json', 'r') as fin:
-        test_entries = json.load(fin)
-    return run_tests(test_entries, mistletoe.markdown, start, end)
+
+def print_failure_in_sections(results):
+    section = results[0][1]
+    failed = 0
+    total = 0
+    for result in results:
+        if section != result[1]:
+            section_str = "Failed in section '{}':".format(section)
+            result_str = "{:>3} / {:>3}".format(failed, total)
+            print('{:70} {}'.format(section_str, result_str))
+            section = result[1]
+            failed = 0
+            total = 0
+        if not result[0]:
+            failed += 1
+        total += 1
+    section_str = "Failed in section '{}':".format(section)
+    result_str = "{:>3} / {:>3}".format(failed, total)
+    print('{:70} {}'.format(section_str, result_str))
+    print()
 
 
 if __name__ == '__main__':
-    start, end = None, None
-    if len(sys.argv) > 1:
-        start = int(sys.argv[1])
-    if len(sys.argv) > 2:
-        end = int(sys.argv[2])
-    results = main(start, end)
-    print('failed:', len(list(filter(lambda x: not x, results))))
-    print(' total:', len(results))
+    parser = ArgumentParser(description="Custom script for running Commonmark tests.")
+    parser.add_argument('start', type=int, nargs='?', default=None,
+                        help="Run tests starting from this position.")
+    parser.add_argument('end', type=int, nargs='?', default=None,
+                        help="Run tests until this position.")
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
+                        help="Output failure count in every section.")
+    parser.add_argument('-q', '--quiet', dest='quiet', action='store_true',
+                        help="Suppress failed test entry output.")
+    parser.add_argument('-s', '--section', dest='section', default=None,
+                        help="Only run tests in specified section.")
+    parser.add_argument('-f', '--file', dest='tests', type=load_tests,
+                        default='test/commonmark/commonmark.json',
+                        help="Specify alternative specfile to run.")
+    args = parser.parse_args()
+
+    start    = args.start
+    end      = args.end
+    verbose  = args.verbose
+    quiet    = args.quiet
+    tests    = args.tests
+    if args.section is not None:
+        start, end = locate_section(args.section, tests)
+
+    run_tests(tests, start, end, quiet, verbose)
 
