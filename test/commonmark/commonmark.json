@@ -4728,267 +4728,267 @@
     "section": "Raw HTML"
   },
   {
-    "markdown": "< a><\nfoo><bar/ >\n<foo bar=baz\nbim!bop />\n",
-    "html": "<p>&lt; a&gt;&lt;\nfoo&gt;&lt;bar/ &gt;\n&lt;foo bar=baz\nbim!bop /&gt;</p>\n",
+    "markdown": "< a><\nfoo><bar/ >\n",
+    "html": "<p>&lt; a&gt;&lt;\nfoo&gt;&lt;bar/ &gt;</p>\n",
     "example": 592,
     "start_line": 8745,
-    "end_line": 8755,
+    "end_line": 8751,
     "section": "Raw HTML"
   },
   {
     "markdown": "<a href='bar'title=title>\n",
     "html": "<p>&lt;a href='bar'title=title&gt;</p>\n",
     "example": 593,
-    "start_line": 8760,
-    "end_line": 8764,
+    "start_line": 8756,
+    "end_line": 8760,
     "section": "Raw HTML"
   },
   {
     "markdown": "</a></foo >\n",
     "html": "<p></a></foo ></p>\n",
     "example": 594,
-    "start_line": 8769,
-    "end_line": 8773,
+    "start_line": 8765,
+    "end_line": 8769,
     "section": "Raw HTML"
   },
   {
     "markdown": "</a href=\"foo\">\n",
     "html": "<p>&lt;/a href=&quot;foo&quot;&gt;</p>\n",
     "example": 595,
-    "start_line": 8778,
-    "end_line": 8782,
+    "start_line": 8774,
+    "end_line": 8778,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <!-- this is a\ncomment - with hyphen -->\n",
     "html": "<p>foo <!-- this is a\ncomment - with hyphen --></p>\n",
     "example": 596,
-    "start_line": 8787,
-    "end_line": 8793,
+    "start_line": 8783,
+    "end_line": 8789,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <!-- not a comment -- two hyphens -->\n",
     "html": "<p>foo &lt;!-- not a comment -- two hyphens --&gt;</p>\n",
     "example": 597,
-    "start_line": 8796,
-    "end_line": 8800,
+    "start_line": 8792,
+    "end_line": 8796,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <!--> foo -->\n\nfoo <!-- foo--->\n",
     "html": "<p>foo &lt;!--&gt; foo --&gt;</p>\n<p>foo &lt;!-- foo---&gt;</p>\n",
     "example": 598,
-    "start_line": 8805,
-    "end_line": 8812,
+    "start_line": 8801,
+    "end_line": 8808,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <?php echo $a; ?>\n",
     "html": "<p>foo <?php echo $a; ?></p>\n",
     "example": 599,
-    "start_line": 8817,
-    "end_line": 8821,
+    "start_line": 8813,
+    "end_line": 8817,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <!ELEMENT br EMPTY>\n",
     "html": "<p>foo <!ELEMENT br EMPTY></p>\n",
     "example": 600,
-    "start_line": 8826,
-    "end_line": 8830,
+    "start_line": 8822,
+    "end_line": 8826,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <![CDATA[>&<]]>\n",
     "html": "<p>foo <![CDATA[>&<]]></p>\n",
     "example": 601,
-    "start_line": 8835,
-    "end_line": 8839,
+    "start_line": 8831,
+    "end_line": 8835,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <a href=\"&ouml;\">\n",
     "html": "<p>foo <a href=\"&ouml;\"></p>\n",
     "example": 602,
-    "start_line": 8845,
-    "end_line": 8849,
+    "start_line": 8841,
+    "end_line": 8845,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo <a href=\"\\*\">\n",
     "html": "<p>foo <a href=\"\\*\"></p>\n",
     "example": 603,
-    "start_line": 8854,
-    "end_line": 8858,
+    "start_line": 8850,
+    "end_line": 8854,
     "section": "Raw HTML"
   },
   {
     "markdown": "<a href=\"\\\"\">\n",
     "html": "<p>&lt;a href=&quot;&quot;&quot;&gt;</p>\n",
     "example": 604,
-    "start_line": 8861,
-    "end_line": 8865,
+    "start_line": 8857,
+    "end_line": 8861,
     "section": "Raw HTML"
   },
   {
     "markdown": "foo  \nbaz\n",
     "html": "<p>foo<br />\nbaz</p>\n",
     "example": 605,
-    "start_line": 8875,
-    "end_line": 8881,
+    "start_line": 8871,
+    "end_line": 8877,
     "section": "Hard line breaks"
   },
   {
     "markdown": "foo\\\nbaz\n",
     "html": "<p>foo<br />\nbaz</p>\n",
     "example": 606,
-    "start_line": 8887,
-    "end_line": 8893,
+    "start_line": 8883,
+    "end_line": 8889,
     "section": "Hard line breaks"
   },
   {
     "markdown": "foo       \nbaz\n",
     "html": "<p>foo<br />\nbaz</p>\n",
     "example": 607,
-    "start_line": 8898,
-    "end_line": 8904,
+    "start_line": 8894,
+    "end_line": 8900,
     "section": "Hard line breaks"
   },
   {
     "markdown": "foo  \n     bar\n",
     "html": "<p>foo<br />\nbar</p>\n",
     "example": 608,
-    "start_line": 8909,
-    "end_line": 8915,
+    "start_line": 8905,
+    "end_line": 8911,
     "section": "Hard line breaks"
   },
   {
     "markdown": "foo\\\n     bar\n",
     "html": "<p>foo<br />\nbar</p>\n",
     "example": 609,
-    "start_line": 8918,
-    "end_line": 8924,
+    "start_line": 8914,
+    "end_line": 8920,
     "section": "Hard line breaks"
   },
   {
     "markdown": "*foo  \nbar*\n",
     "html": "<p><em>foo<br />\nbar</em></p>\n",
     "example": 610,
-    "start_line": 8930,
-    "end_line": 8936,
+    "start_line": 8926,
+    "end_line": 8932,
     "section": "Hard line breaks"
   },
   {
     "markdown": "*foo\\\nbar*\n",
     "html": "<p><em>foo<br />\nbar</em></p>\n",
     "example": 611,
-    "start_line": 8939,
-    "end_line": 8945,
+    "start_line": 8935,
+    "end_line": 8941,
     "section": "Hard line breaks"
   },
   {
     "markdown": "`code  \nspan`\n",
     "html": "<p><code>code span</code></p>\n",
     "example": 612,
-    "start_line": 8950,
-    "end_line": 8955,
+    "start_line": 8946,
+    "end_line": 8951,
     "section": "Hard line breaks"
   },
   {
     "markdown": "`code\\\nspan`\n",
     "html": "<p><code>code\\ span</code></p>\n",
     "example": 613,
-    "start_line": 8958,
-    "end_line": 8963,
+    "start_line": 8954,
+    "end_line": 8959,
     "section": "Hard line breaks"
   },
   {
     "markdown": "<a href=\"foo  \nbar\">\n",
     "html": "<p><a href=\"foo  \nbar\"></p>\n",
     "example": 614,
-    "start_line": 8968,
-    "end_line": 8974,
+    "start_line": 8964,
+    "end_line": 8970,
     "section": "Hard line breaks"
   },
   {
     "markdown": "<a href=\"foo\\\nbar\">\n",
     "html": "<p><a href=\"foo\\\nbar\"></p>\n",
     "example": 615,
-    "start_line": 8977,
-    "end_line": 8983,
+    "start_line": 8973,
+    "end_line": 8979,
     "section": "Hard line breaks"
   },
   {
     "markdown": "foo\\\n",
     "html": "<p>foo\\</p>\n",
     "example": 616,
-    "start_line": 8990,
-    "end_line": 8994,
+    "start_line": 8986,
+    "end_line": 8990,
     "section": "Hard line breaks"
   },
   {
     "markdown": "foo  \n",
     "html": "<p>foo</p>\n",
     "example": 617,
-    "start_line": 8997,
-    "end_line": 9001,
+    "start_line": 8993,
+    "end_line": 8997,
     "section": "Hard line breaks"
   },
   {
     "markdown": "### foo\\\n",
     "html": "<h3>foo\\</h3>\n",
     "example": 618,
-    "start_line": 9004,
-    "end_line": 9008,
+    "start_line": 9000,
+    "end_line": 9004,
     "section": "Hard line breaks"
   },
   {
     "markdown": "### foo  \n",
     "html": "<h3>foo</h3>\n",
     "example": 619,
-    "start_line": 9011,
-    "end_line": 9015,
+    "start_line": 9007,
+    "end_line": 9011,
     "section": "Hard line breaks"
   },
   {
     "markdown": "foo\nbaz\n",
     "html": "<p>foo\nbaz</p>\n",
     "example": 620,
-    "start_line": 9026,
-    "end_line": 9032,
+    "start_line": 9022,
+    "end_line": 9028,
     "section": "Soft line breaks"
   },
   {
     "markdown": "foo \n baz\n",
     "html": "<p>foo\nbaz</p>\n",
     "example": 621,
-    "start_line": 9038,
-    "end_line": 9044,
+    "start_line": 9034,
+    "end_line": 9040,
     "section": "Soft line breaks"
   },
   {
     "markdown": "hello $.;'there\n",
     "html": "<p>hello $.;'there</p>\n",
     "example": 622,
-    "start_line": 9058,
-    "end_line": 9062,
+    "start_line": 9054,
+    "end_line": 9058,
     "section": "Textual content"
   },
   {
     "markdown": "Foo χρῆν\n",
     "html": "<p>Foo χρῆν</p>\n",
     "example": 623,
-    "start_line": 9065,
-    "end_line": 9069,
+    "start_line": 9061,
+    "end_line": 9065,
     "section": "Textual content"
   },
   {
     "markdown": "Multiple     spaces\n",
     "html": "<p>Multiple     spaces</p>\n",
     "example": 624,
-    "start_line": 9074,
-    "end_line": 9078,
+    "start_line": 9070,
+    "end_line": 9074,
     "section": "Textual content"
   }
 ]

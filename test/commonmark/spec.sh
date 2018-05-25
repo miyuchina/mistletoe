@@ -3,13 +3,24 @@
 set -e
 
 REPO="https://github.com/commonmark/CommonMark.git"
+VERSION="0.28"
 
 function main {
-    git clone $REPO
+    echo "Cloning from repo: $REPO..."
+    git clone --quiet $REPO
+
+    echo "Using version $VERSION..."
     cd "CommonMark"
+    git checkout --quiet $VERSION
+
+    echo "Dumping tests file..."
     python3 "test/spec_tests.py" --dump-tests > "../commonmark.json"
+
+    echo "Cleaning up..."
     cd ..
     rm -rf CommonMark
+
+    echo "Done."
 }
 
 main
