@@ -361,6 +361,14 @@ class ListItem(BlockToken):
     def in_continuation(line, prepend):
         return len(line) - len(line.lstrip()) >= prepend
 
+    @staticmethod
+    def other_token(line):
+        return (Heading.start(line)
+                or Quote.start(line)
+                or Heading.start(line)
+                or CodeFence.start(line)
+                or ThematicBreak.start(line))
+
     @classmethod
     def parse_marker(cls, line, prepend=-1, leader=None):
         """
@@ -389,7 +397,7 @@ class ListItem(BlockToken):
         line_buffer = []
         next_line = lines.peek()
         # first line in list item
-        if next_line is None:
+        if next_line is None or cls.other_token(next_line):
             return None
         pair = cls.parse_marker(next_line)
         if pair is None:
@@ -398,6 +406,7 @@ class ListItem(BlockToken):
         line_buffer.append(next(lines))
         next_line = lines.peek()
         while (next_line is not None
+                and not cls.other_token(next_line)
                 and not cls.parse_marker(next_line, prepend, leader)
                 and (not newline or cls.in_continuation(next_line, prepend))):
             line = next(lines)
