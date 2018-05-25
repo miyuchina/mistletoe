@@ -71,7 +71,7 @@ class SpanToken(object):
     Naming conventions:
         * match_obj is passed in from span_tokenizer.tokenize, and contains
           user input.
-        * self.children is (usually) a tuple with all the inner tokens
+        * self.children is (usually) a list with all the inner tokens
           (thus if a token has children attribute, it is not a leaf node);
         * self.content denotes string stored (and later rendered) as-is,
           without need for extra parsing (thus if a token has content
@@ -83,7 +83,7 @@ class SpanToken(object):
           except RawText.
 
     Attributes:
-        children (tuple): inner tokens.
+        children (list): inner tokens.
     """
     def __init__(self, match_obj):
         self.children = tokenize_inner(match_obj.group(1))
@@ -164,7 +164,7 @@ class Link(SpanToken):
     Link tokens. ("[name](target)")
 
     Attributes:
-        children (tuple): link name still needs further parsing.
+        children (list): link name still needs further parsing.
         target (str): link target.
     """
     pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\]\s*?\((\S+)\)", re.DOTALL)
@@ -178,7 +178,7 @@ class FootnoteLink(SpanToken):
     Footnote-style links. ("[name] [some target]")
 
     Attributes:
-        children (tuple): link name still needs further parsing.
+        children (list): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
     pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\](?:\s*?\[(.+?)\])?", re.DOTALL)

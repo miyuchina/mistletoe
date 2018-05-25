@@ -71,7 +71,7 @@ class BlockToken(object):
     Naming conventions:
         * lines denotes a list of (possibly unparsed) input lines, and is
           commonly used as the argument name for constructors.
-        * self.children is a tuple with all the inner tokens (thus if a
+        * self.children is a list with all the inner tokens (thus if a
           token has children attribute, it is not a leaf node; if a token
           calls span_token.tokenize_inner, it is the boundary between
           span-level tokens and block-level tokens);
@@ -80,7 +80,7 @@ class BlockToken(object):
           define a match function (see block_tokenizer.tokenize).
 
     Attributes:
-        children (tuple): inner tokens.
+        children (list): inner tokens.
     """
     def __init__(self, lines, tokenize_func):
         self.children = tokenize_func(lines)
@@ -108,7 +108,7 @@ class Document(BlockToken):
         self.footnotes = {}
         global _root_node
         _root_node = self
-        self.children = tuple(tokenize(lines))
+        self.children = tokenize(lines)
         _root_node = None
 
 
@@ -119,7 +119,7 @@ class Heading(BlockToken):
 
     Attributes:
         level (int): heading level.
-        children (tuple): inner tokens.
+        children (list): inner tokens.
     """
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n| +?(.*?)(?:\n| +?#+ *?$))')
     level = 0
@@ -352,7 +352,7 @@ class ListItem(BlockToken):
         self.prepend = prepend
         lines[0] = lines[0][prepend:]
         self.loose = False
-        self.children = tuple(tokenize(lines, parent=self))
+        self.children = tokenize(lines, parent=self)
 
     @staticmethod
     def in_continuation(line, prepend):
@@ -415,7 +415,7 @@ class Table(BlockToken):
     Attributes:
         has_header (bool): whether table has header row.
         column_align (list): align options for each column (default to [None]).
-        children (tuple): inner tokens (TableRows).
+        children (list): inner tokens (TableRows).
     """
     def __init__(self, lines):
         if '---' in lines[1]:
@@ -490,7 +490,7 @@ class TableCell(BlockToken):
 
     Attributes:
         align (bool): align option for current cell (default to None).
-        children (tuple): inner (span-)tokens.
+        children (list): inner (span-)tokens.
     """
     def __init__(self, content, align=None):
         self.align = align
