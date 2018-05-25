@@ -4,7 +4,6 @@ Built-in block-level token classes.
 
 import re
 import sys
-from types import GeneratorType
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
 import mistletoe.span_token as span_token
