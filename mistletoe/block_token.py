@@ -11,7 +11,7 @@ import mistletoe.span_token as span_token
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-__all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'Separator',
+__all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
            'List', 'Table', 'Footnote', 'Paragraph']
 
 
@@ -182,7 +182,7 @@ class Quote(BlockToken):
                     or BlockCode.start(next_line)
                     or Heading.start(next_line)
                     or CodeFence.start(next_line)
-                    or Separator.start(next_line)
+                    or ThematicBreak.start(next_line)
                     or List.start(next_line)):
                 break
             stripped = next(lines).lstrip()
@@ -531,9 +531,9 @@ class Footnote(BlockToken):
         return line_buffer
 
 
-class Separator(BlockToken):
+class ThematicBreak(BlockToken):
     """
-    Separator token (a.k.a. horizontal rule.)
+    Thematic break token (a.k.a. horizontal rule.)
     """
     def __init__(self, lines):
         self.lines = lines

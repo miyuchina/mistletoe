@@ -126,7 +126,7 @@ class TestJIRARenderer(TestCase):
     def test_render_table_cell(self):
         pass
 
-    def test_render_separator(self):
+    def test_render_thematic_break(self):
         pass
 
     def test_render_html_block(self):

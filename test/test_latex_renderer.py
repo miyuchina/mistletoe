@@ -96,8 +96,8 @@ class TestLaTeXRenderer(TestCase):
     def test_table_cell(self):
         self._test_token('TableCell', 'inner')
 
-    def test_separator(self):
-        self._test_token('Separator', '\\hrulefill\n')
+    def test_thematic_break(self):
+        self._test_token('ThematicBreak', '\\hrulefill\n')
 
     def test_line_break(self):
         self._test_token('LineBreak', '\\newline\n')

@@ -203,7 +203,7 @@ class JIRARenderer(BaseRenderer):
         return template.format(inner=inner)
 
     @staticmethod
-    def render_separator(token):
+    def render_thematic_break(token):
         return '----\n'
 
     @staticmethod

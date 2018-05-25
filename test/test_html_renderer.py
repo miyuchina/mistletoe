@@ -107,8 +107,8 @@ class TestHTMLRenderer(TestRenderer):
         output = '<td align="left">inner</td>\n'
         self._test_token('TableCell', output, align=None)
 
-    def test_separator(self):
-        self._test_token('Separator', '<hr />\n', children=False)
+    def test_thematic_break(self):
+        self._test_token('ThematicBreak', '<hr />\n', children=False)
 
     def test_html_block(self):
         content = output = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'

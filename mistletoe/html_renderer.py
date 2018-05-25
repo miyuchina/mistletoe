@@ -163,7 +163,7 @@ class HTMLRenderer(BaseRenderer):
         return template.format(tag=tag, attr=attr, inner=inner)
 
     @staticmethod
-    def render_separator(token):
+    def render_thematic_break(token):
         return '<hr />\n'
 
     @staticmethod

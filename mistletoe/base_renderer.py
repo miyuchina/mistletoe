@@ -58,7 +58,7 @@ class BaseRenderer(object):
             'AutoLink':       self.render_auto_link,
             'EscapeSequence': self.render_escape_sequence,
             'Heading':        self.render_heading,
-            'SetextHeading':        self.render_heading,
+            'SetextHeading':  self.render_heading,
             'Quote':          self.render_quote,
             'Paragraph':      self.render_paragraph,
             'CodeFence':      self.render_block_code,
@@ -68,7 +68,7 @@ class BaseRenderer(object):
             'Table':          self.render_table,
             'TableRow':       self.render_table_row,
             'TableCell':      self.render_table_cell,
-            'Separator':      self.render_separator,
+            'ThematicBreak':  self.render_thematic_break,
             'LineBreak':      self.render_line_break,
             'Document':       self.render_document,
             }

@@ -140,7 +140,7 @@ class LaTeXRenderer(BaseRenderer):
         return self.render_inner(token)
 
     @staticmethod
-    def render_separator(token):
+    def render_thematic_break(token):
         return '\\hrulefill\n'
 
     @staticmethod

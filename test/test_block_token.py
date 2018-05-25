@@ -332,11 +332,11 @@ class TestDocument(unittest.TestCase):
         self.assertEqual(len(document.children), 1)
 
 
-class TestSeparator(unittest.TestCase):
+class TestThematicBreak(unittest.TestCase):
     def test_match(self):
         def test_case(line):
             token = next(iter(block_token.tokenize([line])))
-            self.assertIsInstance(token, block_token.Separator)
+            self.assertIsInstance(token, block_token.ThematicBreak)
         cases = ['---\n', '* * *\n', '_    _    _\n']
         for case in cases:
             test_case(case)
