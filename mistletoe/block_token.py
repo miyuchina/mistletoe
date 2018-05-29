@@ -517,29 +517,28 @@ class Footnote(BlockToken):
     Attributes:
         children (list): footnote entry tokens.
     """
-    def __new__(cls, lines):
-        for line in lines:
-            key, value = line.strip().split(']:')
-            key = key[1:].casefold()
-            value = value.strip()
-            _root_node.footnotes[key] = value
+    pattern = re.compile(r' {0,3}\[(.+?)(?<!\\)\]:\s*(\S+?)(\s+\".+?(?<!\")\"|\'.+?(?<!\')\'|\(.+?(?<!\))\))?$')
+    def __new__(cls, match_objs):
+        for match_obj in match_objs:
+            key = match_obj.group(1).casefold()
+            dest = match_obj.group(2)
+            title = match_obj.group(3) or ''
+            dest = dest + title if title else dest
+            _root_node.footnotes[key] = dest
         return None
 
     @classmethod
-    def _is_legal(cls, line):
-        return line.strip().startswith('[') and ']:' in line
-
-    @classmethod
     def start(cls, line):
-        return cls._is_legal(line)
+        return cls.pattern.match(line)
 
     @classmethod
     def read(cls, lines):
-        line_buffer = [next(lines)]
-        while (lines.peek() is not None
-                and cls._is_legal(lines.peek())
-                and lines.peek() != '\n'):
-            line_buffer.append(next(lines))
+        line_buffer = [cls.pattern.match(next(lines))]
+        while lines.peek() is not None and lines.peek() != '\n':
+            match_obj = cls.pattern.match(lines.peek())
+            if match_obj is not None:
+                line_buffer.append(match_obj)
+            next(lines)
         return line_buffer
 
 

@@ -46,11 +46,13 @@ class LaTeXRenderer(BaseRenderer):
         return template.format(target=token.target, inner=inner)
 
     def render_footnote_link(self, token):
-        self.packages['hyperref'] = []
-        template = '\\href{{{target}}}{{{inner}}}'
         inner = self.render_inner(token)
-        target = self.footnotes.get(token.target.key.casefold(), '')
-        return template.format(target=target, inner=inner)
+        if token.target.key.casefold() in self.footnotes:
+            self.packages['hyperref'] = []
+            template = '\\href{{{target}}}{{{inner}}}'
+            target = self.footnotes[token.target.key.casefold()]
+            return template.format(target=target, inner=inner)
+        return '[{}]'.format(inner)
 
     def render_auto_link(self, token):
         self.packages['hyperref'] = []

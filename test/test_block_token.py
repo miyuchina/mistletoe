@@ -310,20 +310,19 @@ class TestTableCell(TestToken):
 
 class TestFootnote(unittest.TestCase):
     def test_store(self):
-        lines = ['[key 1]: value 1\n',
-                 '[key 2]: value 2\n']
-        arg = '[key 2]: value 2\n'  # the last item should be called
+        lines = ['[key 1]: value1\n',
+                 '[key 2]: value2\n']
         token = block_token.Document(lines)
-        self.assertEqual(token.footnotes, {"key 1": "value 1", "key 2": "value 2"})
+        self.assertEqual(token.footnotes, {"key 1": "value1", "key 2": "value2"})
 
 
 class TestDocument(unittest.TestCase):
     def test_store_footnote(self):
-        lines = ['[key 1]: value 1\n',
-                 '[key 2]: value 2\n']
+        lines = ['[key 1]: value1\n',
+                 '[key 2]: value2\n']
         document = block_token.Document(lines)
-        self.assertEqual(document.footnotes['key 1'], 'value 1')
-        self.assertEqual(document.footnotes['key 2'], 'value 2')
+        self.assertEqual(document.footnotes['key 1'], 'value1')
+        self.assertEqual(document.footnotes['key 2'], 'value2')
 
     def test_auto_splitlines(self):
         lines = "some\ncontinual\nlines\n"

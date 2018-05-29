@@ -66,11 +66,13 @@ class HTMLRenderer(BaseRenderer):
         return template.format(target=target, title=title, inner=inner)
 
     def render_footnote_link(self, token):
-        template = '<a href="{target}">{inner}</a>'
-        raw_target = self.footnotes.get(token.target.key.casefold(), '')
-        target = escape_url(raw_target)
         inner = self.render_inner(token)
-        return template.format(target=target, inner=inner)
+        if token.target.key.casefold() in self.footnotes:
+            template = '<a href="{target}">{inner}</a>'
+            raw_target = self.footnotes[token.target.key.casefold()]
+            target = escape_url(raw_target)
+            return template.format(target=target, inner=inner)
+        return '[{}]'.format(inner)
 
     def render_auto_link(self, token):
         template = '<a href="{target}">{inner}</a>'
