@@ -38,8 +38,8 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('Image', output, src='src', title='title')
 
     def test_link(self):
-        output = '<a href="target">inner</a>'
-        self._test_token('Link', output, target='target')
+        output = '<a href="target" title="title">inner</a>'
+        self._test_token('Link', output, target='target', title='title')
 
     def test_autolink(self):
         output = '<a href="link">inner</a>'

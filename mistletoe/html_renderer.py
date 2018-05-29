@@ -56,10 +56,14 @@ class HTMLRenderer(BaseRenderer):
         return template.format(src=src, title=title, inner=inner)
 
     def render_link(self, token):
-        template = '<a href="{target}">{inner}</a>'
-        target = escape_url(token.target)
+        template = '<a href="{target}"{title}>{inner}</a>'
+        target = token.target
+        if token.title:
+            title = ' title="{}"'.format(html.escape(token.title))
+        else:
+            title = ''
         inner = self.render_inner(token)
-        return template.format(target=target, inner=inner)
+        return template.format(target=target, title=title, inner=inner)
 
     def render_footnote_link(self, token):
         template = '<a href="{target}">{inner}</a>'

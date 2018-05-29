@@ -56,8 +56,8 @@ class TestStrikethrough(TestBranchToken):
 
 class TestLink(TestBranchToken):
     def test_parse(self):
-        self._test_parse(span_token.Link, '[name 1] (target1)', 'name 1',
-                         target='target1')
+        self._test_parse(span_token.Link, '[name 1](target1)', 'name 1',
+                         target='target1', title='')
 
     def test_parse_multi_links(self):
         tokens = iter(span_token.tokenize_inner('[n1](t1) & [n2](t2)'))
@@ -71,7 +71,7 @@ class TestLink(TestBranchToken):
         self._test_token(child, 'alt', src='src')
 
     def test_multiline(self):
-        self._test_parse(span_token.Link, '[name]\n(target)', 'name', target='target')
+        self._test_parse(span_token.Link, '[name](\ntarget)', 'name', target='target')
 
 
 class TestFootnoteLink(TestBranchToken):
