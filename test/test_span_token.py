@@ -118,13 +118,13 @@ class TestImage(TestBranchToken):
 class TestFootnoteImage(TestBranchToken):
     def test_parse(self):
         with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            self._test_parse(span_token.FootnoteImage, '![alt] [key]', 'alt')
+            self._test_parse(span_token.FootnoteImage, '![alt][key]', 'alt')
             mock.assert_called_with('key')
 
     def test_no_alternative_text(self):
         with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            self._test_parse(span_token.FootnoteImage, '![] [key]', '')
-            mock.assert_called_with('key')
+            self._test_parse(span_token.FootnoteImage, '![alt][]', '', children=False)
+            mock.assert_called_with('alt')
 
 
 class TestEscapeSequence(TestBranchToken):

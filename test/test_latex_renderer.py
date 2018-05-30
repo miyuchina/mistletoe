@@ -118,7 +118,7 @@ class TestLaTeXFootnotes(TestCase):
 
     def test_footnote_image(self):
         from mistletoe import Document
-        raw = ['![alt] [foo]\n', '\n', '[foo]: bar "title"\n']
+        raw = ['![alt][foo]\n', '\n', '[foo]: bar "title"\n']
         target = ('\\documentclass{article}\n'
                   '\\usepackage{graphicx}\n'
                   '\\begin{document}\n'

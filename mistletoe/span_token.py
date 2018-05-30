@@ -151,16 +151,17 @@ class Image(SpanToken):
 
 class FootnoteImage(SpanToken):
     """
-    Footnote image tokens. ("![alt] [some key]")
+    Footnote image tokens. ("![alt][some key]")
 
     Attributes:
         children (iterator): a single RawText node for alternative text.
         src (FootnoteAnchor): could point to both src and title.
     """
-    pattern = re.compile(r"\!\[(.*?)\]\s*?\[(.+?)\]", re.DOTALL)
+    pattern = re.compile(r"\!\[(.+?)\](?:\[(.*?)\])?", re.DOTALL)
     def __init__(self, match_obj):
-        self.children = (RawText(match_obj.group(1)),)
-        self.src = FootnoteAnchor(match_obj.group(2))
+        text = ' '.join(Image.strip_punctuation.sub(' ', match_obj.group(1)).split())
+        self.children = (RawText(text),)
+        self.src = FootnoteAnchor(match_obj.group(2) or match_obj.group(1))
 
 
 class Link(SpanToken):

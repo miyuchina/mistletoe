@@ -130,7 +130,7 @@ class TestHTMLRendererFootnotes(TestCase):
 
     def test_footnote_image(self):
         from mistletoe import Document
-        token = Document(['![alt] [foo]\n', '\n', '[foo]: bar "title"\n'])
+        token = Document(['![alt][foo]\n', '\n', '[foo]: bar "title"\n'])
         output = '<p><img src="bar" alt="alt" title="title" /></p>\n'
         self.assertEqual(self.renderer.render(token), output)
 
