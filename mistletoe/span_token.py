@@ -243,7 +243,7 @@ class FootnoteAnchor(SpanToken):
     To be replaced at render time.
     """
     def __init__(self, raw):
-        self.key = raw
+        self.key = raw.casefold()
 
 
 _token_types = []

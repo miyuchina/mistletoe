@@ -35,7 +35,7 @@ class LaTeXRenderer(BaseRenderer):
 
     def render_footnote_image(self, token):
         self.packages['graphicx'] = []
-        src = self.footnotes.get(token.src.key.casefold(), '')
+        src = self.footnotes.get(token.src.key, '')
         if isinstance(src, tuple):
             src, _ = src
         return '\n\\includegraphics{{{}}}\n'.format(src)
@@ -48,7 +48,7 @@ class LaTeXRenderer(BaseRenderer):
 
     def render_footnote_link(self, token):
         inner = self.render_inner(token)
-        key = token.target.key.casefold()
+        key = token.target.key
         if key in self.footnotes:
             self.packages['hyperref'] = []
             template = '\\href{{{target}}}{{{inner}}}'
