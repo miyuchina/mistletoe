@@ -1,3 +1,4 @@
+import re
 import sys
 import json
 from mistletoe import markdown
@@ -41,7 +42,7 @@ def locate_section(section, tests):
     start = None
     end = None
     for test in tests:
-        if test['section'] == section:
+        if re.search(section, test['section'], re.IGNORECASE):
             if start is None:
                 start = test['example']
         elif start is not None and end is None:
