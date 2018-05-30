@@ -22,6 +22,11 @@ class HTMLRenderer(BaseRenderer):
         self._suppress_ptag_stack = [False]
         super().__init__(*chain(tokens, extras))
 
+    def render_to_plain(self, token):
+        if hasattr(token, 'children'):
+            return self.render_inner(token)
+        return html.escape(token.content)
+
     def render_strong(self, token):
         template = '<strong>{}</strong>'
         return template.format(self.render_inner(token))
@@ -40,7 +45,10 @@ class HTMLRenderer(BaseRenderer):
 
     def render_image(self, token):
         template = '<img src="{}" alt="{}"{} />'
+        render_func = self.render
+        self.render = self.render_to_plain
         inner = self.render_inner(token)
+        self.render = render_func
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
@@ -55,7 +63,10 @@ class HTMLRenderer(BaseRenderer):
             title = ' title="{}"'.format(html.escape(title))
         else:
             title = ''
+        render_func = self.render
+        self.render = self.render_to_plain
         inner = self.render_inner(token)
+        self.render = render_func
         return template.format(src=src, title=title, inner=inner)
 
     def render_link(self, token):

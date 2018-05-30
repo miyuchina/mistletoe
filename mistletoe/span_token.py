@@ -140,11 +140,9 @@ class Image(SpanToken):
         title (str): image title (default to empty).
     """
     pattern = ImagePattern
-    strip_punctuation = re.compile('[{}]'.format("!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"))
     def __init__(self, match_obj):
         text, src, title = match_obj.fields
-        text = ' '.join(self.strip_punctuation.sub(' ', text).split())
-        self.children = (RawText(text),)
+        self.children = tokenize_inner(text)
         self.src = src.strip()
         self.title = title
 
@@ -159,8 +157,7 @@ class FootnoteImage(SpanToken):
     """
     pattern = re.compile(r"\!\[(.+?)\](?:\[(.*?)\])?", re.DOTALL)
     def __init__(self, match_obj):
-        text = ' '.join(Image.strip_punctuation.sub(' ', match_obj.group(1)).split())
-        self.children = (RawText(text),)
+        self.children = tokenize_inner(match_obj.group(1))
         self.src = FootnoteAnchor(match_obj.group(2) or match_obj.group(1))
 
 
