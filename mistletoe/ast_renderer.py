@@ -36,6 +36,8 @@ def get_ast(token):
     node.update({key: token.__dict__[key] for key in token.__dict__})
     if 'target' in node and node['target'].__class__.__name__ == 'FootnoteAnchor':
         node['target'] = {'type': 'FootnoteAnchor', 'key': node['target'].key}
+    if 'header' in node:
+        node['header'] = get_ast(node['header'])
     if 'children' in node:
         node['children'] = [get_ast(child) for child in node['children']]
     return node
