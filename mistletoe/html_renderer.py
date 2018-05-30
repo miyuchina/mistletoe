@@ -39,15 +39,20 @@ class HTMLRenderer(BaseRenderer):
         return template.format(self.render_inner(token))
 
     def render_image(self, token):
-        template = '<img src="{}" title="{}" alt="{}">'
+        template = '<img src="{}" alt="{}"{} />'
         inner = self.render_inner(token)
-        return template.format(token.src, token.title, inner)
+        if token.title:
+            title = ' title="{}"'.format(html.escape(token.title))
+        else:
+            title = ''
+        return template.format(token.src, inner, title)
 
     def render_footnote_image(self, token):
-        template = '<img src="{src}" title="{title}" alt="{inner}">'
+        template = '<img src="{src}" alt="{inner}"{title} />'
         src = self.footnotes.get(token.src.key, '')
         if isinstance(src, tuple):
             src, title = src
+            title = ' title="{}"'.format(html.escape(title))
         else:
             title = ''
         inner = self.render_inner(token)

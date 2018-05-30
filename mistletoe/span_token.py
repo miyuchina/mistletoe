@@ -140,9 +140,11 @@ class Image(SpanToken):
         title (str): image title (default to empty).
     """
     pattern = ImagePattern
+    strip_punctuation = re.compile('[{}]'.format("!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"))
     def __init__(self, match_obj):
         text, src, title = match_obj.fields
-        self.children = tokenize_inner(text)
+        text = ' '.join(self.strip_punctuation.sub(' ', text).split())
+        self.children = (RawText(text),)
         self.src = src.strip()
         self.title = title
 
