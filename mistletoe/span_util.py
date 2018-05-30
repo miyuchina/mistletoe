@@ -49,6 +49,34 @@ class LinkPattern:
         return _MatchObj((text, dest, title), start, end)
 
 
+class ImagePattern:
+    @classmethod
+    def search(cls, string, start=0):
+        # read image text
+        text_pair = read_image_text(string, offset=start)
+        if text_pair is None:
+            return None
+        start, text_end, text = text_pair
+
+        # read dest
+        dest_pair = read_dest_text(string, offset=text_end)
+        if dest_pair is None:
+            return None
+        _, dest_end, dest = dest_pair
+
+        # read title
+        title_pair = read_link_title(string, offset=dest_end)
+        if title_pair is None:
+            return None
+        _, title_end, title = title_pair
+
+        # assert closing paren
+        if string[title_end] != ')':
+            return None
+        end = title_end + 1
+        return _MatchObj((text, dest, title), start, end)
+
+
 def read_link_text(string, offset=0):
     start = string.find('[', offset)
     if start == -1:
@@ -112,6 +140,16 @@ def read_link_title(string, offset=0):
     if title is not None:
         return offset, end, title[1:-1]
     return offset, end, ''
+
+
+def read_image_text(string, offset=0):
+    start = string.find('![', offset)
+    if start == -1:
+        return None
+    link_pair = read_link_text(string, start)
+    if link_pair is None:
+        return None
+    return start, link_pair[1], link_pair[2]
 
 
 def skip_spaces(string, start=0):

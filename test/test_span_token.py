@@ -20,7 +20,8 @@ class TestBranchToken(unittest.TestCase):
     def _test_token(self, token, arg, children=True, **kwargs):
         for attr, value in kwargs.items():
             self.assertEqual(getattr(token, attr), value)
-        self.mock.assert_any_call(arg)
+        if children:
+            self.mock.assert_any_call(arg)
 
 
 class TestStrong(TestBranchToken):
@@ -106,12 +107,12 @@ class TestAutoLink(TestBranchToken):
 
 class TestImage(TestBranchToken):
     def test_parse(self):
-        self._test_parse(span_token.Image, '![alt] (link)', 'alt', src='link')
-        self._test_parse(span_token.Image, '![alt] (link "title")', 'alt',
+        self._test_parse(span_token.Image, '![alt](link)', 'alt', src='link')
+        self._test_parse(span_token.Image, '![alt](link "title")', 'alt',
                          src='link', title='title')
 
     def test_no_alternative_text(self):
-        self._test_parse(span_token.Image, '![] (link)', '', src='link')
+        self._test_parse(span_token.Image, '![](link)', '', children=False, src='link')
 
 
 class TestFootnoteImage(TestBranchToken):

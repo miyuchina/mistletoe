@@ -5,7 +5,7 @@ Built-in span-level token classes.
 import re
 from types import GeneratorType
 import mistletoe.span_tokenizer as tokenizer
-from mistletoe.span_util import LinkPattern
+from mistletoe.span_util import LinkPattern, ImagePattern
 
 """
 Tokens to be included in the parsing process, in the order specified.
@@ -139,11 +139,12 @@ class Image(SpanToken):
         src (str): image source.
         title (str): image title (default to empty).
     """
-    pattern = re.compile(r'\!\[(.*?)\]\s*\((.+?)(?:\s*\"(.+?)\")?\)', re.DOTALL)
+    pattern = ImagePattern
     def __init__(self, match_obj):
-        self.children = (RawText(match_obj.group(1)),)
-        self.src = match_obj.group(2)
-        self.title = match_obj.group(3)
+        text, src, title = match_obj.fields
+        self.children = tokenize_inner(text)
+        self.src = src.strip()
+        self.title = title
 
 
 class FootnoteImage(SpanToken):
