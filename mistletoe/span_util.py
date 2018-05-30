@@ -50,9 +50,7 @@ class LinkPattern:
 
 
 def read_link_text(string, offset=0):
-    if offset:
-        string = string[offset:]
-    start = string.find('[')
+    start = string.find('[', offset)
     if start == -1:
         return None
     brackets = 1
@@ -71,7 +69,7 @@ def read_link_text(string, offset=0):
             break
     else:
         return None
-    return offset+start, offset+i, string[start+1:i]
+    return start, i, string[start+1:i]
 
 
 def read_dest_text(string, offset=0):
