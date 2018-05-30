@@ -45,12 +45,10 @@ class HTMLRenderer(BaseRenderer):
 
     def render_footnote_image(self, token):
         template = '<img src="{src}" title="{title}" alt="{inner}">'
-        maybe_src = self.footnotes.get(token.src.key.casefold(), '')
-        if maybe_src.find('"') != -1:
-            src = maybe_src[:maybe_src.index(' "')]
-            title = maybe_src[maybe_src.index(' "')+2:-1]
+        src = self.footnotes.get(token.src.key.casefold(), '')
+        if isinstance(src, tuple):
+            src, title = src
         else:
-            src = maybe_src
             title = ''
         inner = self.render_inner(token)
         return template.format(src=src, title=title, inner=inner)
@@ -67,11 +65,16 @@ class HTMLRenderer(BaseRenderer):
 
     def render_footnote_link(self, token):
         inner = self.render_inner(token)
-        if token.target.key.casefold() in self.footnotes:
-            template = '<a href="{target}">{inner}</a>'
-            raw_target = self.footnotes[token.target.key.casefold()]
-            target = escape_url(raw_target)
-            return template.format(target=target, inner=inner)
+        key = token.target.key.casefold()
+        if key in self.footnotes:
+            template = '<a href="{target}"{title}>{inner}</a>'
+            target = self.footnotes[key]
+            if isinstance(target, tuple):
+                target, title = target
+                title = ' title="{}"'.format(html.escape(title))
+            else:
+                title = ''
+            return template.format(target=target, inner=inner, title=title)
         return '[{}]'.format(inner)
 
     def render_auto_link(self, token):
