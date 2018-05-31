@@ -92,7 +92,7 @@ def print_failure_in_sections(results):
     print()
 
 
-if __name__ == '__main__':
+def main():
     parser = ArgumentParser(description="Custom script for running Commonmark tests.")
     parser.add_argument('start', type=int, nargs='?', default=None,
                         help="Run tests starting from this position.")
@@ -118,4 +118,8 @@ if __name__ == '__main__':
         start, end = locate_section(args.section, tests)
 
     run_tests(tests, start, end, quiet, verbose)
+
+
+if __name__ == '__main__':
+    main()
 
