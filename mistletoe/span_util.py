@@ -5,23 +5,39 @@ angle_pattern = re.compile(r'\s*<([^\s<>]*?)>')
 title_pattern = re.compile(r'\s*(\".*?(?<!\\)\"|\'.*?(?<!\\)\'|\(.*?(?<!\\)\))?\s*')
 
 
+class Pattern:
+    @classmethod
+    def finditer(cls, string):
+        match = cls.search(string)
+        while match is not None:
+            yield match
+            match = cls.search(string, match.end())
+
+
 class _MatchObj:
     def __init__(self, fields, start, end):
         self.fields = fields
         self._start = start
         self._end = end
 
-    def start(self):
-        return self._start
+    def start(self, n=0):
+        if n == 0:
+            return self._start
+        return self.fields[n-1][0]
 
-    def end(self):
-        return self._end
+    def end(self, n=0):
+        if n == 0:
+            return self._end
+        return self.fields[n-1][1]
+
+    def group(self, n=0):
+        return self.fields[n-1][2]
 
     def __repr__(self):
         return '<MatchObj fields={} start={} end={}>'.format(self.fields, self._start, self._end)
 
 
-class LinkPattern:
+class LinkPattern(Pattern):
     @classmethod
     def search(cls, string, start=0):
         # read link text
@@ -34,22 +50,25 @@ class LinkPattern:
         dest_pair = read_dest_text(string, offset=text_end)
         if dest_pair is None:
             return None
-        _, dest_end, dest = dest_pair
+        dest_start, dest_end, dest = dest_pair
 
         # read title
         title_pair = read_link_title(string, offset=dest_end)
         if title_pair is None:
             return None
-        _, title_end, title = title_pair
+        title_start, title_end, title = title_pair
 
         # assert closing paren
         if string[title_end] != ')':
             return None
         end = title_end + 1
-        return _MatchObj((text, dest, title), start, end)
+        return _MatchObj(((start+1, text_end, text),
+                          (dest_start, dest_end, dest),
+                          (title_start, title_end, title)),
+                         start, end)
 
 
-class ImagePattern:
+class ImagePattern(Pattern):
     @classmethod
     def search(cls, string, start=0):
         # read image text
@@ -62,19 +81,22 @@ class ImagePattern:
         dest_pair = read_dest_text(string, offset=text_end)
         if dest_pair is None:
             return None
-        _, dest_end, dest = dest_pair
+        dest_start, dest_end, dest = dest_pair
 
         # read title
         title_pair = read_link_title(string, offset=dest_end)
         if title_pair is None:
             return None
-        _, title_end, title = title_pair
+        title_start, title_end, title = title_pair
 
         # assert closing paren
         if string[title_end] != ')':
             return None
         end = title_end + 1
-        return _MatchObj((text, dest, title), start, end)
+        return _MatchObj(((start+2, text_end, text),
+                          (dest_start, dest_end, dest),
+                          (title_start, title_end, title)),
+                         start, end)
 
 
 def read_link_text(string, offset=0):

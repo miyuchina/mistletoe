@@ -109,6 +109,5 @@ class HTMLSpan(span_token.SpanToken):
     pattern = re.compile('|'.join([_open_tag, _closing_tag, _comment,
                                    _instruction, _declaration, _cdata]),
                                    re.DOTALL)
-
-    def __init__(self, match_obj):
-        self.content = match_obj.group(0)
+    parse_inner = False
+    in_group = 0

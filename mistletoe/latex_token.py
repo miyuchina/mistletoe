@@ -7,6 +7,5 @@ __all__ = ['Math']
 
 class Math(span_token.SpanToken):
     pattern = re.compile(r'(\${1,2})([^$]+?)\1')
-
-    def __init__(self, match_obj):
-        self.content = match_obj.group(0)
+    parse_inner = False
+    in_group = 0

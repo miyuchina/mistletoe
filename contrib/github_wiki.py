@@ -3,7 +3,7 @@ GitHub Wiki support for mistletoe.
 """
 
 import re
-from mistletoe.span_token import SpanToken, tokenize_inner
+from mistletoe.span_token import SpanToken
 from mistletoe.html_renderer import HTMLRenderer, escape_url
 
 
@@ -12,9 +12,11 @@ __all__ = ['GithubWiki', 'GithubWikiRenderer']
 
 class GithubWiki(SpanToken):
     pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
-    def __init__(self, match_obj):
-        super().__init__(match_obj)
-        self.target = match_obj.group(2)
+    in_group = 1
+
+    def __init__(self, children, match):
+        self.children = children
+        self.target = match.group(2)
 
 
 class GithubWikiRenderer(HTMLRenderer):

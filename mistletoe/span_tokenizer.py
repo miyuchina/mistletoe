@@ -1,44 +1,93 @@
 """
 Inline tokenizer for mistletoe.
 """
+import operator
 
 
-def tokenize(content, token_types):
-    """
-    Searches for token_types in content, and applies fallback_token
-    to texts in between.
-
-    Args:
-        content (str): user input string to be parsed.
-        token_types (list): a list of span-level token constructors.
-        fallback_token (span_token.SpanToken): token for unmatched texts.
-
-    Yields:
-        span-level token instances.
-    """
+def tokenize(string, token_types):
     *token_types, fallback_token = token_types
+    tokens = find_tokens(string, token_types, fallback_token)
+    token_buffer = []
+    if tokens:
+        prev = tokens[0]
+        for curr in tokens[1:]:
+            prev = eval_tokens(prev, curr, token_buffer)
+        token_buffer.append(prev)
+    return make_tokens(token_buffer, 0, len(string), string, fallback_token)
+
+
+def find_tokens(string, token_types, fallback_token):
     tokens = []
-    start = 0
-    while start != len(content):
-        index, match_obj, token_type = _find_nearest_token(content, token_types, start)
-        if index != start:
-            tokens.append(fallback_token(content[start:index]))
-            start = index
-        if match_obj is not None:
-            tokens.append(token_type(match_obj))
-            start = match_obj.end()
-    return tokens
-
-
-def _find_nearest_token(content, token_types, start):
-    # accumulator pattern
-    min_index = len(content)
-    min_match_obj = None
-    min_token_type = None
     for token_type in token_types:
-        match_obj = token_type.pattern.search(content, start)
-        if match_obj and match_obj.start() < min_index:
-            min_index = match_obj.start()
-            min_match_obj = match_obj
-            min_token_type = token_type
-    return min_index, min_match_obj, min_token_type
+        for m in token_type.pattern.finditer(string):
+            tokens.append(ParseToken(m.start(), m.end(), m, string, token_type, fallback_token))
+    return sorted(tokens, key=operator.attrgetter('start'))
+
+
+def eval_tokens(x, y, token_buffer):
+    r = relation(x, y)
+    if r == 0:
+        token_buffer.append(x)
+        return y
+    if r == 1:
+        return x if x.cls.precedence >= y.cls.precedence else y
+    x.append_child(y)
+    return x
+
+
+def relation(x, y):
+    if x.end <= y.start:
+        return 0  # x preceeds y
+    if (x.end >= y.end
+            and x.parse_start <= y.start
+            and x.parse_end >= y.end):
+        return 2  # x contains y
+    return 1      # x intersects y
+
+
+def make_tokens(tokens, start, end, string, fallback_token):
+    result = []
+    prev_end = start
+    for token in tokens:
+        if token.start > prev_end:
+            result.append(fallback_token(string[prev_end:token.start]))
+        result.append(token.make())
+        prev_end = token.end
+    if prev_end != end:
+        result.append(fallback_token(string[prev_end:end]))
+    return result
+
+
+class ParseToken:
+    def __init__(self, start, end, match, string, cls, fallback_token):
+        self.start = start
+        self.end = end
+        self.parse_start = match.start(cls.in_group)
+        self.parse_end = match.end(cls.in_group)
+        self.match = match
+        self.string = string
+        self.cls = cls
+        self.fallback_token = fallback_token
+        self.children = []
+
+    def append_child(self, child):
+        if self.cls.parse_inner:
+            if not self.children:
+                self.children.append(child)
+            else:
+                prev = self.children.pop()
+                prev = eval_tokens(prev, child, self.children)
+                self.children.append(prev)
+
+    def make(self):
+        if not self.cls.parse_inner:
+            return self.cls(self.match.group(self.cls.in_group), self.match)
+        children = make_tokens(self.children, self.parse_start, self.parse_end, self.string, self.fallback_token)
+        return self.cls(children, self.match)
+
+
+    def __repr__(self):
+        pattern = '<ParseToken span=({},{}) parse_span=({},{}) cls={} children={}>'
+        return pattern.format(self.start, self.end,
+                              self.parse_start, self.parse_end,
+                              repr(self.cls.__name__), self.children)
