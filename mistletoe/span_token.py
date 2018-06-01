@@ -63,7 +63,7 @@ def reset_tokens():
 
 class SpanToken:
     parse_inner = True
-    in_group = 1
+    parse_group = 1
     precedence = 5
 
     def __init__(self, arg, match):
@@ -83,7 +83,7 @@ class Strong(SpanToken):
     Strong tokens. ("**some text**")
     """
     pattern = re.compile(r"(\*\*|__)([^\s*_].*?)\1", re.DOTALL)
-    in_group = 2
+    parse_group = 2
 
 
 class Emphasis(SpanToken):
@@ -91,7 +91,7 @@ class Emphasis(SpanToken):
     Emphasis tokens. ("*some text*")
     """
     pattern = re.compile(r"(\*|_)([^\s*_].*?)\1", re.DOTALL)
-    in_group = 2
+    parse_group = 2
 
 
 class InlineCode(SpanToken):
@@ -100,7 +100,7 @@ class InlineCode(SpanToken):
     """
     pattern = re.compile(r"(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
     parse_inner = False
-    in_group = 2
+    parse_group = 2
 
     def __init__(self, content, _):
         self.children = (RawText(' '.join(content.split())),)
@@ -213,7 +213,7 @@ class LineBreak(SpanToken):
     """
     pattern = re.compile(r'(?: {2,}|\\)\n')
     parse_inner = False
-    in_group = 0
+    parse_group = 0
 
     def __init__(self, *_):
         self.content = ''

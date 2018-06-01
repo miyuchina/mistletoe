@@ -8,4 +8,4 @@ __all__ = ['Math']
 class Math(span_token.SpanToken):
     pattern = re.compile(r'(\${1,2})([^$]+?)\1')
     parse_inner = False
-    in_group = 0
+    parse_group = 0

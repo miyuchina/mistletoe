@@ -110,4 +110,4 @@ class HTMLSpan(span_token.SpanToken):
                                    _instruction, _declaration, _cdata]),
                                    re.DOTALL)
     parse_inner = False
-    in_group = 0
+    parse_group = 0

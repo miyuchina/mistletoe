@@ -62,8 +62,8 @@ class ParseToken:
     def __init__(self, start, end, match, string, cls, fallback_token):
         self.start = start
         self.end = end
-        self.parse_start = match.start(cls.in_group)
-        self.parse_end = match.end(cls.in_group)
+        self.parse_start = match.start(cls.parse_group)
+        self.parse_end = match.end(cls.parse_group)
         self.match = match
         self.string = string
         self.cls = cls
@@ -81,7 +81,7 @@ class ParseToken:
 
     def make(self):
         if not self.cls.parse_inner:
-            return self.cls(self.match.group(self.cls.in_group), self.match)
+            return self.cls(self.match.group(self.cls.parse_group), self.match)
         children = make_tokens(self.children, self.parse_start, self.parse_end, self.string, self.fallback_token)
         return self.cls(children, self.match)
 
