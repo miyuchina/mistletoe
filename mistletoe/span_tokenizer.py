@@ -19,7 +19,7 @@ def tokenize(string, token_types):
 def find_tokens(string, token_types, fallback_token):
     tokens = []
     for token_type in token_types:
-        for m in token_type.pattern.finditer(string):
+        for m in token_type.find(string):
             tokens.append(ParseToken(m.start(), m.end(), m, string, token_type, fallback_token))
     return sorted(tokens, key=operator.attrgetter('start'))
 

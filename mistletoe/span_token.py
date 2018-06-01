@@ -77,6 +77,10 @@ class SpanToken:
             return any(text in child for child in self.children)
         return text in self.content
 
+    @classmethod
+    def find(cls, string):
+        return cls.pattern.finditer(string)
+
 
 class Strong(SpanToken):
     """
