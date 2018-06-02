@@ -312,7 +312,7 @@ def succeeded_by(end, string, charset):
 
 
 def is_control_char(char):
-    return ord(char) > 31 and ord(char) != 127
+    return ord(char) < 32 or ord(char) == 127
 
 
 def follows(string, index, char):
