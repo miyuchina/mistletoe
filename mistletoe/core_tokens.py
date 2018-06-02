@@ -277,7 +277,7 @@ def is_opener(start, end, string):
     is_right = is_right_delimiter(start, end, string)
     return (is_left_delimiter(start, end, string)
             and (not is_right
-                 or (is_right and preceded_by(end, string, punctuation))))
+                 or (is_right and preceded_by(start, string, punctuation))))
 
 
 def is_closer(start, end, string):
