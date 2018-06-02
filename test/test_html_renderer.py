@@ -136,6 +136,6 @@ class TestHTMLRendererFootnotes(TestCase):
 
     def test_footnote_link(self):
         from mistletoe import Document
-        token = Document(['[name] [foo]\n', '\n', '[foo]: target\n'])
+        token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         output = '<p><a href="target">name</a></p>\n' 
         self.assertEqual(self.renderer.render(token), output)

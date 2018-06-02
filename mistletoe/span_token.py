@@ -5,14 +5,13 @@ Built-in span-level token classes.
 import re
 from types import GeneratorType
 import mistletoe.span_tokenizer as tokenizer
-from mistletoe.span_util import LinkPattern, ImagePattern
+from mistletoe.core_tokens import find_core_tokens
 
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-__all__ = ['EscapeSequence', 'Emphasis', 'Strong', 'InlineCode',
-           'Strikethrough', 'Image', 'FootnoteImage', 'Link',
-           'FootnoteLink', 'AutoLink', 'LineBreak', 'RawText']
+__all__ = ['EscapeSequence', 'InlineCode', 'Strikethrough',
+           'AutoLink', 'CoreTokens', 'LineBreak', 'RawText']
 
 
 def tokenize_inner(content):
@@ -82,20 +81,23 @@ class SpanToken:
         return cls.pattern.finditer(string)
 
 
+class CoreTokens(SpanToken):
+    def __new__(self, children, match):
+        return globals()[match.type](children, match)
+
+    find = find_core_tokens
+
+
 class Strong(SpanToken):
     """
     Strong tokens. ("**some text**")
     """
-    pattern = re.compile(r"(\*\*|__)([^\s*_].*?)\1", re.DOTALL)
-    parse_group = 2
 
 
 class Emphasis(SpanToken):
     """
     Emphasis tokens. ("*some text*")
     """
-    pattern = re.compile(r"(\*|_)([^\s*_].*?)\1", re.DOTALL)
-    parse_group = 2
 
 
 class InlineCode(SpanToken):
@@ -126,8 +128,6 @@ class Image(SpanToken):
         src (str): image source.
         title (str): image title (default to empty).
     """
-    pattern = ImagePattern
-
     def __init__(self, children, match):
         self.children = children
         self.src = match.group(2).strip()
@@ -142,8 +142,6 @@ class FootnoteImage(SpanToken):
         children (iterator): a single RawText node for alternative text.
         src (FootnoteAnchor): could point to both src and title.
     """
-    pattern = re.compile(r"\!\[(.+?)\](?:\[(.*?)\])?", re.DOTALL)
-
     def __init__(self, children, match):
         self.children = children
         self.src = FootnoteAnchor(match.group(2) or match.group(1))
@@ -157,8 +155,6 @@ class Link(SpanToken):
         children (list): link name still needs further parsing.
         target (str): link target.
     """
-    pattern = LinkPattern
-
     def __init__(self, children, match):
         self.children = children
         self.target = match.group(2).strip().replace('\\', '')
@@ -173,8 +169,6 @@ class FootnoteLink(SpanToken):
         children (list): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
-    pattern = re.compile(r"\[((?:!\[(?:.+?)\][\[\(](?:.+?)[\)\]])|(?:.+?))\](?:\s*?\[(.+?)\])?", re.DOTALL)
-
     def __init__(self, children, match):
         self.children = children
         self.target = FootnoteAnchor(match.group(2) or match.group(1))

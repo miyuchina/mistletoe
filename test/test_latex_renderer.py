@@ -130,7 +130,7 @@ class TestLaTeXFootnotes(TestCase):
 
     def test_footnote_link(self):
         from mistletoe import Document
-        raw = ['[name] [key]\n', '\n', '[key]: target\n']
+        raw = ['[name][key]\n', '\n', '[key]: target\n']
         target = ('\\documentclass{article}\n'
                   '\\usepackage{hyperref}\n'
                   '\\begin{document}\n'
