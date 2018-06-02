@@ -199,7 +199,7 @@ def match_link_dest(string, offset):
     else:
         escaped = False
         count = 1
-        for i, c in enumerate(string[offset+1:], start=offset+1):
+        for i, c in enumerate(string[offset:], start=offset):
             if c == '\\':
                 escaped = True
             elif c in whitespace:
