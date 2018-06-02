@@ -81,9 +81,11 @@ class ParseToken:
 
     def make(self):
         if not self.cls.parse_inner:
-            return self.cls(self.match.group(self.cls.parse_group), self.match)
+            return self.cls(self.match)
         children = make_tokens(self.children, self.parse_start, self.parse_end, self.string, self.fallback_token)
-        return self.cls(children, self.match)
+        token = self.cls(self.match)
+        token.children = children
+        return token
 
 
     def __repr__(self):

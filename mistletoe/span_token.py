@@ -65,11 +65,9 @@ class SpanToken:
     parse_group = 1
     precedence = 5
 
-    def __init__(self, arg, match):
-        if self.parse_inner:
-            self.children = arg
-        else:
-            self.content = arg
+    def __init__(self, match):
+        if not self.parse_inner:
+            self.content = match.group(self.parse_group)
 
     def __contains__(self, text):
         if hasattr(self, 'children'):
@@ -82,8 +80,8 @@ class SpanToken:
 
 
 class CoreTokens(SpanToken):
-    def __new__(self, children, match):
-        return globals()[match.type](children, match)
+    def __new__(self, match):
+        return globals()[match.type](match)
 
     find = find_core_tokens
 
@@ -108,7 +106,8 @@ class InlineCode(SpanToken):
     parse_inner = False
     parse_group = 2
 
-    def __init__(self, content, _):
+    def __init__(self, match):
+        content = match.group(self.parse_group)
         self.children = (RawText(' '.join(content.split())),)
 
 
@@ -128,8 +127,7 @@ class Image(SpanToken):
         src (str): image source.
         title (str): image title (default to empty).
     """
-    def __init__(self, children, match):
-        self.children = children
+    def __init__(self, match):
         self.src = match.group(2).strip()
         self.title = match.group(3)
 
@@ -142,8 +140,7 @@ class FootnoteImage(SpanToken):
         children (iterator): a single RawText node for alternative text.
         src (FootnoteAnchor): could point to both src and title.
     """
-    def __init__(self, children, match):
-        self.children = children
+    def __init__(self, match):
         self.src = FootnoteAnchor(match.group(2) or match.group(1))
 
 
@@ -155,8 +152,7 @@ class Link(SpanToken):
         children (list): link name still needs further parsing.
         target (str): link target.
     """
-    def __init__(self, children, match):
-        self.children = children
+    def __init__(self, match):
         self.target = match.group(2).strip().replace('\\', '')
         self.title = match.group(3).replace('\\', '')
 
@@ -169,8 +165,7 @@ class FootnoteLink(SpanToken):
         children (list): link name still needs further parsing.
         target (FootnoteAnchor): to be looked up when rendered.
     """
-    def __init__(self, children, match):
-        self.children = children
+    def __init__(self, match):
         self.target = FootnoteAnchor(match.group(2) or match.group(1))
 
 
@@ -185,7 +180,8 @@ class AutoLink(SpanToken):
     pattern = re.compile(r"<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
     parse_inner = False
 
-    def __init__(self, content, _):
+    def __init__(self, match):
+        content = match.group(self.parse_group)
         self.children = (RawText(content),)
         self.target = content
         self.mailto = '@' in self.target and 'mailto' not in self.target.casefold()
@@ -201,8 +197,8 @@ class EscapeSequence(SpanToken):
     pattern = re.compile(r"\\([!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])")
     parse_inner = False
 
-    def __init__(self, content, _):
-        self.children = (RawText(content),)
+    def __init__(self, match):
+        self.children = (RawText(match.group(self.parse_group)),)
 
 
 class LineBreak(SpanToken):
@@ -213,7 +209,7 @@ class LineBreak(SpanToken):
     parse_inner = False
     parse_group = 0
 
-    def __init__(self, *_):
+    def __init__(self, _):
         self.content = ''
 
 

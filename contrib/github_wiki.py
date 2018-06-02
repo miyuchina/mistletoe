@@ -14,8 +14,7 @@ class GithubWiki(SpanToken):
     pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
     parse_group = 1
 
-    def __init__(self, children, match):
-        self.children = children
+    def __init__(self, match):
         self.target = match.group(2)
 
 
