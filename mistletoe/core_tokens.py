@@ -27,7 +27,7 @@ def find_core_tokens(string):
         elif in_delimiter_run:
             delimiters.append(Delimiter(start, i, string))
             in_delimiter_run = False
-        elif not escaped:
+        if not escaped:
             if c == '[':
                 if not in_image:
                     delimiters.append(Delimiter(i, i+1, string))
