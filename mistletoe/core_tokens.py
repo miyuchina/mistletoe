@@ -91,8 +91,7 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
             n = 2 if closer.number >= 2 and opener.number >= 2 else 1
             start = opener.end - n
             end = closer.start + n
-            match = MatchObj(((start+n, end-n, string[start+n:end-n]),),
-                              start, end)
+            match = MatchObj(start, end, (start+n, end-n, string[start+n:end-n]))
             match.type = 'Strong' if n == 2 else 'Emphasis'
             matches.append(match)
             if not opener.remove(n, left=False):
@@ -139,10 +138,11 @@ def match_link_image(string, offset, delimiter):
         if paren_index >= len(string) or string[paren_index] != ')':
             return None
         end = paren_index + 1
-        match = MatchObj(((text_start, text_end, text),
+        match = MatchObj(start, end,
+                          (text_start, text_end, text),
                           (dest_start, dest_end, dest),
-                          (title_start, title_end, title)),
-                         start, end)
+                          (title_start, title_end, title))
+                         
         match.type = 'Link' if not image else 'Image'
         return match
     # footnote link
@@ -151,9 +151,9 @@ def match_link_image(string, offset, delimiter):
         match_info = match_link_label(string, offset+1)
         if match_info:
             label_start, label_end, label = match_info
-            match = MatchObj(((text_start, text_end, text),
-                              (label_start, label_end, label)),
-                             start, label_end)
+            match = MatchObj(start, label_end,
+                              (text_start, text_end, text),
+                              (label_start, label_end, label))
             match.type = 'FootnoteLink' if not image else 'FootnoteImage'
             return match
         elif is_link_label(text):
@@ -163,9 +163,9 @@ def match_link_image(string, offset, delimiter):
                 label_end = offset + 2
                 label = ''
                 end = offset + 3
-                match = MatchObj(((text_start, text_end, text),
-                                  (label_start, label_end, label)),
-                                 start, end)
+                match = MatchObj(start, end,
+                                  (text_start, text_end, text),
+                                  (label_start, label_end, label))
                 match.type = 'FootnoteLink' if not image else 'FootnoteImage'
                 return match
     # shortcut footnote link
@@ -174,9 +174,9 @@ def match_link_image(string, offset, delimiter):
         label_end = offset + 1
         label = ''
         end = offset + 1
-        match = MatchObj(((text_start, text_end, text),
-                          (label_start, label_end, label)),
-                         start, end)
+        match = MatchObj(start, end,
+                          (text_start, text_end, text),
+                          (label_start, label_end, label))
         match.type = 'FootnoteLink' if not image else 'FootnoteImage'
         return match
     return None
@@ -295,11 +295,13 @@ def is_left_delimiter(start, end, string):
                  or preceded_by(start, string, punctuation)
                  or preceded_by(start, string, whitespace)))
 
+
 def is_right_delimiter(start, end, string):
     return (not preceded_by(start, string, whitespace)
             and (not preceded_by(start, string, punctuation)
                  or succeeded_by(end, string, whitespace)
                  or succeeded_by(end, string, punctuation)))
+
 
 def preceded_by(start, string, charset):
     preceding_char = string[start-1] if start > 0 else ' '
@@ -323,7 +325,7 @@ def shift_whitespace(string, index):
     for i, c in enumerate(string[index:], start=index):
         if c not in whitespace:
             return i
-    return i
+    return len(string)
 
 
 def deactivate_delimiters(delimiters, index, delimiter_type):
@@ -362,10 +364,10 @@ class Delimiter:
 
 
 class MatchObj:
-    def __init__(self, fields, start, end):
-        self.fields = fields
+    def __init__(self, start, end, *fields):
         self._start = start
         self._end = end
+        self.fields = fields
 
     def start(self, n=0):
         if n == 0:
@@ -378,6 +380,8 @@ class MatchObj:
         return self.fields[n-1][1]
 
     def group(self, n=0):
+        if n == 0:
+            return ''.join([field[2] for field in self.fields])
         return self.fields[n-1][2]
 
     def __repr__(self):
