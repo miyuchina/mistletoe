@@ -27,7 +27,7 @@ class TestHTMLToken(TestCase):
                  'within an html block\n',
                  '</p>\n']
         token = next(iter(tokenize(lines)))
-        content = '<p>a paragraph\nwithin an html block\n</p>\n'
+        content = '<p>a paragraph\nwithin an html block\n</p>'
         self._test_html_token(token, html_token.HTMLBlock, content)
 
     def test_span_attrs(self):
@@ -41,14 +41,14 @@ class TestHTMLToken(TestCase):
                  'within an html block\n',
                  '</p>\n']
         token = next(iter(tokenize(lines)))
-        content = '<p class="bar">a paragraph\nwithin an html block\n</p>\n'
+        content = '<p class="bar">a paragraph\nwithin an html block\n</p>'
         self._test_html_token(token, html_token.HTMLBlock, content)
 
     def test_comment(self):
         from mistletoe.block_token import Heading
         lines = ['<!-- hello -->\n', '\n', '# heading 1\n']
         token1, token2 = tokenize(lines)
-        content = '<!-- hello -->\n'
+        content = '<!-- hello -->'
         self._test_html_token(token1, html_token.HTMLBlock, content)
         self.assertIsInstance(token2, Heading)
 

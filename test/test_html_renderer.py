@@ -57,30 +57,30 @@ class TestHTMLRenderer(TestRenderer):
                          children=False, content='<some>text</some>')
 
     def test_heading(self):
-        output = '<h3>inner</h3>\n'
+        output = '<h3>inner</h3>'
         self._test_token('Heading', output, level=3)
 
     def test_quote(self):
-        output = '<blockquote>\ninner</blockquote>\n'
+        output = '<blockquote>\n</blockquote>'
         self._test_token('Quote', output)
 
     def test_paragraph(self):
-        self._test_token('Paragraph', '<p>inner</p>\n')
+        self._test_token('Paragraph', '<p>inner</p>')
 
     def test_block_code(self):
-        output = '<pre><code class="language-sh">inner</code></pre>\n'
+        output = '<pre><code class="language-sh">inner</code></pre>'
         self._test_token('BlockCode', output, language='sh')
 
     def test_block_code_no_language(self):
-        output = '<pre><code>inner</code></pre>\n'
+        output = '<pre><code>inner</code></pre>'
         self._test_token('BlockCode', output, language='')
 
     def test_list(self):
-        output = '<ul>\ninner</ul>\n'
+        output = '<ul>\n\n</ul>'
         self._test_token('List', output, start=None)
 
     def test_list_item(self):
-        output = '<li>inner</li>\n'
+        output = '<li>\n\n</li>'
         self._test_token('ListItem', output)
 
     def test_table_with_header(self):
@@ -90,14 +90,14 @@ class TestHTMLRenderer(TestRenderer):
             output = ('<table>\n'
                         '<thead>\nrow</thead>\n'
                         '<tbody>\ninner</tbody>\n'
-                      '</table>\n')
+                      '</table>')
             self._test_token('Table', output)
 
     def test_table_without_header(self):
         func_path = 'mistletoe.html_renderer.HTMLRenderer.render_table_row'
         with mock.patch(func_path, autospec=True) as mock_func:
             mock_func.return_value = 'row'
-            output = '<table>\n<tbody>\ninner</tbody>\n</table>\n'
+            output = '<table>\n<tbody>\ninner</tbody>\n</table>'
             self._test_token('Table', output, without_attrs=['header',])
 
     def test_table_row(self):
@@ -108,7 +108,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('TableCell', output, align=None)
 
     def test_thematic_break(self):
-        self._test_token('ThematicBreak', '<hr />\n', children=False)
+        self._test_token('ThematicBreak', '<hr />', children=False)
 
     def test_html_block(self):
         content = output = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'
@@ -119,7 +119,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('LineBreak', '<br />\n', children=False)
 
     def test_document(self):
-        self._test_token('Document', 'inner', footnotes={})
+        self._test_token('Document', '', footnotes={})
 
 
 class TestHTMLRendererFootnotes(TestCase):

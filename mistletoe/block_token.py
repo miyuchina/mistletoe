@@ -243,7 +243,7 @@ class Paragraph(BlockToken):
 class BlockCode(BlockToken):
     def __init__(self, lines):
         self.language = ''
-        self.children = (span_token.RawText(''.join(lines)),)
+        self.children = (span_token.RawText(''.join(lines).strip('\n')+'\n'),)
 
     @staticmethod
     def start(line):

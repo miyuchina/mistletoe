@@ -62,4 +62,4 @@ class TOCRenderer(HTMLRenderer):
         """
         Helper method; converts rendered heading to plain text.
         """
-        return re.sub(r'<.+?>', '', rendered[4:-6])
+        return re.sub(r'<.+?>', '', rendered)

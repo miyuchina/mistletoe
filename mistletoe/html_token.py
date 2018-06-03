@@ -45,7 +45,7 @@ class HTMLBlock(block_token.BlockToken):
     predefined = re.compile(r'<\/?(.+?)(?:\/?>|[ \n])')
     custom_tag = re.compile(r'(?:' + '|'.join((_open_tag, _closing_tag)) + r')\s*$')
     def __init__(self, lines):
-        self.content = ''.join(lines) # implicit newlines
+        self.content = ''.join(lines).rstrip('\n')
 
     @classmethod
     def start(cls, line):
@@ -95,6 +95,7 @@ class HTMLBlock(block_token.BlockToken):
                 if cls._end_cond in line.casefold():
                     break
             elif line.strip() == '':
+                line_buffer.pop()
                 break
         return line_buffer
 

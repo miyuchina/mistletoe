@@ -52,7 +52,7 @@ def locate_section(section, tests):
 
 
 def compare(expected, output):
-    return ''.join(expected.splitlines()) == ''.join(output.splitlines()).replace('&#x27;', '\'')
+    return expected == output.replace('&#x27;', '\'')
 
 
 def print_exception(exception, test_entry):

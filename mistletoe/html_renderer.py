@@ -114,21 +114,23 @@ class HTMLRenderer(BaseRenderer):
         return token.content
 
     def render_heading(self, token):
-        template = '<h{level}>{inner}</h{level}>\n'
+        template = '<h{level}>{inner}</h{level}>'
         inner = self.render_inner(token)
         return template.format(level=token.level, inner=inner)
 
     def render_quote(self, token):
-        template = '<blockquote>\n{inner}</blockquote>\n'
-        return template.format(inner=self.render_inner(token))
+        elements = ['<blockquote>']
+        elements.extend([self.render(child) for child in token.children])
+        elements.append('</blockquote>')
+        return '\n'.join(elements)
 
     def render_paragraph(self, token):
         if self._suppress_ptag_stack[-1]:
-            return '{}\n'.format(self.render_inner(token))
-        return '<p>{}</p>\n'.format(self.render_inner(token))
+            return '{}'.format(self.render_inner(token))
+        return '<p>{}</p>'.format(self.render_inner(token))
 
     def render_block_code(self, token):
-        template = '<pre><code{attr}>{inner}</code></pre>\n'
+        template = '<pre><code{attr}>{inner}</code></pre>'
         if token.language:
             attr = ' class="{}"'.format('language-{}'.format(token.language))
         else:
@@ -137,7 +139,7 @@ class HTMLRenderer(BaseRenderer):
         return template.format(attr=attr, inner=inner)
 
     def render_list(self, token):
-        template = '<{tag}{attr}>\n{inner}</{tag}>\n'
+        template = '<{tag}{attr}>\n{inner}\n</{tag}>'
         if token.start:
             tag = 'ol'
             attr = ' start="{}"'.format(token.start) if token.start != 1 else ''
@@ -145,19 +147,26 @@ class HTMLRenderer(BaseRenderer):
             tag = 'ul'
             attr = ''
         self._suppress_ptag_stack.append(not token.loose)
-        inner = self.render_inner(token)
+        inner = '\n'.join([self.render(child) for child in token.children])
         self._suppress_ptag_stack.pop()
         return template.format(tag=tag, attr=attr, inner=inner)
 
     def render_list_item(self, token):
-        return '<li>{}</li>\n'.format(self.render_inner(token))
+        inner = '\n'.join([self.render(child) for child in token.children])
+        inner_template = '\n{}\n'
+        if self._suppress_ptag_stack[-1]:
+            if token.children[0].__class__.__name__ == 'Paragraph':
+                inner_template = inner_template[1:]
+            if token.children[-1].__class__.__name__ == 'Paragraph':
+                inner_template = inner_template[:-1]
+        return '<li>{}</li>'.format(inner_template.format(inner))
 
     def render_table(self, token):
         # This is actually gross and I wonder if there's a better way to do it.
         #
         # The primary difficulty seems to be passing down alignment options to
         # reach individual cells.
-        template = '<table>\n{inner}</table>\n'
+        template = '<table>\n{inner}</table>'
         if hasattr(token, 'header'):
             head_template = '<thead>\n{inner}</thead>\n'
             head_inner = self.render_table_row(token.header, is_header=True)
@@ -189,7 +198,7 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def render_thematic_break(token):
-        return '<hr />\n'
+        return '<hr />'
 
     @staticmethod
     def render_line_break(token):
@@ -201,7 +210,8 @@ class HTMLRenderer(BaseRenderer):
 
     def render_document(self, token):
         self.footnotes.update(token.footnotes)
-        return self.render_inner(token)
+        inner = '\n'.join([self.render(child) for child in token.children])
+        return '{}\n'.format(inner) if inner else ''
 
 def escape_url(raw):
     """

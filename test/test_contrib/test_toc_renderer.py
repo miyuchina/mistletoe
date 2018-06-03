@@ -4,7 +4,7 @@ from contrib.toc_renderer import TOCRenderer
 
 class TestTOCRenderer(TestCase):
     def test_parse_rendered_heading(self):
-        rendered_heading = '<h3>some <em>text</em></h3>\n'
+        rendered_heading = '<h3>some <em>text</em></h3>'
         content = TOCRenderer.parse_rendered_heading(rendered_heading)
         self.assertEqual(content, 'some text')
 
