@@ -98,16 +98,16 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
             match = MatchObj(start, end, (start+n, end-n, string[start+n:end-n]))
             match.type = 'Strong' if n == 2 else 'Emphasis'
             matches.append(match)
+            # remove all delimiters in between
+            del delimiters[open_pos+1:curr_pos]
+            curr_pos -= curr_pos - open_pos - 1
+            # remove appropriate number of chars from delimiters
             if not opener.remove(n, left=False):
                 delimiters.remove(opener)
-                curr_pos -= 2
-            else:
                 curr_pos -= 1
             if not closer.remove(n, left=True):
                 delimiters.remove(closer)
-                curr_pos -= 2
-            else:
-                curr_pos -= 1
+            curr_pos -= 1
             if curr_pos < 0:
                 curr_pos = 0
         else:
