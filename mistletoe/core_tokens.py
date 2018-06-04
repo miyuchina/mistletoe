@@ -23,12 +23,14 @@ def find_core_tokens(string):
         c = string[i]
         if c == '\\':
             escaped = True
-        elif (c == '*' or c == '_') and not escaped:
+            i += 1
+            continue
+        if (c == '*' or c == '_') and not escaped:
             if not in_delimiter_run:
                 in_delimiter_run = True
                 start = i
         elif in_delimiter_run:
-            delimiters.append(Delimiter(start, i, string))
+            delimiters.append(Delimiter(start, i if not escaped else i-1, string))
             in_delimiter_run = False
         if not escaped:
             if c == '[':
