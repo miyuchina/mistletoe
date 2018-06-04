@@ -263,12 +263,12 @@ def next_closer(curr_pos, delimiters):
 
 
 def matching_opener(curr_pos, delimiters, bottom):
-    curr_type = delimiters[curr_pos].type[0]
+    curr_delimiter = delimiters[curr_pos]
     index = curr_pos - 1
     for delimiter in delimiters[curr_pos-1::-1]:
         if (hasattr(delimiter, 'open')
                 and delimiter.open
-                and delimiter.type[0] == curr_type):
+                and delimiter.closed_by(curr_delimiter)):
             return index
         index -= 1
     return None
@@ -359,6 +359,12 @@ class Delimiter:
         self.end = self.end - n
         self.number = self.end - self.start
         return True
+
+    def closed_by(self, other):
+        return not (self.type[0] != other.type[0]
+                    or (self.open and self.close or other.open and other.close)
+                    and (self.number + other.number) % 3 == 0)
+
 
     def __repr__(self):
         if not self.type.startswith(('*', '_')):
