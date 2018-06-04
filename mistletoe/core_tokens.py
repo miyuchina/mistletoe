@@ -349,7 +349,6 @@ class Delimiter:
         self.active = True
         self.start = start
         self.end = end
-        self._string = string
         if self.type.startswith(('*', '_')):
             self.open = is_opener(start, end, string)
             self.close = is_closer(start, end, string)
@@ -360,9 +359,11 @@ class Delimiter:
         if left:
             self.start = self.start + n
             self.number = self.end - self.start
+            self.type = self.type[n:]
             return True
         self.end = self.end - n
         self.number = self.end - self.start
+        self.type = self.type[:n]
         return True
 
     def closed_by(self, other):
