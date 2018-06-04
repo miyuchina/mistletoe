@@ -101,11 +101,15 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
             if not opener.remove(n, left=False):
                 delimiters.remove(opener)
                 curr_pos -= 2
-                if curr_pos < 0: curr_pos = 0
+            else:
+                curr_pos -= 1
             if not closer.remove(n, left=True):
                 delimiters.remove(closer)
                 curr_pos -= 2
-                if curr_pos < 0: curr_pos = 0
+            else:
+                curr_pos -= 1
+            if curr_pos < 0:
+                curr_pos = 0
         else:
             if closer.type[0] == '*':
                 star_bottom = curr_pos - 1
