@@ -56,18 +56,18 @@ def compare(expected, output):
 
 
 def print_exception(exception, test_entry):
-    print("Failed entry:", test_entry['example'], file=sys.stderr)
+    print_test_entry(test_entry, '-- exception --', fout=sys.stderr)
     print(exception.__class__.__name__ + ':', exception, file=sys.stderr)
     print('Traceback: ', file=sys.stderr)
     print_tb(exception.__traceback__)
 
 
-def print_test_entry(test_entry, output):
-    print('example: ', repr(test_entry['example']))
-    print('markdown:', repr(test_entry['markdown']))
-    print('html:    ', repr(test_entry['html']))
-    print('output:  ', repr(output))
-    print()
+def print_test_entry(test_entry, output, fout=sys.stdout):
+    print('example: ', repr(test_entry['example']), file=fout)
+    print('markdown:', repr(test_entry['markdown']), file=fout)
+    print('html:    ', repr(test_entry['html']), file=fout)
+    print('output:  ', repr(output), file=fout)
+    print(file=fout)
 
 
 
