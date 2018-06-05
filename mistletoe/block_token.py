@@ -359,7 +359,7 @@ class ListItem(BlockToken):
 
     @staticmethod
     def in_continuation(line, prepend):
-        return len(line) - len(line.lstrip()) >= prepend
+        return line.strip() == '' or len(line) - len(line.lstrip()) >= prepend
 
     @staticmethod
     def other_token(line):
@@ -392,7 +392,7 @@ class ListItem(BlockToken):
         lines.anchor()
         prepend = -1
         leader = None
-        newline = False
+        newline = 0
         line_buffer = []
         next_line = lines.peek()
         # first line in list item
@@ -408,7 +408,7 @@ class ListItem(BlockToken):
                 and not cls.other_token(next_line)
                 and not cls.parse_marker(next_line, prepend, leader)):
             if newline and not cls.in_continuation(next_line, prepend):
-                line_buffer.pop()
+                del line_buffer[-newline:]
                 break
             line = next(lines)
             stripped = line.lstrip(' ')
@@ -416,7 +416,7 @@ class ListItem(BlockToken):
             if diff > prepend:
                 stripped = ' ' * (diff - prepend) + stripped
             line_buffer.append(stripped)
-            newline = next_line.strip() == ''
+            newline = newline + 1 if next_line.strip() == '' else 0
             next_line = lines.peek()
         return line_buffer, prepend, leader
 
