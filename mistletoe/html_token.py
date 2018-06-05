@@ -25,12 +25,12 @@ _tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
 _tag   = r'[A-Za-z][A-Za-z0-9-]*'
 _attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 
-_open_tag    = r'<' + _tag + _attrs + r'\s*/?>'
-_closing_tag = r'</' + _tag + r'\s*>'
-_comment     = r'<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'
-_instruction = r'<\?.+?\?>'
-_declaration = r'<![A-Z].+?>'
-_cdata       = r'<!\[CDATA.+?\]\]>'
+_open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'
+_closing_tag = r'(?<!\\)</' + _tag + r'\s*>'
+_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'
+_instruction = r'(?<!\\)<\?.+?\?>'
+_declaration = r'(?<!\\)<![A-Z].+?>'
+_cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'
 
 
 class HTMLBlock(block_token.BlockToken):

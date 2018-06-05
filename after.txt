@@ -1,0 +1,388 @@
+example:  2
+markdown: '  \tfoo\tbaz\t\tbim\n'
+html:     '<pre><code>foo\tbaz\t\tbim\n</code></pre>\n'
+output:   '<pre><code>  foo    baz        bim\n</code></pre>\n'
+
+example:  6
+markdown: '>\t\tfoo\n'
+html:     '<blockquote>\n<pre><code>  foo\n</code></pre>\n</blockquote>\n'
+output:   '<blockquote>\n<pre><code>   foo\n</code></pre>\n</blockquote>\n'
+
+example:  7
+markdown: '-\t\tfoo\n'
+html:     '<ul>\n<li>\n<pre><code>  foo\n</code></pre>\n</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<pre><code>foo\n</code></pre>\n</li>\n</ul>\n'
+
+example:  62
+markdown: '> foo\nbar\n===\n'
+html:     '<blockquote>\n<p>foo\nbar\n===</p>\n</blockquote>\n'
+output:   '<blockquote>\n<h1>foo\nbar</h1>\n</blockquote>\n'
+
+example:  116
+markdown: '<table><tr><td>\n<pre>\n**Hello**,\n\n_world_.\n</pre>\n</td></tr></table>\n'
+html:     '<table><tr><td>\n<pre>\n**Hello**,\n<p><em>world</em>.\n</pre></p>\n</td></tr></table>\n'
+output:   '<table><tr><td>\n<pre>\n**Hello**,\n<p><em>world</em>.\n</pre>\n</td></tr></table></p>\n'
+
+example:  152
+markdown: 'Foo\n<div>\nbar\n</div>\n'
+html:     '<p>Foo</p>\n<div>\nbar\n</div>\n'
+output:   '<p>Foo\n<div>\nbar\n</div></p>\n'
+
+example:  163
+markdown: "[foo]: /url '\ntitle\nline1\nline2\n'\n\n[foo]\n"
+html:     '<p><a href="/url" title="\ntitle\nline1\nline2\n">foo</a></p>\n'
+output:   '<p>[foo]</p>\n'
+
+example:  164
+markdown: "[foo]: /url 'title\n\nwith blank line'\n\n[foo]\n"
+html:     "<p>[foo]: /url 'title</p>\n<p>with blank line'</p>\n<p>[foo]</p>\n"
+output:   '<p>with blank line&#x27;</p>\n<p>[foo]</p>\n'
+
+example:  166
+markdown: '[foo]:\n\n[foo]\n'
+html:     '<p>[foo]:</p>\n<p>[foo]</p>\n'
+output:   '<p>[foo]</p>\n'
+
+example:  167
+markdown: '[foo]: /url\\bar\\*baz "foo\\"bar\\baz"\n\n[foo]\n'
+html:     '<p><a href="/url%5Cbar*baz" title="foo&quot;bar\\baz">foo</a></p>\n'
+output:   '<p><a href="/url%5Cbar%5C*baz" title="foo\\&quot;bar\\baz">foo</a></p>\n'
+
+example:  169
+markdown: '[foo]\n\n[foo]: first\n[foo]: second\n'
+html:     '<p><a href="first">foo</a></p>\n'
+output:   '<p><a href="second">foo</a></p>\n'
+
+example:  173
+markdown: '[\nfoo\n]: /url\nbar\n'
+html:     '<p>bar</p>\n'
+output:   '<p>[\nfoo\n]: /url\nbar</p>\n'
+
+example:  174
+markdown: '[foo]: /url "title" ok\n'
+html:     '<p>[foo]: /url &quot;title&quot; ok</p>\n'
+output:   ''
+
+example:  175
+markdown: '[foo]: /url\n"title" ok\n'
+html:     '<p>&quot;title&quot; ok</p>\n'
+output:   ''
+
+example:  179
+markdown: '# [Foo]\n[foo]: /url\n> bar\n'
+html:     '<h1><a href="/url">Foo</a></h1>\n<blockquote>\n<p>bar</p>\n</blockquote>\n'
+output:   '<h1><a href="/url">Foo</a></h1>\n'
+
+example:  200
+markdown: '> ```\nfoo\n```\n'
+html:     '<blockquote>\n<pre><code></code></pre>\n</blockquote>\n<p>foo</p>\n<pre><code></code></pre>\n'
+output:   '<blockquote>\n<pre><code>foo\n</code></pre>\n</blockquote>\n<pre><code></code></pre>\n'
+
+example:  201
+markdown: '> foo\n    - bar\n'
+html:     '<blockquote>\n<p>foo\n- bar</p>\n</blockquote>\n'
+output:   '<blockquote>\n<p>foo</p>\n</blockquote>\n<pre><code>- bar\n</code></pre>\n'
+
+example:  212
+markdown: '> bar\n>\nbaz\n'
+html:     '<blockquote>\n<p>bar</p>\n</blockquote>\n<p>baz</p>\n'
+output:   '<blockquote>\n<p>bar</p>\n<p>baz</p>\n</blockquote>\n'
+
+example:  218
+markdown: '- one\n\n two\n'
+html:     '<ul>\n<li>one</li>\n</ul>\n<p>two</p>\n'
+output:   '<ul>\n<li>\n<p>one</p>\n</li>\n</ul>\n<p>two</p>\n'
+
+example:  220
+markdown: ' -    one\n\n     two\n'
+html:     '<ul>\n<li>one</li>\n</ul>\n<pre><code> two\n</code></pre>\n'
+output:   '<ul>\n<li>\n<p>one</p>\n</li>\n</ul>\n<pre><code> two\n</code></pre>\n'
+
+example:  223
+markdown: '>>- one\n>>\n  >  > two\n'
+html:     '<blockquote>\n<blockquote>\n<ul>\n<li>one</li>\n</ul>\n<p>two</p>\n</blockquote>\n</blockquote>\n'
+output:   '<blockquote>\n<blockquote>\n<ul>\n<li>\n<p>one</p>\n</li>\n</ul>\n<p>two</p>\n</blockquote>\n</blockquote>\n'
+
+example:  225
+markdown: '- foo\n\n\n  bar\n'
+html:     '<ul>\n<li>\n<p>foo</p>\n<p>bar</p>\n</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<p>foo</p>\n</li>\n</ul>\n<p>bar</p>\n'
+
+example:  227
+markdown: '- Foo\n\n      bar\n\n\n      baz\n'
+html:     '<ul>\n<li>\n<p>Foo</p>\n<pre><code>bar\n\n\nbaz\n</code></pre>\n</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<p>Foo</p>\n<pre><code>bar\n</code></pre>\n</li>\n</ul>\n<pre><code>  baz\n</code></pre>\n'
+
+example:  230
+markdown: '0. ok\n'
+html:     '<ol start="0">\n<li>ok</li>\n</ol>\n'
+output:   '<ul>\n<li>ok</li>\n</ul>\n'
+
+example:  236
+markdown: '1.     indented code\n\n   paragraph\n\n       more code\n'
+html:     '<ol>\n<li>\n<pre><code>indented code\n</code></pre>\n<p>paragraph</p>\n<pre><code>more code\n</code></pre>\n</li>\n</ol>\n'
+output:   '<ol>\n<li>\n<p>indented code</p>\n</li>\n</ol>\n<p>paragraph</p>\n<pre><code>   more code\n</code></pre>\n'
+
+example:  237
+markdown: '1.      indented code\n\n   paragraph\n\n       more code\n'
+html:     '<ol>\n<li>\n<pre><code> indented code\n</code></pre>\n<p>paragraph</p>\n<pre><code>more code\n</code></pre>\n</li>\n</ol>\n'
+output:   '<ol>\n<li>\n<p>indented code</p>\n</li>\n</ol>\n<p>paragraph</p>\n<pre><code>   more code\n</code></pre>\n'
+
+example:  239
+markdown: '-    foo\n\n  bar\n'
+html:     '<ul>\n<li>foo</li>\n</ul>\n<p>bar</p>\n'
+output:   '<ul>\n<li>\n<p>foo</p>\n</li>\n</ul>\n<p>bar</p>\n'
+
+example:  241
+markdown: '-\n  foo\n-\n  ```\n  bar\n  ```\n-\n      baz\n'
+html:     '<ul>\n<li>foo</li>\n<li>\n<pre><code>bar\n</code></pre>\n</li>\n<li>\n<pre><code>baz\n</code></pre>\n</li>\n</ul>\n'
+output:   '<h2>-\nfoo</h2>\n<pre><code>bar\n</code></pre>\n<p>-\nbaz</p>\n'
+
+example:  242
+markdown: '-   \n  foo\n'
+html:     '<ul>\n<li>foo</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<p>foo</p>\n</li>\n</ul>\n'
+
+example:  243
+markdown: '-\n\n  foo\n'
+html:     '<ul>\n<li></li>\n</ul>\n<p>foo</p>\n'
+output:   '<p>-</p>\n<p>foo</p>\n'
+
+example:  244
+markdown: '- foo\n-\n- bar\n'
+html:     '<ul>\n<li>foo</li>\n<li></li>\n<li>bar</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<h2>foo</h2>\n</li>\n<li>bar</li>\n</ul>\n'
+
+example:  245
+markdown: '- foo\n-   \n- bar\n'
+html:     '<ul>\n<li>foo</li>\n<li></li>\n<li>bar</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<p>foo</p>\n</li>\n<li>\n\n</li>\n<li>\n<p>bar</p>\n</li>\n</ul>\n'
+
+example:  246
+markdown: '1. foo\n2.\n3. bar\n'
+html:     '<ol>\n<li>foo</li>\n<li></li>\n<li>bar</li>\n</ol>\n'
+output:   '<ol>\n<li>foo\n2.</li>\n<li>bar</li>\n</ol>\n'
+
+example:  247
+markdown: '*\n'
+html:     '<ul>\n<li></li>\n</ul>\n'
+output:   '<p>*</p>\n'
+
+example:  255
+markdown: '> 1. > Blockquote\ncontinued here.\n'
+html:     '<blockquote>\n<ol>\n<li>\n<blockquote>\n<p>Blockquote\ncontinued here.</p>\n</blockquote>\n</li>\n</ol>\n</blockquote>\n'
+output:   '<blockquote>\n<ol>\n<li>\n<blockquote>\nBlockquote\ncontinued here.\n</blockquote>\n</li>\n</ol>\n</blockquote>\n'
+
+example:  256
+markdown: '> 1. > Blockquote\n> continued here.\n'
+html:     '<blockquote>\n<ol>\n<li>\n<blockquote>\n<p>Blockquote\ncontinued here.</p>\n</blockquote>\n</li>\n</ol>\n</blockquote>\n'
+output:   '<blockquote>\n<ol>\n<li>\n<blockquote>\nBlockquote\ncontinued here.\n</blockquote>\n</li>\n</ol>\n</blockquote>\n'
+
+example:  263
+markdown: '- # Foo\n- Bar\n  ---\n  baz\n'
+html:     '<ul>\n<li>\n<h1>Foo</h1>\n</li>\n<li>\n<h2>Bar</h2>\nbaz</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<h1>Foo</h1>\n</li>\n<li>Bar</li>\n</ul>\n<hr />\n<p>baz</p>\n'
+
+example:  267
+markdown: 'The number of windows in my house is\n14.  The number of doors is 6.\n'
+html:     '<p>The number of windows in my house is\n14.  The number of doors is 6.</p>\n'
+output:   '<p>The number of windows in my house is</p>\n<ol start="14">\n<li>The number of doors is 6.</li>\n</ol>\n'
+
+example:  270
+markdown: '- foo\n  - bar\n    - baz\n\n\n      bim\n'
+html:     '<ul>\n<li>foo\n<ul>\n<li>bar\n<ul>\n<li>\n<p>baz</p>\n<p>bim</p>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n'
+output:   '<ul>\n<li>foo\n<ul>\n<li>bar\n<ul>\n<li>\n<p>baz</p>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n<pre><code>  bim\n</code></pre>\n'
+
+example:  271
+markdown: '- foo\n- bar\n\n<!-- -->\n\n- baz\n- bim\n'
+html:     '<ul>\n<li>foo</li>\n<li>bar</li>\n</ul>\n<!-- -->\n<ul>\n<li>baz</li>\n<li>bim</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<p>foo</p>\n</li>\n<li>\n<p>bar</p>\n</li>\n</ul>\n<!-- -->\n<ul>\n<li>baz</li>\n<li>bim</li>\n</ul>\n'
+
+example:  273
+markdown: '- a\n - b\n  - c\n   - d\n    - e\n   - f\n  - g\n - h\n- i\n'
+html:     '<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n<li>d</li>\n<li>e</li>\n<li>f</li>\n<li>g</li>\n<li>h</li>\n<li>i</li>\n</ul>\n'
+output:   '<ul>\n<li>a</li>\n<li>b</li>\n<li>c</li>\n<li>d\n<ul>\n<li>e</li>\n</ul>\n</li>\n<li>f</li>\n<li>g</li>\n<li>h</li>\n<li>i</li>\n</ul>\n'
+
+example:  274
+markdown: '1. a\n\n  2. b\n\n    3. c\n'
+html:     '<ol>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n<li>\n<p>c</p>\n</li>\n</ol>\n'
+output:   '<ol>\n<li>\n<p>a</p>\n</li>\n<li>\n<p>b</p>\n</li>\n</ol>\n<pre><code>3. c\n</code></pre>\n'
+
+example:  276
+markdown: '* a\n*\n\n* c\n'
+html:     '<ul>\n<li>\n<p>a</p>\n</li>\n<li></li>\n<li>\n<p>c</p>\n</li>\n</ul>\n'
+output:   '<ul>\n<li>\n<p>a\n*</p>\n</li>\n<li>\n<p>c</p>\n</li>\n</ul>\n'
+
+example:  279
+markdown: '- a\n- ```\n  b\n\n\n  ```\n- c\n'
+html:     '<ul>\n<li>a</li>\n<li>\n<pre><code>b\n\n\n</code></pre>\n</li>\n<li>c</li>\n</ul>\n'
+output:   '<ul>\n<li>a</li>\n<li>\n<pre><code>b\n\n</code></pre>\n</li>\n</ul>\n<pre><code>- c\n</code></pre>\n'
+
+example:  281
+markdown: '* a\n  > b\n  >\n* c\n'
+html:     '<ul>\n<li>a\n<blockquote>\n<p>b</p>\n</blockquote>\n</li>\n<li>c</li>\n</ul>\n'
+output:   '<ul>\n<li>a</li>\n</ul>\n<blockquote>\n<p>b</p>\n</blockquote>\n<ul>\n<li>c</li>\n</ul>\n'
+
+example:  282
+markdown: '- a\n  > b\n  ```\n  c\n  ```\n- d\n'
+html:     '<ul>\n<li>a\n<blockquote>\n<p>b</p>\n</blockquote>\n<pre><code>c\n</code></pre>\n</li>\n<li>d</li>\n</ul>\n'
+output:   '<ul>\n<li>a</li>\n</ul>\n<blockquote>\n<p>b</p>\n</blockquote>\n<pre><code>c\n</code></pre>\n<ul>\n<li>d</li>\n</ul>\n'
+
+example:  285
+markdown: '1. ```\n   foo\n   ```\n\n   bar\n'
+html:     '<ol>\n<li>\n<pre><code>foo\n</code></pre>\n<p>bar</p>\n</li>\n</ol>\n'
+output:   '<ol>\n<li>\n<pre><code>foo\n</code></pre>\n</li>\n</ol>\n<pre><code>\nbar\n</code></pre>\n'
+
+example:  286
+markdown: '* foo\n  * bar\n\n  baz\n'
+html:     '<ul>\n<li>\n<p>foo</p>\n<ul>\n<li>bar</li>\n</ul>\n<p>baz</p>\n</li>\n</ul>\n'
+output:   '<ul>\n<li>foo\n<ul>\n<li>\n<p>bar</p>\n</li>\n</ul>\nbaz</li>\n</ul>\n'
+
+example:  287
+markdown: '- a\n  - b\n  - c\n\n- d\n  - e\n  - f\n'
+html:     '<ul>\n<li>\n<p>a</p>\n<ul>\n<li>b</li>\n<li>c</li>\n</ul>\n</li>\n<li>\n<p>d</p>\n<ul>\n<li>e</li>\n<li>f</li>\n</ul>\n</li>\n</ul>\n'
+output:   '<ul>\n<li>a\n<ul>\n<li>\n<p>b</p>\n</li>\n<li>\n<p>c</p>\n</li>\n</ul>\n</li>\n<li>d\n<ul>\n<li>e</li>\n<li>f</li>\n</ul>\n</li>\n</ul>\n'
+
+example:  289
+markdown: '\\!\\"\\#\\$\\%\\&\\\'\\(\\)\\*\\+\\,\\-\\.\\/\\:\\;\\<\\=\\>\\?\\@\\[\\\\\\]\\^\\_\\`\\{\\|\\}\\~\n'
+html:     "<p>!&quot;#$%&amp;'()*+,-./:;&lt;=&gt;?@[\\]^_`{|}~</p>\n"
+output:   '<p>!&quot;#$%&amp;&#x27;()*+,-./:;&lt;=&gt;?@[\\\\]^_`{|}~</p>\n'
+
+example:  292
+markdown: '\\\\*emphasis*\n'
+html:     '<p>\\<em>emphasis</em></p>\n'
+output:   '<p>\\*emphasis*</p>\n'
+
+example:  300
+markdown: '[foo]\n\n[foo]: /bar\\* "ti\\*tle"\n'
+html:     '<p><a href="/bar*" title="ti*tle">foo</a></p>\n'
+output:   '<p><a href="/bar%5C*" title="ti\\*tle">foo</a></p>\n'
+
+example:  301
+markdown: '``` foo\\+bar\nfoo\n```\n'
+html:     '<pre><code class="language-foo+bar">foo\n</code></pre>\n'
+output:   '<pre><code class="language-foo\\+bar">foo\n</code></pre>\n'
+
+example:  319
+markdown: '`a\xa0\xa0b`\n'
+html:     '<p><code>a\xa0\xa0b</code></p>\n'
+output:   '<p><code>a b</code></p>\n'
+
+example:  455
+markdown: '*a `*`*\n'
+html:     '<p><em>a <code>*</code></em></p>\n'
+output:   '<p>*a <code>*</code>*</p>\n'
+
+example:  456
+markdown: '_a `_`_\n'
+html:     '<p><em>a <code>_</code></em></p>\n'
+output:   '<p>_a <code>_</code>_</p>\n'
+
+example:  473
+markdown: '[link](foo\\bar)\n'
+html:     '<p><a href="foo%5Cbar">link</a></p>\n'
+output:   '<p><a href="foobar">link</a></p>\n'
+
+example:  478
+markdown: '[link](/url\xa0"title")\n'
+html:     '<p><a href="/url%C2%A0%22title%22">link</a></p>\n'
+output:   '<p><a href="/url" title="title">link</a></p>\n'
+
+example:  483
+markdown: '[link [foo [bar]]](/uri)\n'
+html:     '<p><a href="/uri">link [foo [bar]]</a></p>\n'
+output:   '<p>[link [foo [bar]]](/uri)</p>\n'
+
+example:  494
+markdown: '*foo [bar* baz]\n'
+html:     '<p><em>foo [bar</em> baz]</p>\n'
+output:   '<p>*foo [bar* baz]</p>\n'
+
+example:  499
+markdown: '[link [foo [bar]]][ref]\n\n[ref]: /uri\n'
+html:     '<p><a href="/uri">link [foo [bar]]</a></p>\n'
+output:   '<p>[link [foo [bar]]]<a href="/uri">ref</a></p>\n'
+
+example:  512
+markdown: '[Foo\n  bar]: /url\n\n[Baz][Foo bar]\n'
+html:     '<p><a href="/url">Baz</a></p>\n'
+output:   '<p>[Foo\nbar]: /url</p>\n<p>[Baz]</p>\n'
+
+example:  515
+markdown: '[foo]: /url1\n\n[foo]: /url2\n\n[bar][foo]\n'
+html:     '<p><a href="/url1">bar</a></p>\n'
+output:   '<p><a href="/url2">bar</a></p>\n'
+
+example:  516
+markdown: '[bar][foo\\!]\n\n[foo!]: /url\n'
+html:     '<p>[bar][foo!]</p>\n'
+output:   '<p>[bar]</p>\n'
+
+example:  517
+markdown: '[foo][ref[]\n\n[ref[]: /uri\n'
+html:     '<p>[foo][ref[]</p>\n<p>[ref[]: /uri</p>\n'
+output:   '<p><a href="/uri">foo</a></p>\n'
+
+example:  518
+markdown: '[foo][ref[bar]]\n\n[ref[bar]]: /uri\n'
+html:     '<p>[foo][ref[bar]]</p>\n<p>[ref[bar]]: /uri</p>\n'
+output:   '<p>[foo]]</p>\n'
+
+example:  519
+markdown: '[[[foo]]]\n\n[[[foo]]]: /url\n'
+html:     '<p>[[[foo]]]</p>\n<p>[[[foo]]]: /url</p>\n'
+output:   '<p>[[[foo]]]</p>\n'
+
+example:  521
+markdown: '[bar\\\\]: /uri\n\n[bar\\\\]\n'
+html:     '<p><a href="/uri">bar\\</a></p>\n'
+output:   '<p>[bar\\]</p>\n'
+
+example:  522
+markdown: '[]\n\n[]: /uri\n'
+html:     '<p>[]</p>\n<p>[]: /uri</p>\n'
+output:   '<p>[]</p>\n'
+
+example:  527
+markdown: '[foo] \n[]\n\n[foo]: /url "title"\n'
+html:     '<p><a href="/url" title="title">foo</a>\n[]</p>\n'
+output:   '<p><a href="/url" title="title">foo</a> \n[]</p>\n'
+
+example:  539
+markdown: '[foo](not a link)\n\n[foo]: /url1\n'
+html:     '<p><a href="/url1">foo</a>(not a link)</p>\n'
+output:   '<p>[foo](not a link)</p>\n'
+
+example:  540
+markdown: '[foo][bar][baz]\n\n[baz]: /url\n'
+html:     '<p>[foo]<a href="/url">bar</a></p>\n'
+output:   '<p>[foo]<a href="/url">baz</a></p>\n'
+
+example:  542
+markdown: '[foo][bar][baz]\n\n[baz]: /url1\n[foo]: /url2\n'
+html:     '<p>[foo]<a href="/url1">bar</a></p>\n'
+output:   '<p>[foo]<a href="/url1">baz</a></p>\n'
+
+example:  551
+markdown: '![foo](<url>)\n'
+html:     '<p><img src="url" alt="foo" /></p>\n'
+output:   '<p>![foo](<url>)</p>\n'
+
+example:  558
+markdown: '![foo] \n[]\n\n[foo]: /url "title"\n'
+html:     '<p><img src="/url" alt="foo" title="title" />\n[]</p>\n'
+output:   '<p><img src="/url" alt="foo" title="title" /> \n[]</p>\n'
+
+example:  561
+markdown: '![[foo]]\n\n[[foo]]: /url "title"\n'
+html:     '<p>![[foo]]</p>\n<p>[[foo]]: /url &quot;title&quot;</p>\n'
+output:   '<p><img src="/url" alt="foo" title="title" /></p>\n'
+
+example:  621
+markdown: 'foo \n baz\n'
+html:     '<p>foo\nbaz</p>\n'
+output:   '<p>foo \nbaz</p>\n'
+
+================================================================================
+failed: 77
+ total: 624

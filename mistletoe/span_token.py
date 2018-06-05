@@ -80,7 +80,7 @@ class SpanToken:
 
 
 class CoreTokens(SpanToken):
-    precedence = 0
+    precedence = 3
     def __new__(self, match):
         return globals()[match.type](match)
 
@@ -103,7 +103,7 @@ class InlineCode(SpanToken):
     """
     Inline code tokens. ("`some code`")
     """
-    pattern = re.compile(r"(?<!`)(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
+    pattern = re.compile(r"(?<!\\|`)(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
     parse_inner = False
     parse_group = 2
 
@@ -197,6 +197,7 @@ class EscapeSequence(SpanToken):
     """
     pattern = re.compile(r"\\([!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])")
     parse_inner = False
+    precedence = 2
 
     def __init__(self, match):
         self.children = (RawText(match.group(self.parse_group)),)
