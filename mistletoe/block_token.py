@@ -365,7 +365,6 @@ class ListItem(BlockToken):
     def other_token(line):
         return (Heading.start(line)
                 or Quote.start(line)
-                or Heading.start(line)
                 or CodeFence.start(line)
                 or ThematicBreak.start(line))
 
@@ -407,8 +406,10 @@ class ListItem(BlockToken):
         next_line = lines.peek()
         while (next_line is not None
                 and not cls.other_token(next_line)
-                and not cls.parse_marker(next_line, prepend, leader)
-                and (not newline or cls.in_continuation(next_line, prepend))):
+                and not cls.parse_marker(next_line, prepend, leader)):
+            if newline and not cls.in_continuation(next_line, prepend):
+                line_buffer.pop()
+                break
             line = next(lines)
             stripped = line.lstrip(' ')
             diff = len(line) - len(stripped)
