@@ -348,7 +348,7 @@ class List(BlockToken):
 
 
 class ListItem(BlockToken):
-    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*]) {1,4}')
+    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])( +)')
 
     def __init__(self, lines, prepend, leader):
         self.leader = leader
@@ -384,6 +384,9 @@ class ListItem(BlockToken):
             return None        # is sublist
         # reassign prepend and leader
         prepend = len(content)
+        spaces = len(match_obj.group(2))
+        if spaces > 4:
+            prepend -= spaces - 1
         leader = match_obj.group(1)
         return prepend, leader
 
