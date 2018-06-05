@@ -49,7 +49,7 @@ def find_core_tokens(string):
         i += 1
     if in_delimiter_run:
         delimiters.append(Delimiter(start, i, string))
-    process_emphasis(string, 0, delimiters, matches)
+    process_emphasis(string, None, delimiters, matches)
     return matches
 
 
@@ -107,18 +107,17 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
                 curr_pos -= 1
             if not closer.remove(n, left=True):
                 delimiters.remove(closer)
-            curr_pos -= 1
-            if curr_pos < 0:
-                curr_pos = 0
+                curr_pos -= 1
         else:
+            bottom = curr_pos - 1 if curr_pos > 1 else None
             if closer.type[0] == '*':
-                star_bottom = curr_pos - 1
+                star_bottom = bottom
             else:
-                underscore_bottom = curr_pos - 1
+                underscore_bottom = bottom
             if not closer.open:
                 delimiters.remove(closer)
-                curr_pos -= 2
-                if curr_pos < 0: curr_pos = 0
+            else:
+                curr_pos += 1
         curr_pos = next_closer(curr_pos, delimiters)
     del delimiters[stack_bottom:]
 
@@ -261,21 +260,22 @@ def is_link_label(text):
 
 
 def next_closer(curr_pos, delimiters):
-    for i, delimiter in enumerate(delimiters[curr_pos+1:], start=curr_pos+1):
+    for i, delimiter in enumerate(delimiters[curr_pos:], start=curr_pos or 0):
         if hasattr(delimiter, 'close') and delimiter.close:
             return i
     return None
 
 
 def matching_opener(curr_pos, delimiters, bottom):
-    curr_delimiter = delimiters[curr_pos]
-    index = curr_pos - 1
-    for delimiter in delimiters[curr_pos-1::-1]:
-        if (hasattr(delimiter, 'open')
-                and delimiter.open
-                and delimiter.closed_by(curr_delimiter)):
-            return index
-        index -= 1
+    if curr_pos > 0:
+        curr_delimiter = delimiters[curr_pos]
+        index = curr_pos - 1
+        for delimiter in delimiters[curr_pos-1:bottom:-1]:
+            if (hasattr(delimiter, 'open')
+                    and delimiter.open
+                    and delimiter.closed_by(curr_delimiter)):
+                return index
+            index -= 1
     return None
 
 
