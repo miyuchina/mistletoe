@@ -80,6 +80,7 @@ class SpanToken:
 
 
 class CoreTokens(SpanToken):
+    precedence = 0
     def __new__(self, match):
         return globals()[match.type](match)
 
