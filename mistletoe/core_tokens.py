@@ -25,7 +25,7 @@ def find_core_tokens(string):
             escaped = True
             i += 1
             continue
-        if in_delimiter_run is not None and c != in_delimiter_run or escaped:
+        if in_delimiter_run is not None and (c != in_delimiter_run or escaped):
             delimiters.append(Delimiter(start, i if not escaped else i-1, string))
             in_delimiter_run = None
         if in_delimiter_run is None and (c == '*' or c == '_') and not escaped:
