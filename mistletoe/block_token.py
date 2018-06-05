@@ -224,8 +224,10 @@ class Paragraph(BlockToken):
                 and next_line.strip() != ''
                 and not Heading.start(next_line)
                 and not CodeFence.start(next_line)
-                and not Quote.start(next_line)
-                and not List.start(next_line)):
+                and not Quote.start(next_line)):
+            list_pair = List.start(next_line)
+            if list_pair is not None and next_line[:list_pair[0]].endswith(' '):
+                break
             if cls.is_setext_heading(next_line):
                 line_buffer.append(next(lines))
                 return SetextHeading(line_buffer)
@@ -348,12 +350,11 @@ class List(BlockToken):
 
 
 class ListItem(BlockToken):
-    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])( +)')
+    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])( *$| +)')
 
     def __init__(self, lines, prepend, leader):
         self.leader = leader
         self.prepend = prepend
-        lines[0] = lines[0][prepend:]
         self.loose = False
         self.children = tokenize(lines, parent=self)
 
@@ -384,9 +385,12 @@ class ListItem(BlockToken):
             return None        # is sublist
         # reassign prepend and leader
         prepend = len(content)
-        spaces = len(match_obj.group(2))
-        if spaces > 4:
-            prepend -= spaces - 1
+        if prepend == len(line.rstrip('\n')):
+            prepend = match_obj.end(1) + 1
+        else:
+            spaces = len(match_obj.group(2))
+            if spaces > 4:
+                prepend -= spaces - 1
         leader = match_obj.group(1)
         return prepend, leader
 
@@ -405,14 +409,20 @@ class ListItem(BlockToken):
         if pair is None:
             return None
         prepend, leader = pair
-        line_buffer.append(next(lines))
+        empty_first_line = next(lines)[prepend:].strip() == ''
+        if not empty_first_line:
+            line_buffer.append(next_line[prepend:])
         next_line = lines.peek()
+        if empty_first_line and next_line is not None and next_line.strip() == '':
+            return line_buffer, prepend, leader
         while (next_line is not None
-                and not cls.other_token(next_line)
                 and not cls.parse_marker(next_line, prepend, leader)):
-            if newline and not cls.in_continuation(next_line, prepend):
-                del line_buffer[-newline:]
-                break
+            if not cls.in_continuation(next_line, prepend):
+                if newline:
+                    del line_buffer[-newline:]
+                    break
+                elif cls.other_token(next_line):
+                    break
             line = next(lines)
             stripped = line.lstrip(' ')
             diff = len(line) - len(stripped)

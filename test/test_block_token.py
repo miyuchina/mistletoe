@@ -142,9 +142,9 @@ class TestListItem(unittest.TestCase):
         for line in lines:
             self.assertTrue(block_token.ListItem.parse_marker(line))
         bad_lines = ['> foo\n',
-                 '1.item 1\n',
-                 '2| item 2\n',
-                 '1234567890. item x\n']
+                     '1item 1\n',
+                     '2| item 2\n',
+                     '1234567890. item x\n']
         for line in bad_lines:
             self.assertFalse(block_token.ListItem.parse_marker(line))
 
@@ -165,9 +165,9 @@ class TestListItem(unittest.TestCase):
             if item_lines is None:
                 break
             result.append(item_lines)
-        expected = [(['- foo\n', 'foo\n'], 2, '-'),
-                    (['- bar\n', '\n', 'bar\n'], 2, '-'),
-                    ([' -    baz\n', '\n', 'baz\n', 'baz\n'], 6, '-'),]
+        expected = [(['foo\n', 'foo\n'], 2, '-'),
+                    (['bar\n', '\n', 'bar\n'], 2, '-'),
+                    (['baz\n', '\n', 'baz\n', 'baz\n'], 6, '-'),]
         self.assertEqual(result, expected)
 
     def test_tokenize(self):

@@ -167,6 +167,8 @@ class HTMLRenderer(BaseRenderer):
         return template.format(tag=tag, attr=attr, inner=inner)
 
     def render_list_item(self, token):
+        if len(token.children) == 0:
+            return '<li></li>'
         inner = '\n'.join([self.render(child) for child in token.children])
         inner_template = '\n{}\n'
         if self._suppress_ptag_stack[-1]:

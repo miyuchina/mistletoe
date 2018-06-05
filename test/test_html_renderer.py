@@ -86,7 +86,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('List', output, start=None)
 
     def test_list_item(self):
-        output = '<li>\n\n</li>'
+        output = '<li></li>'
         self._test_token('ListItem', output)
 
     def test_table_with_header(self):
