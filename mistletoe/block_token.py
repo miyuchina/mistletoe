@@ -348,7 +348,7 @@ class List(BlockToken):
 
 
 class ListItem(BlockToken):
-    pattern = re.compile(r' {0,3}(\d{1,9}[.)]|[+\-*]) {1,4}')
+    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*]) {1,4}')
 
     def __init__(self, lines, prepend, leader):
         self.leader = leader

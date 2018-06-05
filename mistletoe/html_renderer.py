@@ -155,7 +155,7 @@ class HTMLRenderer(BaseRenderer):
 
     def render_list(self, token):
         template = '<{tag}{attr}>\n{inner}\n</{tag}>'
-        if token.start:
+        if token.start is not None:
             tag = 'ol'
             attr = ' start="{}"'.format(token.start) if token.start != 1 else ''
         else:
