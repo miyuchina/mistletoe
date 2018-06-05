@@ -526,7 +526,8 @@ class Footnote(BlockToken):
                 dest = dest[1:-1]
             dest = span_token.EscapeSequence.strip(dest)
             title = span_token.EscapeSequence.strip(title[1:-1] if title else '')
-            _root_node.footnotes[key] = dest, title
+            if key not in _root_node.footnotes:
+                _root_node.footnotes[key] = dest, title
         return None
 
     @classmethod
