@@ -3,11 +3,15 @@ HTML renderer for mistletoe.
 """
 
 import re
-import html
+import sys
 from itertools import chain
 from urllib.parse import quote
 import mistletoe.html_token as html_token
 from mistletoe.base_renderer import BaseRenderer
+if sys.version_info < (3, 4):
+    from mistletoe import _html as html
+else:
+    import html
 
 
 class HTMLRenderer(BaseRenderer):
