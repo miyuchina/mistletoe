@@ -77,11 +77,9 @@ class HTMLRenderer(BaseRenderer):
     def render_footnote_image(self, token):
         template = '<img src="{src}" alt="{inner}"{title} />'
         src = self.footnotes.get(token.src.key, '')
-        if isinstance(src, tuple):
-            src, title = src
+        src, title = src
+        if title:
             title = ' title="{}"'.format(self.escape_html(title))
-        else:
-            title = ''
         render_func = self.render
         self.render = self.render_to_plain
         inner = self.render_inner(token)
@@ -104,13 +102,10 @@ class HTMLRenderer(BaseRenderer):
         if key in self.footnotes:
             template = '<a href="{target}"{title}>{inner}</a>'
             target = self.footnotes[key]
-            if isinstance(target, tuple):
-                target, title = target
-                target = self.escape_url(target)
+            target, title = target
+            target = self.escape_url(target)
+            if title:
                 title = ' title="{}"'.format(self.escape_html(title))
-            else:
-                target = self.escape_url(target)
-                title = ''
             return template.format(target=target, inner=inner, title=title)
         return '[{}]'.format(inner)
 

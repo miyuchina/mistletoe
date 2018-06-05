@@ -524,7 +524,8 @@ class Footnote(BlockToken):
             key = key.casefold()
             if dest.startswith('<'):
                 dest = dest[1:-1]
-            _root_node.footnotes[key] = (dest, title[1:-1]) if title else dest
+            title = title[1:-1] if title else ''
+            _root_node.footnotes[key] = dest, title
         return None
 
     @classmethod

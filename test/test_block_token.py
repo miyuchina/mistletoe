@@ -313,7 +313,8 @@ class TestFootnote(unittest.TestCase):
         lines = ['[key 1]: value1\n',
                  '[key 2]: value2\n']
         token = block_token.Document(lines)
-        self.assertEqual(token.footnotes, {"key 1": "value1", "key 2": "value2"})
+        self.assertEqual(token.footnotes, {"key 1": ("value1", ""),
+                                           "key 2": ("value2", "")})
 
 
 class TestDocument(unittest.TestCase):
@@ -321,8 +322,8 @@ class TestDocument(unittest.TestCase):
         lines = ['[key 1]: value1\n',
                  '[key 2]: value2\n']
         document = block_token.Document(lines)
-        self.assertEqual(document.footnotes['key 1'], 'value1')
-        self.assertEqual(document.footnotes['key 2'], 'value2')
+        self.assertEqual(document.footnotes['key 1'], ('value1', ''))
+        self.assertEqual(document.footnotes['key 2'], ('value2', ''))
 
     def test_auto_splitlines(self):
         lines = "some\ncontinual\nlines\n"

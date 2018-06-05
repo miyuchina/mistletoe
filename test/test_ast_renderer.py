@@ -30,7 +30,7 @@ class TestASTRenderer(unittest.TestCase):
                       '\n',
                       '[baz]: spam\n'])
         target = {'type': 'Document',
-                  'footnotes': {'baz': 'spam'},
+                  'footnotes': {'baz': ('spam', '')},
                   'children': [{
                       'type': 'Paragraph',
                       'children': [{
