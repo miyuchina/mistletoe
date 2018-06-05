@@ -195,7 +195,7 @@ class EscapeSequence(SpanToken):
     Attributes:
         children (iterator): a single RawText node for alternative text.
     """
-    pattern = re.compile(r"\\([!\"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])")
+    pattern = re.compile(r"\\([!\"#$%&'()*+,-./:;<=>?@\[\\\]^_`{|}~])")
     parse_inner = False
     precedence = 2
 
