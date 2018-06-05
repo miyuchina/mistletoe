@@ -3,7 +3,6 @@ Built-in span-level token classes.
 """
 
 import re
-from types import GeneratorType
 import mistletoe.span_tokenizer as tokenizer
 from mistletoe.core_tokens import find_core_tokens
 
