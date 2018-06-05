@@ -4,7 +4,7 @@ GitHub Wiki support for mistletoe.
 
 import re
 from mistletoe.span_token import SpanToken
-from mistletoe.html_renderer import HTMLRenderer, escape_url
+from mistletoe.html_renderer import HTMLRenderer
 
 
 __all__ = ['GithubWiki', 'GithubWikiRenderer']
@@ -24,6 +24,6 @@ class GithubWikiRenderer(HTMLRenderer):
 
     def render_github_wiki(self, token):
         template = '<a href="{target}">{inner}</a>'
-        target = escape_url(token.target)
+        target = self.escape_url(token.target)
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)

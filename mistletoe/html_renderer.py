@@ -2,10 +2,13 @@
 HTML renderer for mistletoe.
 """
 
+import re
 import html
 from itertools import chain
+from urllib.parse import quote
 import mistletoe.html_token as html_token
 from mistletoe.base_renderer import BaseRenderer
+
 
 class HTMLRenderer(BaseRenderer):
     """
@@ -21,11 +24,22 @@ class HTMLRenderer(BaseRenderer):
         tokens = self._tokens_from_module(html_token)
         self._suppress_ptag_stack = [False]
         super().__init__(*chain(tokens, extras))
+        # html.entities.html5 includes entitydefs not ending with ';',
+        # CommonMark seems to hate them, so...
+        self._stdlib_charref = html._charref
+        _charref = re.compile(r'&(#[0-9]+;'
+                              r'|#[xX][0-9a-fA-F]+;'
+                              r'|[^\t\n\f <&#;]{1,32};)')
+        html._charref = _charref
+
+    def __exit__(self, *args):
+        super().__exit__(*args)
+        html._charref = self._stdlib_charref
 
     def render_to_plain(self, token):
         if hasattr(token, 'children'):
             return self.render_inner(token)
-        return html.escape(token.content)
+        return self.escape_html(token.content)
 
     def render_strong(self, token):
         template = '<strong>{}</strong>'
@@ -37,7 +51,8 @@ class HTMLRenderer(BaseRenderer):
 
     def render_inline_code(self, token):
         template = '<code>{}</code>'
-        return template.format(self.render_inner(token))
+        inner = html.escape(token.children[0].content)
+        return template.format(inner)
 
     def render_strikethrough(self, token):
         template = '<del>{}</del>'
@@ -50,7 +65,7 @@ class HTMLRenderer(BaseRenderer):
         inner = self.render_inner(token)
         self.render = render_func
         if token.title:
-            title = ' title="{}"'.format(html.escape(token.title))
+            title = ' title="{}"'.format(self.escape_html(token.title))
         else:
             title = ''
         return template.format(token.src, inner, title)
@@ -60,7 +75,7 @@ class HTMLRenderer(BaseRenderer):
         src = self.footnotes.get(token.src.key, '')
         if isinstance(src, tuple):
             src, title = src
-            title = ' title="{}"'.format(html.escape(title))
+            title = ' title="{}"'.format(self.escape_html(title))
         else:
             title = ''
         render_func = self.render
@@ -71,9 +86,9 @@ class HTMLRenderer(BaseRenderer):
 
     def render_link(self, token):
         template = '<a href="{target}"{title}>{inner}</a>'
-        target = token.target
+        target = self.escape_url(token.target)
         if token.title:
-            title = ' title="{}"'.format(html.escape(token.title))
+            title = ' title="{}"'.format(self.escape_html(token.title))
         else:
             title = ''
         inner = self.render_inner(token)
@@ -87,8 +102,10 @@ class HTMLRenderer(BaseRenderer):
             target = self.footnotes[key]
             if isinstance(target, tuple):
                 target, title = target
-                title = ' title="{}"'.format(html.escape(title))
+                target = self.escape_url(target)
+                title = ' title="{}"'.format(self.escape_html(title))
             else:
+                target = self.escape_url(target)
                 title = ''
             return template.format(target=target, inner=inner, title=title)
         return '[{}]'.format(inner)
@@ -98,16 +115,15 @@ class HTMLRenderer(BaseRenderer):
         if token.mailto:
             target = 'mailto:{}'.format(token.target)
         else:
-            target = html.escape(token.target)
+            target = self.escape_url(token.target)
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)
 
     def render_escape_sequence(self, token):
         return self.render_inner(token)
 
-    @staticmethod
-    def render_raw_text(token):
-        return html.escape(token.content)
+    def render_raw_text(self, token):
+        return self.escape_html(token.content)
 
     @staticmethod
     def render_html_span(token):
@@ -132,10 +148,10 @@ class HTMLRenderer(BaseRenderer):
     def render_block_code(self, token):
         template = '<pre><code{attr}>{inner}</code></pre>'
         if token.language:
-            attr = ' class="{}"'.format('language-{}'.format(token.language))
+            attr = ' class="{}"'.format('language-{}'.format(self.escape_html(token.language)))
         else:
             attr = ''
-        inner = self.render_inner(token)
+        inner = html.escape(token.children[0].content)
         return template.format(attr=attr, inner=inner)
 
     def render_list(self, token):
@@ -213,9 +229,13 @@ class HTMLRenderer(BaseRenderer):
         inner = '\n'.join([self.render(child) for child in token.children])
         return '{}\n'.format(inner) if inner else ''
 
-def escape_url(raw):
-    """
-    Escape urls to prevent code injection craziness. (Hopefully.)
-    """
-    from urllib.parse import quote
-    return quote(raw, safe='/#:')
+    @staticmethod
+    def escape_html(raw):
+        return html.escape(html.unescape(raw))
+
+    @staticmethod
+    def escape_url(raw):
+        """
+        Escape urls to prevent code injection craziness. (Hopefully.)
+        """
+        return html.escape(quote(html.unescape(raw), safe='/#:()*?=%@+,&'))
