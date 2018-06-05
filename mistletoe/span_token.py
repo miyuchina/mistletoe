@@ -154,8 +154,8 @@ class Link(SpanToken):
         target (str): link target.
     """
     def __init__(self, match):
-        self.target = match.group(2).strip().replace('\\', '')
-        self.title = match.group(3).replace('\\', '')
+        self.target = EscapeSequence.strip(match.group(2).strip())
+        self.title = EscapeSequence.strip(match.group(3))
 
 
 class FootnoteLink(SpanToken):
@@ -201,6 +201,10 @@ class EscapeSequence(SpanToken):
 
     def __init__(self, match):
         self.children = (RawText(match.group(self.parse_group)),)
+
+    @classmethod
+    def strip(cls, string):
+        return cls.pattern.sub(r'\1', string)
 
 
 class LineBreak(SpanToken):

@@ -21,7 +21,7 @@ def find_core_tokens(string):
     i = 0
     while i < len(string):
         c = string[i]
-        if c == '\\':
+        if c == '\\' and not escaped:
             escaped = True
             i += 1
             continue
@@ -194,7 +194,7 @@ def match_link_dest(string, offset):
     if string[offset] == '<':
         escaped = False
         for i, c in enumerate(string[offset+1:], start=offset+1):
-            if c == '\\':
+            if c == '\\' and not escaped:
                 escaped = True
             elif c == ' ' or c == '\n' or (c == '<' and not escaped):
                 return None
@@ -207,7 +207,7 @@ def match_link_dest(string, offset):
         escaped = False
         count = 1
         for i, c in enumerate(string[offset:], start=offset):
-            if c == '\\':
+            if c == '\\' and not escaped:
                 escaped = True
             elif c in whitespace:
                 return offset, i, string[offset:i]
@@ -239,7 +239,7 @@ def match_link_title(string, offset):
         return None
     escaped = False
     for i, c in enumerate(string[offset+1:], start=offset+1):
-        if c == '\\':
+        if c == '\\' and not escaped:
             escaped = True
         elif c == closing and not escaped:
             return offset, i+1, string[offset+1:i]

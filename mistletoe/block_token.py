@@ -275,7 +275,7 @@ class CodeFence(BlockToken):
     pattern = re.compile(r'( {0,3})((?:`|~){3,}) *(\S*)')
     _open_info = None
     def __init__(self, lines):
-        self.language = self.__class__._open_info[2]
+        self.language = span_token.EscapeSequence.strip(self.__class__._open_info[2])
         self.children = (span_token.RawText(''.join(lines)),)
         self.__class__._open_info = None
 
@@ -524,7 +524,8 @@ class Footnote(BlockToken):
             key = key.casefold()
             if dest.startswith('<'):
                 dest = dest[1:-1]
-            title = title[1:-1] if title else ''
+            dest = span_token.EscapeSequence.strip(dest)
+            title = span_token.EscapeSequence.strip(title[1:-1] if title else '')
             _root_node.footnotes[key] = dest, title
         return None
 
