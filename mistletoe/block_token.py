@@ -226,8 +226,13 @@ class Paragraph(BlockToken):
                 and not CodeFence.start(next_line)
                 and not Quote.start(next_line)):
             list_pair = List.start(next_line)
-            if list_pair is not None and next_line[:list_pair[0]].endswith(' '):
-                break
+            if list_pair is not None:
+                prepend, leader = list_pair
+                # non-empty list item
+                if next_line[:prepend].endswith(' '):
+                    # unordered list, or ordered list starting from 1
+                    if not leader[:-1].isdigit() or leader[:-1] == '1':
+                        break
             if cls.is_setext_heading(next_line):
                 line_buffer.append(next(lines))
                 return SetextHeading(line_buffer)
