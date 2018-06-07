@@ -1,10 +1,11 @@
 import re
 
 
-whitespace = {'\t', '\n', '\x0b', '\x0c', '\r', '\x1c', '\x1d', '\x1e', '\x1f', ' ',
-              '\x85', '\xa0', '\u1680', '\u2000', '\u2001', '\u2002', '\u2003',
-              '\u2004', '\u2005', '\u2006', '\u2007', '\u2008', '\u2009', '\u200a',
-              '\u2028', '\u2029', '\u202f', '\u205f', '\u3000'}
+whitespace = {' ', '\t', '\n', '\x0b', '\x0c', '\r'}
+unicode_whitespace = {'\t', '\n', '\x0b', '\x0c', '\r', '\x1c', '\x1d', '\x1e',
+        '\x1f', ' ', '\x85', '\xa0', '\u1680', '\u2000', '\u2001', '\u2002',
+        '\u2003', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008', '\u2009',
+        '\u200a', '\u2028', '\u2029', '\u202f', '\u205f', '\u3000'}
 label_pattern = re.compile(r'\[(.+?)(?<!\])\]', re.DOTALL)
 punctuation = {'!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',',
                '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\',
@@ -298,16 +299,16 @@ def is_closer(start, end, string):
 
 
 def is_left_delimiter(start, end, string):
-    return (not succeeded_by(end, string, whitespace)
+    return (not succeeded_by(end, string, unicode_whitespace)
             and (not succeeded_by(end, string, punctuation)
                  or preceded_by(start, string, punctuation)
-                 or preceded_by(start, string, whitespace)))
+                 or preceded_by(start, string, unicode_whitespace)))
 
 
 def is_right_delimiter(start, end, string):
-    return (not preceded_by(start, string, whitespace)
+    return (not preceded_by(start, string, unicode_whitespace)
             and (not preceded_by(start, string, punctuation)
-                 or succeeded_by(end, string, whitespace)
+                 or succeeded_by(end, string, unicode_whitespace)
                  or succeeded_by(end, string, punctuation)))
 
 
