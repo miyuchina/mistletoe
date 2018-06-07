@@ -225,8 +225,9 @@ class Paragraph(BlockToken):
                 and not Heading.start(next_line)
                 and not CodeFence.start(next_line)
                 and not Quote.start(next_line)):
-            list_pair = List.start(next_line)
-            if list_pair is not None:
+            list_pair = ListItem.parse_marker(next_line)
+            if (len(next_line) - len(next_line.lstrip()) < 4
+                    and list_pair is not None):
                 prepend, leader = list_pair
                 # non-empty list item
                 if next_line[:prepend].endswith(' '):
@@ -315,6 +316,7 @@ class CodeFence(BlockToken):
 
 
 class List(BlockToken):
+    pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?: *$| +)')
     def __init__(self, items):
         self.children, self.loose = items
         leader = self.children[0].leader
@@ -324,7 +326,7 @@ class List(BlockToken):
 
     @classmethod
     def start(cls, line):
-        return ListItem.parse_marker(line)
+        return cls.pattern.match(line)
 
     @classmethod
     def read(cls, lines):
@@ -355,7 +357,7 @@ class List(BlockToken):
 
 
 class ListItem(BlockToken):
-    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])( *$| +)')
+    pattern = re.compile(r' *(\d{0,9}[.)]|[+\-*])( *$| +)')
 
     def __init__(self, lines, prepend, leader):
         self.leader = leader
@@ -375,19 +377,14 @@ class ListItem(BlockToken):
                 or ThematicBreak.start(line))
 
     @classmethod
-    def parse_marker(cls, line, prepend=-1, leader=None):
+    def parse_marker(cls, line):
         """
-        Returns a pair (prepend, leader) iff:
-
-          - the line has a valid leader, and
-          - the line is not a sublist of a previous list item
+        Returns a pair (prepend, leader) iff the line has a valid leader.
         """
         match_obj = cls.pattern.match(line)
         if match_obj is None:
             return None        # no valid leader
         content = match_obj.group(0)
-        if prepend != -1 and len(content) - len(content.lstrip()) >= prepend:
-            return None        # is sublist
         # reassign prepend and leader
         prepend = len(content)
         if prepend == len(line.rstrip('\n')):
@@ -430,7 +427,7 @@ class ListItem(BlockToken):
             # not in continuation
             if not cls.in_continuation(next_line, prepend):
                 # next_line is a new list item
-                if cls.parse_marker(next_line, prepend, leader):
+                if cls.parse_marker(next_line):
                     break
                 # not another item, has newlines -> not continuation
                 if newline:
