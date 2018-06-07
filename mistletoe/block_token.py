@@ -334,8 +334,6 @@ class List(BlockToken):
         leader = None
         item_buffer = []
         while True:
-            while lines.peek() == '\n':
-                next(lines)
             output = ListItem.read(lines)
             if output is None:
                 break
@@ -415,7 +413,7 @@ class ListItem(BlockToken):
             line_buffer.append(next_line[prepend:])
         next_line = lines.peek()
         if empty_first_line and next_line is not None and next_line.strip() == '':
-            return line_buffer, prepend, leader
+            return [next(lines)], prepend, leader
         newline = 0
         while True:
             # no more lines
