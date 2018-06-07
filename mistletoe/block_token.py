@@ -404,7 +404,6 @@ class ListItem(BlockToken):
         lines.anchor()
         prepend = -1
         leader = None
-        newline = 0
         line_buffer = []
         next_line = lines.peek()
         # first line in list item
@@ -420,13 +419,25 @@ class ListItem(BlockToken):
         next_line = lines.peek()
         if empty_first_line and next_line is not None and next_line.strip() == '':
             return line_buffer, prepend, leader
-        while (next_line is not None
-                and not cls.parse_marker(next_line, prepend, leader)):
+        newline = 0
+        while True:
+            # no more lines
+            if next_line is None:
+                # strip off newlines
+                if newline:
+                    del line_buffer[-newline:]
+                break
+            # not in continuation
             if not cls.in_continuation(next_line, prepend):
+                # next_line is a new list item
+                if cls.parse_marker(next_line, prepend, leader):
+                    break
+                # not another item, has newlines -> not continuation
                 if newline:
                     del line_buffer[-newline:]
                     break
-                elif cls.other_token(next_line):
+                # directly followed by another token
+                if cls.other_token(next_line):
                     break
             line = next(lines)
             stripped = line.lstrip(' ')
