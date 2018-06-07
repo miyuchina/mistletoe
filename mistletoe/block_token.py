@@ -420,6 +420,7 @@ class ListItem(BlockToken):
             if next_line is None:
                 # strip off newlines
                 if newline:
+                    lines.backstep()
                     del line_buffer[-newline:]
                 break
             # not in continuation
@@ -429,6 +430,7 @@ class ListItem(BlockToken):
                     break
                 # not another item, has newlines -> not continuation
                 if newline:
+                    lines.backstep()
                     del line_buffer[-newline:]
                     break
                 # directly followed by another token
