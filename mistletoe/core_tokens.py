@@ -250,7 +250,7 @@ def match_link_title(string, offset):
 
 
 def match_link_label(string, offset):
-    match_obj = label_pattern.search(string, offset)
+    match_obj = label_pattern.match(string, offset)
     if match_obj and is_link_label(match_obj.group(1)):
         return match_obj.start(), match_obj.end(), match_obj.group(1)
     return None
