@@ -135,7 +135,9 @@ class HTMLRenderer(BaseRenderer):
 
     def render_quote(self, token):
         elements = ['<blockquote>']
+        self._suppress_ptag_stack.append(False)
         elements.extend([self.render(child) for child in token.children])
+        self._suppress_ptag_stack.pop()
         elements.append('</blockquote>')
         return '\n'.join(elements)
 
