@@ -6,7 +6,8 @@ import re
 import sys
 from itertools import chain
 from urllib.parse import quote
-import mistletoe.html_token as html_token
+from mistletoe.block_token import HTMLBlock
+from mistletoe.span_token import HTMLSpan
 from mistletoe.base_renderer import BaseRenderer
 if sys.version_info < (3, 4):
     from mistletoe import _html as html
@@ -25,9 +26,8 @@ class HTMLRenderer(BaseRenderer):
         Args:
             extras (list): allows subclasses to add even more custom tokens.
         """
-        tokens = self._tokens_from_module(html_token)
         self._suppress_ptag_stack = [False]
-        super().__init__(*chain(tokens, extras))
+        super().__init__(*chain((HTMLBlock, HTMLSpan), extras))
         # html.entities.html5 includes entitydefs not ending with ';',
         # CommonMark seems to hate them, so...
         self._stdlib_charref = html._charref

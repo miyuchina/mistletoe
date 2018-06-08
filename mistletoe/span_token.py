@@ -213,6 +213,41 @@ class RawText(SpanToken):
         self.content = content
 
 
+_tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
+        'body', 'caption', 'center', 'col', 'colgroup', 'dd', 'details',
+        'dialog', 'dir', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure',
+        'footer', 'form', 'frame', 'frameset', 'h1', 'h2', 'h3', 'h4', 'h5',
+        'h6', 'head', 'header', 'hr', 'html', 'iframe', 'legend', 'li', 'link',
+        'main', 'menu', 'menuitem', 'meta', 'nav', 'noframes', 'ol',
+        'optgroup', 'option', 'p', 'param', 'section', 'source', 'summary',
+        'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'title', 'tr', 'track',
+        'ul'}
+
+_tag   = r'[A-Za-z][A-Za-z0-9-]*'
+_attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
+
+_open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'
+_closing_tag = r'(?<!\\)</' + _tag + r'\s*>'
+_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'
+_instruction = r'(?<!\\)<\?.+?\?>'
+_declaration = r'(?<!\\)<![A-Z].+?>'
+_cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'
+
+
+class HTMLSpan(SpanToken):
+    """
+    Span-level HTML tokens.
+
+    Attributes:
+        content (str): literal strings rendered as-is.
+    """
+    pattern = re.compile('|'.join([_open_tag, _closing_tag, _comment,
+                                   _instruction, _declaration, _cdata]),
+                                   re.DOTALL)
+    parse_inner = False
+    parse_group = 0
+
+
 _token_types = []
 reset_tokens()
 

@@ -733,6 +733,75 @@ class ThematicBreak(BlockToken):
         return [next(lines)]
 
 
+class HTMLBlock(BlockToken):
+    """
+    Block-level HTML tokens.
+
+    Attributes:
+        content (str): literal strings rendered as-is.
+    """
+    _end_cond = None
+    multiblock = re.compile(r'<(script|pre|style)[ >\n]')
+    predefined = re.compile(r'<\/?(.+?)(?:\/?>|[ \n])')
+    custom_tag = re.compile(r'(?:' + '|'.join((span_token._open_tag,
+                                span_token._closing_tag)) + r')\s*$')
+
+    def __init__(self, lines):
+        self.content = ''.join(lines).rstrip('\n')
+
+    @classmethod
+    def start(cls, line):
+        stripped = line.lstrip()
+        if len(line) - len(stripped) >= 4:
+            return False
+        # rule 1: <pre>, <script> or <style> tags, allow newlines in block
+        match_obj = cls.multiblock.match(stripped)
+        if match_obj is not None:
+            cls._end_cond = '</{}>'.format(match_obj.group(1).casefold())
+            return True
+        # rule 2: html comment tags, allow newlines in block
+        if stripped.startswith('<!--'):
+            cls._end_cond = '-->'
+            return True
+        # rule 3: tags that starts with <?, allow newlines in block
+        if stripped.startswith('<?'):
+            cls._end_cond = '?>'
+            return True
+        # rule 4: tags that starts with <!, allow newlines in block
+        if stripped.startswith('<!') and stripped[2].isupper():
+            cls._end_cond = '>'
+            return True
+        # rule 5: CDATA declaration, allow newlines in block
+        if stripped.startswith('<![CDATA['):
+            cls._end_cond = ']]>'
+            return True
+        # rule 6: predefined tags (see html_token._tags), read until newline
+        match_obj = cls.predefined.match(stripped)
+        if match_obj is not None and match_obj.group(1).casefold() in span_token._tags:
+            cls._end_cond = None
+            return True
+        # rule 7: custom tags, read until newline
+        match_obj = cls.custom_tag.match(stripped)
+        if match_obj is not None:
+            cls._end_cond = None
+            return True
+        return False
+
+    @classmethod
+    def read(cls, lines):
+        # note: stop condition can trigger on the starting line
+        line_buffer = []
+        for line in lines:
+            line_buffer.append(line)
+            if cls._end_cond is not None:
+                if cls._end_cond in line.casefold():
+                    break
+            elif line.strip() == '':
+                line_buffer.pop()
+                break
+        return line_buffer
+
+
 _token_types = []
 reset_tokens()
 
