@@ -114,7 +114,7 @@ class InlineCode(SpanToken):
 
     def __init__(self, match):
         content = match.group(self.parse_group)
-        self.children = (RawText(' '.join(content.split())),)
+        self.children = (RawText(' '.join(re.split('[ \n]+', content.strip()))),)
 
 
 class Strikethrough(SpanToken):
