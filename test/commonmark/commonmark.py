@@ -77,18 +77,20 @@ def print_failure_in_sections(results):
     total = 0
     for result in results:
         if section != result[1]:
-            section_str = "Failed in section '{}':".format(section)
-            result_str = "{:>3} / {:>3}".format(failed, total)
-            print('{:70} {}'.format(section_str, result_str))
+            if failed:
+                section_str = "Failed in section '{}':".format(section)
+                result_str = "{:>3} / {:>3}".format(failed, total)
+                print('{:70} {}'.format(section_str, result_str))
             section = result[1]
             failed = 0
             total = 0
         if not result[0]:
             failed += 1
         total += 1
-    section_str = "Failed in section '{}':".format(section)
-    result_str = "{:>3} / {:>3}".format(failed, total)
-    print('{:70} {}'.format(section_str, result_str))
+    if failed:
+        section_str = "Failed in section '{}':".format(section)
+        result_str = "{:>3} / {:>3}".format(failed, total)
+        print('{:70} {}'.format(section_str, result_str))
     print()
 
 
@@ -109,11 +111,11 @@ def main():
                         help="Specify alternative specfile to run.")
     args = parser.parse_args()
 
-    start    = args.start
-    end      = args.end
-    verbose  = args.verbose
-    quiet    = args.quiet
-    tests    = args.tests
+    start   = args.start
+    end     = args.end
+    verbose = args.verbose
+    quiet   = args.quiet
+    tests   = args.tests
     if args.section is not None:
         start, end = locate_section(args.section, tests)
 
