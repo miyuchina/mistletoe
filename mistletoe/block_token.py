@@ -175,7 +175,9 @@ class Quote(BlockToken):
     Quote token. (["> # heading\n", "> paragraph\n"])
     """
     def __init__(self, lines):
+        Paragraph.parse_setext = False
         super().__init__(lines, tokenize)
+        Paragraph.parse_setext = True
 
     @staticmethod
     def start(line):
@@ -213,6 +215,7 @@ class Paragraph(BlockToken):
     Boundary between span-level and block-level tokens.
     """
     setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
+    parse_setext = True
 
     def __new__(cls, lines):
         if not isinstance(lines, list):
@@ -245,7 +248,7 @@ class Paragraph(BlockToken):
                     # unordered list, or ordered list starting from 1
                     if not leader[:-1].isdigit() or leader[:-1] == '1':
                         break
-            if cls.is_setext_heading(next_line):
+            if cls.parse_setext and cls.is_setext_heading(next_line):
                 line_buffer.append(next(lines))
                 return SetextHeading(line_buffer)
             if ThematicBreak.start(next_line):
