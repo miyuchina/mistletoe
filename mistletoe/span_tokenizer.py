@@ -31,18 +31,21 @@ def eval_tokens(x, y, token_buffer):
         return y
     if r == 1:
         return x if x.cls.precedence >= y.cls.precedence else y
-    x.append_child(y)
+    if r == 2:
+        x.append_child(y)
+        return x
     return x
 
 
 def relation(x, y):
     if x.end <= y.start:
-        return 0  # x preceeds y
-    if (x.end >= y.end
-            and x.parse_start <= y.start
-            and x.parse_end >= y.end):
-        return 2  # x contains y
-    return 1      # x intersects y
+        return 0      # x preceeds y
+    if x.end >= y.end:
+        if x.parse_start <= y.start and x.parse_end >= y.end:
+            return 2  # x contains y
+        if x.parse_end <= y.start:
+            return 3  # ignore y
+    return 1          # x intersects y
 
 
 def make_tokens(tokens, start, end, string, fallback_token):
