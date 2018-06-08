@@ -132,27 +132,24 @@ def match_link_image(string, offset, delimiter, root=None):
     if follows(string, offset, '('):
         # link destination
         match_info = match_link_dest(string, offset+1)
-        if match_info is None:
-            return None
-        dest_start, dest_end, dest = match_info
-        # link title
-        match_info = match_link_title(string, dest_end)
-        if match_info is None:
-            return None
-        title_start, title_end, title = match_info
-        # assert closing paren
-        paren_index = shift_whitespace(string, title_end)
-        if paren_index >= len(string) or string[paren_index] != ')':
-            return None
-        end = paren_index + 1
-        match = MatchObj(start, end,
-                          (text_start, text_end, text),
-                          (dest_start, dest_end, dest),
-                          (title_start, title_end, title))
-        match.type = 'Link' if not image else 'Image'
-        return match
+        if match_info is not None:
+            dest_start, dest_end, dest = match_info
+            # link title
+            match_info = match_link_title(string, dest_end)
+            if match_info is not None:
+                title_start, title_end, title = match_info
+                # assert closing paren
+                paren_index = shift_whitespace(string, title_end)
+                if paren_index < len(string) and string[paren_index] == ')':
+                    end = paren_index + 1
+                    match = MatchObj(start, end,
+                                      (text_start, text_end, text),
+                                      (dest_start, dest_end, dest),
+                                      (title_start, title_end, title))
+                    match.type = 'Link' if not image else 'Image'
+                    return match
     # footnote link
-    elif follows(string, offset, '['):
+    if follows(string, offset, '['):
         # full footnote link
         result = match_link_label(string, offset+1, root)
         if result:
