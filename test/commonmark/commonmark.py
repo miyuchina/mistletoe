@@ -11,8 +11,6 @@ def run_tests(test_entries, start=None, end=None, quiet=False, verbose=False):
     end = end or sys.maxsize
     results = [run_test(test_entry, quiet) for test_entry in test_entries
             if test_entry['example'] >= start and test_entry['example'] <= end]
-    if not quiet:
-        print('=' * 80)
     if verbose:
         print_failure_in_sections(results)
     print('failed:', len(list(filter(lambda x: not x[0], results))))
