@@ -248,6 +248,9 @@ class Paragraph(BlockToken):
                     # unordered list, or ordered list starting from 1
                     if not leader[:-1].isdigit() or leader[:-1] == '1':
                         break
+            html_block = HTMLBlock.start(next_line)
+            if html_block and html_block != 7:
+                break
             if cls.parse_setext and cls.is_setext_heading(next_line):
                 line_buffer.append(next(lines))
                 return SetextHeading(line_buffer)
@@ -758,33 +761,33 @@ class HTMLBlock(BlockToken):
         match_obj = cls.multiblock.match(stripped)
         if match_obj is not None:
             cls._end_cond = '</{}>'.format(match_obj.group(1).casefold())
-            return True
+            return 1
         # rule 2: html comment tags, allow newlines in block
         if stripped.startswith('<!--'):
             cls._end_cond = '-->'
-            return True
+            return 2
         # rule 3: tags that starts with <?, allow newlines in block
         if stripped.startswith('<?'):
             cls._end_cond = '?>'
-            return True
+            return 3
         # rule 4: tags that starts with <!, allow newlines in block
         if stripped.startswith('<!') and stripped[2].isupper():
             cls._end_cond = '>'
-            return True
+            return 4
         # rule 5: CDATA declaration, allow newlines in block
         if stripped.startswith('<![CDATA['):
             cls._end_cond = ']]>'
-            return True
+            return 5
         # rule 6: predefined tags (see html_token._tags), read until newline
         match_obj = cls.predefined.match(stripped)
         if match_obj is not None and match_obj.group(1).casefold() in span_token._tags:
             cls._end_cond = None
-            return True
+            return 6
         # rule 7: custom tags, read until newline
         match_obj = cls.custom_tag.match(stripped)
         if match_obj is not None:
             cls._end_cond = None
-            return True
+            return 7
         return False
 
     @classmethod
