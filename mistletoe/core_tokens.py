@@ -173,6 +173,7 @@ def match_link_image(string, offset, delimiter, root=None):
                                   (-1, -1, title))
                 match.type = 'Link' if not image else 'Image'
                 return match
+        return None
     # shortcut footnote link
     ref = is_link_label(text, root)
     if ref:
