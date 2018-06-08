@@ -77,6 +77,8 @@ class HTMLRenderer(BaseRenderer):
     def render_footnote_image(self, token):
         template = '<img src="{src}" alt="{inner}"{title} />'
         src = self.footnotes.get(token.src.key, '')
+        if src == '':
+            return '![{}]'.format(token.src.key)
         src, title = src
         if title:
             title = ' title="{}"'.format(self.escape_html(title))
