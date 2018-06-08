@@ -190,13 +190,15 @@ class EscapeSequence(SpanToken):
 
 class LineBreak(SpanToken):
     """
-    Hard line breaks. Two spaces at the end of a line, or a backslash.
+    Hard or soft line breaks.
     """
-    pattern = re.compile(r'(?: {2,}|\\)\n')
+    pattern = re.compile(r'( *|\\)\n')
     parse_inner = False
     parse_group = 0
 
-    def __init__(self, _):
+    def __init__(self, match):
+        content = match.group(1)
+        self.soft = not content.startswith(('  ', '\\'))
         self.content = ''
 
 

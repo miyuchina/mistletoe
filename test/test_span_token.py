@@ -29,25 +29,16 @@ class TestStrong(TestBranchToken):
         self._test_parse(span_token.Strong, '**some text**', 'some text')
         self._test_parse(span_token.Strong, '__some text__', 'some text')
 
-    def test_multiline(self):
-        self._test_parse(span_token.Strong, '**some\ntext**', 'some\ntext')
-
 
 class TestEmphasis(TestBranchToken):
     def test_parse(self):
         self._test_parse(span_token.Emphasis, '*some text*', 'some text')
         self._test_parse(span_token.Emphasis, '_some text_', 'some text')
 
-    def test_multiline(self):
-        self._test_parse(span_token.Emphasis, '*some\ntext*', 'some\ntext')
-
 
 class TestInlineCode(TestBranchToken):
     def test_parse(self):
         self._test_parse(span_token.InlineCode, '`some text`', 'some text')
-
-    def test_multiline(self):
-        self._test_parse(span_token.InlineCode, '`some\ntext`', 'some text')
 
 
 class TestStrikethrough(TestBranchToken):
@@ -70,9 +61,6 @@ class TestLink(TestBranchToken):
         token = next(iter(span_token.tokenize_inner('[![alt](src)](target)')))
         child = next(iter(token.children))
         self._test_token(child, 'alt', src='src')
-
-    def test_multiline(self):
-        self._test_parse(span_token.Link, '[name](\ntarget)', 'name', target='target')
 
 
 class TestAutoLink(TestBranchToken):

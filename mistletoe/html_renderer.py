@@ -196,7 +196,7 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def render_line_break(token):
-        return '<br />\n'
+        return '\n' if token.soft else '<br />\n'
 
     @staticmethod
     def render_html_block(token):

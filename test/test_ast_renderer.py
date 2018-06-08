@@ -19,7 +19,14 @@ class TestASTRenderer(unittest.TestCase):
                       'type': 'Paragraph',
                       'children': [{
                           'type': 'RawText',
-                          'content': 'hello\nworld'
+                          'content': 'hello'
+                      }, {
+                          'type': 'LineBreak',
+                          'soft': True,
+                          'content': ''
+                      }, {
+                          'type': 'RawText',
+                          'content': 'world'
                       }]
                  }]}
         self.assertEqual(output, target)

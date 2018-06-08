@@ -100,7 +100,7 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('ThematicBreak', '\\hrulefill\n')
 
     def test_line_break(self):
-        self._test_token('LineBreak', '\\newline\n')
+        self._test_token('LineBreak', '\\newline\n', soft=False)
 
     def test_document(self):
         output = ('\\documentclass{article}\n'

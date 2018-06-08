@@ -132,7 +132,7 @@ class LaTeXRenderer(BaseRenderer):
 
     @staticmethod
     def render_line_break(token):
-        return '\\newline\n'
+        return '\n' if token.soft else '\\newline\n'
 
     def render_packages(self):
         pattern = '\\usepackage{options}{{{package}}}\n'

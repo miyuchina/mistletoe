@@ -49,8 +49,8 @@ class TestATXHeading(TestToken):
 
 class TestSetextHeading(TestToken):
     def test_match(self):
-        lines = ['some\n', 'heading\n', '---\n']
-        arg = 'some\nheading'
+        lines = ['some heading\n', '---\n']
+        arg = 'some heading'
         self._test_match(block_token.SetextHeading, lines, arg, level=2)
 
     def test_next(self):
@@ -58,7 +58,7 @@ class TestSetextHeading(TestToken):
         tokens = iter(block_token.tokenize(lines))
         self.assertIsInstance(next(tokens), block_token.SetextHeading)
         self.assertIsInstance(next(tokens), block_token.Paragraph)
-        self.mock.assert_has_calls([call('some\nheading'), call('foobar')])
+        self.mock.assert_has_calls([call('some'), call('heading'), call('foobar')])
         with self.assertRaises(StopIteration) as e:
             token = next(tokens)
 
@@ -117,7 +117,7 @@ class TestBlockCode(TestToken):
 class TestParagraph(TestToken):
     def test_parse(self):
         lines = ['some\n', 'continuous\n', 'lines\n']
-        arg = 'some\ncontinuous\nlines'
+        arg = 'some'
         self._test_match(block_token.Paragraph, lines, arg)
 
     def test_read(self):
@@ -177,7 +177,7 @@ class TestListItem(unittest.TestCase):
                  '          baz\n']
         token1, token2 = next(iter(block_token.tokenize(lines))).children[0].children
         self.assertIsInstance(token1, block_token.Paragraph)
-        self.assertTrue('foo\nbar' in token1)
+        self.assertTrue('foo' in token1)
         self.assertIsInstance(token2, block_token.BlockCode)
 
     def test_sublist(self):
