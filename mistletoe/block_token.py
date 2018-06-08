@@ -7,6 +7,14 @@ import sys
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
 import mistletoe.span_token as span_token
+from mistletoe.core_tokens import (
+        is_link_label,
+        follows,
+        shift_whitespace,
+        whitespace,
+        is_control_char,
+)
+
 
 """
 Tokens to be included in the parsing process, in the order specified.
@@ -544,29 +552,143 @@ class Footnote(BlockToken):
     Attributes:
         children (list): footnote entry tokens.
     """
-    pattern = re.compile(r' {0,3}\[(.+?)(?<!\\)\]:\s*(<[^\s<>]+?>|\S+?)(?:\s+(\".+?(?<!\")\"|\'.+?(?<!\')\'|\(.+?(?<!\))\)))?\s*$', re.MULTILINE)
-    def __new__(cls, lines):
-        match_objs = cls.pattern.findall(''.join(lines))
-        for key, dest, title in match_objs:
+    label_pattern = re.compile(r'[ \n]{0,3}\[(.+?)(?<!\\)\]', re.DOTALL)
+
+    def __new__(cls, matches):
+        for key, dest, title in matches:
             key = key.casefold()
-            if dest.startswith('<'):
-                dest = dest[1:-1]
-            dest = span_token.EscapeSequence.strip(dest)
-            title = span_token.EscapeSequence.strip(title[1:-1] if title else '')
+            dest = span_token.EscapeSequence.strip(dest.strip())
+            title = span_token.EscapeSequence.strip(title)
             if key not in _root_node.footnotes:
                 _root_node.footnotes[key] = dest, title
         return None
 
     @classmethod
     def start(cls, line):
-        return line.lstrip().startswith('[') and ']:' in line
+        return line.lstrip().startswith('[')
 
     @classmethod
     def read(cls, lines):
         line_buffer = []
-        while lines.peek() is not None and lines.peek().strip() != '':
+        next_line = lines.peek()
+        while next_line is not None and next_line.strip() != '':
             line_buffer.append(next(lines))
-        return line_buffer
+            next_line = lines.peek()
+        string = ''.join(line_buffer)
+        offset = 0
+        matches = []
+        while offset < len(string) - 1:
+            match_info = cls.match_reference(lines, string, offset)
+            if match_info is None:
+                break
+            offset, match = match_info
+            matches.append(match)
+        return matches or None
+
+    @classmethod
+    def match_reference(cls, lines, string, offset):
+        match_info = cls.match_link_label(string, offset)
+        if not match_info:
+            cls.backtrack(lines, string, offset)
+            return None
+        _, label_end, label = match_info
+
+        if not follows(string, label_end-1, ':'):
+            cls.backtrack(lines, string, offset)
+            return None
+
+        match_info = cls.match_link_dest(string, label_end)
+        if not match_info:
+            cls.backtrack(lines, string, offset)
+            return None
+        _, dest_end, dest = match_info
+
+        match_info = cls.match_link_title(string, dest_end)
+        if not match_info:
+            cls.backtrack(lines, string, dest_end)
+            return None
+        _, title_end, title = match_info
+
+        return title_end, (label, dest, title)
+
+    @classmethod
+    def match_link_label(cls, string, offset):
+        match_obj = cls.label_pattern.match(string, offset)
+        if match_obj and is_link_label(match_obj.group(1)):
+            return match_obj.start(), match_obj.end(), match_obj.group(1)
+        return None
+
+    @classmethod
+    def match_link_dest(cls, string, offset):
+        offset = shift_whitespace(string, offset+1)
+        if offset == len(string):
+            return None
+        if string[offset] == '<':
+            escaped = False
+            for i, c in enumerate(string[offset+1:], start=offset+1):
+                if c == '\\' and not escaped:
+                    escaped = True
+                elif c == ' ' or c == '\n' or (c == '<' and not escaped):
+                    return None
+                elif c == '>' and not escaped:
+                    return offset, i+1, string[offset+1:i]
+                elif escaped:
+                    escaped = False
+            return None
+        else:
+            escaped = False
+            count = 0
+            for i, c in enumerate(string[offset:], start=offset):
+                if c == '\\' and not escaped:
+                    escaped = True
+                elif c in whitespace:
+                    break
+                elif not escaped:
+                    if c == '(':
+                        count += 1
+                    elif c == ')':
+                        count -= 1
+                elif is_control_char(c):
+                    return None
+                elif escaped:
+                    escaped = False
+            if count != 0:
+                return None
+            return offset, i, string[offset:i]
+
+    @classmethod
+    def match_link_title(cls, string, offset):
+        new_offset = shift_whitespace(string, offset)
+        if (new_offset == len(string)
+                or '\n' in string[offset:new_offset]
+                and string[new_offset] == '['):
+            return offset, new_offset, ''
+        offset = new_offset
+        if string[offset] == '"':
+            closing = '"'
+        elif string[offset] == "'":
+            closing = "'"
+        elif string[offset] == '(':
+            closing = ')'
+        else:
+            return offset, offset, ''
+        escaped = False
+        for i, c in enumerate(string[offset+1:], start=offset+1):
+            if c == '\\' and not escaped:
+                escaped = True
+            elif c == closing and not escaped:
+                new_offset = shift_whitespace(string, i+1)
+                if '\n' not in string[i+1:new_offset]:
+                    return None
+                return offset, new_offset, string[offset+1:i]
+            elif escaped:
+                escaped = False
+        return None
+
+
+    @staticmethod
+    def backtrack(lines, string, offset):
+        lines._index -= string[offset+1:].count('\n')
 
 
 class ThematicBreak(BlockToken):
