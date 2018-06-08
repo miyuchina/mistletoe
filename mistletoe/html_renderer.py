@@ -74,20 +74,6 @@ class HTMLRenderer(BaseRenderer):
             title = ''
         return template.format(token.src, inner, title)
 
-    def render_footnote_image(self, token):
-        template = '<img src="{src}" alt="{inner}"{title} />'
-        src = self.footnotes.get(token.src.key, '')
-        if src == '':
-            return '![{}]'.format(token.src.key)
-        src, title = src
-        if title:
-            title = ' title="{}"'.format(self.escape_html(title))
-        render_func = self.render
-        self.render = self.render_to_plain
-        inner = self.render_inner(token)
-        self.render = render_func
-        return template.format(src=src, title=title, inner=inner)
-
     def render_link(self, token):
         template = '<a href="{target}"{title}>{inner}</a>'
         target = self.escape_url(token.target)
@@ -97,19 +83,6 @@ class HTMLRenderer(BaseRenderer):
             title = ''
         inner = self.render_inner(token)
         return template.format(target=target, title=title, inner=inner)
-
-    def render_footnote_link(self, token):
-        inner = self.render_inner(token)
-        key = token.target.key
-        if key in self.footnotes:
-            template = '<a href="{target}"{title}>{inner}</a>'
-            target = self.footnotes[key]
-            target, title = target
-            target = self.escape_url(target)
-            if title:
-                title = ' title="{}"'.format(self.escape_html(title))
-            return template.format(target=target, inner=inner, title=title)
-        return '[{}]'.format(inner)
 
     def render_auto_link(self, token):
         template = '<a href="{target}">{inner}</a>'

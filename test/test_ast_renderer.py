@@ -34,11 +34,9 @@ class TestASTRenderer(unittest.TestCase):
                   'children': [{
                       'type': 'Paragraph',
                       'children': [{
-                          'type': 'FootnoteLink',
-                          'target': {
-                              'type': 'FootnoteAnchor',
-                              'key': 'baz'
-                          },
+                          'type': 'Link',
+                          'target': 'spam',
+                          'title': '',
                           'children': [{
                               'type': 'RawText',
                               'content': 'bar'

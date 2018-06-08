@@ -6,11 +6,15 @@ import re
 import mistletoe.span_tokenizer as tokenizer
 from mistletoe.core_tokens import find_core_tokens
 
+
 """
 Tokens to be included in the parsing process, in the order specified.
 """
 __all__ = ['EscapeSequence', 'InlineCode', 'Strikethrough',
            'AutoLink', 'CoreTokens', 'LineBreak', 'RawText']
+
+
+_root_node = None
 
 
 def tokenize_inner(content):
@@ -83,7 +87,9 @@ class CoreTokens(SpanToken):
     def __new__(self, match):
         return globals()[match.type](match)
 
-    find = find_core_tokens
+    @classmethod
+    def find(cls, string):
+        return find_core_tokens(string, _root_node)
 
 
 class Strong(SpanToken):
@@ -132,18 +138,6 @@ class Image(SpanToken):
         self.title = match.group(3)
 
 
-class FootnoteImage(SpanToken):
-    """
-    Footnote image tokens. ("![alt][some key]")
-
-    Attributes:
-        children (iterator): a single RawText node for alternative text.
-        src (FootnoteAnchor): could point to both src and title.
-    """
-    def __init__(self, match):
-        self.src = FootnoteAnchor(match.group(2) or match.group(1))
-
-
 class Link(SpanToken):
     """
     Link tokens. ("[name](target)")
@@ -155,18 +149,6 @@ class Link(SpanToken):
     def __init__(self, match):
         self.target = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
-
-
-class FootnoteLink(SpanToken):
-    """
-    Footnote-style links. ("[name] [some target]")
-
-    Attributes:
-        children (list): link name still needs further parsing.
-        target (FootnoteAnchor): to be looked up when rendered.
-    """
-    def __init__(self, match):
-        self.target = FootnoteAnchor(match.group(2) or match.group(1))
 
 
 class AutoLink(SpanToken):
@@ -227,15 +209,6 @@ class RawText(SpanToken):
     """
     def __init__(self, content):
         self.content = content
-
-
-class FootnoteAnchor(SpanToken):
-    """
-    Footnote anchor.
-    To be replaced at render time.
-    """
-    def __init__(self, raw):
-        self.key = raw.casefold()
 
 
 _token_types = []

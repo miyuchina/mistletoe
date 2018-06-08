@@ -12,7 +12,7 @@ punctuation = {'!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',',
                ']', '^', '_', '`', '{', '|', '}', '~'}
 
 
-def find_core_tokens(string):
+def find_core_tokens(string, root):
     delimiters = []
     matches = []
     escaped = False
@@ -42,7 +42,7 @@ def find_core_tokens(string):
             elif c == '!':
                 in_image = True
             elif c == ']':
-                i = find_link_image(string, i, delimiters, matches)
+                i = find_link_image(string, i, delimiters, matches, root)
             elif in_image:
                 in_image = False
         else:
@@ -54,7 +54,7 @@ def find_core_tokens(string):
     return matches
 
 
-def find_link_image(string, offset, delimiters, matches):
+def find_link_image(string, offset, delimiters, matches, root=None):
     i = len(delimiters) - 1
     for delimiter in delimiters[::-1]:
         # found a link/image delimiter
@@ -63,7 +63,7 @@ def find_link_image(string, offset, delimiters, matches):
             if not delimiter.active:
                 delimiters.remove(delimiter)
                 return offset
-            match = match_link_image(string, offset, delimiter)
+            match = match_link_image(string, offset, delimiter, root)
             # found match
             if match:
                 # parse for emphasis
@@ -123,7 +123,7 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
     del delimiters[stack_bottom:]
 
 
-def match_link_image(string, offset, delimiter):
+def match_link_image(string, offset, delimiter, root=None):
     image = delimiter.type == '!['
     start = delimiter.start
     text_start = start + delimiter.number
@@ -150,42 +150,43 @@ def match_link_image(string, offset, delimiter):
                           (text_start, text_end, text),
                           (dest_start, dest_end, dest),
                           (title_start, title_end, title))
-                         
         match.type = 'Link' if not image else 'Image'
         return match
     # footnote link
     elif follows(string, offset, '['):
         # full footnote link
-        match_info = match_link_label(string, offset+1)
-        if match_info:
-            label_start, label_end, label = match_info
-            match = MatchObj(start, label_end,
+        result = match_link_label(string, offset+1, root)
+        if result:
+            match_info, (dest, title) = result
+            end = match_info[1]
+            match = MatchObj(start, end,
                               (text_start, text_end, text),
-                              (label_start, label_end, label))
-            match.type = 'FootnoteLink' if not image else 'FootnoteImage'
+                              (-1, -1, dest),
+                              (-1, -1, title))
+            match.type = 'Link' if not image else 'Image'
             return match
-        elif is_link_label(text):
+        ref = is_link_label(text, root)
+        if ref:
             # compact footnote link
             if follows(string, offset+1, ']'):
-                label_start = offset + 1
-                label_end = offset + 2
-                label = ''
+                dest, title = ref
                 end = offset + 3
                 match = MatchObj(start, end,
                                   (text_start, text_end, text),
-                                  (label_start, label_end, label))
-                match.type = 'FootnoteLink' if not image else 'FootnoteImage'
+                                  (-1, -1, dest),
+                                  (-1, -1, title))
+                match.type = 'Link' if not image else 'Image'
                 return match
     # shortcut footnote link
-    if is_link_label(text):
-        label_start = offset + 1
-        label_end = offset + 1
-        label = ''
+    ref = is_link_label(text, root)
+    if ref:
+        dest, title = ref
         end = offset + 1
         match = MatchObj(start, end,
                           (text_start, text_end, text),
-                          (label_start, label_end, label))
-        match.type = 'FootnoteLink' if not image else 'FootnoteImage'
+                          (-1, -1, dest),
+                          (-1, -1, title))
+        match.type = 'Link' if not image else 'Image'
         return match
     return None
 
@@ -249,15 +250,26 @@ def match_link_title(string, offset):
     return None
 
 
-def match_link_label(string, offset):
+def match_link_label(string, offset, root=None):
     match_obj = label_pattern.match(string, offset)
-    if match_obj and is_link_label(match_obj.group(1)):
-        return match_obj.start(), match_obj.end(), match_obj.group(1)
+    if match_obj:
+        ref = is_link_label(match_obj.group(1), root)
+        if ref is not None:
+            match = match_obj.start(), match_obj.end(), match_obj.group(1)
+            return match, ref
     return None
 
 
-def is_link_label(text):
-    return text.strip() != ''
+def is_link_label(text, root=None):
+    if text.strip() != '':
+        if not root:
+            return True
+        return root.footnotes.get(normalize_label(text), None)
+    return None
+
+
+def normalize_label(text):
+    return ' '.join(text.split()).casefold()
 
 
 def next_closer(curr_pos, delimiters):

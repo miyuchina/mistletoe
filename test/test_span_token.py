@@ -75,31 +75,6 @@ class TestLink(TestBranchToken):
         self._test_parse(span_token.Link, '[name](\ntarget)', 'name', target='target')
 
 
-class TestFootnoteLink(TestBranchToken):
-    def test_parse_with_key(self):
-        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            self._test_parse(span_token.FootnoteLink, '[alt] [key]', 'alt')
-            mock.assert_called_with('key')
-
-    def test_parse_without_key(self):
-        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            self._test_parse(span_token.FootnoteLink, '[alt]', 'alt')
-            mock.assert_called_with('alt')
-
-    def test_trailing_empty_space(self):
-        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            tokens = iter(span_token.tokenize_inner('[alt] foo'))
-            next(tokens)
-            mock.assert_called_with('alt')
-            next(tokens)
-            self.mock.assert_called_with(' foo')
-
-    def test_multiline(self):
-        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            self._test_parse(span_token.FootnoteLink, '[alt]\n[key]', 'alt')
-            mock.assert_called_with('key')
-
-
 class TestAutoLink(TestBranchToken):
     def test_parse(self):
         self._test_parse(span_token.AutoLink, '<ftp://foo.com>', 'ftp://foo.com', target='ftp://foo.com')
@@ -113,18 +88,6 @@ class TestImage(TestBranchToken):
 
     def test_no_alternative_text(self):
         self._test_parse(span_token.Image, '![](link)', '', children=False, src='link')
-
-
-class TestFootnoteImage(TestBranchToken):
-    def test_parse(self):
-        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            self._test_parse(span_token.FootnoteImage, '![alt][key]', 'alt')
-            mock.assert_called_with('key')
-
-    def test_no_alternative_text(self):
-        with patch('mistletoe.span_token.FootnoteAnchor') as mock:
-            self._test_parse(span_token.FootnoteImage, '![alt][]', '', children=False)
-            mock.assert_called_with('alt')
 
 
 class TestEscapeSequence(TestBranchToken):

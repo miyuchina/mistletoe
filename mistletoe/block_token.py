@@ -13,6 +13,7 @@ from mistletoe.core_tokens import (
         shift_whitespace,
         whitespace,
         is_control_char,
+        normalize_label,
 )
 
 
@@ -116,7 +117,9 @@ class Document(BlockToken):
         self.footnotes = {}
         global _root_node
         _root_node = self
+        span_token._root_node = self
         self.children = tokenize(lines)
+        span_token._root_node = None
         _root_node = None
 
 
@@ -132,9 +135,8 @@ class Heading(BlockToken):
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n| +?(.*?)(?:\n| +?#+ *?$))')
     level = 0
     content = ''
-    def __init__(self, _):
-        self.level = self.__class__.level
-        content = self.__class__.content
+    def __init__(self, match):
+        self.level, content = match
         super().__init__(content, span_token.tokenize_inner)
 
     @classmethod
@@ -148,9 +150,10 @@ class Heading(BlockToken):
             cls.content = ''
         return True
 
-    @staticmethod
-    def read(lines):
-        return [next(lines)]
+    @classmethod
+    def read(cls, lines):
+        next(lines)
+        return cls.level, cls.content
 
 class SetextHeading(BlockToken):
     def __init__(self, lines):
@@ -290,10 +293,10 @@ class CodeFence(BlockToken):
     """
     pattern = re.compile(r'( {0,3})((?:`|~){3,}) *(\S*)')
     _open_info = None
-    def __init__(self, lines):
-        self.language = span_token.EscapeSequence.strip(self.__class__._open_info[2])
+    def __init__(self, match):
+        lines, open_info = match
+        self.language = span_token.EscapeSequence.strip(open_info[2])
         self.children = (span_token.RawText(''.join(lines)),)
-        self.__class__._open_info = None
 
     @classmethod
     def start(cls, line):
@@ -320,7 +323,7 @@ class CodeFence(BlockToken):
             if diff > cls._open_info[0]:
                 stripped_line = ' ' * (diff - cls._open_info[0]) + stripped_line
             line_buffer.append(stripped_line)
-        return line_buffer
+        return line_buffer, cls._open_info
 
 
 class List(BlockToken):
@@ -554,13 +557,7 @@ class Footnote(BlockToken):
     """
     label_pattern = re.compile(r'[ \n]{0,3}\[(.+?)(?<!\\)\]', re.DOTALL)
 
-    def __new__(cls, matches):
-        for key, dest, title in matches:
-            key = key.casefold()
-            dest = span_token.EscapeSequence.strip(dest.strip())
-            title = span_token.EscapeSequence.strip(title)
-            if key not in _root_node.footnotes:
-                _root_node.footnotes[key] = dest, title
+    def __new__(cls, _):
         return None
 
     @classmethod
@@ -583,6 +580,7 @@ class Footnote(BlockToken):
                 break
             offset, match = match_info
             matches.append(match)
+        cls.append_footnotes(matches, _root_node)
         return matches or None
 
     @classmethod
@@ -685,6 +683,14 @@ class Footnote(BlockToken):
                 escaped = False
         return None
 
+    @staticmethod
+    def append_footnotes(matches, root):
+        for key, dest, title in matches:
+            key = normalize_label(key)
+            dest = span_token.EscapeSequence.strip(dest.strip())
+            title = span_token.EscapeSequence.strip(title)
+            if key not in root.footnotes:
+                root.footnotes[key] = dest, title
 
     @staticmethod
     def backtrack(lines, string, offset):

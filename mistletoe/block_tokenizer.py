@@ -49,21 +49,25 @@ def tokenize(iterable, token_types, parent=None):
         block-level token instances.
     """
     lines = FileWrapper(iterable)
-    tokens = []
+    parse_buffer = []
     line = lines.peek()
     while line is not None:
         for token_type in token_types:
             if token_type.start(line):
                 result = token_type.read(lines)
                 if result is not None:
-                    token = token_type(result)
-                    if token is not None:
-                        tokens.append(token)
+                    parse_buffer.append((token_type, result))
                     break
         else:  # unmatched newlines
             next(lines)
             if parent and hasattr(parent, "loose"):
                 parent.loose = True
         line = lines.peek()
+
+    tokens = []
+    for token_type, result in parse_buffer:
+        token = token_type(result)
+        if token is not None:
+            tokens.append(token)
     return tokens
 
