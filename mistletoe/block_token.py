@@ -6,7 +6,7 @@ import re
 import sys
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
-import mistletoe.span_token as span_token
+from mistletoe import span_token
 from mistletoe.core_tokens import (
         is_link_label,
         follows,

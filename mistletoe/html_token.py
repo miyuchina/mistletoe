@@ -6,8 +6,7 @@ renderer (mistletoe.html_renderer in this case.)
 """
 
 import re
-import mistletoe.span_token as span_token
-import mistletoe.block_token as block_token
+from mistletoe import span_token, block_token
 
 
 __all__ = ['HTMLBlock', 'HTMLSpan']
