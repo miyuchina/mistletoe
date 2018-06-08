@@ -6,7 +6,6 @@ unicode_whitespace = {'\t', '\n', '\x0b', '\x0c', '\r', '\x1c', '\x1d', '\x1e',
         '\x1f', ' ', '\x85', '\xa0', '\u1680', '\u2000', '\u2001', '\u2002',
         '\u2003', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008', '\u2009',
         '\u200a', '\u2028', '\u2029', '\u202f', '\u205f', '\u3000'}
-label_pattern = re.compile(r'\[(.+?)(?<!\\)\]', re.DOTALL)
 punctuation = {'!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',',
                '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\',
                ']', '^', '_', '`', '{', '|', '}', '~'}
@@ -251,16 +250,41 @@ def match_link_title(string, offset):
 
 
 def match_link_label(string, offset, root=None):
-    match_obj = label_pattern.match(string, offset)
-    if match_obj:
-        ref = is_link_label(match_obj.group(1), root)
-        if ref is not None:
-            match = match_obj.start(), match_obj.end(), match_obj.group(1)
-            return match, ref
+    start = -1
+    end = -1
+    escaped = False
+    for i, c in enumerate(string[offset:], start=offset):
+        if c == '\\' and not escaped:
+            escaped = True
+        elif c == '[' and not escaped:
+            if start == -1:
+                start = i
+            else:
+                return None
+        elif c == ']' and not escaped:
+            end = i
+            label = string[start+1:end]
+            match_info = start, end+1, label
+            if label.strip() != '':
+                ref = root.footnotes.get(normalize_label(label), None)
+                if ref is not None:
+                    return match_info, ref
+                return None
+            return None
+        elif escaped:
+            escaped = False
     return None
 
 
-def is_link_label(text, root=None):
+def is_link_label(text, root):
+    escaped = False
+    for c in text:
+        if c == '\\' and not escaped:
+            escaped = True
+        elif (c == '[' or c == ']') and not escaped:
+            return None
+        elif escaped:
+            escaped = False
     if text.strip() != '':
         if not root:
             return True

@@ -558,7 +558,7 @@ class Footnote(BlockToken):
     Attributes:
         children (list): footnote entry tokens.
     """
-    label_pattern = re.compile(r'[ \n]{0,3}\[(.+?)(?<!\\)\]', re.DOTALL)
+    label_pattern = re.compile(r'[ \n]{0,3}\[(.+?)\]', re.DOTALL)
 
     def __new__(cls, _):
         return None
@@ -614,9 +614,25 @@ class Footnote(BlockToken):
 
     @classmethod
     def match_link_label(cls, string, offset):
-        match_obj = cls.label_pattern.match(string, offset)
-        if match_obj and is_link_label(match_obj.group(1)):
-            return match_obj.start(), match_obj.end(), match_obj.group(1)
+        start = -1
+        end = -1
+        escaped = False
+        for i, c in enumerate(string[offset:], start=offset):
+            if c == '\\' and not escaped:
+                escaped = True
+            elif c == '[' and not escaped:
+                if start == -1:
+                    start = i
+                else:
+                    return None
+            elif c == ']' and not escaped:
+                end = i
+                label = string[start+1:end]
+                if label.strip() != '':
+                    return start, end+1, label
+                return None
+            elif escaped:
+                escaped = False
         return None
 
     @classmethod
