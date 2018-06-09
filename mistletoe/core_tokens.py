@@ -108,6 +108,8 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
             if not closer.remove(n, left=True):
                 delimiters.remove(closer)
                 curr_pos -= 1
+            if curr_pos < 0:
+                curr_pos = 0
         else:
             bottom = curr_pos - 1 if curr_pos > 1 else None
             if closer.type[0] == '*':
