@@ -126,7 +126,7 @@ mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
 
 ```
-mistletoe [version 0.6.3] (interactive)
+mistletoe [version 0.7] (interactive)
 Type Ctrl-D to complete input, or Ctrl-C to exit.
 >>> some **bold text**
 ... and some *italics*
