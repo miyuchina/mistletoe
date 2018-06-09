@@ -209,7 +209,7 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def escape_html(raw):
-        return html.escape(html.unescape(raw))
+        return html.escape(html.unescape(raw)).replace('&#x27;', "'")
 
     @staticmethod
     def escape_url(raw):

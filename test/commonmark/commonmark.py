@@ -21,7 +21,7 @@ def run_test(test_entry, quiet=False):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
         output = markdown(test_case)
-        success = compare(test_entry['html'], output)
+        success = test_entry['html'] == output
         if not success and not quiet:
             print_test_entry(test_entry, output)
         return success, test_entry['section']
@@ -49,10 +49,6 @@ def locate_section(section, tests):
     if start:
         return start, tests[-1]['example'] - 1
     raise RuntimeError("Section '{}' not found, aborting.".format(section))
-
-
-def compare(expected, output):
-    return expected == output.replace('&#x27;', '\'')
 
 
 def print_exception(exception, test_entry):
