@@ -382,11 +382,10 @@ class List(BlockToken):
     @classmethod
     def read(cls, lines):
         leader = None
+        next_marker = None
         matches = []
         while True:
-            output = ListItem.read(lines)
-            if output is None:
-                break
+            output, next_marker = ListItem.read(lines, next_marker)
             item_leader = output[2]
             if leader is None:
                 leader = item_leader
@@ -394,6 +393,8 @@ class List(BlockToken):
                 lines.reset()
                 break
             matches.append(output)
+            if next_marker is None:
+                break
         return matches
 
     @staticmethod
@@ -448,27 +449,27 @@ class ListItem(BlockToken):
         return prepend, leader
 
     @classmethod
-    def read(cls, lines):
+    def read(cls, lines, prev_marker=None):
+        next_marker = None
         lines.anchor()
         prepend = -1
         leader = None
         line_buffer = []
-        next_line = lines.peek()
-        # first line in list item
-        if next_line is None or cls.other_token(next_line):
-            return None
-        pair = cls.parse_marker(next_line)
-        if pair is None:
-            return None
-        prepend, leader = pair
-        line = next(lines).replace(leader+'\t', leader+'   ', 1).replace('\t', '    ')
+        line = next(lines)
+        prepend, leader = prev_marker if prev_marker else cls.parse_marker(line)
+        line = line.replace(leader+'\t', leader+'   ', 1).replace('\t', '    ')
         empty_first_line = line[prepend:].strip() == ''
         if not empty_first_line:
             line_buffer.append(line[prepend:])
         next_line = lines.peek()
         if empty_first_line and next_line is not None and next_line.strip() == '':
             parse_buffer = tokenizer.tokenize_block([next(lines)], _token_types)
-            return parse_buffer, prepend, leader
+            next_line = lines.peek()
+            if next_line is not None:
+                marker_info = cls.parse_marker(next_line)
+                if marker_info is not None:
+                    next_marker = marker_info
+            return (parse_buffer, prepend, leader), next_marker
         newline = 0
         while True:
             # no more lines
@@ -481,16 +482,18 @@ class ListItem(BlockToken):
             next_line = next_line.replace('\t', '    ')
             # not in continuation
             if not cls.in_continuation(next_line, prepend):
+                # directly followed by another token
+                if cls.other_token(next_line):
+                    break
                 # next_line is a new list item
-                if cls.parse_marker(next_line):
+                marker_info = cls.parse_marker(next_line)
+                if marker_info is not None:
+                    next_marker = marker_info
                     break
                 # not another item, has newlines -> not continuation
                 if newline:
                     lines.backstep()
                     del line_buffer[-newline:]
-                    break
-                # directly followed by another token
-                if cls.other_token(next_line):
                     break
             next(lines)
             line = next_line
@@ -502,7 +505,7 @@ class ListItem(BlockToken):
             newline = newline + 1 if next_line.strip() == '' else 0
             next_line = lines.peek()
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
-        return parse_buffer, prepend, leader
+        return (parse_buffer, prepend, leader), next_marker
 
 
 class Table(BlockToken):

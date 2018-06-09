@@ -161,8 +161,7 @@ class TestListItem(unittest.TestCase):
     def test_sublist(self):
         lines = ['- foo\n',
                  '  - bar\n']
-        f = FileWrapper(lines)
-        token1, token2 = block_token.ListItem(*block_token.ListItem.read(f)).children
+        token1, token2 = block_token.tokenize(lines)[0].children[0].children
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertIsInstance(token2, block_token.List)
 
@@ -171,7 +170,7 @@ class TestListItem(unittest.TestCase):
                  '  - bar\n',
                  '    - baz\n']
         f = FileWrapper(lines)
-        ptoken, ltoken = block_token.ListItem(*block_token.ListItem.read(f)).children
+        ptoken, ltoken = block_token.tokenize(lines)[0].children[0].children
         self.assertIsInstance(ptoken, block_token.Paragraph)
         self.assertIsInstance(ltoken, block_token.List)
         self.assertTrue('foo' in ptoken)
@@ -189,7 +188,7 @@ class TestListItem(unittest.TestCase):
                  '  baz\n'
                  '  ~~~\n']
         f = FileWrapper(lines)
-        list_item = block_token.ListItem(*block_token.ListItem.read(f))
+        list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
 
 
