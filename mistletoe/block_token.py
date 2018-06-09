@@ -132,7 +132,7 @@ class Heading(BlockToken):
         level (int): heading level.
         children (list): inner tokens.
     """
-    pattern = re.compile(r' {0,3}(#{1,6})(?:\n| +?(.*?)(?:\n| +?#+ *?$))')
+    pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(?:\n|\s+?#+\s*?$))')
     level = 0
     content = ''
     def __init__(self, match):
@@ -184,9 +184,12 @@ class Quote(BlockToken):
             return False
         return stripped.startswith('>')
 
-    @staticmethod
-    def read(lines):
-        line_buffer = []
+    @classmethod
+    def read(cls, lines):
+        line = cls.convert_leading_tabs(next(lines).lstrip()).split('>', 1)[1]
+        if len(line) > 0 and line[0] == ' ':
+            line = line[1:]
+        line_buffer = [line]
         next_line = lines.peek()
         while next_line is not None:
             if (next_line.strip() == ''
@@ -196,7 +199,7 @@ class Quote(BlockToken):
                     or ThematicBreak.start(next_line)
                     or List.start(next_line)):
                 break
-            stripped = next(lines).lstrip()
+            stripped = cls.convert_leading_tabs(next(lines).lstrip())
             prepend = 0
             if stripped[0] == '>':
                 prepend += 1
@@ -208,6 +211,21 @@ class Quote(BlockToken):
         children = tokenize(line_buffer)
         Paragraph.parse_setext = True
         return children
+
+    @staticmethod
+    def convert_leading_tabs(string):
+        string = string.replace('>\t', '   ', 1)
+        count = 0
+        for i, c in enumerate(string):
+            if c == '\t':
+                count += 4
+            elif c == ' ':
+                count += 1
+            else:
+                break
+        if i == 0:
+            return string
+        return '>' + ' ' * count + string[i:]
 
 
 class Paragraph(BlockToken):
@@ -273,20 +291,34 @@ class BlockCode(BlockToken):
 
     @staticmethod
     def start(line):
-        return line.startswith('    ')
+        return line.replace('\t', '    ', 1).startswith('    ')
 
-    @staticmethod
-    def read(lines):
+    @classmethod
+    def read(cls, lines):
         line_buffer = []
         for line in lines:
             if line.strip() == '':
                 line_buffer.append(line.lstrip(' ') if len(line) < 5 else line[4:])
                 continue
-            if not line.startswith('    '):
+            if not line.replace('\t', '    ', 1).startswith('    '):
                 lines.backstep()
                 break
-            line_buffer.append(line[4:])
+            line_buffer.append(cls.strip(line))
         return line_buffer
+
+    @staticmethod
+    def strip(string):
+        count = 0
+        for i, c in enumerate(string):
+            if c == '\t':
+                return string[i+1:]
+            elif c == ' ':
+                count += 1
+            else:
+                break
+            if count == 4:
+                return string[i+1:]
+        return string
 
 
 class CodeFence(BlockToken):
@@ -334,7 +366,7 @@ class CodeFence(BlockToken):
 
 
 class List(BlockToken):
-    pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?: *$| +)')
+    pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
         self.loose = any(item.loose for item in self.children)
@@ -372,7 +404,7 @@ class List(BlockToken):
 
 
 class ListItem(BlockToken):
-    pattern = re.compile(r' *(\d{0,9}[.)]|[+\-*])( *$| +)')
+    pattern = re.compile(r'\s*(\d{0,9}[.)]|[+\-*])(\s*$|\s+)')
 
     def __init__(self, lines, prepend, leader):
         self.leader = leader
@@ -399,16 +431,20 @@ class ListItem(BlockToken):
         match_obj = cls.pattern.match(line)
         if match_obj is None:
             return None        # no valid leader
-        content = match_obj.group(0)
+        leader = match_obj.group(1)
+        content = match_obj.group(0).replace(leader+'\t', leader+'   ', 1)
         # reassign prepend and leader
         prepend = len(content)
         if prepend == len(line.rstrip('\n')):
             prepend = match_obj.end(1) + 1
         else:
-            spaces = len(match_obj.group(2))
-            if spaces > 4:
-                prepend -= spaces - 1
-        leader = match_obj.group(1)
+            spaces = match_obj.group(2)
+            if spaces.startswith('\t'):
+                spaces = spaces.replace('\t', '   ', 1)
+            spaces = spaces.replace('\t', '    ')
+            n_spaces = len(spaces)
+            if n_spaces > 4:
+                prepend = match_obj.end(1) + 1
         return prepend, leader
 
     @classmethod
@@ -425,9 +461,10 @@ class ListItem(BlockToken):
         if pair is None:
             return None
         prepend, leader = pair
-        empty_first_line = next(lines)[prepend:].strip() == ''
+        line = next(lines).replace(leader+'\t', leader+'   ', 1).replace('\t', '    ')
+        empty_first_line = line[prepend:].strip() == ''
         if not empty_first_line:
-            line_buffer.append(next_line[prepend:])
+            line_buffer.append(line[prepend:])
         next_line = lines.peek()
         if empty_first_line and next_line is not None and next_line.strip() == '':
             return [next(lines)], prepend, leader
@@ -440,6 +477,7 @@ class ListItem(BlockToken):
                     lines.backstep()
                     del line_buffer[-newline:]
                 break
+            next_line = next_line.replace('\t', '    ')
             # not in continuation
             if not cls.in_continuation(next_line, prepend):
                 # next_line is a new list item
@@ -453,7 +491,8 @@ class ListItem(BlockToken):
                 # directly followed by another token
                 if cls.other_token(next_line):
                     break
-            line = next(lines)
+            next(lines)
+            line = next_line
             stripped = line.lstrip(' ')
             diff = len(line) - len(stripped)
             if diff > prepend:
@@ -723,7 +762,7 @@ class ThematicBreak(BlockToken):
     """
     Thematic break token (a.k.a. horizontal rule.)
     """
-    pattern = re.compile(r' {0,3}(?:([-_*]) *?)(?:\1 *?){2,}$')
+    pattern = re.compile(r' {0,3}(?:([-_*])\s*?)(?:\1\s*?){2,}$')
     def __init__(self, _):
         pass
 

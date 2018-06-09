@@ -21,7 +21,7 @@ def run_test(test_entry, quiet=False):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
         output = markdown(test_case)
-        success = compare(test_entry['html'].replace('\t', '    '), output)
+        success = compare(test_entry['html'], output)
         if not success and not quiet:
             print_test_entry(test_entry, output)
         return success, test_entry['section']

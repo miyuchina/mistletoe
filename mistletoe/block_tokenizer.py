@@ -5,7 +5,7 @@ Block-level tokenizer for mistletoe.
 
 class FileWrapper:
     def __init__(self, lines):
-        self.lines = [line.replace('\t', '    ') for line in lines]
+        self.lines = lines if isinstance(lines, list) else list(lines)
         self._index = -1
         self._anchor = 0
 
