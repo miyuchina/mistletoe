@@ -108,7 +108,7 @@ class InlineCode(SpanToken):
     """
     Inline code tokens. ("`some code`")
     """
-    pattern = re.compile(r"(?<!\\|`)(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
+    pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
     parse_inner = False
     parse_group = 2
 
@@ -121,7 +121,7 @@ class Strikethrough(SpanToken):
     """
     Strikethrough tokens. ("~~some text~~")
     """
-    pattern = re.compile(r"~~(.+)~~", re.DOTALL)
+    pattern = re.compile(r"(?<!\\)(?:\\\\)*~~(.+)~~", re.DOTALL)
 
 
 class Image(SpanToken):
@@ -159,7 +159,7 @@ class AutoLink(SpanToken):
         children (iterator): a single RawText node for alternative text.
         target (str): link target.
     """
-    pattern = re.compile(r"<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
+    pattern = re.compile(r"(?<!\\)(?:\\\\)*<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
     parse_inner = False
 
     def __init__(self, match):
