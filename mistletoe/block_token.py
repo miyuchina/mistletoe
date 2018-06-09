@@ -174,10 +174,8 @@ class Quote(BlockToken):
     """
     Quote token. (["> # heading\n", "> paragraph\n"])
     """
-    def __init__(self, lines):
-        Paragraph.parse_setext = False
-        super().__init__(lines, tokenize)
-        Paragraph.parse_setext = True
+    def __init__(self, tokens):
+        self.children = tokens
 
     @staticmethod
     def start(line):
@@ -206,7 +204,10 @@ class Quote(BlockToken):
                     prepend += 1
             line_buffer.append(stripped[prepend:])
             next_line = lines.peek()
-        return line_buffer
+        Paragraph.parse_setext = False
+        children = tokenize(line_buffer)
+        Paragraph.parse_setext = True
+        return children
 
 
 class Paragraph(BlockToken):
