@@ -5,8 +5,13 @@ python:
     - "3.5"
     - "3.6"
     - "nightly"
-script: make test
+before_script:
+    - (cd test/commonmark && ./spec.sh)
+script:
+    - make test
+    - python3 -m test.commonmark --ignore-known
 after_success:
     - pip install coveralls
-    - coverage run -m unittest
+    - coverage run -a -m unittest
+    - coverage run -a -m test.commonmark --ignore-known
     - coveralls
