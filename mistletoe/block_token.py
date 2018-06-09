@@ -335,8 +335,9 @@ class CodeFence(BlockToken):
 
 class List(BlockToken):
     pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?: *$| +)')
-    def __init__(self, items):
-        self.children, self.loose = items
+    def __init__(self, matches):
+        self.children = [ListItem(*match) for match in matches]
+        self.loose = any(item.loose for item in self.children)
         leader = self.children[0].leader
         self.start = None
         if len(leader) != 1:
@@ -348,22 +349,20 @@ class List(BlockToken):
 
     @classmethod
     def read(cls, lines):
-        loose = False
         leader = None
-        item_buffer = []
+        matches = []
         while True:
             output = ListItem.read(lines)
             if output is None:
                 break
-            item = ListItem(*output)
+            item_leader = output[2]
             if leader is None:
-                leader = item.leader
-            elif not cls.same_marker_type(leader, item.leader):
+                leader = item_leader
+            elif not cls.same_marker_type(leader, item_leader):
                 lines.reset()
                 break
-            loose |= item.loose
-            item_buffer.append(item)
-        return item_buffer, loose
+            matches.append(output)
+        return matches
 
     @staticmethod
     def same_marker_type(leader, other):
