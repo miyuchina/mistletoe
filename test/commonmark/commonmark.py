@@ -46,6 +46,8 @@ def locate_section(section, tests):
         elif start is not None and end is None:
             end = test['example'] - 1
             return start, end
+    if start:
+        return start, tests[-1]['example'] - 1
     raise RuntimeError("Section '{}' not found, aborting.".format(section))
 
 
