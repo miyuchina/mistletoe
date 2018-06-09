@@ -6,15 +6,24 @@ from traceback import print_tb
 from argparse import ArgumentParser
 
 
-def run_tests(test_entries, start=None, end=None, quiet=False, verbose=False):
+KNOWN = [200, 201, 212, 455, 456]
+
+
+def run_tests(test_entries, start=None, end=None,
+              quiet=False, verbose=False, known=False):
+    if known:
+        print('ignoring tests:', ', '.join(map(str, KNOWN)) + '\n')
     start = start or 0
     end = end or sys.maxsize
     results = [run_test(test_entry, quiet) for test_entry in test_entries
-            if test_entry['example'] >= start and test_entry['example'] <= end]
+            if test_entry['example'] >= start and test_entry['example'] <= end
+            and (not known or test_entry['example'] not in KNOWN)]
     if verbose:
         print_failure_in_sections(results)
-    print('failed:', len(list(filter(lambda x: not x[0], results))))
+    fails = len(list(filter(lambda x: not x[0], results)))
+    print('failed:', fails)
     print(' total:', len(results))
+    return not fails
 
 
 def run_test(test_entry, quiet=False):
@@ -105,6 +114,8 @@ def main():
     parser.add_argument('-f', '--file', dest='tests', type=load_tests,
                         default='test/commonmark/commonmark.json',
                         help="Specify alternative specfile to run.")
+    parser.add_argument('-n', '--ignore-known', dest='known', action='store_true',
+                        help="Ignore tests entries that are known to fail.")
     args = parser.parse_args()
 
     start   = args.start
@@ -112,10 +123,12 @@ def main():
     verbose = args.verbose
     quiet   = args.quiet
     tests   = args.tests
+    known   = args.known
     if args.section is not None:
         start, end = locate_section(args.section, tests)
 
-    run_tests(tests, start, end, quiet, verbose)
+    if not run_tests(tests, start, end, quiet, verbose, known):
+        sys.exit(1)
 
 
 if __name__ == '__main__':
