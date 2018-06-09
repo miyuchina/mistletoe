@@ -37,7 +37,7 @@ class FileWrapper:
             self._index -= 1
 
 
-def tokenize(iterable, token_types, parent=None):
+def tokenize(iterable, token_types):
     """
     Searches for token_types in iterable.
 
@@ -48,8 +48,12 @@ def tokenize(iterable, token_types, parent=None):
     Returns:
         block-level token instances.
     """
+    return make_tokens(tokenize_block(iterable, token_types))
+
+
+def tokenize_block(iterable, token_types):
     lines = FileWrapper(iterable)
-    parse_buffer = []
+    parse_buffer = ParseBuffer()
     line = lines.peek()
     while line is not None:
         for token_type in token_types:
@@ -60,10 +64,12 @@ def tokenize(iterable, token_types, parent=None):
                     break
         else:  # unmatched newlines
             next(lines)
-            if parent and hasattr(parent, "loose"):
-                parent.loose = True
+            parse_buffer.loose = True
         line = lines.peek()
+    return parse_buffer
 
+
+def make_tokens(parse_buffer):
     tokens = []
     for token_type, result in parse_buffer:
         token = token_type(result)
@@ -71,3 +77,8 @@ def tokenize(iterable, token_types, parent=None):
             tokens.append(token)
     return tokens
 
+
+class ParseBuffer(list):
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.loose = False

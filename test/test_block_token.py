@@ -148,28 +148,6 @@ class TestListItem(unittest.TestCase):
         for line in bad_lines:
             self.assertFalse(block_token.ListItem.parse_marker(line))
 
-    def test_read(self):
-        lines = ['- foo\n',
-                 'foo\n',
-                 '- bar\n',
-                 '\n',
-                 '  bar\n',
-                 ' -    baz\n',
-                 '\n',
-                 '      baz\n',
-                 'baz\n']
-        f = FileWrapper(lines)
-        result = []
-        while True:
-            item_lines = block_token.ListItem.read(f)
-            if item_lines is None:
-                break
-            result.append(item_lines)
-        expected = [(['foo\n', 'foo\n'], 2, '-'),
-                    (['bar\n', '\n', 'bar\n'], 2, '-'),
-                    (['baz\n', '\n', 'baz\n', 'baz\n'], 6, '-'),]
-        self.assertEqual(result, expected)
-
     def test_tokenize(self):
         lines = [' -    foo\n',
                  '   bar\n',

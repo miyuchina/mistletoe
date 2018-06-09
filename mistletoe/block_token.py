@@ -27,7 +27,7 @@ __all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
 _root_node = None
 
 
-def tokenize(lines, parent=None):
+def tokenize(lines):
     """
     A wrapper around block_tokenizer.tokenize. Pass in all block-level
     token constructors as arguments to block_tokenizer.tokenize.
@@ -40,7 +40,7 @@ def tokenize(lines, parent=None):
 
     See also: block_tokenizer.tokenize, span_token.tokenize_inner.
     """
-    return tokenizer.tokenize(lines, _token_types, parent)
+    return tokenizer.tokenize(lines, _token_types)
 
 
 def add_token(token_cls, position=0):
@@ -174,8 +174,8 @@ class Quote(BlockToken):
     """
     Quote token. (["> # heading\n", "> paragraph\n"])
     """
-    def __init__(self, tokens):
-        self.children = tokens
+    def __init__(self, parse_buffer):
+        self.children = tokenizer.make_tokens(parse_buffer)
 
     @staticmethod
     def start(line):
@@ -208,9 +208,9 @@ class Quote(BlockToken):
             line_buffer.append(stripped[prepend:])
             next_line = lines.peek()
         Paragraph.parse_setext = False
-        children = tokenize(line_buffer)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
         Paragraph.parse_setext = True
-        return children
+        return parse_buffer
 
     @staticmethod
     def convert_leading_tabs(string):
@@ -406,11 +406,11 @@ class List(BlockToken):
 class ListItem(BlockToken):
     pattern = re.compile(r'\s*(\d{0,9}[.)]|[+\-*])(\s*$|\s+)')
 
-    def __init__(self, lines, prepend, leader):
+    def __init__(self, parse_buffer, prepend, leader):
         self.leader = leader
         self.prepend = prepend
-        self.loose = False
-        self.children = tokenize(lines, parent=self)
+        self.children = tokenizer.make_tokens(parse_buffer)
+        self.loose = parse_buffer.loose
 
     @staticmethod
     def in_continuation(line, prepend):
@@ -467,7 +467,8 @@ class ListItem(BlockToken):
             line_buffer.append(line[prepend:])
         next_line = lines.peek()
         if empty_first_line and next_line is not None and next_line.strip() == '':
-            return [next(lines)], prepend, leader
+            parse_buffer = tokenizer.tokenize_block([next(lines)], _token_types)
+            return parse_buffer, prepend, leader
         newline = 0
         while True:
             # no more lines
@@ -500,7 +501,8 @@ class ListItem(BlockToken):
             line_buffer.append(stripped)
             newline = newline + 1 if next_line.strip() == '' else 0
             next_line = lines.peek()
-        return line_buffer, prepend, leader
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
+        return parse_buffer, prepend, leader
 
 
 class Table(BlockToken):
