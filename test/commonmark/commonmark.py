@@ -6,9 +6,6 @@ from traceback import print_tb
 from argparse import ArgumentParser
 
 
-KNOWN = [200, 201, 212, 455, 456]
-
-
 def run_tests(test_entries, start=None, end=None,
               quiet=False, verbose=False, known=False):
     if known:
@@ -21,8 +18,11 @@ def run_tests(test_entries, start=None, end=None,
     if verbose:
         print_failure_in_sections(results)
     fails = len(list(filter(lambda x: not x[0], results)))
-    print('failed:', fails)
-    print(' total:', len(results))
+    if fails:
+        print('failed:', fails)
+        print(' total:', len(results))
+    else:
+        print('All tests passing.')
     return not fails
 
 
