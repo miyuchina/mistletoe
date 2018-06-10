@@ -9,7 +9,7 @@ before_script:
     - (cd test/commonmark && ./spec.sh)
 script:
     - make test
-    - make commonmark
+    - python3 -m test.commonmark
 after_success:
     - pip install coveralls
     - coverage run -a -m unittest
