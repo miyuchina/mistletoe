@@ -57,7 +57,7 @@ def remove_token(token_cls):
 
 def reset_tokens():
     """
-    Returns a list of tokens with the original tokens.
+    Resets global _token_types to all token classes in __all__.
     """
     global _token_types
     _token_types = [globals()[cls_name] for cls_name in __all__]
@@ -135,7 +135,6 @@ class Image(SpanToken):
     Image tokens. ("![alt](src "title")")
 
     Attributes:
-        children (iterator): a single RawText node for alternative text.
         src (str): image source.
         title (str): image title (default to empty).
     """
@@ -149,7 +148,6 @@ class Link(SpanToken):
     Link tokens. ("[name](target)")
 
     Attributes:
-        children (list): link name still needs further parsing.
         target (str): link target.
     """
     def __init__(self, match):

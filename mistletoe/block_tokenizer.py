@@ -42,7 +42,7 @@ def tokenize(iterable, token_types):
     Searches for token_types in iterable.
 
     Args:
-        content (list[str]): user input lines to be parsed.
+        iterable (list): user input lines to be parsed.
         token_types (list): a list of block-level token constructors.
 
     Returns:
@@ -52,6 +52,12 @@ def tokenize(iterable, token_types):
 
 
 def tokenize_block(iterable, token_types):
+    """
+    Returns a list of pairs (token_type, read_result).
+
+    Footnotes are parsed here, but span-level parsing has not
+    started yet.
+    """
     lines = FileWrapper(iterable)
     parse_buffer = ParseBuffer()
     line = lines.peek()
@@ -70,6 +76,13 @@ def tokenize_block(iterable, token_types):
 
 
 def make_tokens(parse_buffer):
+    """
+    Takes a list of pairs (token_type, read_result) and
+    applies token_type(read_result).
+
+    Footnotes are already parsed before this point,
+    and span-level parsing is started here.
+    """
     tokens = []
     for token_type, result in parse_buffer:
         token = token_type(result)
@@ -79,6 +92,10 @@ def make_tokens(parse_buffer):
 
 
 class ParseBuffer(list):
+    """
+    A wrapper around builtin list,
+    so that setattr(list, 'loose') is legal.
+    """
     def __init__(self, *args):
         super().__init__(*args)
         self.loose = False
