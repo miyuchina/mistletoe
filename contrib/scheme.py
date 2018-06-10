@@ -1,82 +1,69 @@
 import re
 from collections import ChainMap
 from mistletoe import BaseRenderer, span_token, block_token
-
-def tokenize(content):
-    tokens = span_token.tokenize_inner(content)
-    return tuple(filter(lambda token: not isinstance(token, Whitespace), tokens))
-
-class Matcher:
-    def search(self, string, start):
-        char_buffer = []
-        count = 0
-        start_index = -1
-        for index, char in enumerate(string[start:]):
-            if char == '(':
-                count += 1
-            elif char == ')':
-                count -= 1
-            if count > 0:
-                if start_index == -1:
-                    start_index = index + start
-                char_buffer.append(char)
-            elif count == 0 and char_buffer:
-                char_buffer.append(char)
-                return MatchObj(''.join(char_buffer), start_index)
-
-class MatchObj:
-    def __init__(self, string, start_index):
-        self.string = string
-        self.start_index = start_index
-
-    def start(self):
-        return self.start_index
-
-    def end(self):
-        return self.start_index + len(self.string)
-
-    def group(self, index=0):
-        return self.string[1:-1] if index == 1 else self.string
+from mistletoe.core_tokens import MatchObj
 
 
 class Program(block_token.BlockToken):
     def __init__(self, lines):
-        content = ''.join([line.strip() for line in lines])
-        super().__init__(content, tokenize)
+        self.children = span_token.tokenize_inner(''.join([line.strip() for line in lines]))
 
-class Whitespace(span_token.RawText):
-    pass
 
 class Expr(span_token.SpanToken):
-    pattern = Matcher()
-    def __init__(self, match_obj):
-        self._children = tokenize(match_obj.group(1))
+    @classmethod
+    def find(cls, string):
+        matches = []
+        count = 0
+        start = []
+        for i, c in enumerate(string):
+            if c == '(':
+                start.append(i)
+            elif c == ')':
+                pos = start.pop()
+                end_pos = i + 1
+                content = string[pos+1:i]
+                matches.append(MatchObj(pos, end_pos, (pos+1, i, content)))
+        return matches
 
     def __repr__(self):
-        repr_inner = ', '.join([repr(child) for child in self.children])
-        return '<Expr [{}]>'.format(repr_inner)
+        return '<Expr {}>'.format(self.children)
 
-class Number(span_token.RawText):
+
+class Number(span_token.SpanToken):
     pattern = re.compile(r"(\d+)")
-    def __init__(self, match_obj):
-        self.number = eval(match_obj.group(1))
+    parse_inner = False
+
+    def __init__(self, match):
+        self.number = eval(match.group(0))
 
     def __repr__(self):
         return '<Number {}>'.format(self.number)
 
-class Variable(span_token.RawText):
-    pattern = re.compile(r"(\S+)")
-    def __init__(self, match_obj):
-        self.name = match_obj.group(1)
+
+class Variable(span_token.SpanToken):
+    pattern = re.compile(r"([^\s()]+)")
+    parse_inner = False
+
+    def __init__(self, match):
+        self.name = match.group(0)
 
     def __repr__(self):
         return '<Variable {!r}>'.format(self.name)
+
+
+class Whitespace(span_token.SpanToken):
+    parse_inner = False
+
+    def __new__(self, _):
+        return None
+
 
 class Procedure:
     def __init__(self, expr_token, body, env):
         self.params = [child.name for child in expr_token.children]
         self.body = body
         self.env = env
+
 
 class Scheme(BaseRenderer):
     def __init__(self):
