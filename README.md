@@ -5,32 +5,43 @@
 [![PyPI][pypi-badge]][pypi]
 [![is wheel][wheel-badge]][pypi]
 
-mistletoe is a Markdown parser in pure Python, designed to be fast, modular
-and fully customizable.
+mistletoe is a Markdown parser in pure Python,
+designed to be fast, spec-compliant and fully customizable.
 
-mistletoe is not simply a Markdown-to-HTML transpiler. It is designed, from
-the start, to parse Markdown into an abstract syntax tree. You can swap out
-renderers for different output formats, without touching any of the core
-components.
+Apart from being the fastest,
+CommonMark-compliant Markdown parser implementation in pure Python,
+mistletoe also supports easy definitions of custom tokens.
+Parsing Markdown into an abstract syntax tree
+also allows us to swap out renderers for different output formats,
+without touching any of the core components.
 
 Remember to spell mistletoe in lowercase!
 
 Features
 --------
-* **Fast**: mistletoe is as fast as the [fastest implementation][mistune]
-  currently available: that is, over 4 times faster than
-  [Python-Markdown][python-markdown], and much faster than
-  [Python-Markdown2][python-markdown2].
+* **Fast**:
+  mistletoe is the fastest implementation of CommonMark in Python,
+  that is, 2 to 3 times as fast as [Commonmark-py][commonmark-py],
+  and still roughly 30% faster than [Python-Markdown][python-markdown].
+  Running with PyPy yields comparable performance with [mistune][mistune].
   
   See the [performance](#performance) section for details.
 
-* **Modular**: mistletoe is designed with modularity in mind. Its initial
-  goal is to provide a clear and easy API to extend upon.
+* **Spec-compliant**:
+  CommonMark is [a useful, high-quality project][oilshell].
+  mistletoe follows the [CommonMark specification][commonmark]
+  to resolve ambiguities during parsing.
+  Outputs are predictable and well-defined.
 
-* **Customizable**: writing a new renderer for mistletoe is a relatively
-  trivial task. You can even write [a Lisp][scheme] in it.
-
-**Supported Syntax**
+* **Extensible**:
+  Strikethrough and tables are supported natively,
+  and custom block-level and span-level tokens can easily be added.
+  Writing a new renderer for mistletoe is a relatively
+  trivial task.
+  
+  You can even write [a Lisp][scheme] in it.
+  
+Some alternative output formats:
 
 * HTML
 * LaTeX
@@ -41,9 +52,7 @@ Features
 
 Installation
 ------------
-mistletoe requires Python 3.3 and above, including Python 3.7, the current
-development branch. It is also tested on PyPy 5.8.0. Install mistletoe with
-pip:
+mistletoe is tested for Python 3.3 and above. Install mistletoe with pip:
 
 ```sh
 pip3 install mistletoe
@@ -100,7 +109,7 @@ with open('foo.md', 'r') as fin:
 
 ### From the command-line
 
-pip installation enables mistletoe's commandline utility. Type the following
+pip installation enables mistletoe's command-line utility. Type the following
 directly into your shell:
 
 ```sh
@@ -125,41 +134,135 @@ Running `mistletoe` without specifying a file will land you in interactive
 mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
 
-```
+```html
 mistletoe [version 0.7] (interactive)
 Type Ctrl-D to complete input, or Ctrl-C to exit.
->>> some **bold text**
+>>> some **bold** text
 ... and some *italics*
-... ^D
-<html>
-<body>
-<p>some <strong>bold text</strong> and some <em>italics</em></p>
-</body>
-</html>
+...
+<p>some <strong>bold</strong> text
+and some <em>italics</em></p>
 >>>
 ```
 
-The interactive mode also accepts the `--renderer` flag.
+The interactive mode also accepts the `--renderer` flag:
+
+```latex
+mistletoe [version 0.7] (interactive)
+Type Ctrl-D to complete input, or Ctrl-C to exit.
+Using renderer: LaTeXRenderer
+>>> some **bold** text
+... and some *italics*
+...
+\documentclass{article}
+\begin{document}
+
+some \textbf{bold} text
+and some \textit{italics}
+\end{document}
+>>>
+```
 
 Performance
 -----------
 
-mistletoe is the fastest Markdown parser implementation available in pure
-Python; that is, on par with [mistune][mistune]. Try the benchmarks yourself by
-running:
+mistletoe is the fastest CommonMark compliant implementation in Python.
+Try the benchmarks yourself by running:
 
 ```sh
-python3 test/benchmark.py
+$ python3 test/benchmark.py  # all results in seconds
+Test document: test/samples/syntax.md
+Test iterations: 1000
+Running tests with markdown, mistune, commonmark, mistletoe...
+==============================================================
+markdown: 33.28557115700096
+mistune: 8.533771439999327
+commonmark: 84.54588776299897
+mistletoe: 23.5405140980001
 ```
 
-One of the significant bottlenecks of mistletoe compared to mistune, however,
+We notice that Mistune is the fastest Markdown parser,
+and by a good margin, which demands some explanation.
+mistletoe's biggest performance penalty
+comes from stringently following the CommonMark spec,
+which outlines a highly context-sensitive grammar for Markdown.
+Mistune takes a simpler approach to the lexing and parsing process,
+but this means that it cannot handle more complex cases,
+e.g., precedence of different types of tokens, escaping rules, etc.
+
+To see why this might be important to you,
+consider the following Markdown input
+([example 392][example-392] from the CommonMark spec):
+
+```markdown
+***foo** bar*
+```
+
+The natural interpretation is:
+
+```html
+<p><em><strong>foo</strong> bar</em></p>
+```
+
+... and it is indeed the output of Python-Markdown, Commonmark-py and mistletoe.
+Mistune (version 0.8.3) greedily parses the first two asterisks
+in the first delimiter run as a strong-emphasis opener,
+the second delimiter run as its closer,
+but does not know what to do with the remaining asterisk in between:
+
+```html
+<p><strong>*foo</strong> bar*</p>
+```
+
+The implication of this runs deeper,
+and it is not simply a matter of dogmatically following an external spec.
+By adopting a more flexible parsing algorithm,
+mistletoe allows us to specify a precedence level to each token class,
+including custom ones that you might write in the future.
+Code spans, for example, has a higher precedence level than emphasis,
+so
+
+```markdown
+*foo `bar* baz`
+```
+
+... is parsed as:
+
+```html
+<p>*foo <code>bar* baz</code></p>
+```
+
+... whereas Mistune parses this as:
+
+```html
+<p><em>foo `bar</em> baz`</p>
+```
+
+Of course, it is not *impossible* for Mistune to modify its behavior,
+and parse these two examples correctly,
+through more sophisticated regexes or some other means.
+It is nevertheless *highly likely* that,
+when Mistune implements all the necessary context checks,
+it will suffer from the same performance penalties.
+
+Contextual analysis is why Python-Markdown is slow, and why CommonMark-py is slower.
+The lack thereof is the reason mistune enjoys stellar performance
+among similar parser implementations,
+as well as the limitations that come with these performance benefits.
+
+If you want an implementation that focuses on raw speed,
+mistune remains a solid choice.
+If you need a spec-compliant and readily extensible implementation, however,
+mistletoe is still marginally faster than Python-Markdown,
+while supporting more functionality (lists in block quotes, for example),
+and significantly faster than CommonMark-py.
+
+
+One last note: another bottleneck of mistletoe compared to mistune
 is the function overhead. Because, unlike mistune, mistletoe chooses to split
 functionality into modules, function lookups can take significantly longer than
-mistune.
-
-To boost the performance further, it is suggested to use PyPy with mistletoe.
-Benchmark results show that on PyPy, mistletoe is about **twice as fast** as
-mistune:
+mistune. To boost the performance further, it is suggested to use PyPy with mistletoe.
+Benchmark results show that on PyPy, mistletoe's performance is on par with mistune:
 
 ```sh
 $ pypy3 test/benchmark.py mistune mistletoe
@@ -167,12 +270,9 @@ Test document: test/samples/syntax.md
 Test iterations: 1000
 Running tests with mistune, mistletoe...
 ========================================
-mistune: 13.524028996936977
-mistletoe: 6.477352762129158
+mistune: 13.645681533998868
+mistletoe: 15.088351159000013
 ```
-
-The above result was achieved on PyPy 5.8.0-beta0, on a 13-inch Retina MacBook
-Pro (Early 2015).
 
 Developer's Guide
 -----------------
@@ -200,24 +300,40 @@ that stores the compiled regex:
 ```python
 class GithubWiki(SpanToken):
     pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
-    def __init__(self, match_obj):
+    def __init__(self, match):
         pass
 ```
 
-For spiritual guidance on regexes, refer to [xkcd][xkcd] classics. For an
-actual representation of this author parsing Markdown with regexes, refer
-to this brilliant [meme][meme] by [Greg Hendershott][hendershott].
+The regex will be picked up by `SpanToken.find`, which is used by the
+tokenizer to find all tokens of its kind in the document.
+If regexes are too limited for your use case, consider overriding
+the `find` method; it should return a list of all token occurrences.
 
-mistletoe's span-level tokenizer will search for our pattern. When it finds
-a match, it will pass in the match object as argument into our constructor.
-We have defined our regex so that the first match group is the alternative
-text, and the second one is the link target.
+Three other class variables are available for our custom token class,
+and their default values are shown below:
 
-Note that alternative text can also contain other span-level tokens.  For
+```python
+class SpanToken:
+    parse_group = 1
+    parse_inner = True
+    precedence = 5
+```
+
+Note that alternative text can also contain other span-level tokens. For
 example, `[[*alt*|link]]` is a GitHub link with an `Emphasis` token as its
-child.  To parse child tokens, simply pass `match_obj` to the `super`
-constructor (which assumes children to be in `match_obj.group(1)`),
-and save off all the additional attributes we need:
+child. To parse child tokens, `parse_inner` should be set to `True`
+(the default value in this case), and `parse_group` should correspond
+to the match group in which child tokens might occur
+(also the default value, 1, in this case).
+
+Once these two class variables are set correctly,
+`GitHubWiki.children` attribute will automatically be set to
+the list of child tokens.
+Note that there is no need to manually set this attribute,
+unlike previous versions of mistletoe.
+
+Lastly, the `SpanToken` constructors take a regex match object as its argument.
+We can simply store off the `target` attribute from `match_obj.group(2)`.
 
 ```python
 from mistletoe.span_token import SpanToken
@@ -225,11 +341,32 @@ from mistletoe.span_token import SpanToken
 class GithubWiki(SpanToken):
     pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
     def __init__(self, match_obj):
-        super().__init__(match_obj)
         self.target = match_obj.group(2)
 ```
 
-There you go: a new token in 7 lines of code.
+There you go: a new token in 5 lines of code.
+
+### Side note about precedence
+
+Normally there is no need to override the `precedence` value of a custom token.
+The default value is the same as `InlineCode`, `AutoLink` and `HTMLSpan`,
+which means that whichever token comes first will be parsed. In our case:
+
+```markdown
+`code with [[ text` | link ]]
+```
+
+... will be parsed as:
+
+```html
+<code>code with [[ text</code> | link ]]
+```
+
+If we set `GitHubWiki.precedence = 6`, we have:
+
+```html
+`code with <a href="link">text`</a>
+```
 
 ### A new renderer
 
@@ -294,35 +431,7 @@ to your needs.
 Why mistletoe?
 --------------
 
-For me, the question becomes: why not [mistune][mistune]? My original
-motivation really has nothing to do with starting a competition. Here's a list
-of reasons I created mistletoe in the first place:
-
-* I am interested in a Markdown-to-LaTeX transpiler in Python.
-* I want to write more Python.
-* "How hard could it be?"
-* "For fun," says David Beazley.
-
-Here's two things mistune inspired mistletoe to do:
-
-* Markdown parsers should be fast, and other parser implementations in Python
-  leaves much to be desired.
-* A parser implementation for Markdown does not need to restrict itself to one
-  flavor of Markdown.
-
-Here's two things mistletoe does differently from mistune:
-
-* Per its [readme][mistune], mistune will always be a single-file script.
-  mistletoe breaks its functionality into modules.
-* mistune, as of now, can only render Markdown into HTML. It is relatively
-  trivial to write a new renderer for mistletoe.
-* Unlike mistune, mistletoe is pushing for some extent of spec compliance with
-  CommonMark.
-
-The implications of these are quite profound, and there's no definite
-this-is-better-than-that answer. Mistune is near perfect if one wants what
-it provides: I have used mistune extensively in the past, and had a great
-experience. If you want more control, however, give mistletoe a try.
+"For fun," says David Beazley.
 
 Copyright & License
 -------------------
@@ -340,12 +449,13 @@ Copyright & License
 [mistune]: https://github.com/lepture/mistune
 [python-markdown]: https://github.com/waylan/Python-Markdown
 [python-markdown2]: https://github.com/trentm/python-markdown2
+[commonmark-py]: https://github.com/rtfd/CommonMark-py
+[oilshell]: https://www.oilshell.org/blog/2018/02/14.html
+[commonmark]: https://spec.commonmark.org/
 [contrib]: https://github.com/miyuchina/mistletoe/tree/master/contrib
 [scheme]: https://github.com/miyuchina/mistletoe/blob/dev/contrib/scheme.py
 [contributing]: CONTRIBUTING.md
-[xkcd]: https://xkcd.com/208/
-[meme]: http://www.greghendershott.com/img/grumpy-regexp-parser.png
-[hendershott]: http://www.greghendershott.com/2013/11/markdown-parser-redesign.html
+[example-392]: https://spec.commonmark.org/0.28/#example-392
 [icon]: https://www.freepik.com
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
 [license]: LICENSE
