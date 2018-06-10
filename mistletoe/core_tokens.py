@@ -23,9 +23,9 @@ def find_core_tokens(string, root):
     in_image = False
     start = 0
     i = 0
+    code_match = code_pattern.search(string)
     while i < len(string):
-        code_match = code_pattern.match(string, i)
-        if code_match:
+        if code_match is not None and i == code_match.start():
             _code_matches.append(code_match)
             i = code_match.end()
             continue
@@ -51,6 +51,7 @@ def find_core_tokens(string, root):
                 in_image = True
             elif c == ']':
                 i = find_link_image(string, i, delimiters, matches, root)
+                code_match = code_pattern.search(string, i)
             elif in_image:
                 in_image = False
         else:
