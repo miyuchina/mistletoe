@@ -186,26 +186,39 @@ class Quote(BlockToken):
 
     @classmethod
     def read(cls, lines):
+        in_code_fence = False
+        in_block_code = False
         line = cls.convert_leading_tabs(next(lines).lstrip()).split('>', 1)[1]
         if len(line) > 0 and line[0] == ' ':
             line = line[1:]
         line_buffer = [line]
+        in_code_fence = CodeFence.start(line)
+        in_block_code = BlockCode.start(line)
+        blank_line = line.strip() == ''
         next_line = lines.peek()
         while next_line is not None:
             if (next_line.strip() == ''
-                    or BlockCode.start(next_line)
                     or Heading.start(next_line)
                     or CodeFence.start(next_line)
                     or ThematicBreak.start(next_line)
                     or List.start(next_line)):
                 break
-            stripped = cls.convert_leading_tabs(next(lines).lstrip())
+            stripped = cls.convert_leading_tabs(next_line.lstrip())
             prepend = 0
             if stripped[0] == '>':
                 prepend += 1
                 if stripped[1] == ' ':
                     prepend += 1
-            line_buffer.append(stripped[prepend:])
+                stripped = stripped[prepend:]
+                in_code_fence = CodeFence.start(stripped)
+                in_block_code = BlockCode.start(stripped)
+                blank_line = stripped.strip() == ''
+                line_buffer.append(stripped)
+            elif in_code_fence or in_block_code or blank_line:
+                break
+            else:
+                line_buffer.append(next_line)
+            next(lines)
             next_line = lines.peek()
         Paragraph.parse_setext = False
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
