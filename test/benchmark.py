@@ -33,14 +33,6 @@ def run_markdown(package):
     with open(TEST_FILE, 'r') as fin:
         return package.markdown(fin.read(), ['extra'])
 
-
-@benchmark('markdown2')
-def run_markdown2(package):
-    with open(TEST_FILE, 'r') as fin:
-        extras = ['code-friendly', 'fenced-code-blocks', 'footnotes']
-        return package.markdown(fin.read(), extras=extras)
-
-
 @benchmark('mistune')
 def run_mistune(package):
     with open(TEST_FILE, 'r') as fin:
@@ -78,7 +70,7 @@ def main(*args):
     if args[1:]:
         run_all(args[1:])
     else:
-        run_all(['markdown', 'markdown2', 'mistune', 'commonmark', 'mistletoe'])
+        run_all(['markdown', 'mistune', 'commonmark', 'mistletoe'])
 
 
 if __name__ == '__main__':
