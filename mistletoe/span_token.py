@@ -4,14 +4,14 @@ Built-in span-level token classes.
 
 import re
 import mistletoe.span_tokenizer as tokenizer
-from mistletoe.core_tokens import find_core_tokens
+from mistletoe import core_tokens
 
 
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-__all__ = ['EscapeSequence', 'InlineCode', 'Strikethrough',
-           'AutoLink', 'CoreTokens', 'LineBreak', 'RawText']
+__all__ = ['EscapeSequence', 'Strikethrough', 'AutoLink', 'CoreTokens',
+           'InlineCode', 'LineBreak', 'RawText']
 
 
 _root_node = None
@@ -89,7 +89,7 @@ class CoreTokens(SpanToken):
 
     @classmethod
     def find(cls, string):
-        return find_core_tokens(string, _root_node)
+        return core_tokens.find_core_tokens(string, _root_node)
 
 
 class Strong(SpanToken):
@@ -115,6 +115,12 @@ class InlineCode(SpanToken):
     def __init__(self, match):
         content = match.group(self.parse_group)
         self.children = (RawText(' '.join(re.split('[ \n]+', content.strip()))),)
+
+    @classmethod
+    def find(cls, string):
+        matches = core_tokens._code_matches
+        core_tokens._code_matches = []
+        return matches
 
 
 class Strikethrough(SpanToken):

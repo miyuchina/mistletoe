@@ -9,6 +9,10 @@ unicode_whitespace = {'\t', '\n', '\x0b', '\x0c', '\r', '\x1c', '\x1d', '\x1e',
 punctuation = {'!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',',
                '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\',
                ']', '^', '_', '`', '{', '|', '}', '~'}
+code_pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
+
+
+_code_matches = []
 
 
 def find_core_tokens(string, root):
@@ -20,6 +24,11 @@ def find_core_tokens(string, root):
     start = 0
     i = 0
     while i < len(string):
+        code_match = code_pattern.match(string, i)
+        if code_match:
+            _code_matches.append(code_match)
+            i = code_match.end()
+            continue
         c = string[i]
         if c == '\\' and not escaped:
             escaped = True
