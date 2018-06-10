@@ -52,8 +52,12 @@ def make_tokens(tokens, start, end, string, fallback_token):
     prev_end = start
     for token in tokens:
         if token.start > prev_end:
-            result.append(fallback_token(string[prev_end:token.start]))
-        result.append(token.make())
+            t = fallback_token(string[prev_end:token.start])
+            if t is not None:
+                result.append(t)
+        t = token.make()
+        if t is not None:
+            result.append(t)
         prev_end = token.end
     if prev_end != end:
         result.append(fallback_token(string[prev_end:end]))
