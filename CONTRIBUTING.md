@@ -1,4 +1,4 @@
-<h1>Contributing<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right'></h1>
+<h1>Contributing<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right' width='128' height='128'></h1>
 
 You've seen mistletoe: it branches off in all directions, bringing people
 together. We would love to see what you can make of mistletoe, which direction
@@ -47,8 +47,7 @@ The creator might not the best person to write documentations; the users,
 knowing all the painpoints, have a better idea of actual use cases and possible
 things that can go wrong.
 
-Go to the mistletoe [wiki][wiki] and write up your own topic. Alternatively,
-write docstrings or comments for functions that are missing them. mistletoe
+Write docstrings or comments for functions that are missing them. mistletoe
 generally follows the [Google Python Style Guide][style-guide] to format
 comments.
 
@@ -107,4 +106,4 @@ I tweet [@mi_before_yu][twitter]. Also yell at me over [email][email].
 [style-guide]: https://google.github.io/styleguide/pyguide.html
 [pep-8]: https://www.python.org/dev/peps/pep-0008/
 [twitter]: https://twitter.com/mi_before_yu
-[email]: mailto:miyu.china@icloud.com
+[email]: mailto:hello@afteryu.me
