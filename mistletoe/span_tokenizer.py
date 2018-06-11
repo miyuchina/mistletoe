@@ -36,6 +36,17 @@ def eval_tokens(x, y, token_buffer):
     return x
 
 
+def eval_new_child(parent, child):
+    last_child = parent.children[-1]
+    r = relation(last_child, child)
+    if r == 0:
+        parent.children.append(child)
+    elif r == 1 and last_child.cls.precedence < y.cls.precedence:
+        parent.children[-1] = child
+    elif r == 2:
+        last_child.append_child(child)
+
+
 def relation(x, y):
     if x.end <= y.start:
         return 0      # x preceeds y
@@ -81,9 +92,7 @@ class ParseToken:
             if not self.children:
                 self.children.append(child)
             else:
-                prev = self.children.pop()
-                prev = eval_tokens(prev, child, self.children)
-                self.children.append(prev)
+                eval_new_child(self, child)
 
     def make(self):
         if not self.cls.parse_inner:
