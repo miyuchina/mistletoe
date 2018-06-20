@@ -28,6 +28,7 @@ def find_core_tokens(string, root):
         if code_match is not None and i == code_match.start():
             _code_matches.append(code_match)
             i = code_match.end()
+            code_match = code_pattern.search(string, i)
             continue
         c = string[i]
         if c == '\\' and not escaped:
