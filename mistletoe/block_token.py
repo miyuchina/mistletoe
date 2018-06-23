@@ -851,7 +851,7 @@ class Footnote(BlockToken):
 
     @staticmethod
     def backtrack(lines, string, offset):
-        lines._index -= string[offset+1:].count('\n')
+        lines._index -= max(1, string[offset+1:].count('\n'))
 
 
 class ThematicBreak(BlockToken):

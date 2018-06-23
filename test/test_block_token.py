@@ -308,6 +308,11 @@ class TestDocument(unittest.TestCase):
         self.assertIsInstance(document.children[0], block_token.Paragraph)
         self.assertEqual(len(document.children), 1)
 
+    def test_missing_final_newline(self):
+        lines = "[link](example.com)"
+        document = block_token.Document(lines)
+        self.assertIsInstance(document.children[0], block_token.Paragraph)
+
 
 class TestThematicBreak(unittest.TestCase):
     def test_match(self):
