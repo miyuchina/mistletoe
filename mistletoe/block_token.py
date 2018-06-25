@@ -142,6 +142,7 @@ class Document(BlockToken):
     def __init__(self, lines):
         if isinstance(lines, str):
             lines = lines.splitlines(keepends=True)
+        lines = [line if line.endswith('\n') else '{}\n'.format(line) for line in lines]
         self.footnotes = {}
         global _root_node
         _root_node = self
