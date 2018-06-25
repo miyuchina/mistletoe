@@ -819,15 +819,17 @@ class Footnote(BlockToken):
                 or '\n' in string[offset:new_offset]
                 and string[new_offset] == '['):
             return offset, new_offset, ''
-        offset = new_offset
-        if string[offset] == '"':
+        if string[new_offset] == '"':
             closing = '"'
-        elif string[offset] == "'":
+        elif string[new_offset] == "'":
             closing = "'"
-        elif string[offset] == '(':
+        elif string[new_offset] == '(':
             closing = ')'
-        else:
+        elif '\n' in string[offset:new_offset]:
             return offset, offset, ''
+        else:
+            return None
+        offset = new_offset
         escaped = False
         for i, c in enumerate(string[offset+1:], start=offset+1):
             if c == '\\' and not escaped:
