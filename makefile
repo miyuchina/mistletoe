@@ -21,7 +21,7 @@ benchmark:
 	${PYTHON_EXEC} test/benchmark.py
 
 commonmark:
-	${PYTHON_EXEC} test/commonmark/commonmark.py
+	${PYTHON_EXEC} -m test.commonmark
 
 docs:
 	${PYTHON_EXEC} -m docs
