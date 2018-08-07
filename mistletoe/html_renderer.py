@@ -42,7 +42,8 @@ class HTMLRenderer(BaseRenderer):
 
     def render_to_plain(self, token):
         if hasattr(token, 'children'):
-            return self.render_inner(token)
+            inner = [self.render_to_plain(child) for child in token.children]
+            return ''.join(inner)
         return self.escape_html(token.content)
 
     def render_strong(self, token):
@@ -64,15 +65,11 @@ class HTMLRenderer(BaseRenderer):
 
     def render_image(self, token):
         template = '<img src="{}" alt="{}"{} />'
-        render_func = self.render
-        self.render = self.render_to_plain
-        inner = self.render_inner(token)
-        self.render = render_func
         if token.title:
             title = ' title="{}"'.format(self.escape_html(token.title))
         else:
             title = ''
-        return template.format(token.src, inner, title)
+        return template.format(token.src, self.render_to_plain(token), title)
 
     def render_link(self, token):
         template = '<a href="{target}"{title}>{inner}</a>'
