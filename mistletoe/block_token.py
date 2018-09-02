@@ -574,6 +574,9 @@ class ListItem(BlockToken):
             if not cls.in_continuation(next_line, prepend):
                 # directly followed by another token
                 if cls.other_token(next_line):
+                    if newline:
+                        lines.backstep()
+                        del line_buffer[-newline:]
                     break
                 # next_line is a new list item
                 marker_info = cls.parse_marker(next_line)
