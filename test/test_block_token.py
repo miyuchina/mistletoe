@@ -191,6 +191,14 @@ class TestListItem(unittest.TestCase):
         list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
 
+    def test_tight_list(self):
+        lines = ['- foo\n',
+                 '\n',
+                 '# bar\n']
+        f = FileWrapper(lines)
+        list_item = block_token.tokenize(lines)[0].children[0]
+        self.assertEqual(list_item.loose, False)
+
 
 class TestList(unittest.TestCase):
     def test_different_markers(self):
