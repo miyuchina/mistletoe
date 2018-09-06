@@ -10,8 +10,8 @@ class FileWrapper:
         self._anchor = 0
 
     def __next__(self):
-        self._index += 1
-        if self._index < len(self.lines):
+        if self._index + 1 < len(self.lines):
+            self._index += 1
             return self.lines[self._index]
         raise StopIteration
 
