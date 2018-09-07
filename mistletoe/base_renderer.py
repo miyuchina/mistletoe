@@ -4,7 +4,6 @@ Base class for renderers.
 
 import re
 import sys
-import inspect
 from mistletoe import block_token, span_token
 
 class BaseRenderer(object):
@@ -73,7 +72,11 @@ class BaseRenderer(object):
         self._extras = extras
 
         for token in extras:
-            inspect.getmodule(token.__bases__[0]).add_token(token)
+            if issubclass(token, span_token.SpanToken):
+                token_module = span_token
+            else:
+                token_module = block_token
+            token_module.add_token(token)
             render_func = getattr(self, self._cls_to_func(token.__name__))
             self.render_map[token.__name__] = render_func
 
