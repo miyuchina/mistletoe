@@ -36,7 +36,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('Strikethrough', '<del>inner</del>')
 
     def test_image(self):
-        output = '<img src="src" alt="inner" title="title" />'
+        output = '<img src="src" alt="" title="title" />'
         self._test_token('Image', output, src='src', title='title')
 
     def test_link(self):
