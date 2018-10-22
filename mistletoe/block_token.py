@@ -497,7 +497,7 @@ class ListItem(BlockToken):
         self.leader = leader
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
-        self.loose = parse_buffer.loose
+        self.loose = len(self.children) > 1 and parse_buffer.loose
 
     @staticmethod
     def in_continuation(line, prepend):
