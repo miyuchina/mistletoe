@@ -477,6 +477,12 @@ class List(BlockToken):
             matches.append(output)
             if next_marker is None:
                 break
+
+        if matches:
+            # Only consider the last list item loose if there's more than one element
+            last_parse_buffer = matches[-1][0]
+            last_parse_buffer.loose = len(last_parse_buffer) > 1 and last_parse_buffer.loose
+
         return matches
 
     @staticmethod
@@ -497,7 +503,7 @@ class ListItem(BlockToken):
         self.leader = leader
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
-        self.loose = len(self.children) > 1 and parse_buffer.loose
+        self.loose = parse_buffer.loose
 
     @staticmethod
     def in_continuation(line, prepend):
