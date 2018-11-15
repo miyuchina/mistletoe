@@ -100,6 +100,8 @@ class ParseToken:
         children = make_tokens(self.children, self.parse_start, self.parse_end, self.string, self.fallback_token)
         token = self.cls(self.match)
         token.children = children
+        for child in token.children:
+            child.parent = token
         return token
 
     def __lt__(self, other):

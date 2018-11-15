@@ -633,6 +633,7 @@ class Table(BlockToken):
                     for column in self.split_delimiter(lines[1])]
             self.header = TableRow(lines[0], self.column_align)
             self.children = [TableRow(line, self.column_align) for line in lines[2:]]
+            self.header.parent = self
         else:
             self.column_align = [None]
             self.children = [TableRow(line) for line in lines]
