@@ -121,6 +121,8 @@ class BlockToken(object):
     """
     def __init__(self, lines, tokenize_func):
         self.children = tokenize_func(lines)
+        for child in self.children:
+            child.parent = self
 
     def __contains__(self, text):
         return any(text in child for child in self.children)
@@ -148,6 +150,8 @@ class Document(BlockToken):
         _root_node = self
         span_token._root_node = self
         self.children = tokenize(lines)
+        for child in self.children:
+            child.parent = self
         span_token._root_node = None
         _root_node = None
 
@@ -211,6 +215,8 @@ class Quote(BlockToken):
     def __init__(self, parse_buffer):
         # span-level tokenizing happens here.
         self.children = tokenizer.make_tokens(parse_buffer)
+        for child in self.children:
+            child.parent = self
 
     @staticmethod
     def start(line):
@@ -362,6 +368,8 @@ class BlockCode(BlockToken):
     def __init__(self, lines):
         self.language = ''
         self.children = (span_token.RawText(''.join(lines).strip('\n')+'\n'),)
+        for child in self.children:
+            child.parent = self
 
     @staticmethod
     def start(line):
@@ -410,6 +418,8 @@ class CodeFence(BlockToken):
         lines, open_info = match
         self.language = span_token.EscapeSequence.strip(open_info[2])
         self.children = (span_token.RawText(''.join(lines)),)
+        for child in self.children:
+            child.parent = self
 
     @classmethod
     def start(cls, line):
@@ -451,6 +461,8 @@ class List(BlockToken):
     pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
+        for child in self.children:
+            child.parent = self
         self.loose = any(item.loose for item in self.children)
         leader = self.children[0].leader
         self.start = None
@@ -497,6 +509,8 @@ class ListItem(BlockToken):
         self.leader = leader
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
+        for child in self.children:
+            child.parent = self
         self.loose = parse_buffer.loose
 
     @staticmethod
@@ -622,6 +636,8 @@ class Table(BlockToken):
         else:
             self.column_align = [None]
             self.children = [TableRow(line) for line in lines]
+        for child in self.children:
+            child.parent = self
 
     @staticmethod
     def split_delimiter(delimiter):
@@ -675,6 +691,8 @@ class TableRow(BlockToken):
         cells = filter(None, line.strip().split('|'))
         self.children = [TableCell(cell.strip(), align)
                          for cell, align in zip_longest(cells, self.row_align)]
+        for child in self.children:
+            child.parent = self
 
 
 class TableCell(BlockToken):
