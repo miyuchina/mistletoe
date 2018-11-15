@@ -41,7 +41,7 @@ def eval_new_child(parent, child):
     r = relation(last_child, child)
     if r == 0:
         parent.children.append(child)
-    elif r == 1 and last_child.cls.precedence < y.cls.precedence:
+    elif r == 1 and last_child.cls.precedence < child.cls.precedence:
         parent.children[-1] = child
     elif r == 2:
         last_child.append_child(child)
