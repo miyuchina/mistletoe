@@ -29,3 +29,10 @@ class TestLimitedHTMLRenderer(TestCase):
         input = '<div>\n\n*hello*\n\n</div>'
         output = '&lt;div&gt;\n<p><em>hello</em></p>\n&lt;/div&gt;'
         self.check_render(input, output, 'Markdown inside div is unexpectedly escaped')
+
+    def test_block_quotes_not_escaped(self):
+        input = '''
+        > Blockquote
+        > End of quote'''.replace('    ', '')
+        output = self.renderer.render(Document(input))
+        self.assertNotIn('&', output, 'Blockquotes are unexpectedly escaped')
