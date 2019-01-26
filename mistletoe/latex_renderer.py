@@ -2,7 +2,6 @@
 LaTeX renderer for mistletoe.
 """
 
-from itertools import chain
 import mistletoe.latex_token as latex_token
 from mistletoe.base_renderer import BaseRenderer
 
@@ -14,7 +13,7 @@ class LaTeXRenderer(BaseRenderer):
         """
         tokens = self._tokens_from_module(latex_token)
         self.packages = {}
-        super().__init__(*chain(tokens, extras))
+        super().__init__(*tokens, *extras)
 
     def render_strong(self, token):
         return '\\textbf{{{}}}'.format(self.render_inner(token))
