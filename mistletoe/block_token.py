@@ -673,7 +673,7 @@ class TableRow(BlockToken):
     def __init__(self, line, row_align=None):
         self.row_align = row_align or [None]
         cells = filter(None, line.strip().split('|'))
-        self.children = [TableCell(cell.strip(), align)
+        self.children = [TableCell(cell.strip() if cell else '', align)
                          for cell, align in zip_longest(cells, self.row_align)]
 
 
