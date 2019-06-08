@@ -107,8 +107,7 @@ class BaseRenderer(object):
         Arguments:
             token: a branch node who has children attribute.
         """
-        rendered = [self.render(child) for child in token.children]
-        return ''.join(rendered)
+        return ''.join(map(self.render, token.children))
 
     def __enter__(self):
         """
@@ -126,8 +125,8 @@ class BaseRenderer(object):
         span_token.reset_tokens()
 
     @classmethod
-    def _cls_to_func(self, cls_name):
-        snake = '_'.join(map(str.lower, self._parse_name.findall(cls_name)))
+    def _cls_to_func(cls, cls_name):
+        snake = '_'.join(map(str.lower, cls._parse_name.findall(cls_name)))
         return 'render_{}'.format(snake)
 
     @staticmethod

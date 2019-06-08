@@ -112,6 +112,14 @@ class TestHTMLRenderer(TestRenderer):
     def test_table_cell(self):
         output = '<td align="left">inner</td>\n'
         self._test_token('TableCell', output, align=None)
+        
+    def test_table_cell0(self):
+        output = '<td align="center">inner</td>\n'
+        self._test_token('TableCell', output, align=0)
+        
+    def test_table_cell1(self):
+        output = '<td align="right">inner</td>\n'
+        self._test_token('TableCell', output, align=1)
 
     def test_thematic_break(self):
         self._test_token('ThematicBreak', '<hr />', children=False)
