@@ -66,7 +66,6 @@ cd mistletoe
 pip3 install -e .
 ```
 
-A fork for Python 2 compatibility is available [here][python2-fork].
 See the [contributing][contributing] doc for how to contribute to mistletoe.
 
 Usage
@@ -446,7 +445,6 @@ Copyright & License
 [wheel-badge]: https://img.shields.io/pypi/wheel/mistletoe.svg?style=flat-square
 [travis]: https://travis-ci.org/miyuchina/mistletoe
 [coveralls]: https://coveralls.io/github/miyuchina/mistletoe?branch=master
-[python2-fork]: https://github.com/daniele-niero/mistletoe/tree/python2_compatibility
 [pypi]: https://pypi.python.org/pypi/mistletoe
 [mistune]: https://github.com/lepture/mistune
 [python-markdown]: https://github.com/waylan/Python-Markdown
