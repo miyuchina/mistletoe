@@ -135,7 +135,7 @@ mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
 
 ```html
-mistletoe [version 0.7.1] (interactive)
+mistletoe [version 0.7.2] (interactive)
 Type Ctrl-D to complete input, or Ctrl-C to exit.
 >>> some **bold** text
 ... and some *italics*
@@ -148,7 +148,7 @@ and some <em>italics</em></p>
 The interactive mode also accepts the `--renderer` flag:
 
 ```latex
-mistletoe [version 0.7.1] (interactive)
+mistletoe [version 0.7.2] (interactive)
 Type Ctrl-D to complete input, or Ctrl-C to exit.
 Using renderer: LaTeXRenderer
 >>> some **bold** text
