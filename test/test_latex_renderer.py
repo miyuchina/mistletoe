@@ -91,7 +91,7 @@ class TestLaTeXRenderer(TestCase):
                          column_align=[None])
 
     def test_table_row(self):
-        self._test_token('TableRow', '\n')
+        self._test_token('TableRow', ' \\\\\n')
 
     def test_table_cell(self):
         self._test_token('TableCell', 'inner')
