@@ -477,6 +477,12 @@ class List(BlockToken):
             matches.append(output)
             if next_marker is None:
                 break
+
+        if matches:
+            # Only consider the last list item loose if there's more than one element
+            last_parse_buffer = matches[-1][0]
+            last_parse_buffer.loose = len(last_parse_buffer) > 1 and last_parse_buffer.loose
+
         return matches
 
     @staticmethod
