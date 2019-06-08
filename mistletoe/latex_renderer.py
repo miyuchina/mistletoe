@@ -121,7 +121,7 @@ class LaTeXRenderer(BaseRenderer):
 
     def render_table_row(self, token):
         cells = [self.render(child) for child in token.children]
-        return ' & '.join(cells) + '\n'
+        return ' & '.join(cells) + ' \\\\\n'
 
     def render_table_cell(self, token):
         return self.render_inner(token)
