@@ -38,4 +38,6 @@ def get_ast(token):
         node['header'] = get_ast(node['header'])
     if 'children' in node:
         node['children'] = [get_ast(child) for child in node['children']]
+    if 'parent' in node:
+        node['parent'] = node['parent'].__class__.__name__
     return node

@@ -13,21 +13,27 @@ class TestASTRenderer(unittest.TestCase):
                       'level': 1,
                       'children': [{
                           'type': 'RawText',
-                          'content': 'heading 1'
-                      }]
+                          'content': 'heading 1',
+                          'parent': 'Heading'
+                      }],
+                      'parent': 'Document'
                   }, {
                       'type': 'Paragraph',
                       'children': [{
                           'type': 'RawText',
-                          'content': 'hello'
+                          'content': 'hello',
+                          'parent': 'Paragraph'
                       }, {
                           'type': 'LineBreak',
                           'soft': True,
-                          'content': ''
+                          'content': '',
+                          'parent': 'Paragraph'
                       }, {
                           'type': 'RawText',
-                          'content': 'world'
-                      }]
+                          'content': 'world',
+                          'parent': 'Paragraph'
+                      }],
+                      'parent': 'Document'
                  }]}
         self.assertEqual(output, target)
 
@@ -46,9 +52,12 @@ class TestASTRenderer(unittest.TestCase):
                           'title': '',
                           'children': [{
                               'type': 'RawText',
-                              'content': 'bar'
-                          }]
-                      }]
+                              'content': 'bar',
+                              'parent': 'Link'
+                          }],
+                          'parent': 'Paragraph'
+                      }],
+                      'parent': 'Document'
                  }]}
         output = ast_renderer.get_ast(d)
         self.assertEqual(output, target)

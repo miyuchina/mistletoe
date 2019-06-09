@@ -115,6 +115,8 @@ class InlineCode(SpanToken):
     def __init__(self, match):
         content = match.group(self.parse_group)
         self.children = (RawText(' '.join(re.split('[ \n]+', content.strip()))),)
+        for child in self.children:
+            child.parent = self
 
     @classmethod
     def find(cls, string):
@@ -169,6 +171,8 @@ class AutoLink(SpanToken):
     def __init__(self, match):
         content = match.group(self.parse_group)
         self.children = (RawText(content),)
+        for child in self.children:
+            child.parent = self
         self.target = content
         self.mailto = '@' in self.target and 'mailto' not in self.target.casefold()
 
@@ -186,6 +190,8 @@ class EscapeSequence(SpanToken):
 
     def __init__(self, match):
         self.children = (RawText(match.group(self.parse_group)),)
+        for child in self.children:
+            child.parent = self
 
     @classmethod
     def strip(cls, string):
