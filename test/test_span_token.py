@@ -44,6 +44,12 @@ class TestInlineCode(TestBranchToken):
 class TestStrikethrough(TestBranchToken):
     def test_parse(self):
         self._test_parse(span_token.Strikethrough, '~~some text~~', 'some text')
+        self._test_parse(span_token.Strikethrough, '~~some text~~', 'some text')
+
+    def test_parse_multiple(self):
+        tokens = iter(span_token.tokenize_inner('~~one~~ ~~two~~'))
+        self._test_token(next(tokens), 'one')
+        self._test_token(next(tokens), 'two')
 
 
 class TestLink(TestBranchToken):

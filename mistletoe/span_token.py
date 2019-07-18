@@ -127,7 +127,7 @@ class Strikethrough(SpanToken):
     """
     Strikethrough tokens. ("~~some text~~")
     """
-    pattern = re.compile(r"(?<!\\)(?:\\\\)*~~(.+)~~", re.DOTALL)
+    pattern = re.compile(r"(?<!\\)(?:\\\\)*~~(.+?)~~", re.DOTALL)
 
 
 class Image(SpanToken):
