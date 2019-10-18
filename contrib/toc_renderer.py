@@ -6,7 +6,7 @@ See `if __name__ == '__main__'` section for sample usage.
 
 import re
 from mistletoe.html_renderer import HTMLRenderer
-
+from mistletoe import block_token
 
 class TOCRenderer(HTMLRenderer):
     """
@@ -42,7 +42,10 @@ class TOCRenderer(HTMLRenderer):
             template = '{indent}- {content}\n'
             return template.format(indent=get_indent(level), content=content)
 
-        return List([build_list_item(heading) for heading in self._headings])
+        lines = [build_list_item(heading) for heading in self._headings]
+        items = block_token.tokenize(lines)
+        return items[0]
+
 
     def render_heading(self, token):
         """
