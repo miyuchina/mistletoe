@@ -23,7 +23,12 @@ class LaTeXRenderer(BaseRenderer):
         return '\\textit{{{}}}'.format(self.render_inner(token))
 
     def render_inline_code(self, token):
-        return '\\verb|{}|'.format(self.render_inner(token))
+        content = ""
+        # there should be only one children...
+        for children in token.children:
+            content += self.render_raw_text(children, escape=False)
+
+        return '\\verb|{}|'.format(content)
 
     def render_strikethrough(self, token):
         self.packages['ulem'] = ['normalem']
@@ -51,9 +56,9 @@ class LaTeXRenderer(BaseRenderer):
         return self.render_inner(token)
 
     def render_raw_text(self, token, escape=True):
-        return (token.content.replace('$', '\$').replace('#', '\#')
-                             .replace('{', '\{').replace('}', '\}')
-                             .replace('&', '\&')) if escape else token.content
+        return (token.content.replace('$', '\\$').replace('#', '\\#')
+                             .replace('{', '\\{').replace('}', '\\}')
+                             .replace('&', '\\&')).replace('_', '\\_') if escape else token.content
 
     def render_heading(self, token):
         inner = self.render_inner(token)
