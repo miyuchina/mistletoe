@@ -17,12 +17,17 @@ class TestTraverse(unittest.TestCase):
             )
         )
         tree = [
-            (t.node.__class__.__name__, t.parent.__class__.__name__, t.depth)
-            for t in traverse(doc)
+            (
+                t.node.__class__.__name__,
+                t.parent.__class__.__name__ if t.parent else None,
+                t.depth
+            )
+            for t in traverse(doc, include_source=True)
         ]
         self.assertEqual(
             tree,
             [
+                ('Document', None, 0),
                 ('Paragraph', 'Document', 1),
                 ('Paragraph', 'Document', 1),
                 ('RawText', 'Paragraph', 2),
