@@ -118,7 +118,7 @@ class JIRARenderer(BaseRenderer):
         return inner
 
     def render_list_item(self, token):
-        template = '{prefix} {inner}\n'
+        template = '{prefix} {inner}'
         prefix = ''.join(self.listTokens)
         result = template.format(prefix=prefix, inner=self.render_inner(token))
         return result
