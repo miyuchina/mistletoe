@@ -79,7 +79,7 @@ class JIRARenderer(BaseRenderer):
 
     @staticmethod
     def render_raw_text(token):
-        return html.escape(token.content)
+        return token.content
 
     @staticmethod
     def render_html_span(token):
