@@ -86,17 +86,17 @@ class JIRARenderer(BaseRenderer):
         return token.content
 
     def render_heading(self, token):
-        template = 'h{level}. {inner}\n'
+        template = 'h{level}. {inner}'
         inner = self.render_inner(token)
-        return template.format(level=token.level, inner=inner)
+        return template.format(level=token.level, inner=inner) + self._block_eol()
 
     def render_quote(self, token):
-        template = 'bq. {inner}\n'
-        return template.format(inner=self.render_inner(token))
+        template = 'bq. {inner}'
+        return template.format(inner=self.render_inner(token)) + self._block_eol()
 
     def render_paragraph(self, token):
-        return '{}\n'.format(self.render_inner(token))
-
+        return '{}'.format(self.render_inner(token)) + self._block_eol()
+    
     def render_block_code(self, token):
         # template = '<pre>\n<code{attr}>\n{inner}</code>\n</pre>\n'
         # if token.language:
@@ -104,7 +104,7 @@ class JIRARenderer(BaseRenderer):
         # else:
         #     attr = ''
 
-        template = '{{code:{attr}}}\n{inner}{{code}}\n'
+        template = '{{code:{attr}}}\n{inner}{{code}}' + self._block_eol()
         if token.language:
             attr = '{}'.format(token.language)
         else:
@@ -115,10 +115,10 @@ class JIRARenderer(BaseRenderer):
 
     def render_list(self, token):
         inner = self.render_inner(token)
-        return inner
+        return inner + ('\n' if len(self.listTokens) == 0 else '')
 
     def render_list_item(self, token):
-        template = '{prefix} {inner}\n'
+        template = '{prefix} {inner}'
         prefix = ''.join(self.listTokens)
         result = template.format(prefix=prefix, inner=self.render_inner(token))
         return result
@@ -185,7 +185,9 @@ class JIRARenderer(BaseRenderer):
 
     @staticmethod
     def render_line_break(token):
-        return '\\\\\n'
+        # Note: In Jira, outputting just '\n' instead of '\\\n' should be usually sufficient as well.
+        # It is not clear when it wouldn't be sufficient though, so we use the longer variant for sure.
+        return ' ' if token.soft else '\\\\\n'
 
     @staticmethod
     def render_html_block(token):
@@ -194,6 +196,16 @@ class JIRARenderer(BaseRenderer):
     def render_document(self, token):
         self.footnotes.update(token.footnotes)
         return self.render_inner(token)
+
+    def _block_eol(self):
+        """
+        Jira syntax is very limited when it comes to lists: whenever
+        we put an empty line anywhere in a list, it gets terminated
+        and there seems to be no workaround for this. Also to have blocks
+        like paragraphs really vertically separated, we need to put
+        an empty line between them. This function handles these two cases.
+        """
+        return '\n' if len(self.listTokens) > 0 else '\n\n'
 
 def escape_url(raw):
     """
