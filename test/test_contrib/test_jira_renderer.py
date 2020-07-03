@@ -21,16 +21,22 @@
 # SOFTWARE.
 
 from unittest import TestCase, mock
+from test.base_test import BaseRendererTest
+from mistletoe.block_token import Document
 from mistletoe.span_token import tokenize_inner
 from contrib.jira_renderer import JIRARenderer
 import random
 import string
 
-class TestJIRARenderer(TestCase):
+filesBasedTest = BaseRendererTest.filesBasedTest
+
+class TestJIRARenderer(BaseRendererTest):
+
     def setUp(self):
         self.renderer = JIRARenderer()
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
+        self.sampleOutputExtension = 'jira'
 
     def genRandomString(self, n, hasWhitespace=False):
         source = string.ascii_letters + string.digits
@@ -134,9 +140,15 @@ class TestJIRARenderer(TestCase):
 
     def test_render_document(self):
         pass
-    
-    
 
+    @filesBasedTest
+    def test_render__basic_blocks(self):
+        pass
 
-    
-    
+    @filesBasedTest
+    def test_render__lists(self):
+        pass
+
+    @filesBasedTest
+    def test_render__quotes(self):
+        pass
