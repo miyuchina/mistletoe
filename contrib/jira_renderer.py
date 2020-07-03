@@ -39,6 +39,7 @@ class JIRARenderer(BaseRenderer):
             extras (list): allows subclasses to add even more custom tokens.
         """
         self.listTokens = []
+        self.lastChildOfQuotes = []
         super().__init__(*chain([block_token.HTMLBlock, span_token.HTMLSpan], extras))
 
     def render_strong(self, token):
@@ -88,25 +89,27 @@ class JIRARenderer(BaseRenderer):
     def render_heading(self, token):
         template = 'h{level}. {inner}'
         inner = self.render_inner(token)
-        return template.format(level=token.level, inner=inner) + self._block_eol()
+        return template.format(level=token.level, inner=inner) + self._block_eol(token)
 
     def render_quote(self, token):
-        template = 'bq. {inner}'
-        return template.format(inner=self.render_inner(token)) + self._block_eol()
+        self.lastChildOfQuotes.append(token.children[-1])
+        inner = self.render_inner(token)
+        del (self.lastChildOfQuotes[-1])
+
+        if len(token.children) == 1 and isinstance(token.children[0], block_token.Paragraph):
+            template = 'bq. {inner}' + self._block_eol(token)[0:-1]
+        else:
+            template = '{{quote}}\n{inner}{{quote}}' + self._block_eol(token)
+            
+        return template.format(inner=inner)
 
     def render_paragraph(self, token):
-        return '{}'.format(self.render_inner(token)) + self._block_eol()
+        return '{}'.format(self.render_inner(token)) + self._block_eol(token)
     
     def render_block_code(self, token):
-        # template = '<pre>\n<code{attr}>\n{inner}</code>\n</pre>\n'
-        # if token.language:
-        #     attr = ' class="{}"'.format('lang-{}'.format(token.language))
-        # else:
-        #     attr = ''
-
-        template = '{{code:{attr}}}\n{inner}{{code}}' + self._block_eol()
+        template = '{{code{attr}}}\n{inner}{{code}}' + self._block_eol(token)
         if token.language:
-            attr = '{}'.format(token.language)
+            attr = ':{}'.format(token.language)
         else:
             attr = ''
             
@@ -115,7 +118,7 @@ class JIRARenderer(BaseRenderer):
 
     def render_list(self, token):
         inner = self.render_inner(token)
-        return inner + ('\n' if len(self.listTokens) == 0 else '')
+        return inner + self._block_eol(token)[0:-1]
 
     def render_list_item(self, token):
         template = '{prefix} {inner}'
@@ -197,7 +200,7 @@ class JIRARenderer(BaseRenderer):
         self.footnotes.update(token.footnotes)
         return self.render_inner(token)
 
-    def _block_eol(self):
+    def _block_eol(self, token):
         """
         Jira syntax is very limited when it comes to lists: whenever
         we put an empty line anywhere in a list, it gets terminated
@@ -205,7 +208,7 @@ class JIRARenderer(BaseRenderer):
         like paragraphs really vertically separated, we need to put
         an empty line between them. This function handles these two cases.
         """
-        return '\n' if len(self.listTokens) > 0 else '\n\n'
+        return '\n' if len(self.listTokens) > 0 or (len(self.lastChildOfQuotes) > 0 and token is self.lastChildOfQuotes[-1]) else '\n\n'
 
 def escape_url(raw):
     """
