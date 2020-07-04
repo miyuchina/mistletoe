@@ -130,6 +130,17 @@ class after a `-r` or `--renderer` flag:
 mistletoe foo.md --renderer custom_renderer.CustomRenderer
 ```
 
+The renderers inside the `contrib` directory are not currently installed
+as a regular Python module, neither as part of the `mistletoe` module.
+So if you want to use a renderer from the `contrib` directory, you either
+have to add that directory to Python's [PYTHONPATH][pythonpath]
+and reference the renderer as in the example above, or have the directory
+as part of the full path to the renderer:
+
+```sh
+mistletoe foo.md --renderer contrib.custom_renderer.CustomRenderer
+```
+
 Running `mistletoe` without specifying a file will land you in interactive
 mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
@@ -459,3 +470,4 @@ Copyright & License
 [icon]: https://www.freepik.com
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
 [license]: LICENSE
+[pythonpath]: https://stackoverflow.com/questions/16107526/how-to-flexibly-change-pythonpath
