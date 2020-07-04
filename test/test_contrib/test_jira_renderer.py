@@ -33,6 +33,7 @@ filesBasedTest = BaseRendererTest.filesBasedTest
 class TestJIRARenderer(BaseRendererTest):
 
     def setUp(self):
+        super().setUp()
         self.renderer = JIRARenderer()
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)

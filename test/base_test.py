@@ -9,6 +9,9 @@ class BaseRendererTest(TestCase):
     """
     Base class for tests of renderers.
     """
+    def setUp(self):
+        self.maxDiff = None
+
     def filesBasedTest(func):
         """
         Note: Use this as a decorator on a test function with an empty body.
