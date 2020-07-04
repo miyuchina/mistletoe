@@ -25,3 +25,22 @@ A paragraph under a table.
 
 ----
 A paragraph under a horizontal line.
+
+## Code blocks
+
+Java code:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
+    }
+}
+```
+
+Log file:
+
+    2020-07-05 10:20:55 ...
+    2020-07-05 10:20:56 ...
+        ...
+    2020-07-05 10:21:03 ...
