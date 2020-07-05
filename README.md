@@ -66,6 +66,12 @@ cd mistletoe
 pip3 install -e .
 ```
 
+This installs mistletoe in "editable" mode (because of the `-e` option).
+That means that any changes made to the source code will get visible
+immediately - that's because Python only makes a link to the specified
+directory (`.`) instead of copying the files to the standard packages
+folder.
+
 See the [contributing][contributing] doc for how to contribute to mistletoe.
 
 Usage
