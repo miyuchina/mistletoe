@@ -147,7 +147,7 @@ class JIRARenderer(BaseRenderer):
         template = '{inner}\n'
         if hasattr(token, 'header'):
             head_template = '{inner}'
-            header = token.children[0]
+            header = token.header
             head_inner = self.render_table_row(header, True)
             head_rendered = head_template.format(inner=head_inner)
              
