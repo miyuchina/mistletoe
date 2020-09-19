@@ -36,20 +36,20 @@ class TestCLI(TestCase):
         mock_convert_file.assert_has_calls(calls)
 
     @patch('mistletoe.markdown', return_value='rendered text')
-    @patch('builtins.print')
+    @patch('sys.stdout.buffer.write')
     @patch('builtins.open', new_callable=mock_open)
-    def test_convert_file_success(self, mock_open_, mock_print, mock_markdown):
+    def test_convert_file_success(self, mock_open_, mock_write, mock_markdown):
         filename = 'foo'
         cli.convert_file(filename, sentinel.RendererCls)
-        mock_open_.assert_called_with(filename, 'r')
-        mock_print.assert_called_with('rendered text', end='')
+        mock_open_.assert_called_with(filename, 'r', encoding='utf-8')
+        mock_write.assert_called_with('rendered text'.encode())
 
     @patch('builtins.open', side_effect=OSError)
     @patch('sys.exit')
     def test_convert_file_fail(self, mock_exit, mock_open_):
         filename = 'foo'
         cli.convert_file(filename, sentinel.RendererCls)
-        mock_open_.assert_called_with(filename, 'r')
+        mock_open_.assert_called_with(filename, 'r', encoding='utf-8')
         mock_exit.assert_called_with('Cannot open file "foo".')
 
     @patch('mistletoe.cli._import_readline')

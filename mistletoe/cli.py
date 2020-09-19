@@ -24,9 +24,9 @@ def convert_file(filename, renderer):
     Parse a Markdown file and dump the output to stdout.
     """
     try:
-        with open(filename, 'r') as fin:
+        with open(filename, 'r', encoding='utf-8') as fin:
             rendered = mistletoe.markdown(fin, renderer)
-            print(rendered, end='')
+            sys.stdout.buffer.write(rendered.encode())
     except OSError:
         sys.exit('Cannot open file "{}".'.format(filename))
 

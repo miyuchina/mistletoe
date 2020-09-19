@@ -1,0 +1,35 @@
+h2. Quotes
+
+bq. A single quote
+
+A response to single quote.
+
+{quote}
+A quote spreading...
+
+... multiple paragraphs
+{quote}
+
+Quote with a list inside:
+
+{quote}
+# first
+# second
+{quote}
+
+Nested quotes:
+
+{quote}
+bq. Nested line quote
+
+Quoted paragraph.
+
+{quote}
+Nested block quote.
+
+Jira does not seem to support this though - maybe we cannot do anything about it?
+{quote}
+{quote}
+
+Another paragraph.
+

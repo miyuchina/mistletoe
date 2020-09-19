@@ -1,0 +1,29 @@
+h2. Basic list
+
+* fruit
+** apple
+** orange
+*** Note: Orange is also a color.
+** lemon
+
+h2. Spaced list
+
+* vegetable
+** carrot
+** cucumber
+
+h2. Combined list
+
+# firstly
+# secondly
+#* s-first
+another paragraph in s-first
+bq. line quote in s-first
+#* s-second
+{code}
+with some code block in s-second
+{code}
+# thirdly
+
+Another paragraph.
+
