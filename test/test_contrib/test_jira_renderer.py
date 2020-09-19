@@ -24,6 +24,7 @@ from unittest import TestCase, mock
 from test.base_test import BaseRendererTest
 from mistletoe.block_token import Document
 from mistletoe.span_token import tokenize_inner
+from mistletoe import Document
 from contrib.jira_renderer import JIRARenderer
 import random
 import string
@@ -141,6 +142,18 @@ class TestJIRARenderer(BaseRendererTest):
 
     def test_render_document(self):
         pass
+
+    def test_table_header(self):
+        markdown = """\
+| header row   |
+|--------------|
+| first cell   |
+"""
+
+        expected = "||header row||\n|first cell|\n\n"
+        with JIRARenderer() as renderer:
+            output = renderer.render(Document(markdown))
+            self.assertEqual(output, expected)
 
     @filesBasedTest
     def test_render__basic_blocks(self):
