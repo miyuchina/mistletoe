@@ -11,6 +11,10 @@ class BaseRendererTest(TestCase):
     """
     def setUp(self):
         self.maxDiff = None
+    
+    def markdownResultTest(self, markdown, expected):
+        output = self.renderer.render(Document(markdown))
+        self.assertEqual(expected, output)
 
     def filesBasedTest(func):
         """

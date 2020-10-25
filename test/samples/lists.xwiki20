@@ -1,0 +1,32 @@
+== Basic list ==
+
+* fruit
+** apple
+** orange
+*** Note: Orange is also a color.
+** lemon
+
+== Spaced list ==
+
+* vegetable
+** carrot
+** cucumber
+
+== Combined list ==
+
+1. firstly
+1. secondly
+1*. s-first(((
+another paragraph in s-first
+
+> line quote in s-first
+)))
+1*. s-second(((
+{{code}}
+with some code block in s-second
+{{/code}}
+)))
+1. thirdly
+
+Another paragraph.
+
