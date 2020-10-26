@@ -104,6 +104,40 @@ class TestXWiki20Renderer(BaseRendererTest):
         expected = 'paragraph\n\n{{html wiki="true"}}\n<pre>some <i>cool</i> code</pre>\n{{/html}}\n\n'
         self.markdownResultTest(markdown, expected)
     
+    def test_render_xwiki_macros_simple(self):
+        markdown = """\
+{{warning}}
+Use this feature with *caution*. See {{Wikipedia article="SomeArticle"/}}. {{test}}Another inline macro{{/test}}.
+{{/warning}}
+"""
+        # Note: There is a trailing ' ' at the end of the second line. It will be a bit complicated to get rid of it.
+        expected = """\
+{{warning}}
+Use this feature with //caution//. See {{Wikipedia article="SomeArticle"/}}. {{test}}Another inline macro{{/test}}. \n\
+{{/warning}}
+
+"""
+        self.markdownResultTest(markdown, expected)
+    
+    def test_render_xwiki_macros_in_list(self):
+        markdown = """\
+* list item
+
+  {{warning}}
+  Use this feature with *caution*. See {{Wikipedia article="SomeArticle"/}}. {{test}}Another inline macro{{/test}}.
+  {{/warning}}
+"""
+        # Note: There is a trailing ' ' at the end of the second line. It will be a bit complicated to get rid of it.
+        expected = """\
+* list item(((
+{{warning}}
+Use this feature with //caution//. See {{Wikipedia article="SomeArticle"/}}. {{test}}Another inline macro{{/test}}. \n\
+{{/warning}}
+)))
+
+"""
+        self.markdownResultTest(markdown, expected)
+    
     @filesBasedTest
     def test_render__basic_blocks(self):
         pass

@@ -251,6 +251,27 @@ class HTMLSpan(SpanToken):
     parse_inner = False
     parse_group = 0
 
+# Note: The following XWiki tokens are based on the XWiki Syntax 2.0 (or above; 1.0 was deprecated years ago already).
+
+class XWikiBlockMacroStart(SpanToken):
+    """
+    A "block" macro opening tag. ("{{macroName<optionalParams>}}<newLine>") 
+    
+    We want to keep it on a separate line instead of "soft" merging it with the *following* line.
+    """
+    pattern = re.compile('(((?<!~)\{\{)(\w+)(.*?)((?<![~/])\}\}))(?:\s*\n)')
+    parse_inner = False
+    parse_group = 1
+
+class XWikiBlockMacroEnd(SpanToken):
+    """
+    A "block" macro closing tag. ("<onlySpacesAllowed>{{/macroName}}") 
+    
+    We want to keep it on a separate line instead of "soft" merging it with the *preceding* line.
+    """
+    pattern = re.compile('^(?:\s*)((\{\{/)(\w+)(\}\}))', re.MULTILINE)
+    parse_inner = False
+    parse_group = 1
 
 _token_types = []
 reset_tokens()

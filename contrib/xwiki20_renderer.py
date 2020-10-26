@@ -41,7 +41,9 @@ class XWiki20Renderer(BaseRenderer):
         self.listTokens = []
         self.lastChildOfQuotes = []
         self.firstChildOfListItems = []
-        super().__init__(*chain([block_token.HTMLBlock, span_token.HTMLSpan], extras))
+
+        localExtras = [block_token.HTMLBlock, span_token.HTMLSpan, span_token.XWikiBlockMacroStart, span_token.XWikiBlockMacroEnd]
+        super().__init__(*chain(localExtras, extras))
 
     def render_strong(self, token):
         template = '**{}**'
@@ -82,17 +84,27 @@ class XWiki20Renderer(BaseRenderer):
 
     def render_raw_text(self, token, escape=True):
         return (token.content.replace('~', '~~')
-                .replace('{{', '~{{').replace('}}', '~}}')
+                # Note: It's probably better to leave potential XWiki macros as-is, i. e. don't escape their markers:
+                #.replace('{{', '~{{').replace('}}', '~}}')
                 .replace('[[', '~[[').replace(']]', '~]]')
                 .replace('**', '~**').replace('//', '~//')
                 .replace('##', '~##').replace('--', '~--')
                 ) if escape else token.content
 
+    def render_x_wiki_block_macro_start(self, token):
+        return token.content + '\n'
+    
+    def render_x_wiki_block_macro_end(self, token):
+        return '\n' + token.content
+    
     def render_html_span(self, token):
-        # FIXME Parser is probably broken, so this render function is called for every
-        # parsed *tag* => no easy way to wrap the whole span into {{html}} like this:
+        # XXX: HTMLSpan parses (contains) only individual opening and closing tags
+        # => no easy way to wrap the whole HTML code into {{html}} like this:
+        # 
         # template = '{{{{html wiki="true"}}}}{}{{{{/html}}}}'
         # return template.format(token.content)
+        # 
+        # => Users must do this themselves after the conversion.
 
         return token.content
 
