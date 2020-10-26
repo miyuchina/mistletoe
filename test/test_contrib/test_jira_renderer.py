@@ -65,7 +65,7 @@ class TestJIRARenderer(BaseRendererTest):
         self.textFormatTest('`a{}b`', '{{{{a{}b}}}}')
 
     def test_render_strikethrough(self):
-        self.textFormatTest('-{}-', '-{}-')
+        self.textFormatTest('~~{}~~', '-{}-')
 
     def test_render_image(self):
         token = next(iter(tokenize_inner('![image](foo.jpg)')))
