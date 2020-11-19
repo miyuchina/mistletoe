@@ -16,10 +16,10 @@ h2. Combined list
 
 # firstly
 # secondly
-#* s-first
-another paragraph in s-first
-bq. line quote in s-first
-#* s-second
+#* s\-first
+another paragraph in s\-first
+bq. line quote in s\-first
+#* s\-second
 {code}
 with some code block in s-second
 {code}

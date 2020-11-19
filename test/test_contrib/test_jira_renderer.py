@@ -55,6 +55,11 @@ class TestJIRARenderer(BaseRendererTest):
         actual = self.renderer.render(token)
         self.assertEqual(expected, actual)
 
+    def test_escaping(self):
+        # Note: There seems to be no way of how to escape plain text URL in Jira.
+        self.textFormatTest('**code: `a = b * c;// {{ test }}`, plain text URL: http://example.com**',
+                '*code: {{{{a = b \\* c;// \\{{ test \\}}}}}}, plain text URL: http://example.com*')
+
     def test_render_strong(self):
         self.textFormatTest('**a{}**', '*a{}*')
 
@@ -114,7 +119,22 @@ class TestJIRARenderer(BaseRendererTest):
         pass
 
     def test_render_block_code(self):
-        pass
+        markdown = """\
+```java
+public static void main(String[] args) {
+    // a = 1 * 2;
+}
+```
+"""
+        expected = """\
+{code:java}
+public static void main(String[] args) {
+    // a = 1 * 2;
+}
+{code}
+
+"""
+        self.markdownResultTest(markdown, expected)
 
     def test_render_list(self):
         pass
