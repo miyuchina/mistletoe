@@ -55,11 +55,24 @@ class TestJIRARenderer(BaseRendererTest):
         actual = self.renderer.render(token)
         self.assertEqual(expected, actual)
 
-    def test_escaping(self):
-        # Note: There seems to be no way of how to escape plain text URL in Jira.
-        self.textFormatTest('**code: `a = b * c;// {{ test }}`, plain text URL: http://example.com**',
-                '*code: {{{{a = b \\* c;// \\{{ test \\}}}}}}, plain text URL: http://example.com*')
+    def test_escape_simple(self):
+        self.textFormatTest('---fancy text---', '\\-\\-\\-fancy text\\-\\-\\-')
+        
+    def test_escape_single_chars(self):
+        self.textFormatTest('**fancy \\*@\\* text**', '*fancy \\*@\\* text*')
+        
+    def test_escape_none_when_whitespaces(self):
+        self.textFormatTest('obj = {{ a: (b * c) + d }}', 'obj = {{ a: (b * c) + d }}')
+        
+    def test_escape_in_inline_code(self):
+        # Note: Jira puts inline code into "{{...}}" as seen in this test.
+        self.textFormatTest('**code: `a = b + c;// [1]`**',
+                '*code: {{{{a = b + c;// \\[1\\]}}}}*')
 
+    def test_escape_link(self):
+        # Note: There seems to be no way of how to escape plain text URL in Jira.
+        self.textFormatTest('http://www.example.com', 'http://www.example.com')
+        
     def test_render_strong(self):
         self.textFormatTest('**a{}**', '*a{}*')
 

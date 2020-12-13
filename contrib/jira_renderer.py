@@ -25,6 +25,7 @@ import html
 from itertools import chain
 from mistletoe import block_token, span_token
 from mistletoe.base_renderer import BaseRenderer
+import re
 import sys
 
 class JIRARenderer(BaseRenderer):
@@ -79,13 +80,18 @@ class JIRARenderer(BaseRenderer):
         return self.render_inner(token)
 
     def render_raw_text(self, token, escape=True):
-        return (token.content
-                .replace('{', '\\{').replace('}', '\\}')
-                .replace('[', '\\[').replace(']', '\\]')
-                .replace('*', '\\*').replace('_', '\\_')
-                .replace('+', '\\+').replace('-', '\\-')
-                .replace('^', '\\^').replace('~', '\\~')
-                ) if escape else token.content
+        if escape:
+            def repl(match):
+                return '\\' + match.group(0)
+            # The following regex tries to find special chars that are one of the following:
+            # 1. the whole string (typically in an EscapeSequence)
+            # 2. just after a non-whitespace
+            # 3. just before a non-whitespace
+            re_esc_chars = r'[{}\[\]\-*_+^~]'
+            re_find = r'(^{esc_chars}$)|((?<=\S)({esc_chars}))|(({esc_chars})(?=\S))'.format(esc_chars=re_esc_chars)
+            return re.sub(re_find, repl, token.content)
+        else:
+            return token.content
 
     @staticmethod
     def render_html_span(token):

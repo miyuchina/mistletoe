@@ -27,7 +27,7 @@ Quoted paragraph.
 {quote}
 Nested block quote.
 
-Jira does not seem to support this though \- maybe we cannot do anything about it?
+Jira does not seem to support this though - maybe we cannot do anything about it?
 {quote}
 {quote}
 
