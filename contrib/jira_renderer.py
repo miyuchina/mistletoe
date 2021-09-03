@@ -177,6 +177,8 @@ class JIRARenderer(BaseRenderer):
             template = '|{inner}'
         
         inner = self.render_inner(token)
+        if inner == '':
+            inner = ' '
         return template.format(inner=inner)
 
     @staticmethod
