@@ -78,7 +78,7 @@ class XWiki20Renderer(BaseRenderer):
         return template.format(target=target)
 
     def render_escape_sequence(self, token):
-        return self.render_inner(token)
+        return '~' + self.render_inner(token)
 
     def render_raw_text(self, token, escape=True):
         return (token.content.replace('~', '~~')

@@ -10,7 +10,7 @@ Line.
 Another Line because the previous ends with at least two spaces.
 
 Line.
-Another line because the previous ends with a "\".
+Another line because the previous ends with a "~\".
 
 == Other block elements ==
 
