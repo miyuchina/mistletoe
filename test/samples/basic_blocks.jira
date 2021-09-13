@@ -1,0 +1,47 @@
+h1. Line endings are important not only in Markdown...
+
+h2. Soft break
+
+Line continues - this is "soft break".
+
+h2. Hard break
+
+Line.\\
+Another Line because the previous ends with at least two spaces.
+
+Line.\\
+Another line because the previous ends with a "\".
+
+h2. Other block elements
+
+||Column A||Column B||Column C||
+|A1|B1|C1|
+|A2|B2|C2|
+|A3|B3|C3|
+
+A paragraph under a table.
+
+----
+A paragraph under a horizontal line.
+
+h2. Code blocks
+
+Java code:
+
+{code:java}
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hello World!");
+    }
+}
+{code}
+
+Log file:
+
+{code}
+2020-07-05 10:20:55 ...
+2020-07-05 10:20:56 ...
+    ...
+2020-07-05 10:21:03 ...
+{code}
+
