@@ -53,7 +53,7 @@ class LaTeXRenderer(BaseRenderer):
     def render_raw_text(self, token, escape=True):
         return (token.content.replace('$', '\$').replace('#', '\#')
                              .replace('{', '\{').replace('}', '\}')
-                             .replace('&', '\&')) if escape else token.content
+                             .replace('&', '\&').replace('%', '\%')) if escape else token.content
 
     def render_heading(self, token):
         inner = self.render_inner(token)
