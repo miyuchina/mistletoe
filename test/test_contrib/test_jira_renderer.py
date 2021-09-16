@@ -182,11 +182,28 @@ public static void main(String[] args) {
 |--------------|
 | first cell   |
 """
+        expected = """\
+||header row||
+|first cell|
 
-        expected = "||header row||\n|first cell|\n\n"
-        with JIRARenderer() as renderer:
-            output = renderer.render(Document(markdown))
-            self.assertEqual(output, expected)
+"""
+        self.markdownResultTest(markdown, expected)
+
+    def test_table_empty_cell(self):
+        """
+        Empty cells need to have a space in them, see <https://jira.atlassian.com/browse/JRASERVER-70048>.
+        """
+        markdown = """\
+| A | B | C |
+|-----------|
+| 1 |   | 3 |
+"""
+        expected = """\
+||A||B||C||
+|1| |3|
+
+"""
+        self.markdownResultTest(markdown, expected)
 
     @filesBasedTest
     def test_render__basic_blocks(self):
