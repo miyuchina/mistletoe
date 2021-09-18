@@ -404,7 +404,7 @@ class CodeFence(BlockToken):
         children (list): contains a single span_token.RawText token.
         language (str): language of code block (default to empty).
     """
-    pattern = re.compile(r'( {0,3})((?:`|~){3,}) *(\S*)')
+    pattern = re.compile(r'( {0,3})(`{3,}|~{3,}) *(\S*)')
     _open_info = None
     def __init__(self, match):
         lines, open_info = match

@@ -81,10 +81,18 @@ class TestCodeFence(TestToken):
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.CodeFence, lines, arg, language='sh')
 
-    def test_match_fenced_code_with_tilda(self):
+    def test_match_fenced_code_with_tilde(self):
         lines = ['~~~sh\n', 'rm dir\n', 'mkdir test\n', '~~~\n']
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.CodeFence, lines, arg, language='sh')
+    
+    def test_not_match_fenced_code_when_only_inline_code(self):
+        lines = ['`~` is called tilde']
+        token = next(iter(block_token.tokenize(lines)))
+        self.assertIsInstance(token, block_token.Paragraph)
+        token1 = token.children[0]
+        self.assertIsInstance(token1, span_token.InlineCode)
+        self.mock.assert_has_calls([call('~'), call(' is called tilde')])
 
     def test_mixed_code_fence(self):
         lines = ['~~~markdown\n', '```sh\n', 'some code\n', '```\n', '~~~\n']
