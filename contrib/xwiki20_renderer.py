@@ -247,4 +247,4 @@ def escape_url(raw):
     Escape urls to prevent code injection craziness. (Hopefully.)
     """
     from urllib.parse import quote
-    return quote(raw, safe='/#:')
+    return quote(html.unescape(raw), safe='/#:()*?=%@+,&;')

@@ -213,4 +213,4 @@ class HTMLRenderer(BaseRenderer):
         """
         Escape urls to prevent code injection craziness. (Hopefully.)
         """
-        return html.escape(quote(html.unescape(raw), safe='/#:()*?=%@+,&'))
+        return html.escape(quote(html.unescape(raw), safe='/#:()*?=%@+,&;'))
