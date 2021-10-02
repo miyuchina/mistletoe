@@ -283,7 +283,6 @@ class TestTableRow(unittest.TestCase):
             line = '| cell 1 | cell 2 |\n'
             token = block_token.TableRow(line)
             self.assertEqual(token.row_align, [None])
-            token.children
             mock.assert_has_calls([call('cell 1', None), call('cell 2', None)])
 
     def test_easy_table_row(self):
@@ -291,7 +290,6 @@ class TestTableRow(unittest.TestCase):
             line = 'cell 1 | cell 2\n'
             token = block_token.TableRow(line)
             self.assertEqual(token.row_align, [None])
-            token.children
             mock.assert_has_calls([call('cell 1', None), call('cell 2', None)])
 
     def test_short_row(self):
@@ -299,8 +297,22 @@ class TestTableRow(unittest.TestCase):
             line = '| cell 1 |\n'
             token = block_token.TableRow(line, [None, None])
             self.assertEqual(token.row_align, [None, None])
-            token.children
             mock.assert_has_calls([call('cell 1', None), call('', None)])
+
+    def test_escaped_pipe_in_cell(self):
+        with patch('mistletoe.block_token.TableCell') as mock:
+            line = '| pipe: `\\|` | cell 2\n'
+            token = block_token.TableRow(line, [None, None])
+            self.assertEqual(token.row_align, [None, None])
+            mock.assert_has_calls([call('pipe: `|`', None), call('cell 2', None)])
+    
+    @unittest.skip('Even GitHub fails in here, workaround: always put a space before `|`')
+    def test_not_really_escaped_pipe_in_cell(self):
+        with patch('mistletoe.block_token.TableCell') as mock:
+            line = '|ending with a \\\\|cell 2\n'
+            token = block_token.TableRow(line, [None, None])
+            self.assertEqual(token.row_align, [None, None])
+            mock.assert_has_calls([call('ending with a \\\\', None), call('cell 2', None)])
 
 
 class TestTableCell(TestToken):
