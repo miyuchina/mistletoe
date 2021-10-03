@@ -259,7 +259,7 @@ class XWikiBlockMacroStart(SpanToken):
     
     We want to keep it on a separate line instead of "soft" merging it with the *following* line.
     """
-    pattern = re.compile('(((?<!~)\{\{)(\w+)(.*?)((?<![~/])\}\}))(?:\s*\n)')
+    pattern = re.compile(r'(?<!\\)(\{\{\w+.*?(?<![\\/])\}\})\s*\n')
     parse_inner = False
     parse_group = 1
 
@@ -269,7 +269,7 @@ class XWikiBlockMacroEnd(SpanToken):
     
     We want to keep it on a separate line instead of "soft" merging it with the *preceding* line.
     """
-    pattern = re.compile('^(?:\s*)((\{\{/)(\w+)(\}\}))', re.MULTILINE)
+    pattern = re.compile(r'^(?:\s*)(\{\{/\w+\}\})', re.MULTILINE)
     parse_inner = False
     parse_group = 1
 
