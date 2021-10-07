@@ -23,12 +23,7 @@ class LaTeXRenderer(BaseRenderer):
         return '\\textit{{{}}}'.format(self.render_inner(token))
 
     def render_inline_code(self, token):
-        content = ""
-        # there should be only one children...
-        for children in token.children:
-            content += self.render_raw_text(children, escape=False)
-
-        return '\\verb|{}|'.format(content)
+        return '\\verb|{}|'.format(self.render_raw_text(token.children[0], escape=False))
 
     def render_strikethrough(self, token):
         self.packages['ulem'] = ['normalem']

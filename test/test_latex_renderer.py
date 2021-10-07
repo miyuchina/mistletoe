@@ -27,7 +27,9 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('Emphasis', '\\textit{inner}')
 
     def test_inline_code(self):
-        self._test_token('InlineCode', '\\verb|inner|')
+        func_path = 'mistletoe.latex_renderer.LaTeXRenderer.render_raw_text'
+        with mock.patch(func_path, return_value='inner'):
+            self._test_token('InlineCode', '\\verb|inner|')
 
     def test_strikethrough(self):
         self._test_token('Strikethrough', '\\sout{inner}')
