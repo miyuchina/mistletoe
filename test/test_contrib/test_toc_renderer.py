@@ -1,4 +1,5 @@
-from unittest import TestCase, mock
+from unittest import TestCase
+from mistletoe import block_token
 from mistletoe.block_token import Document, Heading
 from contrib.toc_renderer import TOCRenderer
 
@@ -40,8 +41,7 @@ class TestTOCRenderer(TestCase):
         renderer.render(token)
         self.assertEqual(renderer._headings, [(4, 'not heading')])
 
-    @mock.patch('mistletoe.block_token.List')
-    def test_get_toc(self, MockList):
+    def test_get_toc(self):
         headings = [(1, 'heading 1'),
                     (2, 'subheading 1'),
                     (2, 'subheading 2'),
@@ -51,9 +51,8 @@ class TestTOCRenderer(TestCase):
         renderer = TOCRenderer(omit_title=False)
         renderer._headings = headings
         toc = renderer.toc
-        MockList.assert_called_with(['- heading 1\n',
-                                     '    - subheading 1\n',
-                                     '    - subheading 2\n',
-                                     '        - subsubheading 1\n',
-                                     '    - subheading 3\n',
-                                     '- heading 2\n'])
+        self.assertIsInstance(toc, block_token.List)
+        # for now, we check at least the most nested heading (hierarchy: `List -> ListItem -> {Paragraph -> RawText.content | List -> ...}`):
+        heading_item = toc.children[0].children[1].children[1].children[1].children[0]
+        self.assertIsInstance(heading_item, block_token.ListItem)
+        self.assertEqual(heading_item.children[0].children[0].content, 'subsubheading 1')
