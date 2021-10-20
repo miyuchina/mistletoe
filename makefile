@@ -20,8 +20,8 @@ integration:
 benchmark:
 	${PYTHON_EXEC} test/benchmark.py
 
-commonmark:
-	${PYTHON_EXEC} -m test.commonmark
+specification:
+	${PYTHON_EXEC} -m test.specification
 
 docs:
 	${PYTHON_EXEC} -m docs
