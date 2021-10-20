@@ -112,7 +112,7 @@ def main():
     parser.add_argument('-s', '--section', dest='section', default=None,
                         help="Only run tests in specified section.")
     parser.add_argument('-f', '--file', dest='tests', type=load_tests,
-                        default='test/commonmark/commonmark.json',
+                        default='test/specification/commonmark.json',
                         help="Specify alternative specfile to run.")
     parser.add_argument('-n', '--ignore-known', dest='known', action='store_true',
                         help="Ignore tests entries that are known to fail.")
