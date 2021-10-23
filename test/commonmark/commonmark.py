@@ -41,7 +41,7 @@ def run_test(test_entry, quiet=False):
 
 
 def load_tests(specfile):
-    with open(specfile, 'r') as fin:
+    with open(specfile, 'r', encoding='utf-8') as fin:
         return json.load(fin)
 
 

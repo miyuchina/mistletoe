@@ -90,13 +90,13 @@ class MarkdownToJIRA:
             sys.stderr.write(usageString + '\n')
             sys.exit(1)
 
-        with open(args[0], 'r') if len(args) == 1 else sys.stdin as infile:
+        with open(args[0], 'r', encoding='utf-8') if len(args) == 1 else sys.stdin as infile:
             rendered = mistletoe.markdown(infile, JIRARenderer)
 
         if self.options['output'] == '-':
             sys.stdout.write(rendered)
         else:
-            with open(self.options['output'], 'w') as outfile:
+            with open(self.options['output'], 'w', encoding='utf-8') as outfile:
                 outfile.write(rendered)
 
 

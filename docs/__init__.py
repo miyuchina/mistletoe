@@ -41,9 +41,9 @@ class DocRenderer(HTMLRenderer):
 def build(files=None):
     files = files or INCLUDE
     for f in files:
-        with open(f, 'r') as fin:
+        with open(f, 'r', encoding='utf-8') as fin:
             rendered_file = 'docs/' + files[f]
-            with open(rendered_file, 'w+') as fout:
+            with open(rendered_file, 'w+', encoding='utf-8') as fout:
                 with DocRenderer() as renderer:
                     renderer.files = files
                     print(renderer.render_document(Document(fin), f), file=fout)

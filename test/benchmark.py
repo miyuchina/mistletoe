@@ -30,24 +30,24 @@ def benchmark(package_name):
 
 @benchmark('markdown')
 def run_markdown(package):
-    with open(TEST_FILE, 'r') as fin:
+    with open(TEST_FILE, 'r', encoding='utf-8') as fin:
         return package.markdown(fin.read(), ['extra'])
 
 @benchmark('mistune')
 def run_mistune(package):
-    with open(TEST_FILE, 'r') as fin:
+    with open(TEST_FILE, 'r', encoding='utf-8') as fin:
         return package.markdown(fin.read())
 
 
 @benchmark('CommonMark')
 def run_commonmark(package):
-    with open(TEST_FILE, 'r') as fin:
+    with open(TEST_FILE, 'r', encoding='utf-8') as fin:
         return package.commonmark(fin.read())
 
 
 @benchmark('mistletoe')
 def run_mistletoe(package):
-    with open(TEST_FILE, 'r') as fin:
+    with open(TEST_FILE, 'r', encoding='utf-8') as fin:
         return package.markdown(fin)
 
 
