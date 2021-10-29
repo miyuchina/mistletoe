@@ -41,14 +41,26 @@ Features
   
   You can even write [a Lisp][scheme] in it.
   
-Some alternative output formats:
+Output formats
+--------------
+
+Renderers for the following "core" output formats exist within the mistletoe
+module itself:
 
 * HTML
 * LaTeX
-* Jira Markdown ([contrib][contrib])
-* Mathjax ([contrib][contrib])
-* Scheme ([contrib][contrib])
-* HTML + code highlighting ([contrib][contrib])
+* AST (Abstract Syntax Tree; handy for debugging the parsing process)
+
+Renderers for the following output formats are placed
+in the [contrib][contrib] folder:
+
+* HTML with MathJax (_mathjax.py_)
+* HTML with code highlighting (using Pygments) (_pygments\_renderer.py_)
+* HTML with TOC (for programmatical use) (_toc\_renderer.py_)
+* HTML with support for GitHub wiki links (_github\_wiki.py_)
+* Jira Markdown (_jira\_renderer.py_)
+* XWiki Syntax (_xwiki20\_renderer.py_)
+* Scheme (_scheme.py_)
 
 Installation
 ------------
