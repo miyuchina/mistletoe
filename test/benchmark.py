@@ -31,7 +31,7 @@ def benchmark(package_name):
 @benchmark('markdown')
 def run_markdown(package):
     with open(TEST_FILE, 'r', encoding='utf-8') as fin:
-        return package.markdown(fin.read(), extensions=['fenced_code', 'tables', 'footnotes'])
+        return package.markdown(fin.read(), extensions=['fenced_code', 'tables'])
 
 @benchmark('mistune')
 def run_mistune(package):
