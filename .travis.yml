@@ -10,12 +10,12 @@ matrix:
       dist: xenial
       sudo: true
 before_script:
-    - (cd test/commonmark && ./spec.sh)
+    - (cd test/specification && ./spec.sh)
 script:
     - make test
-    - python3 -m test.commonmark
+    - python3 -m test.specification
 after_success:
     - pip install coveralls
     - coverage run -a -m unittest
-    - coverage run -a -m test.commonmark
+    - coverage run -a -m test.specification
     - coveralls
