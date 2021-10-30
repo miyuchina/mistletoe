@@ -12,8 +12,11 @@ from mistletoe.html_renderer import HTMLRenderer
 
 def markdown(iterable, renderer=HTMLRenderer):
     """
-    Output HTML with default settings.
-    Enables inline and block-level HTML tags.
+    Converts markdown input to the output supported by the given renderer.
+    If no renderer is supplied, ``HTMLRenderer`` is used.
+
+    Note that extra token types supported by the given renderer
+    are automatically (and temporarily) added to the parsing process.
     """
     with renderer() as renderer:
         return renderer.render(Document(iterable))

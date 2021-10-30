@@ -115,7 +115,8 @@ with open('foo.md', 'r') as fin:
 Finally, here's how you would manually specify extra tokens and a renderer
 for mistletoe. In the following example, we use `HTMLRenderer` to render
 the AST, which adds `HTMLBlock` and `HTMLSpan` to the normal parsing
-process.
+process. The result should be equal to the output obtained from
+the first example above.
 
 ```python
 from mistletoe import Document, HTMLRenderer
@@ -124,6 +125,10 @@ with open('foo.md', 'r') as fin:
     with HTMLRenderer() as renderer:
         rendered = renderer.render(Document(fin))
 ```
+
+**Important**: The parsing phase is currently tightly connected with initiation
+and closing of a renderer. Therefore, you should never call `Document(...)`
+outside of a `with ... as renderer` block, unless you know what you are doing.
 
 ### Usage from command-line
 
