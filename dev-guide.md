@@ -3,6 +3,93 @@
 This document describes usage of mistletoe and its API
 from the developer's point of view.
 
+Understanding the AST
+---------------------
+
+When a markdown document gets parsed by mistletoe, the result is represented
+as an "abstract syntax tree" (AST), stored in an instance of `Document`.
+This object contains a hierarchy of
+all the various tokens which were recognized during the parsing process.
+
+In order to see what exactly gets parsed, one can simply use the `ASTRenderer`
+on a given markdown input, for example:
+
+```sh
+mistletoe text.md --renderer mistletoe.ast_renderer.ASTRenderer
+```
+
+Say that the input file contains for example:
+
+```markdown
+# Heading 1
+
+text
+
+# Heading 2
+
+[link](https://www.example.com)
+```
+
+Then we will get this JSON output from the AST renderer:
+
+```json
+{
+  "type": "Document",
+  "footnotes": {},
+  "children": [
+    {
+      "type": "Heading",
+      "level": 1,
+      "children": [
+        {
+          "type": "RawText",
+          "content": "Heading 1"
+        }
+      ]
+    },
+    {
+      "type": "Paragraph",
+      "children": [
+        {
+          "type": "RawText",
+          "content": "text"
+        }
+      ]
+    },
+    {
+      "type": "Heading",
+      "level": 1,
+      "children": [
+        {
+          "type": "RawText",
+          "content": "Heading 2"
+        }
+      ]
+    },
+    {
+      "type": "Paragraph",
+      "children": [
+        {
+          "type": "Link",
+          "target": "https://www.example.com",
+          "title": "",
+          "children": [
+            {
+              "type": "RawText",
+              "content": "link"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+When passing this tree to a renderer, it is recursively traversed
+and methods corresponding to individual token types get called on the renderer
+in order to create the output in the desired format.
+
 Creating a custom renderer
 --------------------------
 
