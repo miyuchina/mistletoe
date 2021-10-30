@@ -146,23 +146,19 @@ the HTML, direct the output into a file:
 mistletoe foo.md > out.html
 ```
 
-You can pass in custom renderers by including the full path to your renderer
-class after a `-r` or `--renderer` flag:
+You can use a different renderer by including the full path to the renderer
+class after a `-r` or `--renderer` flag. For example, to transpile into
+LaTeX:
 
 ```sh
-mistletoe foo.md --renderer custom_renderer.CustomRenderer
+mistletoe foo.md --renderer mistletoe.latex_renderer.LaTeXRenderer
 ```
 
-The renderers inside the `contrib` directory are not currently installed
-as a regular Python module, neither as part of the `mistletoe` module.
+Note: The renderers inside the `contrib` directory are not currently a part of
+the `mistletoe` module when mistletoe is installed as a regular package.
 So if you want to use a renderer from the `contrib` directory, you either
 have to add that directory to Python's [PYTHONPATH][pythonpath]
-and reference the renderer as in the example above, or have the directory
-as part of the full path to the renderer:
-
-```sh
-mistletoe foo.md --renderer contrib.custom_renderer.CustomRenderer
-```
+or install mistletoe with the `-e` switch (see [Installation](#installation)).
 
 Running `mistletoe` without specifying a file will land you in interactive
 mode.  Like Python's REPL, interactive mode allows you to test how your
