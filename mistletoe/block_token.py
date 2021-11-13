@@ -706,11 +706,13 @@ class TableCell(BlockToken):
 
 class Footnote(BlockToken):
     """
-    Footnote token.
+    Footnote token. A "link reference definition" according to the spec.
 
     The constructor returns None, because the footnote information
     is stored in Footnote.read.
     """
+    # Not used, matched manually instead.
+    # We also rely on code block and similar being parsed beforehand here.
     label_pattern = re.compile(r'[ \n]{0,3}\[(.+?)\]', re.DOTALL)
 
     def __new__(cls, _):
@@ -868,7 +870,11 @@ class Footnote(BlockToken):
 
     @staticmethod
     def backtrack(lines, string, offset):
-        lines._index -= string[offset+1:].count('\n')
+        """
+        Called when we peeked some lines and found nothing
+        relevant on them. This returns those lines back to the parsing process.
+        """
+        lines._index -= string[offset+1:].lstrip().count('\n')
 
 
 class ThematicBreak(BlockToken):
