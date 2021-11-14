@@ -20,11 +20,7 @@ Remember to spell mistletoe in lowercase!
 Features
 --------
 * **Fast**:
-  mistletoe is the fastest implementation of CommonMark in Python,
-  that is, 2 to 3 times as fast as [Commonmark-py][commonmark-py],
-  and still roughly 30% faster than [Python-Markdown][python-markdown].
-  Running with PyPy yields comparable performance with [mistune][mistune].
-  
+  mistletoe is the fastest implementation of CommonMark in Python.
   See the [performance][performance] section for details.
 
 * **Spec-compliant**:

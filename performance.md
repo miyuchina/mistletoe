@@ -1,6 +1,12 @@
 <h1>Performance<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right' width='128' height='128'></h1>
 
-mistletoe is the fastest CommonMark compliant implementation in Python.
+mistletoe is the fastest CommonMark compliant implementation in Python,
+even though since 2017 when the first benchmarks were run,
+the competing implementations improved their performance notably.
+
+The benchmark
+-------------
+
 Try the benchmarks yourself by running:
 
 ```sh
@@ -9,10 +15,11 @@ Test document: test/samples/syntax.md
 Test iterations: 1000
 Running tests with markdown, mistune, commonmark, mistletoe...
 ==============================================================
-markdown: 33.28557115700096
-mistune: 8.533771439999327
-commonmark: 84.54588776299897
-mistletoe: 23.5405140980001
+markdown: 36,1091867333333    # v3.3.4 from Feb 24, 2021
+mistune: 10,7586129666667     # v0.8.4 from Oct 30, 2019
+commonmark: 43,4187382666667  # v0.9.1 from Oct 04, 2019
+mistletoe: 33,2067990666667   # v0.8.0 from Oct 09, 2021
+# run with Python 3.7.5 on MS Windows 10
 ```
 
 We notice that Mistune is the fastest Markdown parser,
@@ -79,7 +86,7 @@ It is nevertheless *highly likely* that,
 when Mistune implements all the necessary context checks,
 it will suffer from the same performance penalties.
 
-Contextual analysis is why Python-Markdown is slow, and why CommonMark-py is slower.
+Contextual analysis is why the other implementations are slower.
 The lack thereof is the reason mistune enjoys stellar performance
 among similar parser implementations,
 as well as the limitations that come with these performance benefits.
@@ -88,15 +95,16 @@ If you want an implementation that focuses on raw speed,
 mistune remains a solid choice.
 If you need a spec-compliant and readily extensible implementation, however,
 mistletoe is still marginally faster than Python-Markdown,
-while supporting more functionality (lists in block quotes, for example),
 and significantly faster than CommonMark-py.
 
+Use PyPy for better performance
+-------------------------------
 
-One last note: another bottleneck of mistletoe compared to mistune
+Another bottleneck of mistletoe compared to mistune
 is the function overhead. Because, unlike mistune, mistletoe chooses to split
 functionality into modules, function lookups can take significantly longer than
 mistune. To boost the performance further, it is suggested to use PyPy with mistletoe.
-Benchmark results show that on PyPy, mistletoe's performance is on par with mistune:
+Benchmark results show that on PyPy, mistletoe's performance improves significantly:
 
 ```sh
 $ pypy3 test/benchmark.py mistune mistletoe
@@ -104,8 +112,9 @@ Test document: test/samples/syntax.md
 Test iterations: 1000
 Running tests with mistune, mistletoe...
 ========================================
-mistune: 13.645681533998868
-mistletoe: 15.088351159000013
+mistune: 9.720779
+mistletoe: 21.984181399999997
+# run with PyPy 3.7-v7.3.7 on MS Windows 10
 ```
 
 [example-392]: https://spec.commonmark.org/0.28/#example-392
