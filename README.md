@@ -160,6 +160,8 @@ So if you want to use a renderer from the `contrib` directory, you either
 have to add that directory to Python's [PYTHONPATH][pythonpath]
 or install mistletoe with the `-e` switch (see [Installation](#installation)).
 
+### mistletoe interactive mode
+
 Running `mistletoe` without specifying a file will land you in interactive
 mode.  Like Python's REPL, interactive mode allows you to test how your
 Markdown will be interpreted by mistletoe:
@@ -193,16 +195,31 @@ and some \textit{italics}
 >>>
 ```
 
-Further reading
----------------
+Who uses mistletoe?
+-------------------
 
-* [Performance][performance]
-* [Developer's Guide](dev-guide.md)
+mistletoe is used by projects of various target audience.
+You can find some concrete projects in the "Used by" section
+on [Libraries.io][libraries-mistletoe], but this is definitely not a complete
+list.
+
+### Run mistletoe from CopyQ
+
+One notable example is running mistletoe as a Markdown converter from the
+advanced clipboard manager called [CopyQ][copyq]. One just needs to install
+the [Convert Markdown to ...][copyq-convert-md] custom script command
+and then run this command on any selected Markdown text.
 
 Why mistletoe?
 --------------
 
 "For fun," says David Beazley.
+
+Further reading
+---------------
+
+* [Performance][performance]
+* [Developer's Guide](dev-guide.md)
 
 Copyright & License
 -------------------
@@ -231,3 +248,6 @@ Copyright & License
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
 [license]: LICENSE
 [pythonpath]: https://stackoverflow.com/questions/16107526/how-to-flexibly-change-pythonpath
+[libraries-mistletoe]: https://libraries.io/pypi/mistletoe
+[copyq]: https://hluk.github.io/CopyQ/
+[copyq-convert-md]: https://github.com/hluk/copyq-commands/tree/master/Global#convert-markdown-to-
