@@ -108,9 +108,9 @@ with open('foo.md', 'r') as fin:
     rendered = mistletoe.markdown(fin, LaTeXRenderer)
 ```
 
-Finally, here's how you would manually specify extra tokens and a renderer
-for mistletoe. In the following example, we use `HTMLRenderer` to render
-the AST, which adds `HTMLBlock` and `HTMLSpan` to the normal parsing
+Finally, here's how you would manually specify extra tokens via a renderer.
+In the following example, we use `HTMLRenderer` to render
+the AST. The renderer itself adds `HTMLBlock` and `HTMLSpan` tokens to the parsing
 process. The result should be equal to the output obtained from
 the first example above.
 
@@ -119,10 +119,13 @@ from mistletoe import Document, HTMLRenderer
 
 with open('foo.md', 'r') as fin:
     with HTMLRenderer() as renderer:
+    # or: with HTMLRenderer(AnotherToken1, AnotherToken2) as renderer:
         rendered = renderer.render(Document(fin))
+        # internal lists of tokens to be parsed are automatically reset when exiting this `with` block
 ```
 
-**Important**: The parsing phase is currently tightly connected with initiation
+**Important**: As can be seen from the example above,
+the parsing phase is currently tightly connected with initiation
 and closing of a renderer. Therefore, you should never call `Document(...)`
 outside of a `with ... as renderer` block, unless you know what you are doing.
 
