@@ -16,6 +16,7 @@ class TestBranchToken(unittest.TestCase):
         token = next(iter(span_token.tokenize_inner(raw)))
         self.assertIsInstance(token, token_cls)
         self._test_token(token, arg, **kwargs)
+        return token
 
     def _test_token(self, token, arg, children=True, **kwargs):
         for attr, value in kwargs.items():
@@ -37,8 +38,21 @@ class TestEmphasis(TestBranchToken):
 
 
 class TestInlineCode(TestBranchToken):
+    def _test_parse_enclosed(self, encl_type, encl_delimiter):
+        token = self._test_parse(encl_type, '{delim}`some text`{delim}'.format(delim=encl_delimiter), 'some text')
+        self.assertEqual(len(token.children), 1)
+        self.assertIsInstance(token.children[0], span_token.InlineCode)
+
     def test_parse(self):
         self._test_parse(span_token.InlineCode, '`some text`', 'some text')
+    def test_parse_in_bold(self):
+        self._test_parse_enclosed(span_token.Strong, '**')
+        self._test_parse_enclosed(span_token.Strong, '__')
+    def test_parse_in_emphasis(self):
+        self._test_parse_enclosed(span_token.Emphasis, '*')
+        self._test_parse_enclosed(span_token.Emphasis, '_')
+    def test_parse_in_strikethrough(self):
+        self._test_parse_enclosed(span_token.Strikethrough, '~~')
 
 
 class TestStrikethrough(TestBranchToken):

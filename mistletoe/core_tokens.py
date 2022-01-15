@@ -26,6 +26,10 @@ def find_core_tokens(string, root):
     code_match = code_pattern.search(string)
     while i < len(string):
         if code_match is not None and i == code_match.start():
+            if in_delimiter_run is not None:
+                delimiters.append(Delimiter(start, i if not escaped else i-1, string))
+                in_delimiter_run = None
+                escaped = False
             _code_matches.append(code_match)
             i = code_match.end()
             code_match = code_pattern.search(string, i)
