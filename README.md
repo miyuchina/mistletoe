@@ -118,9 +118,9 @@ the first example above.
 from mistletoe import Document, HTMLRenderer
 
 with open('foo.md', 'r') as fin:
-    with HTMLRenderer() as renderer:
-    # or: with HTMLRenderer(AnotherToken1, AnotherToken2) as renderer:
-        rendered = renderer.render(Document(fin))
+    with HTMLRenderer() as renderer:     # or: `with HTMLRenderer(AnotherToken1, AnotherToken2) as renderer:`
+        doc = Document(fin)              # parse the lines into AST
+        rendered = renderer.render(doc)  # render the AST
         # internal lists of tokens to be parsed are automatically reset when exiting this `with` block
 ```
 
