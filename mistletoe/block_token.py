@@ -844,6 +844,7 @@ class Footnote(BlockToken):
         elif '\n' in string[offset:new_offset]:
             return offset, offset, ''
         else:
+            # XXX: Can this actually ever happen?
             return None
         offset = new_offset
         escaped = False
@@ -871,9 +872,13 @@ class Footnote(BlockToken):
     @staticmethod
     def backtrack(lines, string, offset):
         """
-        Called when we peeked some lines and found nothing
+        Called when we iterated over some lines and found nothing
         relevant on them. This returns those lines back to the parsing process.
         """
+
+        # call lstrip() to prevent returning too many lines back (hence infinite loop), like in this case:
+        # * valid footlink definition line:      `[key]: valueN\r\n` (here `offset` points to `\r` after parsing the definition)
+        # * follow-up line containing just text: `something\n` (only this line should be re-processed and parsed as a Paragraph)
         lines._index -= string[offset:].lstrip().count('\n')
 
 
