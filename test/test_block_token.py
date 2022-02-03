@@ -356,6 +356,28 @@ class TestFootnote(unittest.TestCase):
         self.assertEqual(token.children[0].children[0].content, "something2")
         self.assertEqual(token.children[1].children[0].content, "something3")
 
+    def test_parse_opening_bracket_as_paragraph(self): # ... and no error is raised
+        lines = ['[\n']
+        token = block_token.Document(lines)
+        self.assertEqual(len(token.footnotes), 0)
+        self.assertEqual(len(token.children), 1)
+        
+        self.assertIsInstance(token.children[0], block_token.Paragraph)
+        self.assertEqual(token.children[0].children[0].content, '[')
+    
+    def test_parse_opening_brackets_as_paragraph(self): # ... and no lines are skipped
+        lines = ['[\n',
+                 '[ \n',
+                 ']\n']
+        token = block_token.Document(lines)
+        self.assertEqual(len(token.footnotes), 0)
+        self.assertEqual(len(token.children), 1)
+        
+        para = token.children[0]
+        self.assertIsInstance(para, block_token.Paragraph)
+        self.assertEqual(len(para.children), 5,
+                'expected: RawText, LineBreak, RawText, LineBreak, RawText')
+        self.assertEqual(para.children[0].content, '[')
 
 class TestDocument(unittest.TestCase):
     def test_store_footnote(self):

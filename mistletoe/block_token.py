@@ -874,7 +874,7 @@ class Footnote(BlockToken):
         Called when we peeked some lines and found nothing
         relevant on them. This returns those lines back to the parsing process.
         """
-        lines._index -= string[offset+1:].lstrip().count('\n')
+        lines._index -= string[offset:].lstrip().count('\n')
 
 
 class ThematicBreak(BlockToken):
