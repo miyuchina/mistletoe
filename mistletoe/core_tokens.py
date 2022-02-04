@@ -207,6 +207,8 @@ def match_link_image(string, offset, delimiter, root=None):
 
 def match_link_dest(string, offset):
     offset = shift_whitespace(string, offset+1)
+    if offset == len(string):
+        return None
     if string[offset] == '<':
         escaped = False
         for i, c in enumerate(string[offset+1:], start=offset+1):
@@ -243,6 +245,8 @@ def match_link_dest(string, offset):
 
 def match_link_title(string, offset):
     offset = shift_whitespace(string, offset)
+    if offset == len(string):
+        return None
     if string[offset] == ')':
         return offset, offset, ''
     if string[offset] == '"':
