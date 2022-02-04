@@ -201,6 +201,7 @@ mistletoe is used by projects of various target audience.
 You can find some concrete projects in the "Used by" section
 on [Libraries.io][libraries-mistletoe], but this is definitely not a complete
 list.
+Also a list of [Dependents][github-dependents] is tracked by GitHub directly.
 
 ### Run mistletoe from CopyQ
 
@@ -250,3 +251,4 @@ Copyright & License
 [libraries-mistletoe]: https://libraries.io/pypi/mistletoe
 [copyq]: https://hluk.github.io/CopyQ/
 [copyq-convert-md]: https://github.com/hluk/copyq-commands/tree/master/Global#convert-markdown-to-
+[github-dependents]: https://github.com/miyuchina/mistletoe/network/dependents
