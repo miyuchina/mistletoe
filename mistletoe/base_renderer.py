@@ -94,7 +94,7 @@ class BaseRenderer(object):
         """
         return self.render_map[token.__class__.__name__](token)
 
-    def render_inner(self, token):
+    def render_inner(self, token) -> str:
         """
         Recursively renders child tokens. Joins the rendered
         strings with no space in between.
@@ -138,30 +138,68 @@ class BaseRenderer(object):
         """
         return [getattr(module, name) for name in module.__all__]
 
-    def render_raw_text(self, token):
+    def render_raw_text(self, token) -> str:
         """
         Default render method for RawText. Simply return token.content.
         """
         return token.content
 
-    def __getattr__(self, name):
-        """
-        Provides a default render method for all tokens.
+    def render_strong(self, token: span_token.Strong) -> str:
+        return self.render_inner(token)
 
-        Any token without a custom render method will simply be rendered by
-        self.render_inner.
+    def render_emphasis(self, token: span_token.Emphasis) -> str:
+        return self.render_inner(token)
 
-        If name does not start with 'render_', raise AttributeError as normal,
-        for less magic during debugging.
+    def render_inline_code(self, token: span_token.InlineCode) -> str:
+        return self.render_inner(token)
 
-        This method would only be called if the attribute requested has not
-        been defined. Defined attributes will not be overridden.
+    def render_strikethrough(self, token: span_token.Strikethrough) -> str:
+        return self.render_inner(token)
 
-        I still think this is heavy wizardry.
-        Let me know if you would like this method removed.
-        """
-        if not name.startswith('render_'):
-            msg = '{cls} object has no attribute {name}'.format(cls=type(self).__name__, name=name)
-            raise AttributeError(msg).with_traceback(sys.exc_info()[2])
-        return self.render_inner
+    def render_image(self, token: span_token.Image) -> str:
+        return self.render_inner(token)
 
+    def render_link(self, token: span_token.Link) -> str:
+        return self.render_inner(token)
+
+    def render_auto_link(self, token: span_token.AutoLink) -> str:
+        return self.render_inner(token)
+
+    def render_escape_sequence(self, token: span_token.EscapeSequence) -> str:
+        return self.render_inner(token)
+
+    def render_line_break(self, token: span_token.LineBreak) -> str:
+        return self.render_inner(token)
+
+    def render_heading(self, token: block_token.Heading) -> str:
+        return self.render_inner(token)
+
+    def render_quote(self, token: block_token.Quote) -> str:
+        return self.render_inner(token)
+
+    def render_paragraph(self, token: block_token.Paragraph) -> str:
+        return self.render_inner(token)
+
+    def render_block_code(self, token: block_token.BlockCode) -> str:
+        return self.render_inner(token)
+
+    def render_list(self, token: block_token.List) -> str:
+        return self.render_inner(token)
+
+    def render_list_item(self, token: block_token.ListItem) -> str:
+        return self.render_inner(token)
+
+    def render_table(self, token: block_token.Table) -> str:
+        return self.render_inner(token)
+
+    def render_table_cell(self, token: block_token.TableCell) -> str:
+        return self.render_inner(token)
+
+    def render_table_row(self, token: block_token.TableRow) -> str:
+        return self.render_inner(token)
+
+    def render_thematic_break(self, token: block_token.ThematicBreak) -> str:
+        return self.render_inner(token)
+
+    def render_document(self, token: block_token.Document) -> str:
+        return self.render_inner(token)
