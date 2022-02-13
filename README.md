@@ -60,7 +60,7 @@ in the [contrib][contrib] folder:
 
 Installation
 ------------
-mistletoe is tested for Python 3.3 and above. Install mistletoe with pip:
+mistletoe is tested for Python 3.5 and above. Install mistletoe with pip:
 
 ```sh
 pip3 install mistletoe
