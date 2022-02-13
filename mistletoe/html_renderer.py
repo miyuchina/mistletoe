@@ -205,11 +205,11 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def escape_html(raw: str) -> str:
-        return html.escape(html.unescape(raw)).replace('&#x27;', "'")
+        return html.escape(raw).replace('&#x27;', "'")
 
     @staticmethod
     def escape_url(raw: str) -> str:
         """
         Escape urls to prevent code injection craziness. (Hopefully.)
         """
-        return html.escape(quote(html.unescape(raw), safe='/#:()*?=%@+,&;'))
+        return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))

@@ -2,6 +2,7 @@
 Built-in span-level token classes.
 """
 
+import html
 import re
 import mistletoe.span_tokenizer as tokenizer
 from mistletoe import core_tokens
@@ -189,7 +190,7 @@ class EscapeSequence(SpanToken):
 
     @classmethod
     def strip(cls, string):
-        return cls.pattern.sub(r'\1', string)
+        return html.unescape(cls.pattern.sub(r'\1', string))
 
 
 class LineBreak(SpanToken):
