@@ -2,6 +2,8 @@
 Inline tokenizer for mistletoe.
 """
 
+import html
+
 
 def tokenize(string, token_types):
     *token_types, fallback_token = token_types
@@ -63,7 +65,7 @@ def make_tokens(tokens, start, end, string, fallback_token):
     prev_end = start
     for token in tokens:
         if token.start > prev_end:
-            t = fallback_token(string[prev_end:token.start])
+            t = fallback_token(html.unescape(string[prev_end:token.start]))
             if t is not None:
                 result.append(t)
         t = token.make()
@@ -71,7 +73,7 @@ def make_tokens(tokens, start, end, string, fallback_token):
             result.append(t)
         prev_end = token.end
     if prev_end != end:
-        result.append(fallback_token(string[prev_end:end]))
+        result.append(fallback_token(html.unescape(string[prev_end:end])))
     return result
 
 
