@@ -139,8 +139,8 @@ class Image(SpanToken):
         title (str): image title (default to empty).
     """
     def __init__(self, match):
-        self.src = match.group(2).strip()
-        self.title = match.group(3)
+        self.src = EscapeSequence.strip(match.group(2).strip())
+        self.title = EscapeSequence.strip(match.group(3))
 
 
 class Link(SpanToken):
