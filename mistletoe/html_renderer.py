@@ -2,6 +2,7 @@
 HTML renderer for mistletoe.
 """
 
+import html
 import re
 import sys
 from itertools import chain
@@ -11,10 +12,6 @@ from mistletoe import span_token
 from mistletoe.block_token import HTMLBlock
 from mistletoe.span_token import HTMLSpan
 from mistletoe.base_renderer import BaseRenderer
-if sys.version_info < (3, 4):
-    from mistletoe import _html as html
-else:
-    import html
 
 
 class HTMLRenderer(BaseRenderer):
@@ -46,7 +43,7 @@ class HTMLRenderer(BaseRenderer):
         if hasattr(token, 'children'):
             inner = [self.render_to_plain(child) for child in token.children]
             return ''.join(inner)
-        return self.escape_html(token.content)
+        return html.escape(token.content)
 
     def render_strong(self, token: span_token.Strong) -> str:
         template = '<strong>{}</strong>'
@@ -68,7 +65,7 @@ class HTMLRenderer(BaseRenderer):
     def render_image(self, token: span_token.Image) -> str:
         template = '<img src="{}" alt="{}"{} />'
         if token.title:
-            title = ' title="{}"'.format(self.escape_html(token.title))
+            title = ' title="{}"'.format(html.escape(token.title))
         else:
             title = ''
         return template.format(token.src, self.render_to_plain(token), title)
@@ -77,7 +74,7 @@ class HTMLRenderer(BaseRenderer):
         template = '<a href="{target}"{title}>{inner}</a>'
         target = self.escape_url(token.target)
         if token.title:
-            title = ' title="{}"'.format(self.escape_html(token.title))
+            title = ' title="{}"'.format(html.escape(token.title))
         else:
             title = ''
         inner = self.render_inner(token)
@@ -96,7 +93,7 @@ class HTMLRenderer(BaseRenderer):
         return self.render_inner(token)
 
     def render_raw_text(self, token: span_token.RawText) -> str:
-        return self.escape_html(token.content)
+        return html.escape(token.content)
 
     @staticmethod
     def render_html_span(token: span_token.HTMLSpan) -> str:
@@ -123,7 +120,7 @@ class HTMLRenderer(BaseRenderer):
     def render_block_code(self, token: block_token.BlockCode) -> str:
         template = '<pre><code{attr}>{inner}</code></pre>'
         if token.language:
-            attr = ' class="{}"'.format('language-{}'.format(self.escape_html(token.language)))
+            attr = ' class="{}"'.format('language-{}'.format(html.escape(token.language)))
         else:
             attr = ''
         inner = html.escape(token.children[0].content)
@@ -208,11 +205,14 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def escape_html(raw: str) -> str:
-        return html.escape(html.unescape(raw)).replace('&#x27;', "'")
+        """
+        This method is deprecated. Use `html.escape` instead.
+        """
+        return html.escape(raw)
 
     @staticmethod
     def escape_url(raw: str) -> str:
         """
         Escape urls to prevent code injection craziness. (Hopefully.)
         """
-        return html.escape(quote(html.unescape(raw), safe='/#:()*?=%@+,&;'))
+        return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))

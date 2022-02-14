@@ -29,7 +29,7 @@ def run_tests(test_entries, start=None, end=None,
 def run_test(test_entry, quiet=False):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
-        output = markdown(test_case)
+        output = markdown(test_case).replace('&#x27;', "'")
         success = test_entry['html'] == output
         if not success and not quiet:
             print_test_entry(test_entry, output)

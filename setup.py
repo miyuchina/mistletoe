@@ -25,5 +25,5 @@ setup(name='mistletoe',
           'Topic :: Text Processing :: Markup',
           ],
       keywords='markdown lexer parser development',
-      python_requires='~=3.3',
+      python_requires='~=3.5',
       zip_safe=False)

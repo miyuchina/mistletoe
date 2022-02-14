@@ -1,6 +1,7 @@
 from unittest import TestCase, mock
 import mistletoe.latex_token as latex_token
 from mistletoe.latex_renderer import LaTeXRenderer
+from mistletoe import markdown
 
 
 class TestLaTeXRenderer(TestCase):
@@ -110,6 +111,14 @@ class TestLaTeXRenderer(TestCase):
                   'inner'
                   '\\end{document}\n')
         self._test_token('Document', output, footnotes={})
+
+
+class TestHtmlEntity(TestCase):
+    def test_html_entity(self):
+        self.assertIn('hello \& goodbye', markdown('hello &amp; goodbye', LaTeXRenderer))
+
+    def test_html_entity_in_link_target(self):
+        self.assertIn('\href{foo}{hello}', markdown('[hello](f&#111;&#111;)', LaTeXRenderer))
 
 
 class TestLaTeXFootnotes(TestCase):
