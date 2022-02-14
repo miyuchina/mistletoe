@@ -6,6 +6,7 @@ import html
 import re
 import sys
 from itertools import chain
+from typing import Dict, Tuple, Union
 from urllib.parse import quote
 from mistletoe import block_token
 from mistletoe import span_token
@@ -13,12 +14,28 @@ from mistletoe.block_token import HTMLBlock
 from mistletoe.span_token import HTMLSpan
 from mistletoe.base_renderer import BaseRenderer
 
+Attributes = Union[Dict[str, str], Tuple[()]]
+"""
+You can specify HTML attributes as a dictionary mapping strings to strings.
+The dictionary values are automatically HTMl escaped for you.
+
+If you don't need any attributes, you can also specify an empty tuple.
+"""
 
 class HTMLRenderer(BaseRenderer):
     """
     HTML renderer class.
 
     See mistletoe.base_renderer module for more info.
+
+    Some methods of the `HTMLRenderer` class take an optional `Attributes`
+    argument letting you easily add custom HTML attributes, for example::
+
+        class MyRenderer(HTMLRenderer):
+            def render_heading(self, token):
+                return super().render_heading(
+                    token, attr={'id': self.stringify(token).replace(' ', '-')}
+                )
     """
     def __init__(self, *extras):
         """
@@ -65,32 +82,29 @@ class HTMLRenderer(BaseRenderer):
         template = '<del>{}</del>'
         return template.format(self.render_inner(token))
 
-    def render_image(self, token: span_token.Image) -> str:
-        template = '<img src="{}" alt="{}"{} />'
+    def render_image(self, token: span_token.Image, attr: Attributes = ()) -> str:
+        template = '<img{} />'
+        attributes = {'src': token.src, 'alt': self.render_to_plain(token)}
         if token.title:
-            title = ' title="{}"'.format(html.escape(token.title))
-        else:
-            title = ''
-        return template.format(token.src, self.render_to_plain(token), title)
+            attributes['title'] = token.title
+        attributes.update(attr)
+        return template.format(self._render_attributes(attributes))
 
-    def render_link(self, token: span_token.Link) -> str:
-        template = '<a href="{target}"{title}>{inner}</a>'
-        target = html.escape(self.quote_url(token.target))
+    def render_link(self, token: span_token.Link, attr: Attributes = ()) -> str:
+        template = '<a{attr}>{inner}</a>'
+        attributes = {'href': self.quote_url(token.target)}
         if token.title:
-            title = ' title="{}"'.format(html.escape(token.title))
-        else:
-            title = ''
+            attributes['title'] = token.title
+        attributes.update(attr)
         inner = self.render_inner(token)
-        return template.format(target=target, title=title, inner=inner)
+        return template.format(inner=inner, attr=self._render_attributes(attributes))
 
-    def render_auto_link(self, token: span_token.AutoLink) -> str:
-        template = '<a href="{target}">{inner}</a>'
-        if token.mailto:
-            target = 'mailto:{}'.format(token.target)
-        else:
-            target = html.escape(self.quote_url(token.target))
+    def render_auto_link(self, token: span_token.AutoLink, attr: Attributes = ()) -> str:
+        template = '<a{attr}>{inner}</a>'
+        attributes = {'href': 'mailto:{}'.format(token.target) if token.mailto else self.quote_url(token.target)}
+        attributes.update(attr)
         inner = self.render_inner(token)
-        return template.format(target=target, inner=inner)
+        return template.format(inner=inner, attr=self._render_attributes(attributes))
 
     def render_escape_sequence(self, token: span_token.EscapeSequence) -> str:
         return self.render_inner(token)
@@ -102,13 +116,13 @@ class HTMLRenderer(BaseRenderer):
     def render_html_span(token: span_token.HTMLSpan) -> str:
         return token.content
 
-    def render_heading(self, token: block_token.Heading) -> str:
-        template = '<h{level}>{inner}</h{level}>'
+    def render_heading(self, token: block_token.Heading, attr: Attributes = ()) -> str:
+        template = '<h{level}{attr}>{inner}</h{level}>'
         inner = self.render_inner(token)
-        return template.format(level=token.level, inner=inner)
+        return template.format(level=token.level, inner=inner, attr=self._render_attributes(attr))
 
-    def render_quote(self, token: block_token.Quote) -> str:
-        elements = ['<blockquote>']
+    def render_quote(self, token: block_token.Quote, attr: Attributes = ()) -> str:
+        elements = ['<blockquote{}>'.format(self._render_attributes(attr))]
         self._suppress_ptag_stack.append(False)
         elements.extend([self.render(child) for child in token.children])
         self._suppress_ptag_stack.pop()
@@ -120,27 +134,29 @@ class HTMLRenderer(BaseRenderer):
             return '{}'.format(self.render_inner(token))
         return '<p>{}</p>'.format(self.render_inner(token))
 
-    def render_block_code(self, token: block_token.BlockCode) -> str:
+    def render_block_code(self, token: block_token.BlockCode, attr: Attributes = ()) -> str:
         template = '<pre><code{attr}>{inner}</code></pre>'
+        attributes = {}
         if token.language:
-            attr = ' class="{}"'.format('language-{}'.format(html.escape(token.language)))
-        else:
-            attr = ''
+            attributes['class'] = 'language-{}'.format(token.language)
+        attributes.update(attr)
         inner = html.escape(token.children[0].content)
-        return template.format(attr=attr, inner=inner)
+        return template.format(inner=inner, attr=self._render_attributes(attributes))
 
-    def render_list(self, token: block_token.List) -> str:
+    def render_list(self, token: block_token.List, attr: Attributes = ()) -> str:
         template = '<{tag}{attr}>\n{inner}\n</{tag}>'
+        attributes = {}
         if token.start is not None:
             tag = 'ol'
-            attr = ' start="{}"'.format(token.start) if token.start != 1 else ''
+            if token.start != 1:
+                attributes['start'] = str(token.start)
         else:
             tag = 'ul'
-            attr = ''
+        attributes.update(attr)
         self._suppress_ptag_stack.append(not token.loose)
         inner = '\n'.join([self.render(child) for child in token.children])
         self._suppress_ptag_stack.pop()
-        return template.format(tag=tag, attr=attr, inner=inner)
+        return template.format(tag=tag, inner=inner, attr=self._render_attributes(attributes))
 
     def render_list_item(self, token: block_token.ListItem) -> str:
         if len(token.children) == 0:
@@ -154,12 +170,12 @@ class HTMLRenderer(BaseRenderer):
                 inner_template = inner_template[:-1]
         return '<li>{}</li>'.format(inner_template.format(inner))
 
-    def render_table(self, token: block_token.Table) -> str:
+    def render_table(self, token: block_token.Table, attr: Attributes = ()) -> str:
         # This is actually gross and I wonder if there's a better way to do it.
         #
         # The primary difficulty seems to be passing down alignment options to
         # reach individual cells.
-        template = '<table>\n{inner}</table>'
+        template = '<table{attr}>\n{inner}</table>'
         if hasattr(token, 'header'):
             head_template = '<thead>\n{inner}</thead>\n'
             head_inner = self.render_table_row(token.header, is_header=True)
@@ -168,7 +184,7 @@ class HTMLRenderer(BaseRenderer):
         body_template = '<tbody>\n{inner}</tbody>\n'
         body_inner = self.render_inner(token)
         body_rendered = body_template.format(inner=body_inner)
-        return template.format(inner=head_rendered+body_rendered)
+        return template.format(inner=head_rendered+body_rendered, attr=self._render_attributes(attr))
 
     def render_table_row(self, token: block_token.TableRow, is_header=False) -> str:
         template = '<tr>\n{inner}</tr>\n'
@@ -226,3 +242,11 @@ class HTMLRenderer(BaseRenderer):
         URL-quote and HTML escape the given string.
         """
         return html.escape(cls.quote_url(raw))
+        return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))
+
+    @classmethod
+    def _render_attributes(cls, attrs: Attributes) -> str:
+        if len(attrs) == 0:
+            return ''
+        else:
+            return ' ' + ' '.join('{}="{}"'.format(k, cls.escape_html(attrs[k])) for k in attrs)

@@ -153,3 +153,30 @@ class TestHTMLRendererFootnotes(TestCase):
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         output = '<p><a href="target">name</a></p>\n' 
         self.assertEqual(self.renderer.render(token), output)
+
+class CustomRenderer(HTMLRenderer):
+    def render_heading(self, token):
+        return super().render_heading(
+            token, attr={'id': self.stringify(token).replace(' ', '-'), 'class': 'fancy-heading'}
+        )
+
+    def render_list(self, token):
+        return super().render_list(token, {'class': 'fancy-list'})
+
+
+class TestCustomAttributes(TestCase):
+    def test_heading_ids(self):
+        from mistletoe import Document
+        with CustomRenderer() as renderer:
+            doc = Document('# hello "world"')
+            # test that attribute values are HTML-escaped
+            output = '<h1 id="hello-&quot;world&quot;" class="fancy-heading">hello &quot;world&quot;</h1>\n'
+            self.assertEqual(renderer.render(doc), output)
+
+    def test_list(self):
+        from mistletoe import Document
+        with CustomRenderer() as renderer:
+            doc = Document('2. foo')
+            # test that start attribute is preserved
+            output = '<ol start="2" class="fancy-list">\n<li>foo</li>\n</ol>\n'
+            self.assertEqual(renderer.render(doc), output)
