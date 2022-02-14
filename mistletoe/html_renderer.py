@@ -39,11 +39,14 @@ class HTMLRenderer(BaseRenderer):
         super().__exit__(*args)
         html._charref = self._stdlib_charref
 
-    def render_to_plain(self, token) -> str:
+    def stringify(self, token) -> str:
         if hasattr(token, 'children'):
-            inner = [self.render_to_plain(child) for child in token.children]
+            inner = [self.stringify(child) for child in token.children]
             return ''.join(inner)
-        return html.escape(token.content)
+        return token.content
+
+    def render_to_plain(self, token) -> str:
+        return html.escape(self.stringify(token))
 
     def render_strong(self, token: span_token.Strong) -> str:
         template = '<strong>{}</strong>'
@@ -72,7 +75,7 @@ class HTMLRenderer(BaseRenderer):
 
     def render_link(self, token: span_token.Link) -> str:
         template = '<a href="{target}"{title}>{inner}</a>'
-        target = self.escape_url(token.target)
+        target = html.escape(self.quote_url(token.target))
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
@@ -85,7 +88,7 @@ class HTMLRenderer(BaseRenderer):
         if token.mailto:
             target = 'mailto:{}'.format(token.target)
         else:
-            target = self.escape_url(token.target)
+            target = html.escape(self.quote_url(token.target))
         inner = self.render_inner(token)
         return template.format(target=target, inner=inner)
 
@@ -211,8 +214,15 @@ class HTMLRenderer(BaseRenderer):
         return html.escape(raw)
 
     @staticmethod
-    def escape_url(raw: str) -> str:
+    def quote_url(raw: str) -> str:
         """
-        Escape urls to prevent code injection craziness. (Hopefully.)
+        Percent-encode URLs.
         """
-        return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))
+        return quote(raw, safe='/#:()*?=%@+,&;')
+
+    @classmethod
+    def escape_url(cls, raw: str) -> str:
+        """
+        URL-quote and HTML escape the given string.
+        """
+        return html.escape(cls.quote_url(raw))
