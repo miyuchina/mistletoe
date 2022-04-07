@@ -6,7 +6,7 @@ import re
 import sys
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
-from mistletoe import span_token
+from mistletoe import token, span_token
 from mistletoe.core_tokens import (
         is_link_label,
         follows,
@@ -80,7 +80,7 @@ def reset_tokens():
     _token_types = [globals()[cls_name] for cls_name in __all__]
 
 
-class BlockToken(object):
+class BlockToken(token.Token):
     """
     Base class for block-level tokens. Recursively parse inner tokens.
 
@@ -161,9 +161,11 @@ class Heading(BlockToken):
         level (int): heading level.
         children (list): inner tokens.
     """
+    repr_attributes = ("level",)
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(?:\n|\s+?#+\s*?$))')
     level = 0
     content = ''
+
     def __init__(self, match):
         self.level, content = match
         super().__init__(content, span_token.tokenize_inner)
@@ -190,6 +192,7 @@ class SetextHeading(BlockToken):
     
     Not included in the parsing process, but called by Paragraph.__new__.
     """
+    repr_attributes = ("level",)
     def __init__(self, lines):
         self.level = 1 if lines.pop().lstrip().startswith('=') else 2
         content = '\n'.join([line.strip() for line in lines])
@@ -359,6 +362,7 @@ class BlockCode(BlockToken):
         children (list): contains a single span_token.RawText token.
         language (str): always the empty string.
     """
+    repr_attributes = ("language",)
     def __init__(self, lines):
         self.language = ''
         self.children = (span_token.RawText(''.join(lines).strip('\n')+'\n'),)
@@ -404,6 +408,7 @@ class CodeFence(BlockToken):
         children (list): contains a single span_token.RawText token.
         language (str): language of code block (default to empty).
     """
+    repr_attributes = ("language",)
     pattern = re.compile(r'( {0,3})(`{3,}|~{3,}) *(\S*)')
     _open_info = None
     def __init__(self, match):
@@ -448,6 +453,7 @@ class List(BlockToken):
         loose (bool): whether the list is loose.
         start (NoneType or int): None if unordered, starting number if ordered.
     """
+    repr_attributes = ("loose", "start")
     pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
@@ -497,6 +503,7 @@ class ListItem(BlockToken):
     List items. Not included in the parsing process, but called by List.
     """
 
+    repr_attributes = ("leader", "prepend", "loose")
     pattern = re.compile(r'\s*(\d{0,9}[.)]|[+\-*])(\s*$|\s+)')
 
     def __init__(self, parse_buffer, prepend, leader):
@@ -619,6 +626,7 @@ class Table(BlockToken):
         column_align (list): align options for each column (default to [None]).
         children (list): inner tokens (TableRows).
     """
+    repr_attributes = ("column_align",)
     def __init__(self, lines):
         if '---' in lines[1]:
             self.column_align = [self.parse_align(column)
@@ -676,6 +684,7 @@ class TableRow(BlockToken):
 
     Should only be called by Table.__init__().
     """
+    repr_attributes = ("row_align",)
     # Note: Python regex requires fixed-length look-behind,
     # so we cannot use a more precise alternative: r"(?<!\\(?:\\\\)*)(\|)"
     split_pattern = re.compile(r"(?<!\\)\|")
@@ -699,6 +708,7 @@ class TableCell(BlockToken):
         align (bool): align option for current cell (default to None).
         children (list): inner (span-)tokens.
     """
+    repr_attributes = ("align",)
     def __init__(self, content, align=None):
         self.align = align
         super().__init__(content, span_token.tokenize_inner)
