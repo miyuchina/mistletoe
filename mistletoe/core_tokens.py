@@ -1,18 +1,17 @@
 import re
-
+import unicodedata
 
 whitespace = {' ', '\t', '\n', '\x0b', '\x0c', '\r'}
-unicode_whitespace = {'\t', '\n', '\x0b', '\x0c', '\r', '\x1c', '\x1d', '\x1e',
-        '\x1f', ' ', '\x85', '\xa0', '\u1680', '\u2000', '\u2001', '\u2002',
-        '\u2003', '\u2004', '\u2005', '\u2006', '\u2007', '\u2008', '\u2009',
-        '\u200a', '\u2028', '\u2029', '\u202f', '\u205f', '\u3000'}
-punctuation = {'!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',',
-               '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\',
-               ']', '^', '_', '`', '{', '|', '}', '~'}
 code_pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
-
-
 _code_matches = []
+
+
+def is_unicode_whitespace(character):
+    return unicodedata.category(character) == "Zs" or character in ("\t", "\u000a", "\u000c", "\000d")
+
+
+def is_unicode_punctuation(character):
+    return unicodedata.category(character) in ("Pc", "Pd", "Pe", "Pf", "Pi", "Po", "Ps")
 
 
 def find_core_tokens(string, root):
@@ -341,7 +340,7 @@ def is_opener(start, end, string):
     is_right = is_right_delimiter(start, end, string)
     return (is_left_delimiter(start, end, string)
             and (not is_right
-                 or (is_right and preceded_by(start, string, punctuation))))
+                 or (is_right and preceded_by(start, string, is_unicode_punctuation))))
 
 
 def is_closer(start, end, string):
@@ -350,31 +349,31 @@ def is_closer(start, end, string):
     is_left = is_left_delimiter(start, end, string)
     return (is_right_delimiter(start, end, string)
             and (not is_left
-                 or (is_left and succeeded_by(end, string, punctuation))))
+                 or (is_left and succeeded_by(end, string, is_unicode_punctuation))))
 
 
 def is_left_delimiter(start, end, string):
-    return (not succeeded_by(end, string, unicode_whitespace)
-            and (not succeeded_by(end, string, punctuation)
-                 or preceded_by(start, string, punctuation)
-                 or preceded_by(start, string, unicode_whitespace)))
+    return (not succeeded_by(end, string, is_unicode_whitespace)
+            and (not succeeded_by(end, string, is_unicode_punctuation)
+                 or preceded_by(start, string, is_unicode_punctuation)
+                 or preceded_by(start, string, is_unicode_whitespace)))
 
 
 def is_right_delimiter(start, end, string):
-    return (not preceded_by(start, string, unicode_whitespace)
-            and (not preceded_by(start, string, punctuation)
-                 or succeeded_by(end, string, unicode_whitespace)
-                 or succeeded_by(end, string, punctuation)))
+    return (not preceded_by(start, string, is_unicode_whitespace)
+            and (not preceded_by(start, string, is_unicode_punctuation)
+                 or succeeded_by(end, string, is_unicode_whitespace)
+                 or succeeded_by(end, string, is_unicode_punctuation)))
 
 
-def preceded_by(start, string, charset):
+def preceded_by(start, string, check_func):
     preceding_char = string[start-1] if start > 0 else ' '
-    return preceding_char in charset
+    return check_func(preceding_char)
 
 
-def succeeded_by(end, string, charset):
+def succeeded_by(end, string, check_func):
     succeeding_char = string[end] if end < len(string) else ' '
-    return succeeding_char in charset
+    return check_func(succeeding_char)
 
 
 def is_control_char(char):
