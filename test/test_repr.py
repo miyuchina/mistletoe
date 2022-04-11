@@ -80,6 +80,10 @@ class TestRepr(unittest.TestCase):
         doc = Document("~~~foo~~~\n")
         self.check_repr_prefix(doc.children[0].children[0], "<mistletoe.span_token.Strikethrough with 1 child at 0x")
 
+    def test_image(self):
+        doc = Document("""![Foo](http://www.example.org/ "bar")\n""")
+        self.check_repr_prefix(doc.children[0].children[0], "<mistletoe.span_token.Image with 1 child src='http://www.example.org/' title='bar' at 0x")
+
     def test_link(self):
         doc = Document("[Foo](http://www.example.org/)\n")
         self.check_repr_prefix(doc.children[0].children[0], "<mistletoe.span_token.Link with 1 child target='http://www.example.org/' title='' at 0x")
