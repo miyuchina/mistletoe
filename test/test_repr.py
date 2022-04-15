@@ -1,8 +1,7 @@
-from textwrap import dedent
 import unittest
 
 from mistletoe import Document
-from mistletoe.utils import traverse
+from mistletoe import block_token
 
 
 class TestRepr(unittest.TestCase):
@@ -60,7 +59,11 @@ class TestRepr(unittest.TestCase):
         doc = Document("Foo\n\n---\n\nBar\n")
         self.check_repr_prefix(doc.children[1], "<mistletoe.block_token.ThematicBreak at 0x")
 
-    # No tests for ``FootNote`` and ``HTMLBlock``
+    # No test for ``Footnote``
+
+    def test_htmlblock(self):
+        token = block_token.HTMLBlock("<pre>\nFoo\n</pre>\n")
+        self.check_repr_prefix(token, "<mistletoe.block_token.HTMLBlock content='<pre>\\nFoo\\n</pre>' at 0x")
 
     # Span tokens
 

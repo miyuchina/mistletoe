@@ -2,13 +2,8 @@
 Base token class
 """
 
-import html
-import re
-import mistletoe.span_tokenizer as tokenizer
-from mistletoe import core_tokens
 
-
-def short_repr(value):
+def _short_repr(value):
     """
     Return a shortened repr output of value for use in __repr__ method.
     """
@@ -38,10 +33,10 @@ class Token:
                 output += " with {} children".format(count)
 
         if hasattr(self, "content"):
-           output += " content=" + short_repr(self.content)
+           output += " content=" + _short_repr(self.content)
 
         for attrname in self.repr_attributes:
             attrvalue = getattr(self, attrname)
-            output += " {}={}".format(attrname, short_repr(attrvalue))
+            output += " {}={}".format(attrname, _short_repr(attrvalue))
         output += " at {:#x}>".format(id(self))
         return output
