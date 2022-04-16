@@ -1,5 +1,5 @@
 """
-Base token class
+token contains the base token class Token.
 """
 
 
@@ -17,6 +17,20 @@ def _short_repr(value):
 
 
 class Token:
+    """
+    Base token class.
+
+    Token has two subclasses:
+
+    * block_token.BlockToken, for all block level tokens. A block level token
+      is text which occupies the entire horizontal width of the "page" and is
+      offset for the surrounding sibling block with line breaks.
+
+    * span_token.SpanToken. for all span-level (or inline-level) tokens.
+      A span-level token appears inside the flow of the text lines without any
+      surrounding line break.
+    """
+
     repr_attributes = ()
 
     def __repr__(self):
