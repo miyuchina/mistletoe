@@ -29,6 +29,13 @@ class Token:
     * span_token.SpanToken. for all span-level (or inline-level) tokens.
       A span-level token appears inside the flow of the text lines without any
       surrounding line break.
+
+    Custom __repr__ methods in subclasses: The default __repr__ implementation
+    outputs the number of child tokens (from the attribute children) if
+    applicable, and the content attribute if applicable. If any additional
+    attributes should be included in the __repr__ output, this can be specified
+    by setting the class attribute repr_attributes to a tuple containing the
+    attribute names to be output.
     """
 
     repr_attributes = ()
