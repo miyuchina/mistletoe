@@ -26,7 +26,7 @@ class Token:
       is text which occupies the entire horizontal width of the "page" and is
       offset for the surrounding sibling block with line breaks.
 
-    * span_token.SpanToken. for all span-level (or inline-level) tokens.
+    * span_token.SpanToken, for all span-level (or inline-level) tokens.
       A span-level token appears inside the flow of the text lines without any
       surrounding line break.
 
