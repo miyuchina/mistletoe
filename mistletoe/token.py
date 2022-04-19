@@ -1,5 +1,5 @@
 """
-token contains the base token class Token.
+Base token class.
 """
 
 
