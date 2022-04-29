@@ -5,7 +5,7 @@ Built-in span-level token classes.
 import html
 import re
 import mistletoe.span_tokenizer as tokenizer
-from mistletoe import core_tokens
+from mistletoe import core_tokens, token
 
 
 """
@@ -64,7 +64,7 @@ def reset_tokens():
     _token_types = [globals()[cls_name] for cls_name in __all__]
 
 
-class SpanToken:
+class SpanToken(token.Token):
     parse_inner = True
     parse_group = 1
     precedence = 5
@@ -139,6 +139,7 @@ class Image(SpanToken):
         src (str): image source.
         title (str): image title (default to empty).
     """
+    repr_attributes = ("src", "title")
     def __init__(self, match):
         self.src = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
@@ -151,6 +152,7 @@ class Link(SpanToken):
     Attributes:
         target (str): link target.
     """
+    repr_attributes = ("target", "title")
     def __init__(self, match):
         self.target = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
@@ -164,6 +166,7 @@ class AutoLink(SpanToken):
         children (iterator): a single RawText node for alternative text.
         target (str): link target.
     """
+    repr_attributes = ("target", "mailto")
     pattern = re.compile(r"(?<!\\)(?:\\\\)*<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
     parse_inner = False
 
@@ -197,6 +200,7 @@ class LineBreak(SpanToken):
     """
     Hard or soft line breaks.
     """
+    repr_attributes = ("soft",)
     pattern = re.compile(r'( *|\\)\n')
     parse_inner = False
     parse_group = 0
@@ -276,4 +280,3 @@ class XWikiBlockMacroEnd(SpanToken):
 
 _token_types = []
 reset_tokens()
-
