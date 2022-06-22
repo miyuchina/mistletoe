@@ -60,7 +60,7 @@ class TestSetextHeading(TestToken):
         self.assertIsInstance(next(tokens), block_token.Paragraph)
         self.mock.assert_has_calls([call('some'), call('heading'), call('foobar')])
         with self.assertRaises(StopIteration) as e:
-            token = next(tokens)
+            next(tokens)
 
 
 class TestQuote(unittest.TestCase):
@@ -177,7 +177,6 @@ class TestListItem(unittest.TestCase):
         lines = ['- foo\n',
                  '  - bar\n',
                  '    - baz\n']
-        f = FileWrapper(lines)
         ptoken, ltoken = block_token.tokenize(lines)[0].children[0].children
         self.assertIsInstance(ptoken, block_token.Paragraph)
         self.assertIsInstance(ltoken, block_token.List)
@@ -195,7 +194,6 @@ class TestListItem(unittest.TestCase):
                  '  \n',
                  '  baz\n'
                  '  ~~~\n']
-        f = FileWrapper(lines)
         list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
 
@@ -203,7 +201,6 @@ class TestListItem(unittest.TestCase):
         lines = ['- foo\n',
                  '\n',
                  '# bar\n']
-        f = FileWrapper(lines)
         list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
 

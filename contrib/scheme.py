@@ -13,7 +13,6 @@ class Expr(span_token.SpanToken):
     @classmethod
     def find(cls, string):
         matches = []
-        count = 0
         start = []
         for i, c in enumerate(string):
             if c == '(':

@@ -1,4 +1,4 @@
-import re, unittest
+import unittest
 
 from mistletoe import Document
 from mistletoe import block_token

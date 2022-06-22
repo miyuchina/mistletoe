@@ -25,8 +25,6 @@
 import os
 import sys
 import getopt
-import subprocess
-import shutil
 import mistletoe
 from contrib.jira_renderer import JIRARenderer
 

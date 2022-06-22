@@ -1,5 +1,4 @@
 from unittest import TestCase, mock
-import mistletoe.latex_token as latex_token
 from mistletoe.latex_renderer import LaTeXRenderer
 from mistletoe import markdown
 

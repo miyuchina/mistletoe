@@ -3,12 +3,10 @@ Built-in block-level token classes.
 """
 
 import re
-import sys
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
 from mistletoe import token, span_token
 from mistletoe.core_tokens import (
-        is_link_label,
         follows,
         shift_whitespace,
         whitespace,
