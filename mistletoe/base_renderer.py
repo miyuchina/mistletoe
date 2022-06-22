@@ -3,7 +3,6 @@ Base class for renderers.
 """
 
 import re
-import sys
 from mistletoe import block_token, span_token
 
 class BaseRenderer(object):

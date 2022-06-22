@@ -21,12 +21,10 @@
 # SOFTWARE.
 #
 
-import html
 from itertools import chain
 from mistletoe import block_token, span_token
 from mistletoe.base_renderer import BaseRenderer
 import re
-import sys
 
 class JIRARenderer(BaseRenderer):
     """
@@ -61,7 +59,7 @@ class JIRARenderer(BaseRenderer):
 
     def render_image(self, token):
         template = '!{src}!'
-        inner = self.render_inner(token)
+        self.render_inner(token)
         return template.format(src=token.src)
 
     def render_link(self, token):

@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch
 from mistletoe import span_token
-from functools import wraps
 
 
 class TestBranchToken(unittest.TestCase):

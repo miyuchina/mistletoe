@@ -4,7 +4,6 @@ HTML renderer for mistletoe.
 
 import html
 import re
-import sys
 from itertools import chain
 from urllib.parse import quote
 from mistletoe import block_token

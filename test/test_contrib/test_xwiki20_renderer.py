@@ -18,11 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from unittest import TestCase, mock
 from test.base_test import BaseRendererTest
-from mistletoe.block_token import Document
 from mistletoe.span_token import tokenize_inner
-from mistletoe import Document
 from contrib.xwiki20_renderer import XWiki20Renderer
 import random
 import string
