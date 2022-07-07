@@ -13,10 +13,6 @@ judgements when employing them.
 Refer to the [README][readme] for install instructions. Since you're going to
 mess with the code, it's prefered that you clone the repo directly.
 
-Check back on the dev branch regularly to avoid redoing work that others might
-have done. The master branch is updated only when features on the dev branch
-are stabilized somewhat.
-
 ## Things you can do
 
 ### Introducing new features
