@@ -23,7 +23,18 @@ class LaTeXRenderer(BaseRenderer):
         return '\\textit{{{}}}'.format(self.render_inner(token))
 
     def render_inline_code(self, token):
-        return '\\verb|{}|'.format(self.render_raw_text(token.children[0], escape=False))
+        content = self.render_raw_text(token.children[0], escape=False)
+
+        # search for delimiter not present in content
+        for delimiter in list('|+=!@#$^&`~-_:'):
+            if delimiter not in content:
+                break
+
+        if delimiter in content:  # no delimiter found
+            raise RuntimeError('Unable to find delimiter for verb macro')
+
+        template = '\\verb{delimiter}{content}{delimiter}'
+        return template.format(delimiter=delimiter, content=content)
 
     def render_strikethrough(self, token):
         self.packages['ulem'] = ['normalem']
