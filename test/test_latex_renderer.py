@@ -1,4 +1,5 @@
 from unittest import TestCase, mock
+import mistletoe.latex_renderer
 from mistletoe.latex_renderer import LaTeXRenderer
 from mistletoe import markdown
 
@@ -31,13 +32,13 @@ class TestLaTeXRenderer(TestCase):
 
         for content, output in {'inner': '\\verb|inner|',
                                 'a + b': '\\verb|a + b|',
-                                'a | b': '\\verb+a | b+',
-                                '|a + b|': '\\verb=|a + b|=',
+                                'a | b': '\\verb!a | b!',
+                                '|ab!|': '\\verb"|ab!|"',
                                }.items():
             with mock.patch(func_path, return_value=content):
                 self._test_token('InlineCode', output, content=content)
 
-        content = '|+=!@#$^&`~-_:'
+        content = mistletoe.latex_renderer.verb_delimiters
         with self.assertRaises(RuntimeError):
             with mock.patch(func_path, return_value=content):
                 self._test_token('InlineCode', None, content=content)
