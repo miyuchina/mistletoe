@@ -5,6 +5,16 @@ LaTeX renderer for mistletoe.
 from itertools import chain
 import mistletoe.latex_token as latex_token
 from mistletoe.base_renderer import BaseRenderer
+import string
+
+
+# (customizable) delimiters for inline code
+verb_delimiters = string.punctuation + string.digits
+for delimiter in '*':  # remove invalid delimiters
+    verb_delimiters.replace(delimiter, '')
+for delimiter in reversed('|!"\'=+'):  # start with most common delimiters
+    verb_delimiters = delimiter + verb_delimiters.replace(delimiter, '')
+
 
 class LaTeXRenderer(BaseRenderer):
     def __init__(self, *extras):
@@ -14,6 +24,7 @@ class LaTeXRenderer(BaseRenderer):
         """
         tokens = self._tokens_from_module(latex_token)
         self.packages = {}
+        self.verb_delimiters = verb_delimiters
         super().__init__(*chain(tokens, extras))
 
     def render_strong(self, token):
@@ -26,7 +37,7 @@ class LaTeXRenderer(BaseRenderer):
         content = self.render_raw_text(token.children[0], escape=False)
 
         # search for delimiter not present in content
-        for delimiter in list('|+=!@#$^&`~-_:'):
+        for delimiter in self.verb_delimiters:
             if delimiter not in content:
                 break
 
