@@ -189,8 +189,11 @@ class SetextHeading(BlockToken):
     """
     Setext heading token.
     This is a leaf block token. Its children are inline (span) tokens.
-    
+
     Not included in the parsing process, but called by Paragraph.__new__.
+
+    Attributes:
+        level (int): heading level.
     """
     repr_attributes = ("level",)
     def __init__(self, lines):
