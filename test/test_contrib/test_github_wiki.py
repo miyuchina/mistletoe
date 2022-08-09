@@ -1,6 +1,6 @@
 from unittest import TestCase, mock
 from mistletoe import span_token, Document
-from mistletoe.span_token import tokenize_inner, _token_types
+from mistletoe.span_token import tokenize_inner
 from contrib.github_wiki import GithubWiki, GithubWikiRenderer
 
 
@@ -12,9 +12,9 @@ class TestGithubWiki(TestCase):
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
     def test_parse(self):
-        MockRawText = mock.Mock(autospec='mistletoe.span_token.RawText')
-        RawText = _token_types.pop()
-        _token_types.append(MockRawText)
+        MockRawText = mock.Mock()
+        RawText = span_token._token_types.pop()
+        span_token._token_types.append(MockRawText)
         try:
             tokens = tokenize_inner('text with [[wiki | target]]')
             token = tokens[1]
@@ -22,7 +22,7 @@ class TestGithubWiki(TestCase):
             self.assertEqual(token.target, 'target')
             MockRawText.assert_has_calls([mock.call('text with '), mock.call('wiki')])
         finally:
-            _token_types[-1] = RawText
+            span_token._token_types[-1] = RawText
 
     def test_render(self):
         token = next(iter(tokenize_inner('[[wiki|target]]')))
