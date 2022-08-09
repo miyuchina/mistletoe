@@ -144,7 +144,7 @@ class Strikethrough(SpanToken):
 class Image(SpanToken):
     """
     Image token. ("![alt](src "title")")
-    This is an inline token. Its children are inline (span) tokens.
+    This is an inline token. Its children are inline (span) tokens holding the image description.
     One of the core tokens.
 
     Attributes:
@@ -160,11 +160,12 @@ class Image(SpanToken):
 class Link(SpanToken):
     """
     Link token. ("[name](target)")
-    This is an inline token. Its children are inline (span) tokens.
+    This is an inline token. Its children are inline (span) tokens holding the link text.
     One of the core tokens.
 
     Attributes:
         target (str): link target.
+        title (str): link title (default to empty).
     """
     repr_attributes = ("target", "title")
     def __init__(self, match):
