@@ -84,6 +84,10 @@ class SpanToken(token.Token):
 
 
 class CoreTokens(SpanToken):
+    """
+    Represents core tokens (Strong, Emphasis, Image, Link) during the early stage of parsing.
+    Replaced with objects of the proper classes in the final stage of parsing.
+    """
     precedence = 3
     def __new__(self, match):
         return globals()[match.type](match)
@@ -95,19 +99,24 @@ class CoreTokens(SpanToken):
 
 class Strong(SpanToken):
     """
-    Strong tokens. ("**some text**")
+    Strong token. ("**some text**")
+    This is an inline token. Its children are inline (span) tokens.
+    One of the core tokens.
     """
 
 
 class Emphasis(SpanToken):
     """
-    Emphasis tokens. ("*some text*")
+    Emphasis token. ("*some text*")
+    This is an inline token. Its children are inline (span) tokens.
+    One of the core tokens.
     """
 
 
 class InlineCode(SpanToken):
     """
-    Inline code tokens. ("`some code`")
+    Inline code token. ("`some code`")
+    This is an inline token with a single child of type RawText.
     """
     pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
     parse_inner = False
@@ -126,14 +135,17 @@ class InlineCode(SpanToken):
 
 class Strikethrough(SpanToken):
     """
-    Strikethrough tokens. ("~~some text~~")
+    Strikethrough token. ("~~some text~~")
+    This is an inline token. Its children are inline (span) tokens.
     """
     pattern = re.compile(r"(?<!\\)(?:\\\\)*~~(.+?)~~", re.DOTALL)
 
 
 class Image(SpanToken):
     """
-    Image tokens. ("![alt](src "title")")
+    Image token. ("![alt](src "title")")
+    This is an inline token. Its children are inline (span) tokens.
+    One of the core tokens.
 
     Attributes:
         src (str): image source.
@@ -147,7 +159,9 @@ class Image(SpanToken):
 
 class Link(SpanToken):
     """
-    Link tokens. ("[name](target)")
+    Link token. ("[name](target)")
+    This is an inline token. Its children are inline (span) tokens.
+    One of the core tokens.
 
     Attributes:
         target (str): link target.
@@ -160,10 +174,11 @@ class Link(SpanToken):
 
 class AutoLink(SpanToken):
     """
-    Autolink tokens. ("<http://www.google.com>")
+    Autolink token. ("<http://www.google.com>")
+    This is an inline token with a single child of type RawText.
 
     Attributes:
-        children (iterator): a single RawText node for alternative text.
+        children (iterator): a single RawText node for the link target.
         target (str): link target.
     """
     repr_attributes = ("target", "mailto")
@@ -179,7 +194,8 @@ class AutoLink(SpanToken):
 
 class EscapeSequence(SpanToken):
     """
-    Escape sequences. ("\*")
+    Escape sequence token. ("\*")
+    This is an inline token with a single child of type RawText.
 
     Attributes:
         children (iterator): a single RawText node for alternative text.
@@ -198,7 +214,8 @@ class EscapeSequence(SpanToken):
 
 class LineBreak(SpanToken):
     """
-    Hard or soft line breaks.
+    Line break token. Hard or soft.
+    This is an inline token without children.
     """
     repr_attributes = ("soft",)
     pattern = re.compile(r'( *|\\)\n')
@@ -213,7 +230,8 @@ class LineBreak(SpanToken):
 
 class RawText(SpanToken):
     """
-    Raw text. A leaf node.
+    Raw text token.
+    This is an inline token without children.
 
     RawText is the only token that accepts a string for its constructor,
     instead of a match object. Also, all recursions should bottom out here.
@@ -245,7 +263,8 @@ _cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'
 
 class HTMLSpan(SpanToken):
     """
-    Span-level HTML tokens.
+    Span-level HTML token.
+    This is an inline token without children.
 
     Attributes:
         content (str): literal strings rendered as-is.
