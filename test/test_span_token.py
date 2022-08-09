@@ -98,10 +98,10 @@ class TestImage(TestBranchToken):
 
 class TestEscapeSequence(TestBranchToken):
     def test_parse(self):
-        self._test_parse(span_token.EscapeSequence, '\*', '*')
+        self._test_parse(span_token.EscapeSequence, r'\*', '*')
 
     def test_parse_in_text(self):
-        tokens = iter(span_token.tokenize_inner('some \*text*'))
+        tokens = iter(span_token.tokenize_inner(r'some \*text*'))
         self._test_token(next(tokens), 'some ', children=False)
         self._test_token(next(tokens), '*')
         self._test_token(next(tokens), 'text*', children=False)
