@@ -35,6 +35,15 @@ class TestEmphasis(TestBranchToken):
         self._test_parse(span_token.Emphasis, '*some text*', 'some text')
         self._test_parse(span_token.Emphasis, '_some text_', 'some text')
 
+    def test_emphasis_with_straight_quote(self):
+        tokens = iter(span_token.tokenize_inner('_Book Title_\'s author'))
+        self._test_token(next(tokens), 'Book Title', children=True)
+        self._test_token(next(tokens), '\'s author', children=False)
+
+    def test_emphasis_with_smart_quote(self):
+        tokens = iter(span_token.tokenize_inner('_Book Title_’s author'))
+        self._test_token(next(tokens), 'Book Title', children=True)
+        self._test_token(next(tokens), '’s author', children=False)
 
 class TestInlineCode(TestBranchToken):
     def _test_parse_enclosed(self, encl_type, encl_delimiter):
