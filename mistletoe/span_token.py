@@ -267,7 +267,7 @@ class HTMLSpan(SpanToken):
     This is an inline token without children.
 
     Attributes:
-        content (str): literal strings rendered as-is.
+        content (str): the raw HTML content.
     """
     pattern = re.compile('|'.join([_open_tag, _closing_tag, _comment,
                                    _instruction, _declaration, _cdata]),

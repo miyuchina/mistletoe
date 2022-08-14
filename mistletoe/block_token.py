@@ -921,9 +921,10 @@ class ThematicBreak(BlockToken):
 class HTMLBlock(BlockToken):
     """
     Block-level HTML token.
+    This is a leaf block token without children.
 
     Attributes:
-        content (str): literal strings rendered as-is.
+        content (str): the raw HTML content.
     """
     _end_cond = None
     multiblock = re.compile(r'<(script|pre|style)[ >\n]')
