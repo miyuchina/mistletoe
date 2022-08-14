@@ -198,7 +198,7 @@ class EscapeSequence(SpanToken):
     This is an inline token with a single child of type RawText.
 
     Attributes:
-        children (iterator): a single RawText node for alternative text.
+        children (iterator): a single RawText node containing the escaped character.
     """
     pattern = re.compile(r"\\([!\"#$%&'()*+,-./:;<=>?@\[\\\]^_`{|}~])")
     parse_inner = False
