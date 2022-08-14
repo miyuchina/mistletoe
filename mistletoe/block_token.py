@@ -907,7 +907,7 @@ class Footnote(BlockToken):
 class ThematicBreak(BlockToken):
     """
     Thematic break token (a.k.a. horizontal rule.)
-    This is a leaf block token. Its children are inline (span) tokens.
+    This is a leaf block token without children.
     """
     pattern = re.compile(r' {0,3}(?:([-_*])\s*?)(?:\1\s*?){2,}$')
     def __init__(self, _):
