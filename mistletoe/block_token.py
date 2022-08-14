@@ -155,7 +155,6 @@ class Heading(BlockToken):
     """
     ATX heading token. (["### some heading ###\\n"])
     This is a leaf block token. Its children are inline (span) tokens.
-    Boundary between span-level and block-level tokens.
 
     Attributes:
         level (int): heading level.
@@ -293,7 +292,6 @@ class Paragraph(BlockToken):
     """
     Paragraph token. (["some\\n", "continuous\\n", "lines\\n"])
     This is a leaf block token. Its children are inline (span) tokens.
-    Boundary between span-level and block-level tokens.
     """
     setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
     parse_setext = True  # can be disabled by Quote
@@ -407,7 +405,6 @@ class CodeFence(BlockToken):
     """
     Fenced code block token. (["```sh\\n", "rm -rf /", ..., "```"])
     This is a leaf block token with a single child of type span_token.RawText.
-    Boundary between span-level and block-level tokens.
 
     Attributes:
         children (list): contains a single span_token.RawText token.
@@ -711,7 +708,6 @@ class TableCell(BlockToken):
     """
     Table cell token.
     This is a leaf block token. Its children are inline (span) tokens.
-    Boundary between span-level and block-level tokens.
 
     Should only be called by TableRow.__init__().
 
