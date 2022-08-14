@@ -136,7 +136,7 @@ class BlockToken(token.Token):
 class Document(BlockToken):
     """
     Document token.
-    This is a container block token. Its children are block tokens, container or leaf.
+    This is a container block token. Its children are block tokens - container or leaf ones.
     """
     def __init__(self, lines):
         if isinstance(lines, str):
@@ -211,7 +211,7 @@ class SetextHeading(BlockToken):
 class Quote(BlockToken):
     """
     Block quote token. (["> # heading\\n", "> paragraph\\n"])
-    This is a container block token. Its children are block tokens, container or leaf.
+    This is a container block token. Its children are block tokens - container or leaf ones.
     """
     def __init__(self, parse_buffer):
         # span-level tokenizing happens here.
@@ -507,7 +507,7 @@ class List(BlockToken):
 class ListItem(BlockToken):
     """
     List item token.
-    This is a container block token. Its children are block tokens, container or leaf.
+    This is a container block token. Its children are block tokens - container or leaf ones.
 
     Not included in the parsing process, but called by List.
     """
