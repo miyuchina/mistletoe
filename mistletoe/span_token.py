@@ -255,7 +255,7 @@ _tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
         'ul'}
 
 _tag   = r'[A-Za-z][A-Za-z0-9-]*'
-_attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
+_attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^\s"\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 
 _open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'
 _closing_tag = r'(?<!\\)</' + _tag + r'\s*>'
@@ -278,6 +278,7 @@ class HTMLSpan(SpanToken):
                                    re.DOTALL)
     parse_inner = False
     parse_group = 0
+
 
 # Note: The following XWiki tokens are based on the XWiki Syntax 2.0 (or above; 1.0 was deprecated years ago already).
 

@@ -60,6 +60,7 @@ class TestEmphasis(TestBranchToken):
         self._test_token(next(tokens), 'bar', children=True)
         self._test_token(next(tokens), '***baz', children=False)
 
+
 class TestInlineCode(TestBranchToken):
     def _test_parse_enclosed(self, encl_type, encl_delimiter):
         token = self._test_parse(encl_type, '{delim}`some text`{delim}'.format(delim=encl_delimiter), 'some text')
@@ -170,3 +171,18 @@ class TestContains(unittest.TestCase):
         self.assertTrue('emphasis' in token)
         self.assertFalse('foo' in token)
 
+
+class TestHTMLSpan(unittest.TestCase):
+    def setUp(self):
+        span_token.add_token(span_token.HTMLSpan)
+        self.addCleanup(span_token.reset_tokens)
+
+    def test_html_span(self):
+        tokens = span_token.tokenize_inner('<a>')
+        self.assertIsInstance(tokens[0], span_token.HTMLSpan)
+        self.assertEqual('<a>', tokens[0].content)
+
+    def test_html_span_with_illegal_whitespace(self):
+        tokens = span_token.tokenize_inner('< a><\nfoo><bar/ >\n<foo bar=baz\nbim!bop />')
+        for t in tokens:
+            self.assertNotIsInstance(t, span_token.HTMLSpan)
