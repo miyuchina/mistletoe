@@ -31,6 +31,8 @@ class TestHTMLRenderer(TestRenderer):
         from mistletoe.span_token import tokenize_inner
         rendered = self.renderer.render(tokenize_inner('`foo`')[0])
         self.assertEqual(rendered, '<code>foo</code>')
+        rendered = self.renderer.render(tokenize_inner('`` \\[\\` ``')[0])
+        self.assertEqual(rendered, '<code>\\[\\`</code>')
 
     def test_strikethrough(self):
         self._test_token('Strikethrough', '<del>inner</del>')

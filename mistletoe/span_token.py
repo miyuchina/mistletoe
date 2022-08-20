@@ -124,7 +124,7 @@ class InlineCode(SpanToken):
 
     def __init__(self, match):
         content = match.group(self.parse_group)
-        self.children = (RawText(' '.join(re.split('[ \n]+', content.strip()))),)
+        self.children = (RawText(content),)
 
     @classmethod
     def find(cls, string):

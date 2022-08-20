@@ -53,6 +53,14 @@ class TestInlineCode(TestBranchToken):
     def test_parse_in_strikethrough(self):
         self._test_parse_enclosed(span_token.Strikethrough, '~~')
 
+    def test_preserve_space(self):
+        self._test_parse(span_token.InlineCode, '``` ```', ' ')
+        self._test_parse(span_token.InlineCode, '`  ``  `', '  ``  ')
+
+    def test_preserve_escapes(self):
+        self._test_parse(span_token.InlineCode, '`\\xa0b\\xa0`', '\\xa0b\\xa0')
+        self._test_parse(span_token.InlineCode, '`` \\[\\` ``', ' \\[\\` ')
+
 
 class TestStrikethrough(TestBranchToken):
     def test_parse(self):
