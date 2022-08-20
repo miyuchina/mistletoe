@@ -335,7 +335,7 @@ class TestFootnote(unittest.TestCase):
 
     # this tests an edge case, it shouldn't occur in normal documents:
     # "[key 2]" is part of the paragraph above it, because a link reference definitions cannot interrupt a paragraph.
-    def test_parse_with_para_right_after(self):
+    def test_footnote_followed_by_paragraph(self):
         lines = ['[key 1]: value1\n',
                  'something1\n',
                  '[key 2]: value2\n',
@@ -351,6 +351,31 @@ class TestFootnote(unittest.TestCase):
         self.assertEqual(len(token.children[0].children), 5) # something1, <line break>, [key 2]: value2, <line break>, something2
         self.assertEqual(token.children[0].children[2].content, "[key 2]: value2")
         self.assertEqual(token.children[1].children[0].content, "something3")
+
+    def test_content_after_title_not_allowed(self):
+        lines = ['[foo]: /url\n',
+                 '"title" ok\n']
+        token = block_token.Document(lines)
+        self.assertEqual(token.footnotes, {"foo": ("/url", "")})
+        self.assertEqual(len(token.children), 1)
+        self.assertIsInstance(token.children[0], block_token.Paragraph)
+        self.assertEqual(token.children[0].children[0].content, "\"title\" ok")
+
+    def test_footnotes_may_not_have_too_much_leading_space(self):
+        lines = ['   [link]: /bla\n',
+                 '    [i-am-block-actually]: /foo\n',
+                 'paragraph\n',
+                 '\n',
+                 '\t[i-am-block-too]: /foo\n']
+        token = block_token.Document(lines)
+        self.assertEqual(token.footnotes, {"link": ("/bla", "")})
+        self.assertEqual(len(token.children), 3)
+        self.assertIsInstance(token.children[0], block_token.BlockCode)
+        self.assertEqual(token.children[0].children[0].content, "[i-am-block-actually]: /foo\n")
+        self.assertIsInstance(token.children[1], block_token.Paragraph)
+        self.assertEqual(token.children[1].children[0].content, "paragraph")
+        self.assertIsInstance(token.children[2], block_token.BlockCode)
+        self.assertEqual(token.children[2].children[0].content, "[i-am-block-too]: /foo\n")
 
     def test_parse_opening_bracket_as_paragraph(self): # ... and no error is raised
         lines = ['[\n']
