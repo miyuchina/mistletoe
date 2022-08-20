@@ -732,10 +732,6 @@ class Footnote(BlockToken):
     The constructor returns None, because the footnote information
     is stored in Footnote.read.
     """
-    # Not used, matched manually instead.
-    # We also rely on code block and similar being parsed beforehand here.
-    label_pattern = re.compile(r'[ \n]{0,3}\[(.+?)\]', re.DOTALL)
-
     def __new__(cls, _):
         return None
 
@@ -754,8 +750,10 @@ class Footnote(BlockToken):
         offset = 0
         matches = []
         while offset < len(string) - 1:
-            match_info = cls.match_reference(lines, string, offset)
+            match_info = cls.match_reference(string, offset)
             if match_info is None:
+                # backtrack the lines that have not been consumed
+                lines._index -= string[offset:].count('\n')
                 break
             offset, match = match_info
             matches.append(match)
@@ -763,72 +761,97 @@ class Footnote(BlockToken):
         return matches or None
 
     @classmethod
-    def match_reference(cls, lines, string, offset):
+    def match_reference(cls, string, offset):
+        # up to three spaces, "[", label, "]"
         match_info = cls.match_link_label(string, offset)
         if not match_info:
-            cls.backtrack(lines, string, offset)
             return None
         _, label_end, label = match_info
 
+        # ":"
         if not follows(string, label_end-1, ':'):
-            cls.backtrack(lines, string, offset)
             return None
 
-        match_info = cls.match_link_dest(string, label_end)
+        # optional spaces or tabs (including up to one line ending)
+        dest_start = shift_whitespace(string, label_end + 1)
+        if dest_start == len(string):
+            return None
+
+        # link destination
+        match_info = cls.match_link_dest(string, dest_start)
         if not match_info:
-            cls.backtrack(lines, string, offset)
             return None
         _, dest_end, dest = match_info
 
-        match_info = cls.match_link_title(string, dest_end)
-        if not match_info:
-            cls.backtrack(lines, string, dest_end)
+        # either of:
+        # 1) optional spaces or tabs and then a line break to finish the link reference definition.
+        # 2) optional spaces or tabs (including up to one line ending) followed by a title.
+        # in any case, if the destination is followed directly by non-whitespace, then it's not
+        # a valid link reference definition.
+        title_start = shift_whitespace(string, dest_end)
+        if title_start == dest_end and title_start < len(string):
             return None
+
+        # link title
+        match_info = cls.match_link_title(string, title_start)
+        if not match_info:
+            # no valid title found. if there was a line break following the destination,
+            # we still have a valid link reference definition. otherwise not.
+            eol_pos = string[dest_end:title_start].find("\n")
+            if eol_pos >= 0:
+                return dest_end + eol_pos + 1, (label, dest, "")
+            else:
+                return None
         _, title_end, title = match_info
 
+        # optional spaces or tabs. final line ending.
         line_end = title_end
         while line_end < len(string):
-            if not string[line_end] in whitespace:
-                cls.backtrack(lines, string, offset)
-                return None
-            elif string[line_end] == '\n':
+            if string[line_end] == '\n':
+                return line_end + 1, (label, dest, title)
+            elif string[line_end] in whitespace:
                 line_end += 1
-                break
             else:
-                line_end += 1
+                break
 
-        return line_end, (label, dest, title)
+        # non-whitespace found on the same line as the title, making it invalid.
+        # if there was a line break following the destination,
+        # we still have a valid link reference definition. otherwise not.
+        eol_pos = string[dest_end:title_start].find("\n")
+        if eol_pos >= 0:
+            return dest_end + eol_pos + 1, (label, dest, "")
+        else:
+            return None
 
     @classmethod
     def match_link_label(cls, string, offset):
+        """
+        Matches: up to three spaces, "[", label, "]".
+        """
         start = -1
-        end = -1
         escaped = False
         for i, c in enumerate(string[offset:], start=offset):
-            if c == '\\' and not escaped:
+            if escaped:
+                escaped = False
+            elif c == '\\':
                 escaped = True
-            elif c == '[' and not escaped:
+            elif c == '[':
                 if start == -1:
                     start = i
                 else:
                     return None
-            elif c == ']' and not escaped:
-                end = i
-                label = string[start+1:end]
+            elif c == ']':
+                label = string[start+1:i]
                 if label.strip() != '':
-                    return start, end+1, label
+                    return start, i+1, label
                 return None
-            elif escaped:
-                escaped = False
-            elif c not in whitespace and start == -1:
+            # only spaces allowed before the opening bracket
+            if start == -1 and not (c == " " and i - offset < 3):
                 return None
         return None
 
     @classmethod
     def match_link_dest(cls, string, offset):
-        offset = shift_whitespace(string, offset+1)
-        if offset == len(string):
-            return None
         if string[offset] == '<':
             escaped = False
             for i, c in enumerate(string[offset+1:], start=offset+1):
@@ -864,18 +887,16 @@ class Footnote(BlockToken):
 
     @classmethod
     def match_link_title(cls, string, offset):
-        new_offset = shift_whitespace(string, offset)
-        if new_offset == len(string):
-            return offset, offset, ''
-        if string[new_offset] == '"':
+        if offset == len(string):
+            return None
+        if string[offset] == '"':
             closing = '"'
-        elif string[new_offset] == "'":
+        elif string[offset] == "'":
             closing = "'"
-        elif string[new_offset] == '(':
+        elif string[offset] == '(':
             closing = ')'
         else:
-            return offset, offset, ''
-        offset = new_offset
+            return None
         escaped = False
         for i, c in enumerate(string[offset+1:], start=offset+1):
             if c == '\\' and not escaped:
@@ -894,18 +915,6 @@ class Footnote(BlockToken):
             title = span_token.EscapeSequence.strip(title)
             if key not in root.footnotes:
                 root.footnotes[key] = dest, title
-
-    @staticmethod
-    def backtrack(lines, string, offset):
-        """
-        Called when we iterated over some lines and found nothing
-        relevant on them. This returns those lines back to the parsing process.
-        """
-
-        # call lstrip() to prevent returning too many lines back (hence infinite loop), like in this case:
-        # * valid footlink definition line:      `[key]: valueN\r\n` (here `offset` points to `\r` after parsing the definition)
-        # * follow-up line containing just text: `something\n` (only this line should be re-processed and parsed as a Paragraph)
-        lines._index -= string[offset:].lstrip().count('\n')
 
 
 class ThematicBreak(BlockToken):
