@@ -857,7 +857,7 @@ class Footnote(BlockToken):
             for i, c in enumerate(string[offset+1:], start=offset+1):
                 if c == '\\' and not escaped:
                     escaped = True
-                elif c == ' ' or c == '\n' or (c == '<' and not escaped):
+                elif c == '\n' or (c == '<' and not escaped):
                     return None
                 elif c == '>' and not escaped:
                     return offset, i+1, string[offset+1:i]
