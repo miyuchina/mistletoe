@@ -786,7 +786,18 @@ class Footnote(BlockToken):
             return None
         _, title_end, title = match_info
 
-        return title_end, (label, dest, title)
+        line_end = title_end
+        while line_end < len(string):
+            if not string[line_end] in whitespace:
+                cls.backtrack(lines, string, offset)
+                return None
+            elif string[line_end] == '\n':
+                line_end += 1
+                break
+            else:
+                line_end += 1
+
+        return line_end, (label, dest, title)
 
     @classmethod
     def match_link_label(cls, string, offset):
@@ -809,6 +820,8 @@ class Footnote(BlockToken):
                 return None
             elif escaped:
                 escaped = False
+            elif c not in whitespace and start == -1:
+                return None
         return None
 
     @classmethod
@@ -852,31 +865,23 @@ class Footnote(BlockToken):
     @classmethod
     def match_link_title(cls, string, offset):
         new_offset = shift_whitespace(string, offset)
-        if (new_offset == len(string)
-                or '\n' in string[offset:new_offset]
-                and string[new_offset] == '['):
-            return offset, new_offset, ''
+        if new_offset == len(string):
+            return offset, offset, ''
         if string[new_offset] == '"':
             closing = '"'
         elif string[new_offset] == "'":
             closing = "'"
         elif string[new_offset] == '(':
             closing = ')'
-        elif '\n' in string[offset:new_offset]:
-            return offset, offset, ''
         else:
-            # XXX: Can this actually ever happen?
-            return None
+            return offset, offset, ''
         offset = new_offset
         escaped = False
         for i, c in enumerate(string[offset+1:], start=offset+1):
             if c == '\\' and not escaped:
                 escaped = True
             elif c == closing and not escaped:
-                new_offset = shift_whitespace(string, i+1)
-                if '\n' not in string[i+1:new_offset]:
-                    return None
-                return offset, new_offset, string[offset+1:i]
+                return offset, i+1, string[offset+1:i]
             elif escaped:
                 escaped = False
         return None

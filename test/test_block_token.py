@@ -332,25 +332,24 @@ class TestFootnote(unittest.TestCase):
         token = block_token.Document(lines)
         self.assertEqual(token.footnotes, {"key 1": ("value1", "title1"),
                                            "key 2": ("value2", "title2")})
-    
-    # this tests an edge case, it shouldn't occur in normal documents
+
+    # this tests an edge case, it shouldn't occur in normal documents:
+    # "[key 2]" is part of the paragraph above it, because a link reference definitions cannot interrupt a paragraph.
     def test_parse_with_para_right_after(self):
         lines = ['[key 1]: value1\n',
-                 # 'something1\n', # if uncommented,
-                 #     this and the next line should be treated as a paragraph
-                 #     - this line gets skipped instead now
+                 'something1\n',
                  '[key 2]: value2\n',
                  'something2\n',
                  '\n',
-                 '[key 3]: value3\r\n', # '\r', or any other whitespace
+                 '[key 3]: value3\r\n', # '\r', or any other whitespace may follow on the same line
                  'something3\n']
         token = block_token.Document(lines)
         self.assertEqual(token.footnotes, {"key 1": ("value1", ""),
-                                           "key 2": ("value2", ""),
                                            "key 3": ("value3", "")})
         self.assertEqual(len(token.children), 2)
         self.assertIsInstance(token.children[0], block_token.Paragraph)
-        self.assertEqual(token.children[0].children[0].content, "something2")
+        self.assertEqual(len(token.children[0].children), 5) # something1, <line break>, [key 2]: value2, <line break>, something2
+        self.assertEqual(token.children[0].children[2].content, "[key 2]: value2")
         self.assertEqual(token.children[1].children[0].content, "something3")
 
     def test_parse_opening_bracket_as_paragraph(self): # ... and no error is raised
