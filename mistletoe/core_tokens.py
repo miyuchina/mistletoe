@@ -225,7 +225,7 @@ def match_link_dest(string, offset):
         for i, c in enumerate(string[offset+1:], start=offset+1):
             if c == '\\' and not escaped:
                 escaped = True
-            elif c == ' ' or c == '\n' or (c == '<' and not escaped):
+            elif c == '\n' or (c == '<' and not escaped):
                 return None
             elif c == '>' and not escaped:
                 return offset, i+1, string[offset+1:i]
@@ -307,6 +307,12 @@ def match_link_label(string, offset, root=None):
 
 
 def is_link_label(text, root):
+    """
+    Normalize and look up `text` among the footnotes.
+    Returns (destination, title) if successful, otherwise None.
+    """
+    if not root:
+        return None
     escaped = False
     for c in text:
         if c == '\\' and not escaped:
@@ -316,8 +322,6 @@ def is_link_label(text, root):
         elif escaped:
             escaped = False
     if text.strip() != '':
-        if not root:
-            return True
         return root.footnotes.get(normalize_label(text), None)
     return None
 

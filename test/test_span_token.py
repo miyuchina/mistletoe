@@ -107,6 +107,13 @@ class TestLink(TestBranchToken):
         child = next(iter(token.children))
         self._test_token(child, 'alt', src='src')
 
+    def test_angle_bracketed_inline_link_with_space(self):
+        tokens = span_token.tokenize_inner('[link](</my uri>)')
+        self.assertIsInstance(tokens[0], span_token.Link)
+        self.assertEqual('', tokens[0].title)
+        self.assertEqual('/my uri', tokens[0].target)
+        self._test_token(tokens[0], 'link')
+
 
 class TestAutoLink(TestBranchToken):
     def test_parse(self):
