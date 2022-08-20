@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch, call
 from mistletoe import block_token, core_tokens, span_token
-from mistletoe.block_tokenizer import FileWrapper
 
 
 class TestToken(unittest.TestCase):
@@ -448,3 +447,22 @@ class TestContains(unittest.TestCase):
         self.assertTrue('heading' in token)
         self.assertTrue('code' in token)
         self.assertFalse('foo' in token)
+
+
+class TestHTMLBlock(unittest.TestCase):
+    def setUp(self):
+        block_token.add_token(block_token.HTMLBlock)
+        self.addCleanup(block_token.reset_tokens)
+
+    def test_textarea_block_may_contain_blank_lines(self):
+        lines = ['<textarea>\n',
+                 '\n',
+                 '*foo*\n',
+                 '\n',
+                 '_bar_\n',
+                 '\n',
+                 '</textarea>\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.HTMLBlock)
