@@ -242,10 +242,10 @@ class TestListItem(unittest.TestCase):
         self.assertIsInstance(tokens[0].children[1].children[0], block_token.CodeFence)
         self.assertIsInstance(tokens[0].children[2].children[0], block_token.BlockCode)
         self.assertTrue('foo' in tokens[0].children[0].children[0])
-        self.assertTrue('bar' in tokens[0].children[1].children[0])
+        self.assertEqual('bar\n', tokens[0].children[1].children[0].children[0].content)
         self.assertEqual('baz\n', tokens[0].children[2].children[0].children[0].content)
 
-    def test_a_list_item_can_begin_with_at_most_one_blank_line(self):
+    def test_a_list_item_may_begin_with_at_most_one_blank_line(self):
         lines = ['-\n',
                  '\n',
                  '  foo\n']

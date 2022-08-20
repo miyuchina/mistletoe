@@ -325,8 +325,7 @@ class Paragraph(BlockToken):
 
             # check if next_line starts List
             marker_tuple = ListItem.parse_marker(next_line)
-            if (len(next_line) - len(next_line.lstrip()) < 4
-                    and marker_tuple is not None):
+            if (marker_tuple is not None):
                 _, leader, content = marker_tuple
                 # to break a paragraph, the first line may not be empty,
                 # and the list must be unordered or start from 1.
@@ -512,7 +511,7 @@ class ListItem(BlockToken):
     Not included in the parsing process, but called by List.
     """
     repr_attributes = ("leader", "prepend", "loose")
-    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])(\s*$|\s+)')
+    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
     def __init__(self, parse_buffer, prepend, leader):
@@ -549,17 +548,17 @@ class ListItem(BlockToken):
     @classmethod
     def parse_marker(cls, line):
         """
-        Returns a tuple (prepend, leader, content) iff the line has a valid leader and a
-        valid number of spaces between leader and content: between 1 and 4 according to
-        the spec. Or if the content is empty, in which case there need not be any spaces.
+        Returns a tuple (prepend, leader, content) iff the line has a valid leader and at
+        least one space separating leader and content, or if the content is empty, in which
+        case there need not be any spaces.
         The return value is None if the line doesn't have a valid marker.
 
-        The leader is a bullet list marker or an ordered list marker.
+        The leader is a bullet list marker, or an ordered list marker.
 
         The prepend is the start position of the content, i.e., the indentation required
         for continuation lines.
         """
-        match_obj = cls.pattern.match(line.removesuffix('\n'))
+        match_obj = cls.pattern.match(line)
         if match_obj is None:
             return None
         prepend = len(match_obj.group(0).expandtabs(4))
@@ -567,6 +566,8 @@ class ListItem(BlockToken):
         content = line[match_obj.end(0):]
         n_spaces = prepend - match_obj.end(1)
         if n_spaces > 4:
+            # if there are more than 4 spaces after the leader, we treat them as part of the content
+            # with the exception of the first (marker separator) space.
             prepend -= n_spaces - 1
             content = ' ' * (n_spaces - 1) + content
         return prepend, leader, content
@@ -582,12 +583,15 @@ class ListItem(BlockToken):
         next_line = lines.peek()
         prepend, leader, content = prev_marker if prev_marker else cls.parse_marker(line)
         if content.strip() == '':
+            # item starting with a blank line: look for the next non-blank line
             prepend = len(leader) + 1
             blanks = 1
             while next_line is not None and next_line.strip() == '':
                 blanks += 1
                 next(lines)
                 next_line = lines.peek()
+            # if the line following the list marker is also empty, then this is an empty
+            # list item.
             if blanks > 1:
                 parse_buffer = tokenizer.ParseBuffer()
                 parse_buffer.loose = True
@@ -596,39 +600,40 @@ class ListItem(BlockToken):
         else:
             line_buffer.append(content)
 
-        newline = 0
+        # loop over the following lines, looking for the end of the list item
+        newline_count = 0
         while True:
             if next_line is None:
-                # strip off trailing newlines
-                if newline:
+                # list item ends here because we have reached the end of content
+                if newline_count:
                     lines.backstep()
-                    del line_buffer[-newline:]
+                    del line_buffer[-newline_count:]
                 break
 
             continuation = cls.parse_continuation(next_line, prepend)
             if not continuation:
-                # directly followed by another token
+                # the line doesn't have the indentation to show that it belongs to
+                # the list item, but it should be included anyway by lazy continuation...
+                # ...unless it's the start of another token
                 if cls.other_token(next_line):
-                    if newline:
+                    if newline_count:
                         lines.backstep()
-                        del line_buffer[-newline:]
+                        del line_buffer[-newline_count:]
                     break
-                # next_line is a new list item
+                # ...or it's a new list item
                 marker_info = cls.parse_marker(next_line)
                 if marker_info is not None:
                     next_marker = marker_info
                     break
-                # not another item, has newlines -> not continuation
-                if newline:
+                # ...or the line above it was blank
+                if newline_count:
                     lines.backstep()
-                    del line_buffer[-newline:]
+                    del line_buffer[-newline_count:]
                     break
-                # lazy continuation
                 continuation = next_line
 
-            # continuation
             line_buffer.append(continuation)
-            newline = newline + 1 if continuation == '\n' else 0
+            newline_count = newline_count + 1 if continuation == '\n' else 0
             next(lines)
             next_line = lines.peek()
 
