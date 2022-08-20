@@ -438,10 +438,16 @@ class Delimiter:
         return True
 
     def closed_by(self, other):
-        return not (self.type[0] != other.type[0]
-                    or (self.open and self.close or other.open and other.close)
-                    and (self.number + other.number) % 3 == 0)
-
+        if self.type[0] != other.type[0]:
+            return False
+        if self.open and self.close or other.open and other.close:
+            # if either of the delimiters can both open and close emphasis, then additional
+            # restrictions apply: the sum of the lengths of the delimiter runs
+            # containing the opening and closing delimiters must not be a multiple of 3
+            # unless both lengths are multiples of 3.
+            return ((self.number + other.number) % 3 != 0
+                    or (self.number % 3 == 0 and other.number % 3 == 0))
+        return True
 
     def __repr__(self):
         if not self.type.startswith(('*', '_')):

@@ -54,6 +54,11 @@ class TestEmphasis(TestBranchToken):
         self._test_token(next(tokens), 'an example without', children=True)
         self._test_token(next(tokens), 'punctuation', children=False)
 
+    def test_emphasis_when_both_delimiter_run_lengths_are_multiples_of_3(self):
+        tokens = iter(span_token.tokenize_inner('foo******bar*********baz'))
+        self._test_token(next(tokens), 'foo', children=False)
+        self._test_token(next(tokens), 'bar', children=True)
+        self._test_token(next(tokens), '***baz', children=False)
 
 class TestInlineCode(TestBranchToken):
     def _test_parse_enclosed(self, encl_type, encl_delimiter):
