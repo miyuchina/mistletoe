@@ -962,7 +962,7 @@ class HTMLBlock(BlockToken):
         content (str): the raw HTML content.
     """
     _end_cond = None
-    multiblock = re.compile(r'<(script|pre|style)[ >\n]')
+    multiblock = re.compile(r'<(pre|script|style|textarea)[ >\n]')
     predefined = re.compile(r'<\/?(.+?)(?:\/?>|[ \n])')
     custom_tag = re.compile(r'(?:' + '|'.join((span_token._open_tag,
                                 span_token._closing_tag)) + r')\s*$')
@@ -975,7 +975,7 @@ class HTMLBlock(BlockToken):
         stripped = line.lstrip()
         if len(line) - len(stripped) >= 4:
             return False
-        # rule 1: <pre>, <script> or <style> tags, allow newlines in block
+        # rule 1: HTML tags designed to contain literal content, allow newlines in block
         match_obj = cls.multiblock.match(stripped)
         if match_obj is not None:
             cls._end_cond = '</{}>'.format(match_obj.group(1).casefold())
