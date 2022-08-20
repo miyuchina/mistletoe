@@ -124,6 +124,9 @@ class InlineCode(SpanToken):
 
     def __init__(self, match):
         content = match.group(self.parse_group)
+        content = content.replace('\n', ' ')
+        if not content.isspace() and content.startswith(" ") and content.endswith(" "):
+            content = content[1:-1]
         self.children = (RawText(content),)
 
     @classmethod
