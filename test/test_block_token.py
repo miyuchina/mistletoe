@@ -142,17 +142,19 @@ class TestParagraph(TestToken):
 class TestListItem(unittest.TestCase):
     def test_parse_marker(self):
         lines = ['- foo\n',
-                 '*    bar\n',
+                 '   *    bar\n',
                  ' + baz\n',
                  '1. item 1\n',
                  '2) item 2\n',
-                 '123456789. item x\n']
+                 '123456789. item x\n',
+                 '*\n']
         for line in lines:
             self.assertTrue(block_token.ListItem.parse_marker(line))
         bad_lines = ['> foo\n',
                      '1item 1\n',
                      '2| item 2\n',
-                     '1234567890. item x\n']
+                     '1234567890. item x\n',
+                     '    * too many spaces\n']
         for line in bad_lines:
             self.assertFalse(block_token.ListItem.parse_marker(line))
 
@@ -203,6 +205,81 @@ class TestListItem(unittest.TestCase):
                  '# bar\n']
         list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
+
+    def test_tabbed_list_items(self):
+        # according to the CommonMark spec:
+        # in contexts where spaces help to define block structure, tabs behave as if they
+        # were replaced by spaces with a tab stop of 4 characters.
+        lines = ['title\n',
+                 '*\ttabbed item long line\n',
+                 '\n', # break lazy continuation
+                 '    continuation 1\n',
+                 '*   second list item\n',
+                 '\n', # break lazy continuation
+                 '\tcontinuation 2\n']
+        tokens = block_token.tokenize(lines)
+        self.assertEqual(len(tokens), 2)
+        self.assertIsInstance(tokens[0], block_token.Paragraph)
+        self.assertIsInstance(tokens[1], block_token.List)
+        self.assertTrue('tabbed item long line' in tokens[1].children[0])
+        self.assertTrue('continuation 1' in tokens[1].children[0])
+        self.assertTrue('second list item' in tokens[1].children[1])
+        self.assertTrue('continuation 2' in tokens[1].children[1])
+
+    def test_list_items_starting_with_blank_line(self):
+        lines = ['-\n',
+                 '  foo\n',
+                 '-\n',
+                 '  ```\n',
+                 '  bar\n',
+                 '  ```\n',
+                 '-\n',
+                 '      baz\n']
+        tokens = block_token.tokenize(lines)
+        self.assertEqual(len(tokens), 1)
+        self.assertIsInstance(tokens[0], block_token.List)
+        self.assertIsInstance(tokens[0].children[0].children[0], block_token.Paragraph)
+        self.assertIsInstance(tokens[0].children[1].children[0], block_token.CodeFence)
+        self.assertIsInstance(tokens[0].children[2].children[0], block_token.BlockCode)
+        self.assertTrue('foo' in tokens[0].children[0].children[0])
+        self.assertTrue('bar' in tokens[0].children[1].children[0])
+        self.assertEqual('baz\n', tokens[0].children[2].children[0].children[0].content)
+
+    def test_a_list_item_can_begin_with_at_most_one_blank_line(self):
+        lines = ['-\n',
+                 '\n',
+                 '  foo\n']
+        tokens = block_token.tokenize(lines)
+        self.assertEqual(len(tokens), 2)
+        self.assertIsInstance(tokens[0], block_token.List)
+        self.assertIsInstance(tokens[1], block_token.Paragraph)
+        self.assertTrue('foo' in tokens[1].children[0])
+
+    def test_empty_list_item_in_the_middle(self):
+        lines = ['* a\n',
+                 '*\n',
+                 '\n',
+                 '* c\n']
+        tokens = block_token.tokenize(lines)
+        self.assertEqual(len(tokens), 1)
+        self.assertIsInstance(tokens[0], block_token.List)
+        self.assertEqual(len(tokens[0].children), 3)
+        self.assertTrue(tokens[0].loose)
+
+    def test_list_with_code_block(self):
+        lines = ['1.      indented code\n',
+                 '\n',
+                 '   paragraph\n',
+                 '\n',
+                 '       more code\n']
+        tokens = block_token.tokenize(lines)
+        self.assertEqual(len(tokens), 1)
+        self.assertIsInstance(tokens[0], block_token.List)
+        self.assertEqual(len(tokens[0].children), 1)
+        self.assertIsInstance(tokens[0].children[0].children[0], block_token.BlockCode)
+        self.assertEqual(' indented code\n', tokens[0].children[0].children[0].children[0].content)
+        self.assertIsInstance(tokens[0].children[0].children[1], block_token.Paragraph)
+        self.assertIsInstance(tokens[0].children[0].children[2], block_token.BlockCode)
 
 
 class TestList(unittest.TestCase):
