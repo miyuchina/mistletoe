@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, call
-from mistletoe import block_token, span_token
+from mistletoe import block_token, core_tokens, span_token
 from mistletoe.block_tokenizer import FileWrapper
 
 
@@ -453,6 +453,22 @@ class TestFootnote(unittest.TestCase):
         self.assertEqual(token.children[1].children[0].content, "paragraph")
         self.assertIsInstance(token.children[2], block_token.BlockCode)
         self.assertEqual(token.children[2].children[0].content, "[i-am-block-too]: /foo\n")
+
+    def test_footnotes_angle_bracketed_link_with_space(self):
+        lines = ['[Foo bar]:\n',
+                 '<my url>\n',
+                 '\'title\'\n',
+                 '\n',
+                 '[Foo bar]\n']
+        token = block_token.Document(lines)
+        self.assertEqual(token.footnotes, {core_tokens.normalize_label("Foo bar"): ("my url", "title")})
+
+    def test_footnotes_title_separated_from_link_destination(self):
+        lines = ['[foo]: <bar>(baz)\n',
+                 '\n',
+                 '[foo]\n']
+        token = block_token.Document(lines)
+        self.assertEqual(token.footnotes, {})
 
     def test_parse_opening_bracket_as_paragraph(self): # ... and no error is raised
         lines = ['[\n']
