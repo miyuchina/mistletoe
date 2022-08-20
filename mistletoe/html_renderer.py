@@ -54,7 +54,10 @@ class HTMLRenderer(BaseRenderer):
 
     def render_inline_code(self, token: span_token.InlineCode) -> str:
         template = '<code>{}</code>'
-        inner = html.escape(token.children[0].content)
+        content = token.children[0].content.replace('\n', ' ')
+        if not content.isspace() and content.startswith(" ") and content.endswith(" "):
+            content = content[1:-1]
+        inner = html.escape(content)
         return template.format(inner)
 
     def render_strikethrough(self, token: span_token.Strikethrough) -> str:
