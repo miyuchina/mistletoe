@@ -45,6 +45,16 @@ class TestEmphasis(TestBranchToken):
         self._test_token(next(tokens), 'Book Title', children=True)
         self._test_token(next(tokens), '’s author', children=False)
 
+    def test_no_emphasis_for_underscore_without_punctuation(self):
+        tokens = iter(span_token.tokenize_inner('_an example without_punctuation'))
+        self._test_token(next(tokens), '_an example without_punctuation', children=True)
+
+    def test_emphasis_for_asterisk_without_punctuation(self):
+        tokens = iter(span_token.tokenize_inner('*an example without*punctuation'))
+        self._test_token(next(tokens), 'an example without', children=True)
+        self._test_token(next(tokens), 'punctuation', children=False)
+
+
 class TestInlineCode(TestBranchToken):
     def _test_parse_enclosed(self, encl_type, encl_delimiter):
         token = self._test_parse(encl_type, '{delim}`some text`{delim}'.format(delim=encl_delimiter), 'some text')
