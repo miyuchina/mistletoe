@@ -2,11 +2,12 @@ from textwrap import dedent
 import unittest
 
 from mistletoe import Document
+from mistletoe.span_token import Strong
 from mistletoe.utils import traverse
 
 
 class TestTraverse(unittest.TestCase):
-    def test_a(self):
+    def test_with_included_source(self):
         doc = Document(
             dedent(
                 """\
@@ -39,3 +40,8 @@ class TestTraverse(unittest.TestCase):
                 ('RawText', 'Emphasis', 4),
             ]
         )
+
+    def test_with_class_filter(self):
+        doc = Document("a **b** c **d**")
+        filtered = [t.node.__class__.__name__ for t in traverse(doc, klass=Strong)]
+        self.assertEqual(filtered, ["Strong", "Strong"])
