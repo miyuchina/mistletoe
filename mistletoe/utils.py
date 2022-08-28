@@ -24,7 +24,7 @@ def traverse(source, klass=None, depth=None, include_source=False):
         current_depth += 1
         new_children = []
         for parent, child in next_children:
-            if klass is None or issubclass(child, klass):
+            if klass is None or isinstance(child, klass):
                 yield TraverseResult(child, parent, current_depth)
             new_children.extend(
                 [(child, c) for c in getattr(child, 'children', [])]
