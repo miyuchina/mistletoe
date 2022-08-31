@@ -62,7 +62,7 @@ class HTMLRenderer(BaseRenderer):
         return template.format(self.render_inner(token))
 
     def render_image(self, token: span_token.Image) -> str:
-        template = '<img src="{}" alt="{}"{} />'
+        template = '<img src="{}" alt="{}"{}>'
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
@@ -187,11 +187,11 @@ class HTMLRenderer(BaseRenderer):
 
     @staticmethod
     def render_thematic_break(token: block_token.ThematicBreak) -> str:
-        return '<hr />'
+        return '<hr>'
 
     @staticmethod
     def render_line_break(token: span_token.LineBreak) -> str:
-        return '\n' if token.soft else '<br />\n'
+        return '\n' if token.soft else '<br>\n'
 
     @staticmethod
     def render_html_block(token: block_token.HTMLBlock) -> str:
