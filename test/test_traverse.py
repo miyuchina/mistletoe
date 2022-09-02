@@ -7,6 +7,22 @@ from mistletoe.utils import traverse
 
 
 class TestTraverse(unittest.TestCase):
+    def test(self):
+        doc = Document("a **b** c **d**")
+        filtered = [t.node.__class__.__name__ for t in traverse(doc)]
+        self.assertEqual(
+            filtered,
+            [
+                "Paragraph",
+                "RawText",
+                "Strong",
+                "RawText",
+                "Strong",
+                "RawText",
+                "RawText",
+            ],
+        )
+
     def test_with_included_source(self):
         doc = Document(
             dedent(
@@ -45,3 +61,12 @@ class TestTraverse(unittest.TestCase):
         doc = Document("a **b** c **d**")
         filtered = [t.node.__class__.__name__ for t in traverse(doc, klass=Strong)]
         self.assertEqual(filtered, ["Strong", "Strong"])
+
+    def test_with_included_source_and_class_filter(self):
+        doc = Document("a **b** c **d**")
+        filtered = [
+            t.node.__class__.__name__
+            for t in traverse(doc, include_source=True, klass=Strong)
+        ]
+        self.assertEqual(filtered, ["Strong", "Strong"])
+

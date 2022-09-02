@@ -12,12 +12,13 @@ def traverse(source, klass=None, depth=None, include_source=False):
         klass: filter children by a certain token class
         depth (int): The depth to recurse into the tree
         include_source (bool): whether to first yield the source element
+                               (provided it passes any given ``klass`` filter)
 
     Yields:
         A container for an element, its parent and depth
     """
     current_depth = 0
-    if include_source:
+    if include_source and (klass is None or isinstance(source, klass)):
         yield TraverseResult(source, None, current_depth)
     next_children = [(source, c) for c in getattr(source, 'children', [])]
     while next_children and (depth is None or current_depth > depth):
