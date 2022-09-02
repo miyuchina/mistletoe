@@ -70,3 +70,56 @@ class TestTraverse(unittest.TestCase):
         ]
         self.assertEqual(filtered, ["Strong", "Strong"])
 
+    def test_with_depth_limit(self):
+        doc = Document("a **b** c **d**")
+
+        # Zero depth with root not included yields no nodes.
+        filtered = [t.node.__class__.__name__ for t in traverse(doc, depth=0)]
+        self.assertEqual(filtered, [])
+
+        # Zero depth with root included yields the root node.
+        filtered = [
+            t.node.__class__.__name__
+            for t in traverse(doc, depth=0, include_source=True)
+        ]
+        self.assertEqual(filtered, ["Document"])
+
+        # Depth=1 correctly returns the single node at that level.
+        filtered = [t.node.__class__.__name__ for t in traverse(doc, depth=1)]
+        self.assertEqual(filtered, ["Paragraph"])
+
+        # Depth=2 returns the correct nodes.
+        filtered = [t.node.__class__.__name__ for t in traverse(doc, depth=2)]
+        self.assertEqual(
+            filtered, ["Paragraph", "RawText", "Strong", "RawText", "Strong"]
+        )
+
+        # Depth=3 returns the correct nodes (all nodes in the tree).
+        filtered = [t.node.__class__.__name__ for t in traverse(doc, depth=3)]
+        self.assertEqual(
+            filtered,
+            [
+                "Paragraph",
+                "RawText",
+                "Strong",
+                "RawText",
+                "Strong",
+                "RawText",
+                "RawText",
+            ],
+        )
+
+        # Verify there are no additional nodes at depth=4.
+        filtered = [t.node.__class__.__name__ for t in traverse(doc, depth=4)]
+        self.assertEqual(
+            filtered,
+            [
+                "Paragraph",
+                "RawText",
+                "Strong",
+                "RawText",
+                "Strong",
+                "RawText",
+                "RawText",
+            ],
+        )
