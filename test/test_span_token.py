@@ -157,6 +157,13 @@ class TestRawText(unittest.TestCase):
         with self.assertRaises(AttributeError):
             token.children
 
+    def test_html_entities(self):
+        tokens = span_token.tokenize_inner('&nbsp &x; &#; &#x;\n&#87654321;\n&#abcdef0;\n&ThisIsNotDefined; &hi?;\n')
+        self.assertEqual(tokens[0].content, '&nbsp &x; &#; &#x;')
+        self.assertEqual(tokens[2].content, '&#87654321;')
+        self.assertEqual(tokens[4].content, '&#abcdef0;')
+        self.assertEqual(tokens[6].content, '&ThisIsNotDefined; &hi?;')
+
 
 class TestLineBreak(unittest.TestCase):
     def test_parse(self):
