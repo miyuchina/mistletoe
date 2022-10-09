@@ -3,7 +3,6 @@ HTML renderer for mistletoe.
 """
 
 import html
-import re
 from itertools import chain
 from urllib.parse import quote
 from mistletoe import block_token
@@ -26,17 +25,9 @@ class HTMLRenderer(BaseRenderer):
         """
         self._suppress_ptag_stack = [False]
         super().__init__(*chain((HTMLBlock, HTMLSpan), extras))
-        # html.entities.html5 includes entitydefs not ending with ';',
-        # CommonMark seems to hate them, so...
-        self._stdlib_charref = html._charref
-        _charref = re.compile(r'&(#[0-9]+;'
-                              r'|#[xX][0-9a-fA-F]+;'
-                              r'|[^\t\n\f <&#;]{1,32};)')
-        html._charref = _charref
 
     def __exit__(self, *args):
         super().__exit__(*args)
-        html._charref = self._stdlib_charref
 
     def render_to_plain(self, token) -> str:
         if hasattr(token, 'children'):
