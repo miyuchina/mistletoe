@@ -102,6 +102,15 @@ class TestJIRARenderer(BaseRendererTest):
         expected = '[{body}|{url}]'.format(url=url, body=body)
         actual = self.renderer.render(token)
         self.assertEqual(expected, actual)
+
+    def test_render_link_with_title(self):
+        url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
+        body = self.genRandomString(80, True)
+        title = self.genRandomString(20, True)
+        token = next(iter(tokenize_inner('[{body}]({url} "{title}")'.format(url=url, body=body, title=title))))
+        expected = '[{body}|{url}|{title}]'.format(url=url, body=body, title=title)
+        actual = self.renderer.render(token)
+        self.assertEqual(expected, actual)
     
     def test_render_footnote_link(self):
         pass

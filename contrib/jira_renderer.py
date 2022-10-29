@@ -63,10 +63,15 @@ class JIRARenderer(BaseRenderer):
         return template.format(src=token.src)
 
     def render_link(self, token):
-        template = '[{inner}|{target}]'
-        target = escape_url(token.target)
+        template = '[{inner}|{target}{title}]'
         inner = self.render_inner(token)
-        return template.format(target=target, inner=inner)
+        target = escape_url(token.target)
+        if token.title:
+            title = '|{}'.format(token.title)
+        else:
+            title = ''
+
+        return template.format(inner=inner, target=target, title=title)
 
     def render_auto_link(self, token):
         template = '[{target}]'
