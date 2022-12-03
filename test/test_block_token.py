@@ -114,6 +114,11 @@ class TestCodeFence(TestToken):
         arg = 'hey'
         self._test_match(block_token.CodeFence, lines, arg, language='')
 
+    def test_code_fence_with_backticks_and_tildes_in_the_info_string(self):
+        lines = ['~~~ aa ``` ~~~\n', 'foo\n', '~~~\n']
+        arg = 'foo\n'
+        self._test_match(block_token.CodeFence, lines, arg, language='aa')
+
 
 class TestBlockCode(TestToken):
     def test_parse_indented_code(self):
