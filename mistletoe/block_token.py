@@ -426,7 +426,9 @@ class CodeFence(BlockToken):
         if not match_obj:
             return False
         prepend, leader, lang = match_obj.groups()
-        if leader[0] in lang or leader[0] in line[match_obj.end():]:
+        # info strings for backtick code blocks may not contain backticks,
+        # but info strings for tilde code blocks may contain both tildes and backticks.
+        if leader[0] == '`' and '`' in line[match_obj.end(2):]:
             return False
         cls._open_info = len(prepend), leader, lang
         return True
