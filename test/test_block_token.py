@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, call
-from mistletoe import block_token, core_tokens, span_token
+from mistletoe import block_token, span_token
 
 
 class TestToken(unittest.TestCase):
@@ -332,6 +332,22 @@ class TestFootnote(unittest.TestCase):
         self.assertEqual(token.footnotes, {"key 1": ("value1", "title1"),
                                            "key 2": ("value2", "title2")})
 
+    def test_parse_with_space_in_every_part(self):
+        lines = ['[Foo bar]:\n',
+                 '<my url>\n',
+                 '\'my title\'\n']
+        token = block_token.Document(lines)
+        self.assertEqual(set(token.footnotes.values()), set({ ("my url", "my title") }))
+
+    def test_parse_title_must_be_separated_from_link_destination(self):
+        lines = ['[foo]: <bar> (baz)\n']
+        token = block_token.Document(lines)
+        self.assertEqual(set(token.footnotes.values()), set({ ("bar", "baz") }))
+
+        lines = ['[foo]: <bar>(baz)\n']
+        token = block_token.Document(lines)
+        self.assertEqual(len(token.footnotes), 0)
+
     # this tests an edge case, it shouldn't occur in normal documents:
     # "[key 2]" is part of the paragraph above it, because a link reference definitions cannot interrupt a paragraph.
     def test_footnote_followed_by_paragraph(self):
@@ -375,22 +391,6 @@ class TestFootnote(unittest.TestCase):
         self.assertEqual(token.children[1].children[0].content, "paragraph")
         self.assertIsInstance(token.children[2], block_token.BlockCode)
         self.assertEqual(token.children[2].children[0].content, "[i-am-block-too]: /foo\n")
-
-    def test_footnotes_angle_bracketed_link_with_space(self):
-        lines = ['[Foo bar]:\n',
-                 '<my url>\n',
-                 '\'title\'\n',
-                 '\n',
-                 '[Foo bar]\n']
-        token = block_token.Document(lines)
-        self.assertEqual(token.footnotes, {core_tokens.normalize_label("Foo bar"): ("my url", "title")})
-
-    def test_footnotes_title_separated_from_link_destination(self):
-        lines = ['[foo]: <bar>(baz)\n',
-                 '\n',
-                 '[foo]\n']
-        token = block_token.Document(lines)
-        self.assertEqual(token.footnotes, {})
 
     def test_parse_opening_bracket_as_paragraph(self): # ... and no error is raised
         lines = ['[\n']
