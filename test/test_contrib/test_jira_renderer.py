@@ -22,7 +22,7 @@
 
 from test.base_test import BaseRendererTest
 from mistletoe.span_token import tokenize_inner
-from contrib.jira_renderer import JIRARenderer
+from mistletoe.contrib.jira_renderer import JIRARenderer
 import random
 import string
 
