@@ -153,11 +153,12 @@ LaTeX:
 mistletoe foo.md --renderer mistletoe.latex_renderer.LaTeXRenderer
 ```
 
-Note: The renderers inside the `contrib` directory are not currently a part of
-the `mistletoe` module when mistletoe is installed as a regular package.
-So if you want to use a renderer from the `contrib` directory, you either
-have to add that directory to Python's [PYTHONPATH][pythonpath]
-or install mistletoe with the `-e` switch (see [Installation](#installation)).
+and similarly for a renderer in the contrib directory:
+
+```sh
+mistletoe foo.md --renderer mistletoe.contrib.jira_renderer.JIRARenderer
+```
+
 
 ### mistletoe interactive mode
 
