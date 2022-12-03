@@ -3,7 +3,7 @@
 You've seen mistletoe: it branches off in all directions, bringing people
 together. We would love to see what you can make of mistletoe, which direction
 you would take it to. Or maybe you can discover some [Nargles][nargles], which,
-by the way, totally exists.
+by the way, totally exist.
 
 The following instructions serve as guidelines, and you should use your best
 judgements when employing them.
@@ -11,7 +11,7 @@ judgements when employing them.
 ## Getting started
 
 Refer to the [README][readme] for install instructions. Since you're going to
-mess with the code, it's prefered that you clone the repo directly.
+mess with the code, it's preferred that you clone the repo directly.
 
 ## Things you can do
 
@@ -37,9 +37,9 @@ I created it just for this purpose. To use it, run `mistletoe` (or
 Markdown is a very finicky document format to parse, so if something does not
 work as intended, it's probably my fault and not yours.
 
-### Writing documentations
+### Writing documentation
 
-The creator might not the best person to write documentations; the users,
+The creator might not the best person to write documentation; the users,
 knowing all the painpoints, have a better idea of actual use cases and possible
 things that can go wrong.
 
