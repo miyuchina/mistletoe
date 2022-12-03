@@ -189,7 +189,7 @@ def match_link_image(string, offset, delimiter, root=None):
                               (-1, -1, title))
             match.type = 'Link' if not image else 'Image'
             return match
-        ref = is_link_label(text, root)
+        ref = get_link_label(text, root)
         if ref:
             # compact footnote link
             if follows(string, offset+1, ']'):
@@ -203,7 +203,7 @@ def match_link_image(string, offset, delimiter, root=None):
                 return match
         return None
     # shortcut footnote link
-    ref = is_link_label(text, root)
+    ref = get_link_label(text, root)
     if ref:
         dest, title = ref
         end = offset + 1
@@ -306,7 +306,7 @@ def match_link_label(string, offset, root=None):
     return None
 
 
-def is_link_label(text, root):
+def get_link_label(text, root):
     """
     Normalize and look up `text` among the footnotes.
     Returns (destination, title) if successful, otherwise None.
