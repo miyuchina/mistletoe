@@ -41,14 +41,14 @@ Output formats
 --------------
 
 Renderers for the following "core" output formats exist within the mistletoe
-module itself:
+main package:
 
 * HTML
 * LaTeX
 * AST (Abstract Syntax Tree; handy for debugging the parsing process)
 
-Renderers for the following output formats are placed
-in the [contrib][contrib] folder:
+Renderers for the following output formats can be found
+in the [contrib][contrib] package:
 
 * HTML with MathJax (_mathjax.py_)
 * HTML with code highlighting (using Pygments) (_pygments\_renderer.py_)
@@ -153,7 +153,7 @@ LaTeX:
 mistletoe foo.md --renderer mistletoe.latex_renderer.LaTeXRenderer
 ```
 
-and similarly for a renderer in the contrib directory:
+and similarly for a renderer in the contrib package:
 
 ```sh
 mistletoe foo.md --renderer mistletoe.contrib.jira_renderer.JIRARenderer
@@ -242,8 +242,8 @@ Copyright & License
 [performance]: performance.md
 [oilshell]: https://www.oilshell.org/blog/2018/02/14.html
 [commonmark]: https://spec.commonmark.org/
-[contrib]: https://github.com/miyuchina/mistletoe/tree/master/contrib
-[scheme]: https://github.com/miyuchina/mistletoe/blob/dev/contrib/scheme.py
+[contrib]: https://github.com/miyuchina/mistletoe/tree/master/mistletoe/contrib
+[scheme]: https://github.com/miyuchina/mistletoe/blob/master/mistletoe/contrib/scheme.py
 [contributing]: CONTRIBUTING.md
 [icon]: https://www.freepik.com
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/
