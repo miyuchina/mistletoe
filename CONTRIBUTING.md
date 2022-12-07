@@ -22,7 +22,7 @@ features. Include your reasons, use case, and maybe plans for implementation.
 That way, we have a better idea of what you'll be working on, and can hopefully
 avoid collision. Your pull request may also get merged much faster.
 
-There is a contrib directory (and python module) for software that has been
+There is a contrib directory (and Python package) for software that has been
 contributed to the project, but which isn't maintained by the core developers.
 This is a good place to put things like renderers for new formats.
 
