@@ -18,7 +18,7 @@ from mistletoe.core_tokens import (
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-__all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
+__all__ = ['HTMLAttributes', 'BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
            'List', 'Table', 'Footnote', 'Paragraph']
 
 
@@ -741,7 +741,6 @@ class TableCell(BlockToken):
         self.align = align
         super().__init__(content, span_token.tokenize_inner)
 
-
 class Footnote(BlockToken):
     """
     Footnote token. A "link reference definition" according to the spec.
@@ -934,7 +933,6 @@ class Footnote(BlockToken):
             if key not in root.footnotes:
                 root.footnotes[key] = dest, title
 
-
 class ThematicBreak(BlockToken):
     """
     Thematic break token (a.k.a. horizontal rule.)
@@ -952,6 +950,52 @@ class ThematicBreak(BlockToken):
     def read(lines):
         return [next(lines)]
 
+
+class HTMLAttributes(BlockToken):
+    
+    @classmethod
+    def process_attrs(cls, attr_str: str):
+        """Returns tuple for discovered Parent and Child html attributes"""
+        try:
+            def get_props(prop):
+                if ':' in prop:
+                    key, _, value = prop.partition(":")
+                    return f' {key}="{value}"'
+                return None
+            propslst = attr_str.split(',')
+            childattr = None
+            parentattr = ''
+
+            for prop in propslst:
+                prop = prop.strip()
+                if prop.startswith('>'):
+                    childattr = get_props(prop.lstrip('>'))
+                else:
+                    parentattr += get_props(prop)
+            cls.html_props = (parentattr, childattr)
+        except Exception as e:
+            pass
+        return cls
+    
+    @classmethod
+    def apply_props(cls, token, props=None):
+        if not props and not cls.html_props: return
+        props = cls.html_props if not props else props
+        token.html_props = props[0]
+        if not token.children: return
+        for chld in token.children:
+            chld.html_props = props[1]
+
+    @classmethod
+    def start(cls, line):
+        return line.strip().startswith("{") and line.strip().endswith("}")
+
+    @classmethod
+    def read(cls, lines):
+        line = lines.peek()
+        l = line.strip().lstrip("{").rstrip("}")
+        next(lines)
+        return l
 
 class HTMLBlock(BlockToken):
     """

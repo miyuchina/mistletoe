@@ -62,22 +62,24 @@ class HTMLRenderer(BaseRenderer):
         return template.format(self.render_inner(token))
 
     def render_image(self, token: span_token.Image) -> str:
-        template = '<img src="{}" alt="{}"{} />'
+        template = '<img src="{}" alt="{}"{}{attr} />'
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
             title = ''
-        return template.format(token.src, self.render_to_plain(token), title)
+        attr = '' if not token.html_props else token.html_props
+        return template.format(token.src, self.render_to_plain(token), title, attr=attr)
 
     def render_link(self, token: span_token.Link) -> str:
-        template = '<a href="{target}"{title}>{inner}</a>'
+        template = '<a href="{target}"{title}{attr}>{inner}</a>'
         target = self.escape_url(token.target)
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
             title = ''
         inner = self.render_inner(token)
-        return template.format(target=target, title=title, inner=inner)
+        attr = '' if not token.html_props else token.html_props
+        return template.format(target=target, title=title, inner=inner, attr=attr)
 
     def render_auto_link(self, token: span_token.AutoLink) -> str:
         template = '<a href="{target}">{inner}</a>'
@@ -116,7 +118,8 @@ class HTMLRenderer(BaseRenderer):
     def render_paragraph(self, token: block_token.Paragraph) -> str:
         if self._suppress_ptag_stack[-1]:
             return '{}'.format(self.render_inner(token))
-        return '<p>{}</p>'.format(self.render_inner(token))
+        attr = '' if not token.html_props else token.html_props
+        return '<p{attr}>{}</p>'.format(self.render_inner(token), attr=attr)
 
     def render_block_code(self, token: block_token.BlockCode) -> str:
         template = '<pre><code{attr}>{inner}</code></pre>'
@@ -195,6 +198,10 @@ class HTMLRenderer(BaseRenderer):
     @staticmethod
     def render_line_break(token: span_token.LineBreak) -> str:
         return '\n' if token.soft else '<br />\n'
+
+    @staticmethod
+    def render_html_attributes(token: block_token.HTMLAttributes) -> str:
+        return token.props
 
     @staticmethod
     def render_html_block(token: block_token.HTMLBlock) -> str:
