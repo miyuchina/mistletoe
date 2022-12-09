@@ -17,6 +17,36 @@ without touching any of the core components.
 
 Remember to spell mistletoe in lowercase!
 
+In This Fork
+------------
+
+**Html attribute block Proposed Spec**
+Prepend line containing `{...}` will describe the html attributes that will be added during the tokenizer process.
+Contents within the Html attribute block will be a comma separated list of key/value pairs. 
+Any key prefixed with `>` will apply to the children token.
+
+
+**Example Html attribute block**
+INPUT
+```
+{id:my-value, class:some-class}
+# Mistletoe is Awesome
+
+{id:my-list, class:foo, >class:bar-items}
+- Item One
+- Item Two
+- Item Three\
+```
+OUTPUT
+```
+<h1 id="my-value" class="some-class">Mistletoe is Awesome</h1>
+<ul id="my-list" class="foo">
+    <li class="bar-items">Item One</li>
+    <li class="bar-items">Item Two</li>
+    <li class="bar-items">Item Three</li>
+</ul>
+```
+
 Features
 --------
 * **Fast**:
