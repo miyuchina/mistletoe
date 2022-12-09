@@ -74,6 +74,35 @@ def tokenize_block(iterable, token_types):
         line = lines.peek()
     return parse_buffer
 
+def process_props(result: str):
+    if not isinstance(result, str): return None
+    if not result.strip().endswith('}'): return None
+    def get_props(prop):
+        if ':' in prop:
+            key, _, value = prop.partition(":")
+            return f' {key}="{value}"'
+        return None
+    propstr = result.strip().replace('{','').replace('}','')
+    propslst = propstr.split(',')
+    childattr = None
+    parentattr = ''
+
+    for prop in propslst:
+        prop = prop.strip()
+        if prop.startswith('>'):
+            childattr = get_props(prop.lstrip('>'))
+        else:
+            parentattr += get_props(prop)
+    
+    return (parentattr, childattr)
+
+def apply_props(token, props):
+    if not props: return
+    token.html_props = props[0]
+    if not token.children: return
+    for chld in token.children:
+        chld.html_props = props[1]
+
 
 def make_tokens(parse_buffer):
     """
@@ -84,10 +113,16 @@ def make_tokens(parse_buffer):
     and span-level parsing is started here.
     """
     tokens = []
+    props = None
     for token_type, result in parse_buffer:
+        if not props: 
+            props = process_props(result[0])
+            if props: continue
         token = token_type(result)
         if token is not None:
+            apply_props(token, props)
             tokens.append(token)
+            props = None
     return tokens
 
 

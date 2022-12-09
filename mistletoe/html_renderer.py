@@ -99,9 +99,11 @@ class HTMLRenderer(BaseRenderer):
         return token.content
 
     def render_heading(self, token: block_token.Heading) -> str:
-        template = '<h{level}>{inner}</h{level}>'
+        template = '<h{level}{attr}>{inner}</h{level}>'
         inner = self.render_inner(token)
-        return template.format(level=token.level, inner=inner)
+        id = inner.replace(' ','-').lower()
+        attr = f' id="{id}"' if not token.html_props else token.html_props
+        return template.format(level=token.level, attr=html.unescape(attr), inner=inner)
 
     def render_quote(self, token: block_token.Quote) -> str:
         elements = ['<blockquote>']
@@ -132,7 +134,7 @@ class HTMLRenderer(BaseRenderer):
             attr = ' start="{}"'.format(token.start) if token.start != 1 else ''
         else:
             tag = 'ul'
-            attr = ''
+            attr = '' if not token.html_props else token.html_props
         self._suppress_ptag_stack.append(not token.loose)
         inner = '\n'.join([self.render(child) for child in token.children])
         self._suppress_ptag_stack.pop()
@@ -148,7 +150,8 @@ class HTMLRenderer(BaseRenderer):
                 inner_template = inner_template[1:]
             if token.children[-1].__class__.__name__ == 'Paragraph':
                 inner_template = inner_template[:-1]
-        return '<li>{}</li>'.format(inner_template.format(inner))
+        attr = '' if not token.html_props else token.html_props
+        return '<li{attr}>{}</li>'.format(inner_template.format(inner), attr=attr)
 
     def render_table(self, token: block_token.Table) -> str:
         # This is actually gross and I wonder if there's a better way to do it.
