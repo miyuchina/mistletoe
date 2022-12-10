@@ -39,7 +39,7 @@ class Token:
     """
 
     repr_attributes = ()
-    html_props = None
+
     def __repr__(self):
         output = "<{}.{}".format(
             self.__class__.__module__,

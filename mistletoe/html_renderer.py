@@ -67,7 +67,7 @@ class HTMLRenderer(BaseRenderer):
             title = ' title="{}"'.format(html.escape(token.title))
         else:
             title = ''
-        attr = '' if not token.html_props else token.html_props
+        attr = '' if not hasattr(token,'html_props') else token.html_props
         return template.format(token.src, self.render_to_plain(token), title, attr=attr)
 
     def render_link(self, token: span_token.Link) -> str:
@@ -78,7 +78,7 @@ class HTMLRenderer(BaseRenderer):
         else:
             title = ''
         inner = self.render_inner(token)
-        attr = '' if not token.html_props else token.html_props
+        attr = '' if not hasattr(token,'html_props') else token.html_props
         return template.format(target=target, title=title, inner=inner, attr=attr)
 
     def render_auto_link(self, token: span_token.AutoLink) -> str:
@@ -103,9 +103,8 @@ class HTMLRenderer(BaseRenderer):
     def render_heading(self, token: block_token.Heading) -> str:
         template = '<h{level}{attr}>{inner}</h{level}>'
         inner = self.render_inner(token)
-        id = inner.replace(' ','-').lower()
-        attr = f' id="{id}"' if not token.html_props else token.html_props
-        return template.format(level=token.level, attr=html.unescape(attr), inner=inner)
+        attr = '' if not hasattr(token,'html_props') else token.html_props
+        return template.format(level=token.level, attr=attr, inner=inner)
 
     def render_quote(self, token: block_token.Quote) -> str:
         elements = ['<blockquote>']
@@ -118,7 +117,7 @@ class HTMLRenderer(BaseRenderer):
     def render_paragraph(self, token: block_token.Paragraph) -> str:
         if self._suppress_ptag_stack[-1]:
             return '{}'.format(self.render_inner(token))
-        attr = '' if not token.html_props else token.html_props
+        attr = '' if not hasattr(token,'html_props') else token.html_props
         return '<p{attr}>{}</p>'.format(self.render_inner(token), attr=attr)
 
     def render_block_code(self, token: block_token.BlockCode) -> str:
@@ -137,7 +136,7 @@ class HTMLRenderer(BaseRenderer):
             attr = ' start="{}"'.format(token.start) if token.start != 1 else ''
         else:
             tag = 'ul'
-            attr = '' if not token.html_props else token.html_props
+            attr = '' if not hasattr(token,'html_props') else token.html_props
         self._suppress_ptag_stack.append(not token.loose)
         inner = '\n'.join([self.render(child) for child in token.children])
         self._suppress_ptag_stack.pop()
@@ -153,7 +152,7 @@ class HTMLRenderer(BaseRenderer):
                 inner_template = inner_template[1:]
             if token.children[-1].__class__.__name__ == 'Paragraph':
                 inner_template = inner_template[:-1]
-        attr = '' if not token.html_props else token.html_props
+        attr = '' if not hasattr(token,'html_props') else token.html_props
         return '<li{attr}>{}</li>'.format(inner_template.format(inner), attr=attr)
 
     def render_table(self, token: block_token.Table) -> str:
@@ -198,10 +197,6 @@ class HTMLRenderer(BaseRenderer):
     @staticmethod
     def render_line_break(token: span_token.LineBreak) -> str:
         return '\n' if token.soft else '<br />\n'
-
-    @staticmethod
-    def render_html_attributes(token: block_token.HTMLAttributes) -> str:
-        return token.props
 
     @staticmethod
     def render_html_block(token: block_token.HTMLBlock) -> str:

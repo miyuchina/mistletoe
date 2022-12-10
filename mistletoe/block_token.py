@@ -952,7 +952,18 @@ class ThematicBreak(BlockToken):
 
 
 class HTMLAttributes(BlockToken):
-    
+    start_str = "${"
+    end_str = "}"
+    allow_auto_ids = ['Heading']
+    enable_auto_ids = False
+
+    @classmethod
+    def serialize(cls, props, auto_id: str = ''):
+        if not hasattr(cls,"html_props"): return
+        if auto_id and not props.get('id'):
+            props['id'] = auto_id
+        return "".join([f" {k}={v}" for k, v in props.items()])
+        
     @classmethod
     def process_attrs(cls, attr_str: str):
         """Returns tuple for discovered Parent and Child html attributes"""
@@ -960,18 +971,18 @@ class HTMLAttributes(BlockToken):
             def get_props(prop):
                 if ':' in prop:
                     key, _, value = prop.partition(":")
-                    return f' {key}="{value}"'
-                return None
-            propslst = attr_str.split(',')
-            childattr = None
-            parentattr = ''
+                    return key, value
+                return None, None
+            parntprops,_,chldprops = attr_str.partition('>')
+            childattr = {}
+            parentattr = {}
+            for prop in chldprops.split(', '):
+                k, v = get_props(prop.strip())
+                if k and v: childattr[k] = v
+            for prop in parntprops.split(', '):
+                k, v = get_props(prop.strip())
+                if k and v: parentattr[k] = v
 
-            for prop in propslst:
-                prop = prop.strip()
-                if prop.startswith('>'):
-                    childattr = get_props(prop.lstrip('>'))
-                else:
-                    parentattr += get_props(prop)
             cls.html_props = (parentattr, childattr)
         except Exception as e:
             pass
@@ -979,21 +990,22 @@ class HTMLAttributes(BlockToken):
     
     @classmethod
     def apply_props(cls, token, props=None):
-        if not props and not cls.html_props: return
         props = cls.html_props if not props else props
-        token.html_props = props[0]
+        autoid = token.content.lower().replace(' ','-') if cls.enable_auto_ids and type(token).__name__ in cls.allow_auto_ids else ''
+        prop_str = cls.serialize(props[0], autoid)
+        token.html_props = prop_str
         if not token.children: return
         for chld in token.children:
-            chld.html_props = props[1]
+            chld.html_props = cls.serialize(props[1])
 
     @classmethod
     def start(cls, line):
-        return line.strip().startswith("{") and line.strip().endswith("}")
+        return line.strip().startswith(cls.start_str) and line.strip().endswith(cls.end_str)
 
     @classmethod
     def read(cls, lines):
         line = lines.peek()
-        l = line.strip().lstrip("{").rstrip("}")
+        l = line.strip().lstrip(cls.start_str).rstrip(cls.end_str)
         next(lines)
         return l
 

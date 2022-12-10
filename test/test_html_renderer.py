@@ -155,3 +155,31 @@ class TestHTMLRendererFootnotes(TestCase):
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         output = '<p><a href="target">name</a></p>\n' 
         self.assertEqual(self.renderer.render(token), output)
+
+class TestHTMLAttributes(TestCase):
+
+    def test_document(self):
+        from mistletoe import markdown, block_token
+        txt = """\
+${class:foobar}
+# Mistletoe is Awesome
+
+${id:todos, >.list-item}
+- Item One
+- Item Two
+- Item Three
+
+${class:img-sm}
+![foo](https://i.creativecommons.org/l/by-sa/4.0/80x15.png "toof")
+
+${>class:btn-link, onclick:event.preventDefault();console.log(this,'button clicked');}
+[some link](https://i.creativecommons.org/l/by-sa/4.0/80x15.png "toof")\
+            """
+        block_token.HTMLAttributes.enable_auto_ids = True
+        html = markdown(txt)
+        block_token.HTMLAttributes.enable_auto_ids = False
+        output = '<h1 class=foobar id=mistletoe-is-awesome>Mistletoe is Awesome</h1>\n<ul id=todos>\n<li>Item One</li>\n<li>Item Two</li>\n<li>Item Three</li>\n</ul>\n<p class=img-sm><img src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" alt="foo" title="toof" /></p>\n<p><a href="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" title="toof" class=btn-link onclick=event.preventDefault();console.log(this,\'button clicked\');>some link</a></p>\n'
+        self.assertEqual(html, output)
+
+t = TestHTMLAttributes()
+t.test_document()
