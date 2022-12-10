@@ -22,10 +22,10 @@ In This Fork
 
 **Html Attribute block with Proposed Spec**
 
-Prepend line containing `${...}` will describe the html attributes that will be added during the tokenizer process.
+Line containing the following string `${...}` will describe the html attributes for the element proceeding it.
 
-Contents within the Html attribute block will be a comma separated list of key/value pairs. 
-Any key prefixed with `>` will apply to the children token.
+Contents within the `${...}` string will be a comma separated list of key/value pairs. 
+The `>` character will separate parent attributes from child attributes.
 
 
 **Example Html attribute block**
