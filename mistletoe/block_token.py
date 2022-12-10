@@ -989,14 +989,23 @@ class HTMLAttributes(BlockToken):
         return cls
     
     @classmethod
-    def apply_props(cls, token, props=None):
+    def apply_props(cls, token, props=None, is_child: str=''):
+        if hasattr(token,'parse_inner') and token.parse_inner: return
         props = cls.html_props if not props else props
         autoid = token.content.lower().replace(' ','-') if cls.enable_auto_ids and type(token).__name__ in cls.allow_auto_ids else ''
-        prop_str = cls.serialize(props[0], autoid)
-        token.html_props = prop_str
-        if not token.children: return
-        for chld in token.children:
-            chld.html_props = cls.serialize(props[1])
+        token_pos = 0 if not is_child else 1
+        token.html_props = cls.serialize(props[token_pos], autoid )
+        if not hasattr(token, "children"): return
+        if is_child and props[token_pos].get('id'): del props[token_pos]['id']
+        for i,chld in enumerate(token.children):
+            # child_key = True
+            if type(chld).__name__ == 'List':
+                print(i, props[1])
+                child_key = props[0].get("id","uuu")+"-"+str(i)
+                props[1]['id'] = child_key
+                print(' found a list elem '+child_key)
+            cls.apply_props(chld, props, True)
+            # chld.html_props = cls.serialize(props[1])
 
     @classmethod
     def start(cls, line):

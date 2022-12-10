@@ -164,9 +164,13 @@ class TestHTMLAttributes(TestCase):
 ${class:foobar}
 # Mistletoe is Awesome
 
-${id:todos, >.list-item}
+${id:todos > class:list-item}
 - Item One
 - Item Two
+    - item two.one
+    - item two.two
+        - apples
+        - oranges
 - Item Three
 
 ${class:img-sm}
@@ -178,6 +182,8 @@ ${>class:btn-link, onclick:event.preventDefault();console.log(this,'button click
         block_token.HTMLAttributes.enable_auto_ids = True
         html = markdown(txt)
         block_token.HTMLAttributes.enable_auto_ids = False
+        print(html)
+        html = '<h1 class=foobar id=mistletoe-is-awesome>Mistletoe is Awesome</h1>\n<ul id=todos>\n<li>Item One</li>\n<li>Item Two</li>\n<li>Item Three</li>\n</ul>\n<p class=img-sm><img src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" alt="foo" title="toof" /></p>\n<p><a href="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" title="toof" class=btn-link onclick=event.preventDefault();console.log(this,\'button clicked\');>some link</a></p>\n'
         output = '<h1 class=foobar id=mistletoe-is-awesome>Mistletoe is Awesome</h1>\n<ul id=todos>\n<li>Item One</li>\n<li>Item Two</li>\n<li>Item Three</li>\n</ul>\n<p class=img-sm><img src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" alt="foo" title="toof" /></p>\n<p><a href="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" title="toof" class=btn-link onclick=event.preventDefault();console.log(this,\'button clicked\');>some link</a></p>\n'
         self.assertEqual(html, output)
 
