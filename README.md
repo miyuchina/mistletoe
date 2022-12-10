@@ -20,8 +20,10 @@ Remember to spell mistletoe in lowercase!
 In This Fork
 ------------
 
-**Html attribute block Proposed Spec**
-Prepend line containing `{...}` will describe the html attributes that will be added during the tokenizer process.
+**Html Attribute block with Proposed Spec**
+
+Prepend line containing `${...}` will describe the html attributes that will be added during the tokenizer process.
+
 Contents within the Html attribute block will be a comma separated list of key/value pairs. 
 Any key prefixed with `>` will apply to the children token.
 
