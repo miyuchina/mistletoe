@@ -29,10 +29,10 @@ Any key prefixed with `>` will apply to the children token.
 **Example Html attribute block**
 INPUT
 ```
-{id:my-value, class:some-class}
+${id:my-value, class:some-class}
 # Mistletoe is Awesome
 
-{id:my-list, class:foo, >class:bar-items}
+${id:my-list, class:foo, >class:bar-items}
 - Item One
 - Item Two
 - Item Three\
