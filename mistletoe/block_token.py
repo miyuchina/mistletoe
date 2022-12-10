@@ -956,13 +956,20 @@ class HTMLAttributes(BlockToken):
     end_str = "}"
     allow_auto_ids = ['Heading']
     enable_auto_ids = False
+    enable_auto_tabindex = True
+    tabindex = 1;
+    id_index = -1;
 
     @classmethod
-    def serialize(cls, props, auto_id: str = ''):
+    def serialize(cls, props: dict, auto_id: str = ''):
         if not hasattr(cls,"html_props"): return
-        if auto_id and not props.get('id'):
+        if auto_id and not props.get('id') and cls.enable_auto_ids:
             props['id'] = auto_id
-        return "".join([f" {k}={v}" for k, v in props.items()])
+        if cls.enable_auto_tabindex:
+            props['tabindex'] = props.get('tabindex', 1)
+        propstr = "".join([f" {k}={v}" for k, v in props.items()])
+        if cls.enable_auto_tabindex: del props['tabindex']
+        return propstr
         
     @classmethod
     def process_attrs(cls, attr_str: str):
@@ -989,23 +996,23 @@ class HTMLAttributes(BlockToken):
         return cls
     
     @classmethod
-    def apply_props(cls, token, props=None, is_child: str=''):
+    def apply_props(cls, token, props:list=None, is_child:bool=None):
         if hasattr(token,'parse_inner') and token.parse_inner: return
         props = cls.html_props if not props else props
-        autoid = token.content.lower().replace(' ','-') if cls.enable_auto_ids and type(token).__name__ in cls.allow_auto_ids else ''
+        allow_auto_id = cls.enable_auto_ids and type(token).__name__ in cls.allow_auto_ids
+        autoid = token.content.lower().replace(' ','-') if allow_auto_id else ''
         token_pos = 0 if not is_child else 1
         token.html_props = cls.serialize(props[token_pos], autoid )
         if not hasattr(token, "children"): return
-        if is_child and props[token_pos].get('id'): del props[token_pos]['id']
-        for i,chld in enumerate(token.children):
-            # child_key = True
-            if type(chld).__name__ == 'List':
-                print(i, props[1])
-                child_key = props[0].get("id","uuu")+"-"+str(i)
-                props[1]['id'] = child_key
-                print(' found a list elem '+child_key)
-            cls.apply_props(chld, props, True)
-            # chld.html_props = cls.serialize(props[1])
+        for chld in token.children:
+            is_child_key = True if type(chld).__name__ != 'List' else False
+            if not is_child_key:
+                cls.id_index += 1
+                child_key = props[0].get("id","uuu")
+                child_key = child_key+"-"+str(cls.id_index)
+                props[0]['id'] = child_key
+
+            cls.apply_props(chld, props, is_child_key)
 
     @classmethod
     def start(cls, line):

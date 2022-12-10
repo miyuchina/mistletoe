@@ -164,7 +164,7 @@ class TestHTMLAttributes(TestCase):
 ${class:foobar}
 # Mistletoe is Awesome
 
-${id:todos > class:list-item}
+${id:todos, tabindex:100 > class:list-item}
 - Item One
 - Item Two
     - item two.one
