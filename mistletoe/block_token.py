@@ -954,11 +954,40 @@ class ThematicBreak(BlockToken):
 class HTMLAttributes(BlockToken):
     start_str = "${"
     end_str = "}"
+    parent_child_partition_str = " > "
+    mapping_str = ":"
     allow_auto_ids = ['Heading']
     enable_auto_ids = False
     enable_auto_tabindex = True
     tabindex = 1;
     id_index = -1;
+
+    def __init__(self, line: str):
+        pattr,_,cattr = line.partition(self.parent_child_partition_str)
+        self.raw_attr_str: str = line.strip()
+        self.parent_attr_str: str = pattr
+        self.child_attr_str: str = cattr
+        self.parent_props: dict = self.set_props(self.parent_attr_str)
+        self.child_props: dict = self.set_props(self.child_attr_str)
+        pass
+    
+    def set_props(self, attr_str: str):
+        """Parses raw attribute string into dicts"""
+        try:
+            def get_props(prop):
+                if self.mapping_str in prop:
+                    key, _, value = prop.partition(self.mapping_str)
+                    return key, value
+                return None, None
+            attr_map = {}
+            for prop in attr_str.split(', '):
+                k, v = get_props(prop.strip())
+                if k and v: attr_map[k] = v
+            return attr_map
+        except Exception as e:
+            print(str(e))
+            pass
+
 
     @classmethod
     def serialize(cls, props: dict, auto_id: str = ''):
@@ -997,7 +1026,7 @@ class HTMLAttributes(BlockToken):
     
     @classmethod
     def apply_props(cls, token, props:list=None, is_child:bool=None):
-        if hasattr(token,'parse_inner') and token.parse_inner: return
+        if not props and not cls.html_props: return
         props = cls.html_props if not props else props
         allow_auto_id = cls.enable_auto_ids and type(token).__name__ in cls.allow_auto_ids
         autoid = token.content.lower().replace(' ','-') if allow_auto_id else ''
@@ -1013,6 +1042,12 @@ class HTMLAttributes(BlockToken):
                 props[0]['id'] = child_key
 
             cls.apply_props(chld, props, is_child_key)
+
+    @classmethod
+    def clear(cls):
+        cls.id_index = -1
+        cls.tabindex = 1
+        cls.html_props = None
 
     @classmethod
     def start(cls, line):

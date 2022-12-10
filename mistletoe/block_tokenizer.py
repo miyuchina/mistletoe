@@ -86,14 +86,15 @@ def make_tokens(parse_buffer):
     tokens = []
     htmlAttributesToken = None
     for token_type, result in parse_buffer:
-        if 'HTMLAttributes' is token_type.__name__: 
-            htmlAttributesToken = token_type.process_attrs(result)
-            continue
+        # if 'HTMLAttributes' == token_type.__name__: 
+        #     htmlAttributesToken = token_type.process_attrs(result)
+        #     continue
         token = token_type(result)
         if token is not None:
-            if htmlAttributesToken: 
-                htmlAttributesToken.apply_props(token)
-                htmlAttributesToken = None
+            # if htmlAttributesToken: 
+            #     htmlAttributesToken.apply_props(token)
+            #     htmlAttributesToken.clear()
+            #     htmlAttributesToken = None
             tokens.append(token)
     return tokens
 
