@@ -952,6 +952,17 @@ class ThematicBreak(BlockToken):
 
 
 class HTMLAttributes(BlockToken):
+    """
+    Block-level HTMLAttributes token.
+    This is a leaf block token without children.
+
+    Attributes:
+        raw_attr_str (str): the raw HTML attributes.
+        parent_props dict: parsed from raw_attr_str
+        child_props dict: parsed from raw_attr_str
+    """
+
+    # Configurable properties
     start_str = "${"
     end_str = "}"
     parent_child_partition_str = " > "
@@ -965,10 +976,8 @@ class HTMLAttributes(BlockToken):
     def __init__(self, line: str):
         pattr,_,cattr = line.partition(self.parent_child_partition_str)
         self.raw_attr_str: str = line.strip()
-        self.parent_attr_str: str = pattr
-        self.child_attr_str: str = cattr
-        self.parent_props: dict = self.set_props(self.parent_attr_str)
-        self.child_props: dict = self.set_props(self.child_attr_str)
+        self.parent_props: dict = self.set_props(pattr)
+        self.child_props: dict = self.set_props(cattr)
         pass
     
     def set_props(self, attr_str: str):
@@ -989,6 +998,8 @@ class HTMLAttributes(BlockToken):
             pass
 
     def apply_props(self, token, is_child: bool = None):
+        """Applies props recursively to parent and child tokens"""
+
         has_nested_children = self.check_for_children(token)
         token_props = self.parent_props if not is_child else self.child_props
         auto_id = self.get_auto_id(token)
@@ -1004,7 +1015,8 @@ class HTMLAttributes(BlockToken):
                 token_props['id'] = child_key
             self.apply_props(chld, is_child_key)
 
-    def serialize(self, props: dict, auto_id: str = ''):
+    def serialize(self, props: dict, auto_id: str = '') -> str:
+        """Serializes the props into html attribute strings"""
         if auto_id and not props.get('id') and self.enable_auto_ids:
             props['id'] = auto_id
         if HTMLAttributes.enable_auto_tabindex:
@@ -1013,6 +1025,14 @@ class HTMLAttributes(BlockToken):
         if HTMLAttributes.enable_auto_tabindex: del props['tabindex']
         return propstr
             
+    @classmethod
+    def configure(cls, options: dict) -> str:
+        """Override default class configuration fields"""
+        only_fields = ("start_str", "end_str", "parent_child_partition_str", "mapping_st", "allow_auto_ids", "enable_auto_ids", "enable_auto_tabindex")
+        for k, v in options.items():
+            if k not in only_fields: continue
+            setattr(cls, k, v)
+
     @classmethod
     def get_auto_id(cls, token) -> str:
         """Automatically generate ids for Heading elements or any specified token type"""
