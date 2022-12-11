@@ -988,66 +988,49 @@ class HTMLAttributes(BlockToken):
             print(str(e))
             pass
 
+    def apply_props(self, token, is_child: bool = None):
+        has_nested_children = self.check_for_children(token)
+        token_props = self.parent_props if not is_child else self.child_props
+        auto_id = self.get_auto_id(token)
+        token.html_props = self.serialize(token_props, auto_id)
+        if not has_nested_children: return
+        for chld in token.children:
+            is_child_key = True if chld.__class__.__name__ != 'List' else False
+            if not is_child_key:
+                self.id_index += 1
+                token_props = self.parent_props
+                child_key = token_props.get("id","uuu")
+                child_key = child_key+"-"+str(self.id_index)
+                token_props['id'] = child_key
+            self.apply_props(chld, is_child_key)
 
-    @classmethod
-    def serialize(cls, props: dict, auto_id: str = ''):
-        if not hasattr(cls,"html_props"): return
-        if auto_id and not props.get('id') and cls.enable_auto_ids:
+    def serialize(self, props: dict, auto_id: str = ''):
+        if auto_id and not props.get('id') and self.enable_auto_ids:
             props['id'] = auto_id
-        if cls.enable_auto_tabindex:
+        if HTMLAttributes.enable_auto_tabindex:
             props['tabindex'] = props.get('tabindex', 1)
-        propstr = "".join([f" {k}={v}" for k, v in props.items()])
-        if cls.enable_auto_tabindex: del props['tabindex']
+        propstr = "".join([f' {k}="{v}"' for k, v in props.items()])
+        if HTMLAttributes.enable_auto_tabindex: del props['tabindex']
         return propstr
-        
+            
     @classmethod
-    def process_attrs(cls, attr_str: str):
-        """Returns tuple for discovered Parent and Child html attributes"""
+    def get_auto_id(cls, token) -> str:
+        """Automatically generate ids for Heading elements or any specified token type"""
         try:
-            def get_props(prop):
-                if ':' in prop:
-                    key, _, value = prop.partition(":")
-                    return key, value
-                return None, None
-            parntprops,_,chldprops = attr_str.partition('>')
-            childattr = {}
-            parentattr = {}
-            for prop in chldprops.split(', '):
-                k, v = get_props(prop.strip())
-                if k and v: childattr[k] = v
-            for prop in parntprops.split(', '):
-                k, v = get_props(prop.strip())
-                if k and v: parentattr[k] = v
-
-            cls.html_props = (parentattr, childattr)
+            allow_auto_id = cls.enable_auto_ids and token.__class__.__name__ in cls.allow_auto_ids
+            auto_id = token.content.lower().replace(' ','-') if allow_auto_id else ''
+            return auto_id
         except Exception as e:
-            pass
-        return cls
+            return ""
     
     @classmethod
-    def apply_props(cls, token, props:list=None, is_child:bool=None):
-        if not props and not cls.html_props: return
-        props = cls.html_props if not props else props
-        allow_auto_id = cls.enable_auto_ids and type(token).__name__ in cls.allow_auto_ids
-        autoid = token.content.lower().replace(' ','-') if allow_auto_id else ''
-        token_pos = 0 if not is_child else 1
-        token.html_props = cls.serialize(props[token_pos], autoid )
-        if not hasattr(token, "children"): return
-        for chld in token.children:
-            is_child_key = True if type(chld).__name__ != 'List' else False
-            if not is_child_key:
-                cls.id_index += 1
-                child_key = props[0].get("id","uuu")
-                child_key = child_key+"-"+str(cls.id_index)
-                props[0]['id'] = child_key
-
-            cls.apply_props(chld, props, is_child_key)
+    def check_for_children(cls, token):
+        return hasattr(token, "children") and token.__class__.__name__ != "RawText"
 
     @classmethod
     def clear(cls):
         cls.id_index = -1
         cls.tabindex = 1
-        cls.html_props = None
 
     @classmethod
     def start(cls, line):

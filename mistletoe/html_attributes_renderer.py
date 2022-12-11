@@ -13,9 +13,10 @@ from mistletoe.span_token import HTMLSpan
 from mistletoe.base_renderer import BaseRenderer
 
 
-class HTMLRenderer(BaseRenderer):
+class HTMLAttributesRenderer(BaseRenderer):
     """
     HTML renderer class.
+
     See mistletoe.base_renderer module for more info.
     """
     def __init__(self, *extras):
@@ -32,10 +33,42 @@ class HTMLRenderer(BaseRenderer):
                               r'|#[xX][0-9a-fA-F]+;'
                               r'|[^\t\n\f <&#;]{1,32};)')
         html._charref = _charref
+        self.RENDERER_START = False
 
     def __exit__(self, *args):
         super().__exit__(*args)
         html._charref = self._stdlib_charref
+    
+    def render(self, token):
+        """
+        Grabs the class name from input token and finds its corresponding
+        render function.
+
+        Basically a janky way to do polymorphism.
+
+        Arguments:
+            token: whose __class__.__name__ is in self.render_map.
+        """
+        # reconcile our htmlattributes
+        if not self.RENDERER_START: 
+            self.reconcile_attrs(token)
+        return self.render_map[token.__class__.__name__](token)
+
+    def reconcile_attrs(self, doc_token):
+        """Traverse token children while assigning html attributes if available"""
+        self.RENDERER_START = True
+        recon_tokens = []
+        htmlAttributesToken: block_token.HTMLAttributes = None
+        for token_type in doc_token.children:
+            if 'HTMLAttributes' == token_type.__class__.__name__: 
+                htmlAttributesToken = token_type
+                continue
+            if htmlAttributesToken: 
+                htmlAttributesToken.apply_props(token_type)
+                htmlAttributesToken.clear()
+                htmlAttributesToken = None
+            recon_tokens.append(token_type)
+        doc_token.children = recon_tokens
 
     def render_to_plain(self, token) -> str:
         if hasattr(token, 'children'):
@@ -61,22 +94,24 @@ class HTMLRenderer(BaseRenderer):
         return template.format(self.render_inner(token))
 
     def render_image(self, token: span_token.Image) -> str:
-        template = '<img src="{}" alt="{}"{} />'
+        template = '<img src="{}" alt="{}"{}{attr} />'
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
             title = ''
-        return template.format(token.src, self.render_to_plain(token), title)
+        attr = '' if not hasattr(token,'html_props') else token.html_props
+        return template.format(token.src, self.render_to_plain(token), title, attr=attr)
 
     def render_link(self, token: span_token.Link) -> str:
-        template = '<a href="{target}"{title}>{inner}</a>'
+        template = '<a href="{target}"{title}{attr}>{inner}</a>'
         target = self.escape_url(token.target)
         if token.title:
             title = ' title="{}"'.format(html.escape(token.title))
         else:
             title = ''
         inner = self.render_inner(token)
-        return template.format(target=target, title=title, inner=inner)
+        attr = '' if not hasattr(token,'html_props') else token.html_props
+        return template.format(target=target, title=title, inner=inner, attr=attr)
 
     def render_auto_link(self, token: span_token.AutoLink) -> str:
         template = '<a href="{target}">{inner}</a>'
@@ -93,14 +128,11 @@ class HTMLRenderer(BaseRenderer):
     def render_raw_text(self, token: span_token.RawText) -> str:
         return html.escape(token.content)
 
-    @staticmethod
-    def render_html_span(token: span_token.HTMLSpan) -> str:
-        return token.content
-
     def render_heading(self, token: block_token.Heading) -> str:
-        template = '<h{level}>{inner}</h{level}>'
+        template = '<h{level}{attr}>{inner}</h{level}>'
         inner = self.render_inner(token)
-        return template.format(level=token.level, inner=inner)
+        attr = '' if not hasattr(token,'html_props') else token.html_props
+        return template.format(level=token.level, attr=attr, inner=inner)
 
     def render_quote(self, token: block_token.Quote) -> str:
         elements = ['<blockquote>']
@@ -113,7 +145,8 @@ class HTMLRenderer(BaseRenderer):
     def render_paragraph(self, token: block_token.Paragraph) -> str:
         if self._suppress_ptag_stack[-1]:
             return '{}'.format(self.render_inner(token))
-        return '<p>{}</p>'.format(self.render_inner(token))
+        attr = '' if not hasattr(token,'html_props') else token.html_props
+        return '<p{attr}>{}</p>'.format(self.render_inner(token), attr=attr)
 
     def render_block_code(self, token: block_token.BlockCode) -> str:
         template = '<pre><code{attr}>{inner}</code></pre>'
@@ -131,7 +164,7 @@ class HTMLRenderer(BaseRenderer):
             attr = ' start="{}"'.format(token.start) if token.start != 1 else ''
         else:
             tag = 'ul'
-            attr = ''
+            attr = '' if not hasattr(token,'html_props') else token.html_props
         self._suppress_ptag_stack.append(not token.loose)
         inner = '\n'.join([self.render(child) for child in token.children])
         self._suppress_ptag_stack.pop()
@@ -147,7 +180,8 @@ class HTMLRenderer(BaseRenderer):
                 inner_template = inner_template[1:]
             if token.children[-1].__class__.__name__ == 'Paragraph':
                 inner_template = inner_template[:-1]
-        return '<li>{}</li>'.format(inner_template.format(inner))
+        attr = '' if not hasattr(token,'html_props') else token.html_props
+        return '<li{attr}>{}</li>'.format(inner_template.format(inner), attr=attr)
 
     def render_table(self, token: block_token.Table) -> str:
         # This is actually gross and I wonder if there's a better way to do it.
@@ -185,6 +219,10 @@ class HTMLRenderer(BaseRenderer):
         return template.format(tag=tag, attr=attr, inner=inner)
 
     @staticmethod
+    def render_html_span(token: span_token.HTMLSpan) -> str:
+        return token.content
+
+    @staticmethod
     def render_thematic_break(token: block_token.ThematicBreak) -> str:
         return '<hr />'
 
@@ -199,7 +237,9 @@ class HTMLRenderer(BaseRenderer):
     def render_document(self, token: block_token.Document) -> str:
         self.footnotes.update(token.footnotes)
         inner = '\n'.join([self.render(child) for child in token.children])
-        return '{}\n'.format(inner) if inner else ''
+        doc_html = '{}\n'.format(inner) if inner else ''
+        self.RENDERER_START = False
+        return doc_html
 
     @staticmethod
     def escape_html(raw: str) -> str:

@@ -40,11 +40,9 @@ class FileWrapper:
 def tokenize(iterable, token_types):
     """
     Searches for token_types in iterable.
-
     Args:
         iterable (list): user input lines to be parsed.
         token_types (list): a list of block-level token constructors.
-
     Returns:
         block-level token instances.
     """
@@ -54,7 +52,6 @@ def tokenize(iterable, token_types):
 def tokenize_block(iterable, token_types):
     """
     Returns a list of pairs (token_type, read_result).
-
     Footnotes are parsed here, but span-level parsing has not
     started yet.
     """
@@ -79,22 +76,13 @@ def make_tokens(parse_buffer):
     """
     Takes a list of pairs (token_type, read_result) and
     applies token_type(read_result).
-
     Footnotes are already parsed before this point,
     and span-level parsing is started here.
     """
     tokens = []
-    htmlAttributesToken = None
     for token_type, result in parse_buffer:
-        # if 'HTMLAttributes' == token_type.__name__: 
-        #     htmlAttributesToken = token_type.process_attrs(result)
-        #     continue
         token = token_type(result)
         if token is not None:
-            # if htmlAttributesToken: 
-            #     htmlAttributesToken.apply_props(token)
-            #     htmlAttributesToken.clear()
-            #     htmlAttributesToken = None
             tokens.append(token)
     return tokens
 
