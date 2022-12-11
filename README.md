@@ -20,34 +20,92 @@ Remember to spell mistletoe in lowercase!
 In This Fork
 ------------
 
-**Html Attribute block with Proposed Spec**
+**HTMLAttributesRenderer + HTMLAttributes Block with Proposed Spec**
 
-Line containing the following string `${...}` will describe the html attributes for the element proceeding it.
-
-Contents within the `${...}` string will be a comma separated list of key/value pairs. 
-The `>` character will separate parent attributes from child attributes.
+This render allows you to write Markdown that will render 508 compliant html attributes.
 
 
-**Example Html attribute block**
-INPUT
-```
-${id:my-value, class:some-class}
+**HTMLAttributesRenderer Block syntax**
+
+Contents within the following characters `${...}` will describe how the HTMLAttributesRenderer will process and include attributes.
+
+`${ ..................... }`
+
+The content string is partitioned by the optional ` > ` character (whitespace included) will separate parent attributes from child attributes. Attributes defined on the left will apply to root parent element and the right side applies to children.
+
+`${ id:some-parent > class:our-code our-love }`
+
+Multiple attribute pairs are delimited using comma space. `, `
+
+`${ class:our-code our-love, aria-label:spread-love }`
+
+Multiple attributes values are delimited using a single space. ` `
+
+`${ class:our-code our-love }`
+
+example:
+
+
+**How to Use HTMLAttributesRenderer**
+
+```python
+import mistletoe
+from mistletoe.html_attributes_renderer import HTMLAttributesRenderer
+txt = """\
+${class:foobar}
 # Mistletoe is Awesome
 
-${id:my-list, class:foo, >class:bar-items}
-- Item One
-- Item Two
-- Item Three\
+${id:todos, tabindex:100 > class:list-item}
+- Push Code
+- Get Groceries
+    - Veggies
+    - Fruits
+        - apples
+        - oranges
+- Hang up the mistletoe
+
+${class:img-sm}
+![foo](https://i.creativecommons.org/l/by-sa/4.0/80x15.png "toof")
+
+${ > class:btn-link, onclick:event.preventDefault();console.log(this,'button clicked');}
+[some link](https://i.creativecommons.org/l/by-sa/4.0/80x15.png "toof")\
+"""
+
+# Optional: Configure HTMLAttributesRenderer
+HTMLAttributesRenderer.configure({...})
+
+# Render the markdown into html
+rendered = mistletoe.markdown(txt, HTMLAttributesRenderer)
 ```
+
 OUTPUT
-```
-<h1 id="my-value" class="some-class">Mistletoe is Awesome</h1>
-<ul id="my-list" class="foo">
-    <li class="bar-items">Item One</li>
-    <li class="bar-items">Item Two</li>
-    <li class="bar-items">Item Three</li>
+
+```html
+<h1 class="foobar" id="mistletoe-is-awesome" tabindex="1">Mistletoe is Awesome</h1>
+<ul id="todos" tabindex="100">
+    <li class="list-item" tabindex="1">Push Code</li>
+    <li class="list-item" tabindex="1">Get Groceries
+        <ul id="todos-0" tabindex="1">
+            <li class="list-item" tabindex="1">Veggies</li>
+            <li class="list-item" tabindex="1">Fruits
+                <ul id="todos-0-1" tabindex="1">
+                    <li class="list-item" tabindex="1">apples</li>
+                    <li class="list-item" tabindex="1">oranges</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li class="list-item" tabindex="1">Hang up the mistletoe</li>
 </ul>
+<p class="img-sm" tabindex="1">
+    <img src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" alt="foo" title="toof" tabindex="1" />
+</p>
+<p tabindex="1">
+    <a href="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" title="toof" class="btn-link"
+        onclick="event.preventDefault();console.log(this,'button clicked');" tabindex="1">some link</a>
+</p>
 ```
+
 
 Features
 --------

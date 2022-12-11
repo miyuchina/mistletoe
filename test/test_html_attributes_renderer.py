@@ -1,5 +1,4 @@
-from unittest import TestCase, mock
-from mistletoe.html_renderer import HTMLRenderer
+from unittest import TestCase
 
 
 class TestHTMLAttributes(TestCase):
@@ -29,9 +28,7 @@ ${ > class:btn-link, onclick:event.preventDefault();console.log(this,'button cli
             """
         block_token.HTMLAttributes.enable_auto_ids = True
         html = markdown(txt, HTMLAttributesRenderer)
-        print(html)
-        html = '<h1 class=foobar id=mistletoe-is-awesome>Mistletoe is Awesome</h1>\n<ul id=todos>\n<li>Item One</li>\n<li>Item Two</li>\n<li>Item Three</li>\n</ul>\n<p class=img-sm><img src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" alt="foo" title="toof" /></p>\n<p><a href="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" title="toof" class=btn-link onclick=event.preventDefault();console.log(this,\'button clicked\');>some link</a></p>\n'
-        output = '<h1 class=foobar id=mistletoe-is-awesome>Mistletoe is Awesome</h1>\n<ul id=todos>\n<li>Item One</li>\n<li>Item Two</li>\n<li>Item Three</li>\n</ul>\n<p class=img-sm><img src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" alt="foo" title="toof" /></p>\n<p><a href="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" title="toof" class=btn-link onclick=event.preventDefault();console.log(this,\'button clicked\');>some link</a></p>\n'
+        output = '<h1 class="foobar" id="mistletoe-is-awesome" tabindex="1">Mistletoe is Awesome</h1>\n<ul id="todos" tabindex="100">\n<li class="list-item" tabindex="1">Push Code</li>\n<li class="list-item" tabindex="1">Get Groceries\n<ul id="todos-0" tabindex="1">\n<li class="list-item" tabindex="1">Veggies</li>\n<li class="list-item" tabindex="1">Fruits\n<ul id="todos-0-1" tabindex="1">\n<li class="list-item" tabindex="1">apples</li>\n<li class="list-item" tabindex="1">oranges</li>\n</ul>\n</li>\n</ul>\n</li>\n<li class="list-item" tabindex="1">Hang up the mistletoe</li>\n</ul>\n<p class="img-sm" tabindex="1"><img src="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" alt="foo" title="toof" tabindex="1" /></p>\n<p tabindex="1"><a href="https://i.creativecommons.org/l/by-sa/4.0/80x15.png" title="toof" class="btn-link" onclick="event.preventDefault();console.log(this,\'button clicked\');" tabindex="1">some link</a></p>\n'
         self.assertEqual(html, output)
 
 t = TestHTMLAttributes()
