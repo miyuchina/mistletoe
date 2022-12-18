@@ -185,6 +185,7 @@ class Heading(BlockToken):
         next(lines)
         return cls.level, cls.content
 
+
 class SetextHeading(BlockToken):
     """
     Setext heading token.
@@ -741,6 +742,7 @@ class TableCell(BlockToken):
         self.align = align
         super().__init__(content, span_token.tokenize_inner)
 
+
 class Footnote(BlockToken):
     """
     Footnote token. A "link reference definition" according to the spec.
@@ -933,6 +935,7 @@ class Footnote(BlockToken):
             if key not in root.footnotes:
                 root.footnotes[key] = dest, title
 
+
 class ThematicBreak(BlockToken):
     """
     Thematic break token (a.k.a. horizontal rule.)
@@ -954,12 +957,11 @@ class ThematicBreak(BlockToken):
 class HTMLAttributes(BlockToken):
     """
     Block-level HTMLAttributes token.
-    This is a leaf block token without children.
 
     Attributes:
         raw_attr_str (str): the raw HTML attributes.
-        parent_props dict: parsed from raw_attr_str
-        child_props dict: parsed from raw_attr_str
+        parent_props (dict): parsed from raw_attr_str
+        child_props (dict): parsed from raw_attr_str
     """
 
     # Configurable properties
@@ -978,7 +980,6 @@ class HTMLAttributes(BlockToken):
         self.raw_attr_str: str = line.strip()
         self.parent_props: dict = self.set_props(pattr)
         self.child_props: dict = self.set_props(cattr)
-        pass
     
     def set_props(self, attr_str: str):
         """Parses raw attribute string into dicts"""
@@ -1062,6 +1063,7 @@ class HTMLAttributes(BlockToken):
         l = line.strip().lstrip(cls.start_str).rstrip(cls.end_str)
         next(lines)
         return l
+
 
 class HTMLBlock(BlockToken):
     """
