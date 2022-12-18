@@ -1007,7 +1007,7 @@ class HTMLAttributes(BlockToken):
         if not has_nested_children: 
             return
         for chld in token.children:
-            is_child_key = True if chld.__class__.__name__ != 'List' else False
+            is_child_key = not isinstance(chld, List)
             if not is_child_key:
                 self.id_index += 1
                 token_props = self.parent_props
