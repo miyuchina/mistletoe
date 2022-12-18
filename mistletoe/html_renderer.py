@@ -16,6 +16,7 @@ from mistletoe.base_renderer import BaseRenderer
 class HTMLRenderer(BaseRenderer):
     """
     HTML renderer class.
+
     See mistletoe.base_renderer module for more info.
     """
     def __init__(self, *extras):
