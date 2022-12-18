@@ -81,7 +81,7 @@ class TestRepr(unittest.TestCase):
         self._check_repr_matches(doc.children[0].children[0], "span_token.InlineCode with 1 child")
 
     def test_strikethrough(self):
-        doc = Document("~~~foo~~~\n")
+        doc = Document("~~foo~~\n")
         self._check_repr_matches(doc.children[0].children[0], "span_token.Strikethrough with 1 child")
 
     def test_image(self):
