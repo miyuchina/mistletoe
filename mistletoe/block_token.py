@@ -995,8 +995,7 @@ class HTMLAttributes(BlockToken):
                 if k and v: attr_map[k] = v
             return attr_map
         except Exception as e:
-            print(str(e))
-            pass
+            raise
 
     def apply_props(self, token, is_child: bool = None):
         """Applies props recursively to parent and child tokens"""
