@@ -1037,11 +1037,11 @@ class HTMLAttributes(BlockToken):
     def get_auto_id(cls, token) -> str:
         """Automatically generate ids for Heading elements or any specified token type"""
         try:
-            allow_auto_id = cls.enable_auto_ids and token.__class__.__name__ in cls.allow_auto_ids
+            allow_auto_id = hasattr(token, 'content') and cls.enable_auto_ids and token.__class__.__name__ in cls.allow_auto_ids
             auto_id = token.content.lower().replace(' ','-') if allow_auto_id else ''
             return auto_id
         except Exception as e:
-            return ""
+            raise
     
     @classmethod
     def check_for_children(cls, token):
