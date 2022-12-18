@@ -42,7 +42,7 @@ If no input file is specified, stdin is used.
 Command-line utility to convert Markdown (CommonMark) to JIRA markup.
 
 JIRA markup spec: https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all
-CommonMark spec: http://spec.commonmark.org/0.28/#introduction
+CommonMark spec: http://spec.commonmark.org/0.30/#introduction
 """
 
 
