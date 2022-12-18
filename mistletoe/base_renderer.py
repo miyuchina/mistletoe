@@ -41,7 +41,6 @@ class BaseRenderer(object):
                         parsing process.
     """
     _parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
-    auto_header_ids = False
 
     def __init__(self, *extras):
         self.render_map = {
