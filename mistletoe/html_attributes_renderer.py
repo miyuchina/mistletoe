@@ -1,44 +1,28 @@
 """
-HTML renderer for mistletoe.
+HTML Attributes renderer for mistletoe.
 """
 
 import html
-import re
-from itertools import chain
-from urllib.parse import quote
 from mistletoe import block_token
 from mistletoe import span_token
-from mistletoe.block_token import HTMLBlock
-from mistletoe.span_token import HTMLSpan
-from mistletoe.base_renderer import BaseRenderer
+from mistletoe.block_token import HTMLAttributes
+from mistletoe.html_renderer import HTMLRenderer
 
 
-class HTMLAttributesRenderer(BaseRenderer):
+class HTMLAttributesRenderer(HTMLRenderer):
     """
-    HTML renderer class.
+    HTML Attributes renderer class.
 
-    See mistletoe.base_renderer module for more info.
+    See mistletoe.html_renderer module for more info.
     """
-    def __init__(self, *extras):
+    def __init__(self):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
         """
-        self._suppress_ptag_stack = [False]
-        super().__init__(*chain((HTMLBlock, HTMLSpan), extras))
-        # html.entities.html5 includes entitydefs not ending with ';',
-        # CommonMark seems to hate them, so...
-        self._stdlib_charref = html._charref
-        _charref = re.compile(r'&(#[0-9]+;'
-                              r'|#[xX][0-9a-fA-F]+;'
-                              r'|[^\t\n\f <&#;]{1,32};)')
-        html._charref = _charref
+        super().__init__(HTMLAttributes)
         self.RENDERER_START = False
 
-    def __exit__(self, *args):
-        super().__exit__(*args)
-        html._charref = self._stdlib_charref
-    
     def render(self, token):
         """
         Grabs the class name from input token and finds its corresponding
@@ -69,12 +53,6 @@ class HTMLAttributesRenderer(BaseRenderer):
                 htmlAttributesToken = None
             recon_tokens.append(token_type)
         doc_token.children = recon_tokens
-
-    def render_to_plain(self, token) -> str:
-        if hasattr(token, 'children'):
-            inner = [self.render_to_plain(child) for child in token.children]
-            return ''.join(inner)
-        return html.escape(token.content)
 
     def render_strong(self, token: span_token.Strong) -> str:
         template = '<strong>{}</strong>'
@@ -124,9 +102,6 @@ class HTMLAttributesRenderer(BaseRenderer):
 
     def render_escape_sequence(self, token: span_token.EscapeSequence) -> str:
         return self.render_inner(token)
-
-    def render_raw_text(self, token: span_token.RawText) -> str:
-        return html.escape(token.content)
 
     def render_heading(self, token: block_token.Heading) -> str:
         template = '<h{level}{attr}>{inner}</h{level}>'
@@ -218,39 +193,9 @@ class HTMLAttributesRenderer(BaseRenderer):
         inner = self.render_inner(token)
         return template.format(tag=tag, attr=attr, inner=inner)
 
-    @staticmethod
-    def render_html_span(token: span_token.HTMLSpan) -> str:
-        return token.content
-
-    @staticmethod
-    def render_thematic_break(token: block_token.ThematicBreak) -> str:
-        return '<hr />'
-
-    @staticmethod
-    def render_line_break(token: span_token.LineBreak) -> str:
-        return '\n' if token.soft else '<br />\n'
-
-    @staticmethod
-    def render_html_block(token: block_token.HTMLBlock) -> str:
-        return token.content
-
     def render_document(self, token: block_token.Document) -> str:
         self.footnotes.update(token.footnotes)
         inner = '\n'.join([self.render(child) for child in token.children])
         doc_html = '{}\n'.format(inner) if inner else ''
         self.RENDERER_START = False
         return doc_html
-
-    @staticmethod
-    def escape_html(raw: str) -> str:
-        """
-        This method is deprecated. Use `html.escape` instead.
-        """
-        return html.escape(raw)
-
-    @staticmethod
-    def escape_url(raw: str) -> str:
-        """
-        Escape urls to prevent code injection craziness. (Hopefully.)
-        """
-        return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))
