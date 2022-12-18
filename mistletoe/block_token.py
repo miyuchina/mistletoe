@@ -1011,8 +1011,7 @@ class HTMLAttributes(BlockToken):
             if not is_child_key:
                 self.id_index += 1
                 token_props = self.parent_props
-                child_key = token_props.get("id","uuu")
-                child_key = child_key+"-"+str(self.id_index)
+                child_key = "{}-{}".format(token_props.get("id","item"), str(self.id_index))
                 token_props['id'] = child_key
             self.apply_props(chld, is_child_key)
 
