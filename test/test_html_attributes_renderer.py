@@ -31,24 +31,24 @@ ${ > class:btn-link, aria-label:Kiss Me under the mistle toe}
         output = """\
 <h1 class="foobar" id="mistletoe-is-awesome" tabindex="1">Mistletoe is Awesome</h1>
 <ul id="todos" tabindex="100">
-<li class="list-item" tabindex="1">Push Code</li>
-<li class="list-item" tabindex="1">Get Groceries
-<ul id="todos-0" tabindex="1">
-<li class="list-item" tabindex="1">Veggies</li>
-<li class="list-item" tabindex="1">Fruits
-<ul id="todos-0-1" tabindex="1">
-<li class="list-item" tabindex="1">apples</li>
-<li class="list-item" tabindex="1">oranges</li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="list-item" tabindex="1">Hang up the mistletoe</li>
+    <li class="list-item" tabindex="1">Push Code</li>
+    <li class="list-item" tabindex="1">Get Groceries
+        <ul id="todos-0" tabindex="1">
+            <li class="list-item" tabindex="1">Veggies</li>
+            <li class="list-item" tabindex="1">Fruits
+                <ul id="todos-0-1" tabindex="1">
+                    <li class="list-item" tabindex="1">apples</li>
+                    <li class="list-item" tabindex="1">oranges</li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+    <li class="list-item" tabindex="1">Hang up the mistletoe</li>
 </ul>
 <p class="img-sm" tabindex="1"><img src="https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg" alt="foo" title="toof" tabindex="1" /></p>
 <p tabindex="1"><a href="https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg" title="toof" class="btn-link" aria-label="Kiss Me under the mistle toe" tabindex="1">some link</a></p>
 """
-        self.assertEqual(html, output)
+        self.assertEqual(html.strip().replace('\n',' '), ' '.join(output.split()))
 
 t = TestHTMLAttributes()
 t.test_document()
