@@ -3,6 +3,14 @@ Base token class.
 """
 
 
+"""
+Stores a reference to the current document (root) token during parsing.
+
+Footnotes are stored in the document token by accessing this reference.
+"""
+_root_node = None
+
+
 def _short_repr(value):
     """
     Return a shortened ``repr`` output of value for use in ``__repr__`` methods.

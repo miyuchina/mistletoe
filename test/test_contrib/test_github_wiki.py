@@ -1,12 +1,12 @@
 from unittest import TestCase, mock
-from mistletoe import span_token, Document
+from mistletoe import span_token, Document, token
 from mistletoe.span_token import tokenize_inner
 from mistletoe.contrib.github_wiki import GithubWiki, GithubWikiRenderer
 
 
 class TestGithubWiki(TestCase):
     def setUp(self):
-        span_token._root_node = Document([])
+        token._root_node = Document([])
         self.renderer = GithubWikiRenderer()
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)

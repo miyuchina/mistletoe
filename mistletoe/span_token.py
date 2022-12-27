@@ -15,9 +15,6 @@ __all__ = ['EscapeSequence', 'Strikethrough', 'AutoLink', 'CoreTokens',
            'InlineCode', 'LineBreak', 'RawText']
 
 
-_root_node = None
-
-
 def tokenize_inner(content):
     """
     A wrapper around span_tokenizer.tokenize. Pass in all span-level token
@@ -94,7 +91,7 @@ class CoreTokens(SpanToken):
 
     @classmethod
     def find(cls, string):
-        return core_tokens.find_core_tokens(string, _root_node)
+        return core_tokens.find_core_tokens(string, token._root_node)
 
 
 class Strong(SpanToken):
