@@ -22,15 +22,6 @@ __all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
            'List', 'Table', 'Footnote', 'Paragraph']
 
 
-"""
-Stores a reference to the current document token.
-
-When parsing, footnote entries will be stored in the document by
-accessing this pointer.
-"""
-_root_node = None
-
-
 def tokenize(lines):
     """
     A wrapper around block_tokenizer.tokenize. Pass in all block-level
@@ -143,12 +134,9 @@ class Document(BlockToken):
             lines = lines.splitlines(keepends=True)
         lines = [line if line.endswith('\n') else '{}\n'.format(line) for line in lines]
         self.footnotes = {}
-        global _root_node
-        _root_node = self
-        span_token._root_node = self
+        token._root_node = self
         self.children = tokenize(lines)
-        span_token._root_node = None
-        _root_node = None
+        token._root_node = None
 
 
 class Heading(BlockToken):
@@ -777,7 +765,7 @@ class Footnote(BlockToken):
                 break
             offset, match = match_info
             matches.append(match)
-        cls.append_footnotes(matches, _root_node)
+        cls.append_footnotes(matches, token._root_node)
         return matches or None
 
     @classmethod
