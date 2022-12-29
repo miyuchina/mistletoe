@@ -26,7 +26,7 @@ import os
 import sys
 import getopt
 import mistletoe
-from contrib.jira_renderer import JIRARenderer
+from mistletoe.contrib.jira_renderer import JIRARenderer
 
 usageString = '%s <markdownfile>' % os.path.basename(sys.argv[0])
 helpString = """

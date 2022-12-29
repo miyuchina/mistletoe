@@ -20,7 +20,7 @@
 
 from test.base_test import BaseRendererTest
 from mistletoe.span_token import tokenize_inner
-from contrib.xwiki20_renderer import XWiki20Renderer
+from mistletoe.contrib.xwiki20_renderer import XWiki20Renderer
 import random
 import string
 

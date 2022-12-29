@@ -1,7 +1,7 @@
 from unittest import TestCase, mock
 from mistletoe import span_token, Document
 from mistletoe.span_token import tokenize_inner
-from contrib.github_wiki import GithubWiki, GithubWikiRenderer
+from mistletoe.contrib.github_wiki import GithubWiki, GithubWikiRenderer
 
 
 class TestGithubWiki(TestCase):
