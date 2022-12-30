@@ -15,12 +15,12 @@ class HTMLAttributesRenderer(HTMLRenderer):
 
     See mistletoe.html_renderer module for more info.
     """
-    def __init__(self):
+    def __init__(self, *extras):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
         """
-        super().__init__(HTMLAttributes)
+        super().__init__(HTMLAttributes, *extras)
         self.RENDERER_START = False
 
     def render(self, token):
