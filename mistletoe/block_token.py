@@ -968,7 +968,7 @@ class HTMLAttributes(BlockToken):
     start_str = "${"
     end_str = "}"
     parent_child_partition_str = " > "
-    mapping_str = ":"
+    mapping_delimeter = ":"
     allow_auto_ids = ['Heading']
     enable_auto_ids = False
     enable_auto_tabindex = True
@@ -985,8 +985,8 @@ class HTMLAttributes(BlockToken):
         """Parses raw attribute string into dicts"""
         try:
             def get_props(prop):
-                if self.mapping_str in prop:
-                    key, _, value = prop.partition(self.mapping_str)
+                if self.mapping_delimeter in prop:
+                    key, _, value = prop.partition(self.mapping_delimeter)
                     return key, value
                 return None, None
             attr_map = {}
@@ -1028,7 +1028,7 @@ class HTMLAttributes(BlockToken):
     @classmethod
     def configure(cls, options: dict) -> str:
         """Override default class configuration fields"""
-        only_fields = ("start_str", "end_str", "parent_child_partition_str", "mapping_st", "allow_auto_ids", "enable_auto_ids", "enable_auto_tabindex")
+        only_fields = ("start_str", "end_str", "parent_child_partition_str", "mapping_delimeter", "allow_auto_ids", "enable_auto_ids", "enable_auto_tabindex")
         for k, v in options.items():
             if k not in only_fields: continue
             setattr(cls, k, v)
