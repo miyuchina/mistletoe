@@ -54,23 +54,6 @@ class HTMLAttributesRenderer(HTMLRenderer):
             recon_tokens.append(token_type)
         doc_token.children = recon_tokens
 
-    def render_strong(self, token: span_token.Strong) -> str:
-        template = '<strong>{}</strong>'
-        return template.format(self.render_inner(token))
-
-    def render_emphasis(self, token: span_token.Emphasis) -> str:
-        template = '<em>{}</em>'
-        return template.format(self.render_inner(token))
-
-    def render_inline_code(self, token: span_token.InlineCode) -> str:
-        template = '<code>{}</code>'
-        inner = html.escape(token.children[0].content)
-        return template.format(inner)
-
-    def render_strikethrough(self, token: span_token.Strikethrough) -> str:
-        template = '<del>{}</del>'
-        return template.format(self.render_inner(token))
-
     def render_image(self, token: span_token.Image) -> str:
         template = '<img src="{}" alt="{}"{}{attr} />'
         if token.title:
