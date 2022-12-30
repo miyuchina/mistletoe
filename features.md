@@ -1,7 +1,7 @@
 HTMLAttributesRenderer
 ----------------------
 
-This feature allows you to write Markdown that will render 508 compliant html attributes.
+This feature allows you to write Markdown that will render [508 compliant](https://www.section508.gov/manage/laws-and-policies/) html attributes.
 
 
 **HTMLAttributesRenderer Block syntax**
