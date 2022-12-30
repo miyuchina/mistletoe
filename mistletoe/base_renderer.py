@@ -44,7 +44,6 @@ class BaseRenderer(object):
 
     def __init__(self, *extras):
         self.render_map = {
-            'HTMLAttributes': self.render_html_attributes,
             'Strong':         self.render_strong,
             'Emphasis':       self.render_emphasis,
             'InlineCode':     self.render_inline_code,

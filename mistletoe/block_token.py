@@ -18,7 +18,7 @@ from mistletoe.core_tokens import (
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-__all__ = ['HTMLAttributes', 'BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
+__all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
            'List', 'Table', 'Footnote', 'Paragraph']
 
 
