@@ -11,7 +11,7 @@ setup(name='mistletoe',
       packages=['mistletoe'],
       entry_points={'console_scripts': ['mistletoe = mistletoe.__main__:main']},
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: MIT License',
           'Programming Language :: Python :: 3',
