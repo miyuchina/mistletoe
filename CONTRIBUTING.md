@@ -53,29 +53,31 @@ comments.
 
 ## Writing code
 
-### Commit messages
+### Atomic commits
 
 * minimal cosmetic changes are fine to mix in with your commits, but try feel
   guilty when you do that, and if it's not too big of a hassle, break them
   into two commits.
 
-* give clear, instructive commit messages. Try using phrases like "added XXX
-  feature" or "fixed XXX (#42)".
+* similarly, provided there occur bigger, independent areas of changes you
+  would like to address in a pull request, it may be a good idea to split
+  your pull request into multiple ones.
 
-* if you find yourself cramming too many things into one commit message, you
-  should probably break them into multiple commits.
+### Commit messages
 
-* emojis are awesome. Use them like this:
+* give clear, instructive commit messages.
+  [Conventional Commits](conv-commits) is the preferred way of how to
+  structure a commit message.
 
-  | Emoji | Description                     |
-  | :---: | :------------------------------ |
-  |  📚   | Update documentation.           |
-  |  🐎   | Performance improvements.       |
-  |  💡   | New features.                   |
-  |  🐛   | Bug fixes.                      |
-  |  🚨   | Under construction.             |
-  |  ☕️   | Refactoring / cosmetic changes. |
-  |  🌎   | Internationalization.           |
+* here is an example commit message when fixing some stuff from a numbered
+  issue: `fix: avoid infinite loop when parsing specific Footnotes (#124)`.
+
+* find 5 minutes of your time to add important non-obvious details
+  to the message body, like WHY or HOW.
+  This can tremendously reduce the time necessary to investigate future issues
+  and to get better understanding of the project code for newbies.
+  (Yet, this should not serve as a replacement for proper documentation or
+  inline comments.)
 
 ### Style guide
 
@@ -107,3 +109,4 @@ I tweet [@mi_before_yu][twitter]. Also yell at me over [email][email].
 [pep-8]: https://www.python.org/dev/peps/pep-0008/
 [twitter]: https://twitter.com/mi_before_yu
 [email]: mailto:hello@afteryu.me
+[conv-commits]: https://www.conventionalcommits.org/
