@@ -6,7 +6,7 @@ you would take it to. Or maybe you can discover some [Nargles][nargles], which,
 by the way, totally exist.
 
 The following instructions serve as guidelines, and you should use your best
-judgements when employing them.
+judgement when employing them.
 
 ## Getting started
 
@@ -88,7 +88,7 @@ things to be aware of:
   ones, despite PEP8's suggestion to the contrary.
 * mistletoe follows the eighty-character rule: if you find your line to be
   too lengthy, try giving variable names to expressions, and break it up
-  that way. That said, it's okay to go over the charater limit occasionally.
+  that way. That said, it's okay to go over the character limit occasionally.
 * mistletoe uses four spaces instead of a tab to indent. For vim users,
   include `set ts=4 sw=4 ai et` in your `.vimrc`.
 
