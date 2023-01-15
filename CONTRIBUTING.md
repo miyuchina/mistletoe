@@ -86,8 +86,6 @@ things to be aware of:
 
 * mistletoe uses `CamelCase` for classnames, `snake_case` for functions and
   methods;
-* mistletoe uses *one* blank line between classes and functions, even global
-  ones, despite PEP8's suggestion to the contrary.
 * mistletoe follows the eighty-character rule: if you find your line to be
   too lengthy, try giving variable names to expressions, and break it up
   that way. That said, it's okay to go over the character limit occasionally.
