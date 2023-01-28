@@ -983,19 +983,16 @@ class HTMLAttributes(BlockToken):
     
     def set_props(self, attr_str: str):
         """Parses raw attribute string into dicts"""
-        try:
-            def get_props(prop):
-                if self.mapping_delimeter in prop:
-                    key, _, value = prop.partition(self.mapping_delimeter)
-                    return key, value
-                return None, None
-            attr_map = {}
-            for prop in attr_str.split(', '):
-                k, v = get_props(prop.strip())
-                if k and v: attr_map[k] = v
-            return attr_map
-        except Exception as e:
-            raise
+        def get_props(prop):
+            if self.mapping_delimeter in prop:
+                key, _, value = prop.partition(self.mapping_delimeter)
+                return key, value
+            return None, None
+        attr_map = {}
+        for prop in attr_str.split(', '):
+            k, v = get_props(prop.strip())
+            if k and v: attr_map[k] = v
+        return attr_map
 
     def apply_props(self, token, is_child: bool = None):
         """Applies props recursively to parent and child tokens"""
@@ -1036,12 +1033,10 @@ class HTMLAttributes(BlockToken):
     @classmethod
     def get_auto_id(cls, token) -> str:
         """Automatically generate ids for Heading elements or any specified token type"""
-        try:
-            allow_auto_id = hasattr(token, 'content') and cls.enable_auto_ids and token.__class__.__name__ in cls.allow_auto_ids
-            auto_id = token.content.lower().replace(' ','-') if allow_auto_id else ''
-            return auto_id
-        except Exception as e:
-            raise
+        allow_auto_id = hasattr(token, 'content') and cls.enable_auto_ids and token.__class__.__name__ in cls.allow_auto_ids
+        auto_id = token.content.lower().replace(' ','-') if allow_auto_id else ''
+        return auto_id
+
     
     @classmethod
     def check_for_children(cls, token):
