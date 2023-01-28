@@ -143,9 +143,6 @@ class BaseRenderer(object):
         """
         return token.content
 
-    def render_html_attributes(self, token: block_token) -> str:
-        return self.render_inner(token)
-
     def render_strong(self, token: span_token.Strong) -> str:
         return self.render_inner(token)
 
