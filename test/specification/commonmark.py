@@ -6,6 +6,11 @@ from traceback import print_tb
 from argparse import ArgumentParser
 
 
+KNOWN = []
+"""
+Examples (their numbers) from the specification which are known to fail in mistletoe.
+"""
+
 def run_tests(test_entries, start=None, end=None,
               quiet=False, verbose=False, known=False):
     if known:
