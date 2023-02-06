@@ -1,6 +1,8 @@
 import re
 from collections import ChainMap
-from mistletoe import BaseRenderer, span_token, block_token
+from functools import reduce
+from mistletoe.base_renderer import BaseRenderer
+from mistletoe import span_token, block_token
 from mistletoe.core_tokens import MatchObj
 
 
@@ -102,6 +104,9 @@ class Scheme(BaseRenderer):
             "list": lambda *args: reduce(lambda x, y: (y, x), map(self.render, reversed(args)), None),
             "display": lambda *args: print(*map(self.render, args)),
         })
+
+    def render_program(self, token):
+        return self.render_inner(token)
 
     def render_inner(self, token):
         result = None
