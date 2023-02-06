@@ -12,7 +12,9 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    # As long as we want to support Python 3.6-, we need to stick to an older version of Ubuntu,
+    # see <https://github.com/actions/setup-python/issues/544>.
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
