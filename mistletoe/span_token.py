@@ -195,7 +195,7 @@ class AutoLink(SpanToken):
 
 class EscapeSequence(SpanToken):
     """
-    Escape sequence token. ("\*")
+    Escape sequence token. ("\\\\*")
     This is an inline token with a single child of type RawText.
 
     Attributes:
