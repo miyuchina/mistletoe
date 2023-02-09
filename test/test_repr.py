@@ -18,11 +18,13 @@ class TestRepr(unittest.TestCase):
 
     def test_heading(self):
         doc = Document("# Foo")
-        self._check_repr_matches(doc.children[0], "block_token.Heading with 1 child content='Foo' level=1")
+        self._check_repr_matches(doc.children[0], "block_token.Heading with 1 child level=1")
+        self._check_repr_matches(doc.children[0].children[0], "span_token.RawText content='Foo'")
 
     def test_subheading(self):
         doc = Document("# Foo\n## Bar")
-        self._check_repr_matches(doc.children[1], "block_token.Heading with 1 child content='Bar' level=2")
+        self._check_repr_matches(doc.children[1], "block_token.Heading with 1 child level=2")
+        self._check_repr_matches(doc.children[1].children[0], "span_token.RawText content='Bar'")
 
     def test_quote(self):
         doc = Document("> Foo")

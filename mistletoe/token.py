@@ -54,14 +54,14 @@ class Token:
             self.__class__.__name__
         )
 
-        if hasattr(self, "children"):
+        if "children" in vars(self):
             count = len(self.children)
             if count == 1:
                 output += " with 1 child"
             else:
                 output += " with {} children".format(count)
 
-        if hasattr(self, "content"):
+        if "content" in vars(self):
            output += " content=" + _short_repr(self.content)
 
         for attrname in self.repr_attributes:
