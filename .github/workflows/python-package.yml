@@ -3,6 +3,10 @@
 
 name: Python package
 
+env:
+  package_name: mistletoe
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 on:
   push:
     branches: [ "master" ]
@@ -30,7 +34,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
@@ -45,3 +49,34 @@ jobs:
       if: ${{ success() || steps.unit_tests.conclusion == 'failure' }}
       run: |
         python -m test.specification --ignore-known
+
+  coverage:
+
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      python_version: 3.11
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ env.python_version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.python_version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install pytest
+        # note: the following also installs "coverage"
+        python -m pip install coveralls
+        if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+    - name: Get coverage report
+      run: |
+        coverage run --source=${package_name} --append -m pytest
+        coverage run --source=${package_name} --append -m test.specification --ignore-known
+        # quick local report output to console:
+        coverage report
+    - name: Upload report to Coveralls
+      # documentation for GitHub setup: https://coveralls-python.readthedocs.io/en/latest/usage/configuration.html#github-actions-support
+      run: |
+        coveralls --service=github
