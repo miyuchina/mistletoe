@@ -40,3 +40,6 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - name: Test CommonMark compliance
+      run: |
+        python -m test.specification --ignore-known
