@@ -1,6 +1,6 @@
 <h1>mistletoe<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right' width='128' height='128'></h1>
 
-[![Build Status][build-badge]][travis]
+[![Build Status][build-badge]][github-actions]
 [![Coverage Status][cover-badge]][coveralls]
 [![PyPI][pypi-badge]][pypi]
 [![is wheel][wheel-badge]][pypi]
@@ -228,11 +228,11 @@ Copyright & License
   [CC BY 3.0][cc-by].
 * mistletoe is released under [MIT][license].
 
-[build-badge]: https://img.shields.io/travis/miyuchina/mistletoe.svg?style=flat-square
+[build-badge]: https://img.shields.io/github/actions/workflow/status/miyuchina/mistletoe/python-package.yml?style=flat-square
 [cover-badge]: https://img.shields.io/coveralls/miyuchina/mistletoe.svg?style=flat-square
 [pypi-badge]: https://img.shields.io/pypi/v/mistletoe.svg?style=flat-square
 [wheel-badge]: https://img.shields.io/pypi/wheel/mistletoe.svg?style=flat-square
-[travis]: https://travis-ci.org/miyuchina/mistletoe
+[github-actions]: https://github.com/miyuchina/mistletoe/actions/workflows/python-package.yml
 [coveralls]: https://coveralls.io/github/miyuchina/mistletoe?branch=master
 [pypi]: https://pypi.python.org/pypi/mistletoe
 [mistune]: https://github.com/lepture/mistune
