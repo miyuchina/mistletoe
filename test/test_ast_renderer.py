@@ -52,3 +52,57 @@ class TestASTRenderer(unittest.TestCase):
                  }]}
         output = ast_renderer.get_ast(d)
         self.assertEqual(output, target)
+
+    def test_table(self):
+        self.maxDiff = None
+        d = Document(
+            [
+                "| A   | B   |\n",
+                "| --- | --- |\n",
+                "| 1   | 2   |\n",
+            ]
+        )
+        target = {
+            "type": "Document",
+            "footnotes": {},
+            "children": [{
+                "type": "Table",
+                "column_align": [None, None],
+                "header": {
+                    "type": "TableRow",
+                    "row_align": [None, None],
+                    "children": [{
+                        "type": "TableCell",
+                        "align": None,
+                        "children": [{
+                            "type": "RawText",
+                            "content": "A",
+                    }]}, {
+                        "type": "TableCell",
+                        "align": None,
+                        "children": [{
+                            "type": "RawText",
+                            "content": "B",
+                    }]}],
+                },
+                "children": [{
+                    "type": "TableRow",
+                    "row_align": [None, None],
+                    "children": [{
+                        "type": "TableCell",
+                        "align": None,
+                        "children": [{
+                            "type": "RawText",
+                            "content": "1",
+                    }]}, {
+                        "type": "TableCell",
+                        "align": None,
+                        "children": [{
+                            "type": "RawText",
+                            "content": "2",
+                    }]}],
+                }],
+            }],
+        }
+        output = ast_renderer.get_ast(d)
+        self.assertEqual(output, target)
