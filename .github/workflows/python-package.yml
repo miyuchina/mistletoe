@@ -5,7 +5,6 @@ name: Python package
 
 env:
   package_name: mistletoe
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 on:
   push:
@@ -78,5 +77,7 @@ jobs:
         coverage report
     - name: Upload report to Coveralls
       # documentation for GitHub setup: https://coveralls-python.readthedocs.io/en/latest/usage/configuration.html#github-actions-support
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         coveralls --service=github
