@@ -119,45 +119,11 @@ class TestCodeFence(TestToken):
         self._test_match(block_token.CodeFence, lines, arg, language='aa')
 
 
-class TestCodeFenceBehavior(unittest.TestCase):
-    def test_content_property(self):
-        lines = ['```\n',
-                 'line 1\n',
-                 'line 2\n',
-                 '```\n']
-        document = block_token.Document(lines)
-        tokens = document.children
-        self.assertEqual(1, len(tokens))
-        self.assertIsInstance(tokens[0], block_token.CodeFence)
-
-        # option 1: direct access to the content
-        self.assertEqual('line 1\nline 2\n', tokens[0].children[0].content)
-
-        # option 2: using property getter to access the content
-        self.assertEqual('line 1\nline 2\n', tokens[0].content)
-
-
 class TestBlockCode(TestToken):
     def test_parse_indented_code(self):
         lines = ['    rm dir\n', '    mkdir test\n']
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.BlockCode, lines, arg, language='')
-
-
-class TestBlockCodeBehavior(unittest.TestCase):
-    def test_content_property(self):
-        lines = ['    line 1\n',
-                 '    line 2\n']
-        document = block_token.Document(lines)
-        tokens = document.children
-        self.assertEqual(1, len(tokens))
-        self.assertIsInstance(tokens[0], block_token.BlockCode)
-
-        # option 1: direct access to the content
-        self.assertEqual('line 1\nline 2\n', tokens[0].children[0].content)
-
-        # option 2: using property getter to access the content
-        self.assertEqual('line 1\nline 2\n', tokens[0].content)
 
 
 class TestParagraph(TestToken):
@@ -583,7 +549,43 @@ class TestHTMLBlock(unittest.TestCase):
         self.assertEqual(1, len(tokens))
         self.assertIsInstance(tokens[0], block_token.HTMLBlock)
 
-    def test_content_property(self):
+
+class TestLeafBlockTokenContentProperty(unittest.TestCase):
+    def setUp(self):
+        block_token.add_token(block_token.HTMLBlock)
+        self.addCleanup(block_token.reset_tokens)
+
+    def test_code_fence(self):
+        lines = ['```\n',
+                 'line 1\n',
+                 'line 2\n',
+                 '```\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.CodeFence)
+
+        # option 1: direct access to the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].children[0].content)
+
+        # option 2: using property getter to access the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].content)
+
+    def test_block_code(self):
+        lines = ['    line 1\n',
+                 '    line 2\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.BlockCode)
+
+        # option 1: direct access to the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].children[0].content)
+
+        # option 2: using property getter to access the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].content)
+
+    def test_html_block(self):
         lines = ['<div>\n',
                  'text\n'
                  '</div>\n']
