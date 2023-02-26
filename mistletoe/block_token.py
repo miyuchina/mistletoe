@@ -359,6 +359,11 @@ class BlockCode(BlockToken):
         self.language = ''
         self.children = (span_token.RawText(''.join(lines).strip('\n')+'\n'),)
 
+    @property
+    def content(self):
+        """Return the code block content."""
+        return self.children[0].content
+
     @staticmethod
     def start(line):
         return line.replace('\t', '    ', 1).startswith('    ')
@@ -407,6 +412,11 @@ class CodeFence(BlockToken):
         lines, open_info = match
         self.language = span_token.EscapeSequence.strip(open_info[2])
         self.children = (span_token.RawText(''.join(lines)),)
+
+    @property
+    def content(self):
+        """Return the code block content."""
+        return self.children[0].content
 
     @classmethod
     def start(cls, line):
