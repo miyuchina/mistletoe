@@ -548,3 +548,18 @@ class TestHTMLBlock(unittest.TestCase):
         tokens = document.children
         self.assertEqual(1, len(tokens))
         self.assertIsInstance(tokens[0], block_token.HTMLBlock)
+
+    def test_content_property(self):
+        lines = ['<div>\n',
+                 'text\n'
+                 '</div>\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.HTMLBlock)
+
+        # option 1: direct access to the content
+        self.assertEqual(''.join(lines).strip(), tokens[0].children[0].content)
+
+        # option 2: using property getter to access the content
+        self.assertEqual(''.join(lines).strip(), tokens[0].content)

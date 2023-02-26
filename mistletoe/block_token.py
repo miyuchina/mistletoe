@@ -946,10 +946,10 @@ class ThematicBreak(BlockToken):
 class HTMLBlock(BlockToken):
     """
     Block-level HTML token.
-    This is a leaf block token without children.
+    This is a leaf block token with a single child of type span_token.RawText.
 
     Attributes:
-        content (str): the raw HTML content.
+        children (list): contains a single span_token.RawText token with the raw HTML content.
     """
     _end_cond = None
     multiblock = re.compile(r'<(pre|script|style|textarea)[ >\n]')
@@ -958,7 +958,12 @@ class HTMLBlock(BlockToken):
                                 span_token._closing_tag)) + r')\s*$')
 
     def __init__(self, lines):
-        self.content = ''.join(lines).rstrip('\n')
+        self.children = (span_token.RawText(''.join(lines).rstrip('\n')),)
+
+    @property
+    def content(self):
+        """Return the raw HTML content."""
+        return self.children[0].content
 
     @classmethod
     def start(cls, line):
