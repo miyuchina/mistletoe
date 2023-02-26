@@ -361,7 +361,7 @@ class BlockCode(BlockToken):
 
     @property
     def content(self):
-        """Return the code block content."""
+        """Returns the code block content."""
         return self.children[0].content
 
     @staticmethod
@@ -415,7 +415,7 @@ class CodeFence(BlockToken):
 
     @property
     def content(self):
-        """Return the code block content."""
+        """Returns the code block content."""
         return self.children[0].content
 
     @classmethod
@@ -972,7 +972,7 @@ class HTMLBlock(BlockToken):
 
     @property
     def content(self):
-        """Return the raw HTML content."""
+        """Returns the raw HTML content."""
         return self.children[0].content
 
     @classmethod
