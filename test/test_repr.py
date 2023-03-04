@@ -65,8 +65,13 @@ class TestRepr(unittest.TestCase):
     # No test for ``Footnote``
 
     def test_htmlblock(self):
-        token = block_token.HTMLBlock("<pre>\nFoo\n</pre>\n")
-        self._check_repr_matches(token, "block_token.HTMLBlock content='<pre>\\nFoo\\n</pre>'")
+        try:
+            block_token.add_token(block_token.HTMLBlock)
+            doc = Document("<pre>\nFoo\n</pre>\n")
+        finally:
+            block_token.reset_tokens()
+        self._check_repr_matches(doc.children[0], "block_token.HTMLBlock with 1 child")
+        self._check_repr_matches(doc.children[0].children[0], "span_token.RawText content='<pre>\\nFoo\\n</pre>'")
 
     # Span tokens
 
