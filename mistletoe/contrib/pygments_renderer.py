@@ -14,7 +14,7 @@ class PygmentsRenderer(HTMLRenderer):
 
 
     def render_block_code(self, token):
-        code = token.content
+        code = token.children[0].content
         lexer = get_lexer(token.language) if token.language else guess_lexer(code)
         return highlight(code, lexer, self.formatter)
 
