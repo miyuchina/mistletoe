@@ -18,13 +18,19 @@ class HTMLRenderer(BaseRenderer):
 
     See mistletoe.base_renderer module for more info.
     """
-    def __init__(self, *extras):
+    def __init__(self, *extras, html_escape_double_quotes=True, html_escape_single_quotes=False):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
+            html_escape_double_quotes (bool): whether to also escape double
+                quotes when HTML-escaping rendered text.
+            html_escape_single_quotes (bool): whether to also escape single
+                quotes when HTML-escaping rendered text.
         """
         self._suppress_ptag_stack = [False]
         super().__init__(*chain((HTMLBlock, HTMLSpan), extras))
+        self.html_escape_double_quotes = html_escape_double_quotes
+        self.html_escape_single_quotes = html_escape_single_quotes
 
     def __exit__(self, *args):
         super().__exit__(*args)
@@ -45,7 +51,7 @@ class HTMLRenderer(BaseRenderer):
 
     def render_inline_code(self, token: span_token.InlineCode) -> str:
         template = '<code>{}</code>'
-        inner = html.escape(token.children[0].content)
+        inner = self.escape_html_text(token.children[0].content)
         return template.format(inner)
 
     def render_strikethrough(self, token: span_token.Strikethrough) -> str:
@@ -83,7 +89,7 @@ class HTMLRenderer(BaseRenderer):
         return self.render_inner(token)
 
     def render_raw_text(self, token: span_token.RawText) -> str:
-        return html.escape(token.content)
+        return self.escape_html_text(token.content)
 
     @staticmethod
     def render_html_span(token: span_token.HTMLSpan) -> str:
@@ -113,7 +119,7 @@ class HTMLRenderer(BaseRenderer):
             attr = ' class="{}"'.format('language-{}'.format(html.escape(token.language)))
         else:
             attr = ''
-        inner = html.escape(token.content)
+        inner = self.escape_html_text(token.content)
         return template.format(attr=attr, inner=inner)
 
     def render_list(self, token: block_token.List) -> str:
@@ -193,12 +199,22 @@ class HTMLRenderer(BaseRenderer):
         inner = '\n'.join([self.render(child) for child in token.children])
         return '{}\n'.format(inner) if inner else ''
 
-    @staticmethod
-    def escape_html(raw: str) -> str:
+    def escape_html_text(self, s: str) -> str:
         """
-        This method is deprecated. Use `html.escape` instead.
+        Like `html.escape()`, but this  looks into the current rendering options
+        to decide which of the quotes (double, single, or both) to escape.
+
+        Intended for escaping text content. To escape content of an attribute,
+        simply call `html.escape()`.
         """
-        return html.escape(raw)
+        s = s.replace("&", "&amp;") # Must be done first!
+        s = s.replace("<", "&lt;")
+        s = s.replace(">", "&gt;")
+        if self.html_escape_double_quotes:
+            s = s.replace('"', "&quot;")
+        if self.html_escape_single_quotes:
+            s = s.replace('\'', "&#x27;")
+        return s
 
     @staticmethod
     def escape_url(raw: str) -> str:
