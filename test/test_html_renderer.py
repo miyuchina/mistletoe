@@ -1,6 +1,6 @@
 from unittest import TestCase, mock
 from mistletoe.html_renderer import HTMLRenderer
-
+from parameterized import parameterized
 
 class TestRenderer(TestCase):
     def setUp(self):
@@ -136,6 +136,19 @@ class TestHTMLRenderer(TestRenderer):
 
     def test_document(self):
         self._test_token('Document', '', footnotes={})
+
+
+class TestHTMLRendererEscaping(TestCase):
+    @parameterized.expand([
+        (False, False, '" and \''),
+        (False, True, '" and &#x27;'),
+        (True, False, '&quot; and \''),
+        (True, True, '&quot; and &#x27;'),
+    ])
+    def test_escape_html_text(self, escape_double, escape_single, expected):
+        with HTMLRenderer(html_escape_double_quotes=escape_double,
+                          html_escape_single_quotes=escape_single) as renderer:
+            self.assertEqual(renderer.escape_html_text('" and \''), expected)
 
 
 class TestHTMLRendererFootnotes(TestCase):
