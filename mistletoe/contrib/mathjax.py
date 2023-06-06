@@ -6,10 +6,14 @@ from mistletoe.html_renderer import HTMLRenderer
 from mistletoe.latex_renderer import LaTeXRenderer
 
 class MathJaxRenderer(HTMLRenderer, LaTeXRenderer):
-    """
-    MRO will first look for render functions under HTMLRenderer,
-    then LaTeXRenderer.
-    """
+    def __init__(self, **kwargs):
+        """
+        Args:
+            **kwargs: additional parameters to be passed to the ancestors'
+                      constructors.
+        """
+        super().__init__(**kwargs)
+
     mathjax_src = '<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>\n'
 
     def render_math(self, token):

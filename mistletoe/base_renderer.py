@@ -42,7 +42,7 @@ class BaseRenderer(object):
     """
     _parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
 
-    def __init__(self, *extras):
+    def __init__(self, *extras, **kwargs):
         self.render_map = {
             'Strong':         self.render_strong,
             'Emphasis':       self.render_emphasis,

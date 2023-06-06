@@ -11,16 +11,19 @@ from mistletoe import block_token
 class TOCRenderer(HTMLRenderer):
     """
     Extends HTMLRenderer class for table of contents support.
-
-    Args:
-        depth (int): the maximum level of heading to be included in TOC;
-        omit_title (bool): whether to ignore tokens where token.level == 1;
-        filter_conds (list): when any of these functions evaluate to true,
-                             current heading will not be included;
-        extras (list): allows subclasses to add even more custom tokens.
     """
-    def __init__(self, depth=5, omit_title=True, filter_conds=[], *extras):
-        super().__init__(*extras)
+    def __init__(self, *extras, depth=5, omit_title=True, filter_conds=[], **kwargs):
+        """
+        Args:
+            extras (list): allows subclasses to add even more custom tokens.
+            depth (int): the maximum level of heading to be included in TOC.
+            omit_title (bool): whether to ignore tokens where token.level == 1.
+            filter_conds (list): when any of these functions evaluate to true,
+                                current heading will not be included.
+            **kwargs: additional parameters to be passed to the ancestor's
+                      constructor.
+        """
+        super().__init__(*extras, **kwargs)
         self._headings = []
         self.depth = depth
         self.omit_title = omit_title
