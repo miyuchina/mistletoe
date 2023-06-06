@@ -18,8 +18,13 @@ class GithubWiki(SpanToken):
 
 
 class GithubWikiRenderer(HTMLRenderer):
-    def __init__(self):
-        super().__init__(GithubWiki)
+    def __init__(self, **kwargs):
+        """
+        Args:
+            **kwargs: additional parameters to be passed to the ancestor's
+                      constructor.
+        """
+        super().__init__(GithubWiki, **kwargs)
 
     def render_github_wiki(self, token):
         template = '<a href="{target}">{inner}</a>'

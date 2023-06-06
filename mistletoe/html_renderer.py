@@ -18,7 +18,7 @@ class HTMLRenderer(BaseRenderer):
 
     See mistletoe.base_renderer module for more info.
     """
-    def __init__(self, *extras, html_escape_double_quotes=True, html_escape_single_quotes=False):
+    def __init__(self, *extras, html_escape_double_quotes=True, html_escape_single_quotes=False, **kwargs):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
@@ -26,9 +26,11 @@ class HTMLRenderer(BaseRenderer):
                 quotes when HTML-escaping rendered text.
             html_escape_single_quotes (bool): whether to also escape single
                 quotes when HTML-escaping rendered text.
+            **kwargs: additional parameters to be passed to the ancestor's
+                constructor.
         """
         self._suppress_ptag_stack = [False]
-        super().__init__(*chain((HTMLBlock, HTMLSpan), extras))
+        super().__init__(*chain((HTMLBlock, HTMLSpan), extras), **kwargs)
         self.html_escape_double_quotes = html_escape_double_quotes
         self.html_escape_single_quotes = html_escape_single_quotes
 

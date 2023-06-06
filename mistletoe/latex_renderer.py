@@ -17,15 +17,17 @@ for delimiter in reversed('|!"\'=+'):  # start with most common delimiters
 
 
 class LaTeXRenderer(BaseRenderer):
-    def __init__(self, *extras):
+    def __init__(self, *extras, **kwargs):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
+            **kwargs: additional parameters to be passed to the ancestor's
+                      constructor.
         """
         tokens = self._tokens_from_module(latex_token)
         self.packages = {}
         self.verb_delimiters = verb_delimiters
-        super().__init__(*chain(tokens, extras))
+        super().__init__(*chain(tokens, extras), **kwargs)
 
     def render_strong(self, token):
         return '\\textbf{{{}}}'.format(self.render_inner(token))
