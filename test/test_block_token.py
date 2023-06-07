@@ -125,6 +125,11 @@ class TestBlockCode(TestToken):
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.BlockCode, lines, arg, language='')
 
+    def test_parse_indented_code_with_blank_lines(self):
+        lines = ['    chunk1\n', '\n', '    chunk2\n', '  \n', ' \n', ' \n', '    chunk3\n']
+        arg = 'chunk1\n\nchunk2\n\n\n\nchunk3\n'
+        self._test_match(block_token.BlockCode, lines, arg, language='')
+
 
 class TestParagraph(TestToken):
     def test_parse(self):
