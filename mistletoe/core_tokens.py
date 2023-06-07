@@ -123,6 +123,7 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
             end = closer.start + n
             match = MatchObj(start, end, (start+n, end-n, string[start+n:end-n]))
             match.type = 'Strong' if n == 2 else 'Emphasis'
+            match.delimiter = string[start]
             matches.append(match)
             # remove all delimiters in between
             del delimiters[open_pos+1:curr_pos]
@@ -175,10 +176,12 @@ def match_link_image(string, offset, delimiter, root=None):
                                       (dest_start, dest_end, dest),
                                       (title_start, title_end, title))
                     match.type = 'Link' if not image else 'Image'
+                    match.dest_type = "angle_uri" if dest_start < dest_end and string[dest_start] == "<" else "uri"
+                    match.title_delimiter = string[title_start] if title_start < title_end else None
                     return match
     # footnote link
     if follows(string, offset, '['):
-        # full footnote link
+        # full footnote link: [label][dest]
         result = match_link_label(string, offset+1, root)
         if result:
             match_info, (dest, title) = result
@@ -188,10 +191,12 @@ def match_link_image(string, offset, delimiter, root=None):
                               (-1, -1, dest),
                               (-1, -1, title))
             match.type = 'Link' if not image else 'Image'
+            match.label = match_info[2]
+            match.dest_type = "full"
             return match
         ref = get_link_label(text, root)
         if ref:
-            # compact footnote link
+            # compact (collapsed) footnote link: [dest][]
             if follows(string, offset+1, ']'):
                 dest, title = ref
                 end = offset + 3
@@ -200,9 +205,10 @@ def match_link_image(string, offset, delimiter, root=None):
                                   (-1, -1, dest),
                                   (-1, -1, title))
                 match.type = 'Link' if not image else 'Image'
+                match.dest_type = "collapsed"
                 return match
         return None
-    # shortcut footnote link
+    # shortcut footnote link: [dest]
     ref = get_link_label(text, root)
     if ref:
         dest, title = ref
@@ -212,6 +218,7 @@ def match_link_image(string, offset, delimiter, root=None):
                           (-1, -1, dest),
                           (-1, -1, title))
         match.type = 'Link' if not image else 'Image'
+        match.dest_type = "shortcut"
         return match
     return None
 

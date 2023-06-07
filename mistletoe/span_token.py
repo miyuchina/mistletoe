@@ -100,6 +100,8 @@ class Strong(SpanToken):
     This is an inline token. Its children are inline (span) tokens.
     One of the core tokens.
     """
+    def __init__(self, match):
+        self.delimiter = match.delimiter
 
 
 class Emphasis(SpanToken):
@@ -108,6 +110,8 @@ class Emphasis(SpanToken):
     This is an inline token. Its children are inline (span) tokens.
     One of the core tokens.
     """
+    def __init__(self, match):
+        self.delimiter = match.delimiter
 
 
 class InlineCode(SpanToken):
@@ -121,8 +125,10 @@ class InlineCode(SpanToken):
 
     def __init__(self, match):
         content = match.group(self.parse_group)
+        self.delimiter = match.group(1)
         content = content.replace('\n', ' ')
-        if not content.isspace() and content.startswith(" ") and content.endswith(" "):
+        self.padding = " " if not content.isspace() and content.startswith(" ") and content.endswith(" ") else ""
+        if self.padding:
             content = content[1:-1]
         self.children = (RawText(content),)
 
@@ -150,27 +156,35 @@ class Image(SpanToken):
     Attributes:
         src (str): image source.
         title (str): image title (default to empty).
+        label (str): link label, for reference links.
     """
     repr_attributes = ("src", "title")
     def __init__(self, match):
         self.src = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
+        self.dest_type = getattr(match, "dest_type", None)
+        self.label = getattr(match, "label", None)
+        self.title_delimiter = getattr(match, "title_delimiter", None)
 
 
 class Link(SpanToken):
     """
-    Link token. ("[name](target)")
+    Link token. ("[name](target "title")")
     This is an inline token. Its children are inline (span) tokens holding the link text.
     One of the core tokens.
 
     Attributes:
         target (str): link target.
         title (str): link title (default to empty).
+        label (str): link label, for reference links.
     """
     repr_attributes = ("target", "title")
     def __init__(self, match):
         self.target = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
+        self.dest_type = getattr(match, "dest_type", None)
+        self.label = getattr(match, "label", None)
+        self.title_delimiter = getattr(match, "title_delimiter", None)
 
 
 class AutoLink(SpanToken):
@@ -179,8 +193,9 @@ class AutoLink(SpanToken):
     This is an inline token with a single child of type RawText.
 
     Attributes:
-        children (iterator): a single RawText node for the link target.
+        children (list): a single RawText node for the link target.
         target (str): link target.
+        mailto (bool): true iff the target looks like an email address, but does not have the "mailto:" prefix.
     """
     repr_attributes = ("target", "mailto")
     pattern = re.compile(r"(?<!\\)(?:\\\\)*<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
@@ -215,8 +230,11 @@ class EscapeSequence(SpanToken):
 
 class LineBreak(SpanToken):
     """
-    Line break token. Hard or soft.
+    Line break token: hard or soft.
     This is an inline token without children.
+
+    Attributes:
+        soft (bool): true if this is a soft line break.
     """
     repr_attributes = ("soft",)
     pattern = re.compile(r'( *|\\)\n')
@@ -224,9 +242,8 @@ class LineBreak(SpanToken):
     parse_group = 0
 
     def __init__(self, match):
-        content = match.group(1)
-        self.soft = not content.startswith(('  ', '\\'))
-        self.content = ''
+        self.content = match.group(1)
+        self.soft = not self.content.startswith(('  ', '\\'))
 
 
 class RawText(SpanToken):
