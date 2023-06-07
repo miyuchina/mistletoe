@@ -113,7 +113,7 @@ class TestRepr(unittest.TestCase):
 
     def test_hard_linebreak(self):
         doc = Document("Foo\\\nBar\n")
-        self._check_repr_matches(doc.children[0].children[1], "span_token.LineBreak content='' soft=False")
+        self._check_repr_matches(doc.children[0].children[1], "span_token.LineBreak content='\\\\' soft=False")
 
     def test_rawtext(self):
         doc = Document("Foo\n")

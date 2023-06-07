@@ -128,7 +128,11 @@ class Document(BlockToken):
     """
     Document token.
     This is a container block token. Its children are block tokens - container or leaf ones.
+
+    Attributes:
+        footnotes (dictionary): link reference definitions.
     """
+
     def __init__(self, lines):
         if isinstance(lines, str):
             lines = lines.splitlines(keepends=True)
@@ -146,15 +150,14 @@ class Heading(BlockToken):
 
     Attributes:
         level (int): heading level.
-        children (list): inner tokens.
     """
     repr_attributes = ("level",)
-    pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(?:\n|\s+?#+\s*?$))')
+    pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(\n|\s+?#+\s*?$))')
     level = 0
     content = ''
 
     def __init__(self, match):
-        self.level, content = match
+        self.level, content, self.closing_sequence = match
         super().__init__(content, span_token.tokenize_inner)
 
     @classmethod
@@ -166,12 +169,13 @@ class Heading(BlockToken):
         cls.content = (match_obj.group(2) or '').strip()
         if set(cls.content) == {'#'}:
             cls.content = ''
+        cls.closing_sequence = (match_obj.group(3) or '').strip()
         return True
 
     @classmethod
     def read(cls, lines):
         next(lines)
-        return cls.level, cls.content
+        return cls.level, cls.content, cls.closing_sequence
 
 class SetextHeading(BlockToken):
     """
@@ -184,8 +188,10 @@ class SetextHeading(BlockToken):
         level (int): heading level.
     """
     repr_attributes = ("level",)
+
     def __init__(self, lines):
-        self.level = 1 if lines.pop().lstrip().startswith('=') else 2
+        self.underline = lines.pop().rstrip()
+        self.level = 1 if self.underline.endswith('=') else 2
         content = '\n'.join([line.strip() for line in lines])
         super().__init__(content, span_token.tokenize_inner)
 
@@ -351,7 +357,6 @@ class BlockCode(BlockToken):
     This is a leaf block token with a single child of type span_token.RawText.
 
     Attributes:
-        children (list): contains a single span_token.RawText token.
         language (str): always the empty string.
     """
     repr_attributes = ("language",)
@@ -402,15 +407,18 @@ class CodeFence(BlockToken):
     This is a leaf block token with a single child of type span_token.RawText.
 
     Attributes:
-        children (list): contains a single span_token.RawText token.
         language (str): language of code block (default to empty).
     """
     repr_attributes = ("language",)
-    pattern = re.compile(r'( {0,3})(`{3,}|~{3,}) *(\S*)')
+    pattern = re.compile(r'( {0,3})(`{3,}|~{3,})( *(\S*)[^\n]*)')
     _open_info = None
+
     def __init__(self, match):
         lines, open_info = match
-        self.language = span_token.EscapeSequence.strip(open_info[2])
+        self.indentation = open_info[0]
+        self.delimiter = open_info[1]
+        self.info_string = open_info[2]
+        self.language = span_token.EscapeSequence.strip(open_info[3])
         self.children = (span_token.RawText(''.join(lines)),)
 
     @property
@@ -423,12 +431,12 @@ class CodeFence(BlockToken):
         match_obj = cls.pattern.match(line)
         if not match_obj:
             return False
-        prepend, leader, lang = match_obj.groups()
+        prepend, leader, info_string, lang = match_obj.groups()
         # info strings for backtick code blocks may not contain backticks,
         # but info strings for tilde code blocks may contain both tildes and backticks.
-        if leader[0] == '`' and '`' in line[match_obj.end(2):]:
+        if leader[0] == '`' and '`' in info_string:
             return False
-        cls._open_info = len(prepend), leader, lang
+        cls._open_info = len(prepend), leader, info_string, lang
         return True
 
     @classmethod
@@ -451,10 +459,9 @@ class CodeFence(BlockToken):
 class List(BlockToken):
     """
     List token.
-    This is a container block token. Its children are list item tokens.
+    This is a container block token. Its children are ListItem tokens.
 
     Attributes:
-        children (list): a list of ListItem tokens.
         loose (bool): whether the list is loose.
         start (NoneType or int): None if unordered, starting number if ordered.
     """
@@ -509,6 +516,12 @@ class ListItem(BlockToken):
     This is a container block token. Its children are block tokens - container or leaf ones.
 
     Not included in the parsing process, but called by List.
+
+    Attributes:
+        leader (string): a bullet list marker or an ordered list marker.
+        prepend (int): the start position of the content, i.e., the indentation required
+                       for continuation lines.
+        loose (bool): whether the list is loose.
     """
     repr_attributes = ("leader", "prepend", "loose")
     pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])($|\s+)')
@@ -646,12 +659,11 @@ class ListItem(BlockToken):
 class Table(BlockToken):
     """
     Table token.
-    This is a container block token. Its children are table row tokens.
+    This is a container block token. Its children are TableRow tokens.
 
     Attributes:
-        has_header (bool): whether table has header row.
+        header: header row (TableRow).
         column_align (list): align options for each column (default to [None]).
-        children (list): inner tokens (TableRows).
     """
     repr_attributes = ("column_align",)
     def __init__(self, lines):
@@ -661,6 +673,7 @@ class Table(BlockToken):
             self.header = TableRow(lines[0], self.column_align)
             self.children = [TableRow(line, self.column_align) for line in lines[2:]]
         else:
+            # note: not reachable, because read() guarantees the presence of three dashes
             self.column_align = [None]
             self.children = [TableRow(line) for line in lines]
 
@@ -708,9 +721,12 @@ class Table(BlockToken):
 class TableRow(BlockToken):
     """
     Table row token. Supports escaped pipes in table cells (for primary use within code spans).
-    This is a container block token. Its children are table cell tokens.
+    This is a container block token. Its children are TableCell tokens.
 
     Should only be called by Table.__init__().
+
+    Attributes:
+        row_align (list): align options for each column (default to [None]).
     """
     repr_attributes = ("row_align",)
     # Note: Python regex requires fixed-length look-behind,
@@ -734,7 +750,6 @@ class TableCell(BlockToken):
 
     Attributes:
         align (bool): align option for current cell (default to None).
-        children (list): inner (span-)tokens.
     """
     repr_attributes = ("align",)
     def __init__(self, content, align=None):
@@ -744,11 +759,12 @@ class TableCell(BlockToken):
 
 class Footnote(BlockToken):
     """
-    Footnote token. A "link reference definition" according to the spec.
-    This is a leaf block token. Its children are inline (span) tokens.
+    Footnote token. One or more "link reference definitions" according to the CommonMark spec.
+    This is a leaf block token without children.
 
-    The constructor returns None, because the footnote information
-    is stored in Footnote.read.
+    The constructor returns None, because available footnote definitions are parsed
+    and stored into the root node within `Footnote.read()`. We don't put instances of
+    this class into the resulting AST.
     """
     def __new__(cls, _):
         return None
@@ -800,6 +816,7 @@ class Footnote(BlockToken):
         if not match_info:
             return None
         _, dest_end, dest = match_info
+        dest_type = "angle_uri" if string[dest_start] == "<" else "uri"
 
         # either of:
         # 1) optional spaces or tabs and then a line break to finish the link reference definition.
@@ -817,7 +834,7 @@ class Footnote(BlockToken):
             # we still have a valid link reference definition. otherwise not.
             eol_pos = string[dest_end:title_start].find("\n")
             if eol_pos >= 0:
-                return dest_end + eol_pos + 1, (label, dest, "")
+                return dest_end + eol_pos + 1, (label, dest, "", dest_type, None)
             else:
                 return None
         _, title_end, title = match_info
@@ -826,7 +843,8 @@ class Footnote(BlockToken):
         line_end = title_end
         while line_end < len(string):
             if string[line_end] == '\n':
-                return line_end + 1, (label, dest, title)
+                title_delimiter = string[title_start] if title_start < title_end else None
+                return line_end + 1, (label, dest, title, dest_type, title_delimiter)
             elif string[line_end] in whitespace:
                 line_end += 1
             else:
@@ -837,7 +855,7 @@ class Footnote(BlockToken):
         # we still have a valid link reference definition. otherwise not.
         eol_pos = string[dest_end:title_start].find("\n")
         if eol_pos >= 0:
-            return dest_end + eol_pos + 1, (label, dest, "")
+            return dest_end + eol_pos + 1, (label, dest, "", dest_type, None)
         else:
             return None
 
@@ -927,7 +945,7 @@ class Footnote(BlockToken):
 
     @staticmethod
     def append_footnotes(matches, root):
-        for key, dest, title in matches:
+        for key, dest, title, *_ in matches:
             key = normalize_label(key)
             dest = span_token.EscapeSequence.strip(dest.strip())
             title = span_token.EscapeSequence.strip(title)
@@ -941,8 +959,9 @@ class ThematicBreak(BlockToken):
     This is a leaf block token without children.
     """
     pattern = re.compile(r' {0,3}(?:([-_*])\s*?)(?:\1\s*?){2,}$')
-    def __init__(self, _):
-        pass
+
+    def __init__(self, lines):
+        self.line = lines[0].strip('\n')
 
     @classmethod
     def start(cls, line):
@@ -956,10 +975,8 @@ class ThematicBreak(BlockToken):
 class HTMLBlock(BlockToken):
     """
     Block-level HTML token.
-    This is a leaf block token with a single child of type span_token.RawText.
-
-    Attributes:
-        children (list): contains a single span_token.RawText token with the raw HTML content.
+    This is a leaf block token with a single child of type span_token.RawText,
+    which holds the raw HTML content.
     """
     _end_cond = None
     multiblock = re.compile(r'<(pre|script|style|textarea)[ >\n]')
