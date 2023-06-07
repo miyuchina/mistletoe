@@ -376,14 +376,20 @@ class BlockCode(BlockToken):
     @classmethod
     def read(cls, lines):
         line_buffer = []
+        trailing_blanks = 0
         for line in lines:
             if line.strip() == '':
                 line_buffer.append(line.lstrip(' ') if len(line) < 5 else line[4:])
+                trailing_blanks = trailing_blanks + 1 if line == '\n' else 0
                 continue
             if not line.replace('\t', '    ', 1).startswith('    '):
                 lines.backstep()
                 break
             line_buffer.append(cls.strip(line))
+            trailing_blanks = 0
+        for _ in range(trailing_blanks):
+            line_buffer.pop()
+            lines.backstep()
         return line_buffer
 
     @staticmethod
@@ -1041,6 +1047,7 @@ class HTMLBlock(BlockToken):
                     break
             elif line.strip() == '':
                 line_buffer.pop()
+                lines.backstep()
                 break
         return line_buffer
 
