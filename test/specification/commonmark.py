@@ -1,7 +1,7 @@
 import re
 import sys
 import json
-from mistletoe import markdown
+from mistletoe import Document, HTMLRenderer
 from traceback import print_tb
 from argparse import ArgumentParser
 
@@ -34,7 +34,8 @@ def run_tests(test_entries, start=None, end=None,
 def run_test(test_entry, quiet=False):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
-        output = markdown(test_case)
+        with HTMLRenderer(html_escape_double_quotes=True) as renderer:
+            output = renderer.render(Document(test_case))
         success = test_entry['html'] == output
         if not success and not quiet:
             print_test_entry(test_entry, output)

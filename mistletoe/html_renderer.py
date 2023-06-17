@@ -18,7 +18,7 @@ class HTMLRenderer(BaseRenderer):
 
     See mistletoe.base_renderer module for more info.
     """
-    def __init__(self, *extras, html_escape_double_quotes=True, html_escape_single_quotes=False, **kwargs):
+    def __init__(self, *extras, html_escape_double_quotes=False, html_escape_single_quotes=False, **kwargs):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
