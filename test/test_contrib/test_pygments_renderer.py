@@ -7,7 +7,7 @@ from pygments.util import ClassNotFound
 
 
 class TestPygmentsRenderer(unittest.TestCase):
-    @parameterized.expand([(True), (False)])
+    @parameterized.expand([(True,), (False,)])
     def test_render_no_language(self, fail_on_unsupported_language: bool):
         renderer = PygmentsRenderer(fail_on_unsupported_language=fail_on_unsupported_language)
         token = Document(['```\n', 'no language\n', '```\n'])
