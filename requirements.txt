@@ -1,0 +1,2 @@
+# optional
+Pygments>=2.11.2,<=2.16.* # 2.11.2 is the last version which supports the old Python 3.5
