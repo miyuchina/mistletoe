@@ -10,7 +10,7 @@ class PygmentsRenderer(HTMLRenderer):
     formatter = HtmlFormatter()
     formatter.noclasses = True
 
-    def __init__(self, *extras, style='default', fail_on_unsupported_language=False):
+    def __init__(self, *extras, style='default', fail_on_unsupported_language=False, **kwargs):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
@@ -20,8 +20,10 @@ class PygmentsRenderer(HTMLRenderer):
                       be thrown when there is an unsupported language found on
                       a code block.
                       If `False`, then language is guessed instead of throwing the error.
+            **kwargs: additional parameters to be passed to the ancestor's
+                      constructor.
         """
-        super().__init__(*extras)
+        super().__init__(*extras, **kwargs)
         self.formatter.style = get_style(style)
         self.fail_on_unsupported_language = fail_on_unsupported_language
 
