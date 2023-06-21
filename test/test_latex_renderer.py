@@ -11,7 +11,7 @@ class TestLaTeXRenderer(TestCase):
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
-    def _test_token(self, token_name, output, children=True,
+    def _test_token(self, token_name, expected_output, children=True,
                     without_attrs=None, **kwargs):
         render_func = self.renderer.render_map[token_name]
         children = mock.MagicMock(spec=list) if children else None
@@ -19,7 +19,7 @@ class TestLaTeXRenderer(TestCase):
         without_attrs = without_attrs or []
         for attr in without_attrs:
             delattr(mock_token, attr)
-        self.assertEqual(render_func(mock_token), output)
+        self.assertEqual(render_func(mock_token), expected_output)
 
     def test_strong(self):
         self._test_token('Strong', '\\textbf{inner}')
@@ -141,23 +141,23 @@ class TestLaTeXFootnotes(TestCase):
     def test_footnote_image(self):
         from mistletoe import Document
         raw = ['![alt][foo]\n', '\n', '[foo]: bar "title"\n']
-        target = ('\\documentclass{article}\n'
+        expected = ('\\documentclass{article}\n'
                   '\\usepackage{graphicx}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\n\\includegraphics{bar}\n'
                   '\n'
                   '\\end{document}\n')
-        self.assertEqual(self.renderer.render(Document(raw)), target)
+        self.assertEqual(self.renderer.render(Document(raw)), expected)
 
     def test_footnote_link(self):
         from mistletoe import Document
         raw = ['[name][key]\n', '\n', '[key]: target\n']
-        target = ('\\documentclass{article}\n'
+        expected = ('\\documentclass{article}\n'
                   '\\usepackage{hyperref}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\\href{target}{name}'
                   '\n'
                   '\\end{document}\n')
-        self.assertEqual(self.renderer.render(Document(raw)), target)
+        self.assertEqual(self.renderer.render(Document(raw)), expected)

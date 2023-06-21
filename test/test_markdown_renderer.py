@@ -14,8 +14,8 @@ class TestMarkdownRenderer(unittest.TestCase):
 
     def test_empty_document(self):
         input = []
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_paragraphs_and_blank_lines(self):
         input = [
@@ -25,9 +25,9 @@ class TestMarkdownRenderer(unittest.TestCase):
             "Paragraph 2. Two\n",
             "lines, no final line break.",
         ]
-        rendered = self.roundtrip(input)
+        output = self.roundtrip(input)
         # note: a line break is always added at the end of a paragraph.
-        self.assertEqual(rendered, "".join(input) + "\n")
+        self.assertEqual(output, "".join(input) + "\n")
 
     def test_line_breaks(self):
         input = [
@@ -37,35 +37,35 @@ class TestMarkdownRenderer(unittest.TestCase):
             "yet another hard line break    \n",
             "that's all.\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_emphasized_and_strong(self):
         input = ["*emphasized* __strong__ _**emphasized and strong**_\n"]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_strikethrough(self):
         input = ["~~strikethrough~~\n"]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_escaped_chars(self):
         input = ["\\*escaped, not emphasized\\*\n"]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_html_span(self):
         input = ["so <p>hear ye</p><h1>\n"]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_code_span(self):
         input = [
             "a) `code span` b) ``trailing space, double apostrophes `` c) ` leading and trailing space `\n"
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_code_span_with_embedded_line_breaks(self):
         input = [
@@ -73,11 +73,11 @@ class TestMarkdownRenderer(unittest.TestCase):
             "code\n",
             "span`.\n"
         ]
+        output = self.roundtrip(input)
         expected = [
             "a `multi-line code span`.\n"
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(expected))
+        self.assertEqual(output, "".join(expected))
 
     def test_images_and_links(self):
         input = [
@@ -87,16 +87,16 @@ class TestMarkdownRenderer(unittest.TestCase):
             '![an \\[*image*\\], escapes and emphasis](#url "title")\n',
             "<http://auto.link>\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_thematic_break(self):
         input = [
             " **  * ** * ** * **\n",
             "followed by a paragraph of text\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_atx_headings(self):
         input = [
@@ -105,8 +105,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "###\n",
             "^ empty atx heading\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_setext_headings(self):
         input = [
@@ -114,8 +114,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "heading!\n",
             "===============\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_numbered_list(self):
         input = [
@@ -125,6 +125,7 @@ class TestMarkdownRenderer(unittest.TestCase):
             "       + apples\n",
             "       +  bananas\n",
         ]
+        output = self.roundtrip(input)
         expected = [
             "22) *emphasized list item*\n",
             "96) \n",
@@ -132,8 +133,7 @@ class TestMarkdownRenderer(unittest.TestCase):
             "     + apples\n",
             "     + bananas\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(expected))
+        self.assertEqual(output, "".join(expected))
 
     def test_bulleted_list(self):
         input = [
@@ -143,8 +143,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "\n",
             "[properly]: uri\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_code_blocks(self):
         input = [
@@ -163,8 +163,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "\n",
             "       indented code block.\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_blank_lines_following_code_block(self):
         input = [
@@ -172,8 +172,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "\n",
             "paragraph.\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_html_block(self):
         input = [
@@ -183,8 +183,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "+ <h1>html block embedded in list <img src='https://cdn.rawgit.com/' align='right'></h1>\n",
             "  <br>\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_block_quote(self):
         input = [
@@ -193,8 +193,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "> 1. > and finally, a list with a nested block quote\n",
             ">    > which continues on a second line.\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_link_reference_definition(self):
         input = [
@@ -208,8 +208,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "with line break'\n",
             "[label-not-referred-to]: https://foo (title)\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_table(self):
         input = [
@@ -219,8 +219,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             "|   🐎   | Performance improvements. |\n",
             "etc, etc\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(input))
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
 
     def test_table_with_varying_column_counts(self):
         input = [
@@ -229,14 +229,14 @@ class TestMarkdownRenderer(unittest.TestCase):
             "   | . | Performance improvements. | an extra column |   \n",
             "etc, etc\n",
         ]
+        output = self.roundtrip(input)
         expected = [
             "| header |                         x |                 |\n",
             "| ------ | ------------------------: | --------------- |\n",
             "| .      | Performance improvements. | an extra column |\n",
             "etc, etc\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(expected))
+        self.assertEqual(output, "".join(expected))
 
     def test_table_with_narrow_column(self):
         input = [
@@ -245,14 +245,14 @@ class TestMarkdownRenderer(unittest.TestCase):
             "| a   | p |\n",
             "| b   | q |\n",
         ]
+        output = self.roundtrip(input)
         expected = [
             "| xyz | ?   |\n",
             "| --- | --- |\n",
             "| a   | p   |\n",
             "| b   | q   |\n",
         ]
-        rendered = self.roundtrip(input)
-        self.assertEqual(rendered, "".join(expected))
+        self.assertEqual(output, "".join(expected))
 
     def test_direct_rendering_of_block_token(self):
         input = [
