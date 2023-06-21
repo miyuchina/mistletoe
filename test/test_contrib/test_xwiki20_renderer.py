@@ -26,9 +26,9 @@ class TestXWiki20Renderer(BaseRendererTest):
     def textFormatTest(self, inputTemplate, outputTemplate):
         input = self.genRandomString(80, False)
         token = next(iter(tokenize_inner(inputTemplate.format(input))))
+        output = self.renderer.render(token)
         expected = outputTemplate.format(input)
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
+        self.assertEqual(output, expected)
 
     def test_escaping(self):
         self.textFormatTest('**code: `a = 1;// comment`, plain text URL: http://example.com**',
@@ -48,24 +48,24 @@ class TestXWiki20Renderer(BaseRendererTest):
 
     def test_render_image(self):
         token = next(iter(tokenize_inner('![image](foo.jpg)')))
+        output = self.renderer.render(token)
         expected = '[[image:foo.jpg]]'
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
+        self.assertEqual(output, expected)
     
     def test_render_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         body = self.genRandomString(80, True)
         token = next(iter(tokenize_inner('[{body}]({url})'.format(url=url, body=body))))
+        output = self.renderer.render(token)
         expected = '[[{body}>>{url}]]'.format(url=url, body=body)
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
+        self.assertEqual(output, expected)
     
     def test_render_auto_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         token = next(iter(tokenize_inner('<{url}>'.format(url=url))))
+        output = self.renderer.render(token)
         expected = '[[{url}]]'.format(url=url)
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
+        self.assertEqual(output, expected)
 
     def test_render_html_span(self):
         markdown = 'text styles: <i>italic</i>, <b>bold</b>'
