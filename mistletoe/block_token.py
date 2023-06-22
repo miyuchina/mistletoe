@@ -93,7 +93,7 @@ class BlockToken(token.Token):
           that should be read into this token.
 
           Default to stop at an empty line.
-          
+
           Note that BlockToken.read does not have to return a list of lines.
           Because the return value of this function will be directly
           passed into the token constructor, we can return any relevant
@@ -113,7 +113,7 @@ class BlockToken(token.Token):
 
     def __contains__(self, text):
         return any(text in child for child in self.children)
-    
+
     @staticmethod
     def read(lines):
         line_buffer = [next(lines)]
@@ -173,9 +173,14 @@ class Heading(BlockToken):
         return True
 
     @classmethod
+    def check_interrupts_paragraph(cls, line):
+        return cls.start(line)
+
+    @classmethod
     def read(cls, lines):
         next(lines)
         return cls.level, cls.content, cls.closing_sequence
+
 
 class SetextHeading(BlockToken):
     """
@@ -219,6 +224,10 @@ class Quote(BlockToken):
         if len(line) - len(stripped) > 3:
             return False
         return stripped.startswith('>')
+
+    @classmethod
+    def check_interrupts_paragraph(cls, line):
+        return cls.start(line)
 
     @classmethod
     def read(cls, lines):
@@ -311,37 +320,22 @@ class Paragraph(BlockToken):
     def read(cls, lines):
         line_buffer = [next(lines)]
         next_line = lines.peek()
-        while (next_line is not None
-                and next_line.strip() != ''
-                and not Heading.start(next_line)
-                and not CodeFence.start(next_line)
-                and not Quote.start(next_line)):
-
-            # check if next_line starts List
-            marker_tuple = ListItem.parse_marker(next_line)
-            if (marker_tuple is not None):
-                _, leader, content = marker_tuple
-                # to break a paragraph, the first line may not be empty,
-                # and the list must be unordered or start from 1.
-                if not content.strip() == '':
-                    if not leader[0].isdigit() or leader in ['1.', '1)']:
-                        break
-
-            # check if next_line starts HTMLBlock other than type 7
-            html_block = HTMLBlock.start(next_line)
-            if html_block and html_block != 7:
+        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
+        while (next_line is not None and next_line.strip() != ''):
+            # check if a paragraph-breaking token starts on the next line.
+            # (except ThematicBreak, because these can be confused with Setext underlines.)
+            if any(token_type.check_interrupts_paragraph(next_line) for token_type in breaking_tokens):
                 break
 
-            # check if we see a setext underline
+            # check if the paragraph being parsed is in fact a Setext heading
             if cls.parse_setext and cls.is_setext_heading(next_line):
                 line_buffer.append(next(lines))
                 return SetextHeading(line_buffer)
 
-            # check if we have a ThematicBreak (has to be after setext)
-            if ThematicBreak.start(next_line):
+            # finish the check for paragraph-breaking tokens with the special case: ThematicBreak
+            if ThematicBreak.check_interrupts_paragraph(next_line):
                 break
 
-            # no other tokens, we're good
             line_buffer.append(next(lines))
             next_line = lines.peek()
         return line_buffer
@@ -446,6 +440,10 @@ class CodeFence(BlockToken):
         return True
 
     @classmethod
+    def check_interrupts_paragraph(cls, line):
+        return cls.start(line)
+
+    @classmethod
     def read(cls, lines):
         next(lines)
         line_buffer = []
@@ -484,6 +482,17 @@ class List(BlockToken):
     @classmethod
     def start(cls, line):
         return cls.pattern.match(line)
+
+    @classmethod
+    def check_interrupts_paragraph(cls, line):
+        # to break a paragraph, the first line may not be empty (beyond the list marker),
+        # and the list must either be unordered or start from 1.
+        marker_tuple = ListItem.parse_marker(line)
+        if (marker_tuple is not None):
+            _, leader, content = marker_tuple
+            if not content.strip() == '':
+                return not leader[0].isdigit() or leader in ['1.', '1)']
+        return False
 
     @classmethod
     def read(cls, lines):
@@ -973,6 +982,10 @@ class ThematicBreak(BlockToken):
     def start(cls, line):
         return cls.pattern.match(line)
 
+    @classmethod
+    def check_interrupts_paragraph(cls, line):
+        return cls.start(line)
+
     @staticmethod
     def read(lines):
         return [next(lines)]
@@ -1035,6 +1048,11 @@ class HTMLBlock(BlockToken):
             cls._end_cond = None
             return 7
         return False
+
+    @classmethod
+    def check_interrupts_paragraph(cls, line):
+        html_block = cls.start(line)
+        return html_block and html_block != 7
 
     @classmethod
     def read(cls, lines):
