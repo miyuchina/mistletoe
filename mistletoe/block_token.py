@@ -107,6 +107,7 @@ class BlockToken(token.Token):
 
     Attributes:
         children (list): inner tokens.
+        line_number (int): starting line (1-based).
     """
     def __init__(self, lines, tokenize_func):
         self.children = tokenize_func(lines)
@@ -685,16 +686,17 @@ class Table(BlockToken):
     repr_attributes = ("column_align",)
     interrupt_paragraph = True
 
-    def __init__(self, lines):
+    def __init__(self, match):
+        lines, start_line = match
         if '---' in lines[1]:
             self.column_align = [self.parse_align(column)
                     for column in self.split_delimiter(lines[1])]
-            self.header = TableRow(lines[0], self.column_align)
-            self.children = [TableRow(line, self.column_align) for line in lines[2:]]
+            self.header = TableRow(lines[0], start_line, self.column_align)
+            self.children = [TableRow(line, start_line + offset, self.column_align) for offset, line in enumerate(lines[2:], start=2)]
         else:
             # note: not reachable, because read() guarantees the presence of three dashes
             self.column_align = [None]
-            self.children = [TableRow(line) for line in lines]
+            self.children = [TableRow(line, start_line + offset) for offset, line in enumerate(lines)]
 
     @staticmethod
     def split_delimiter(delimiter):
@@ -738,12 +740,13 @@ class Table(BlockToken):
     def read(lines):
         anchor = lines.get_pos()
         line_buffer = [next(lines)]
+        start_line = lines.line_number()
         while lines.peek() is not None and '|' in lines.peek():
             line_buffer.append(next(lines))
         if len(line_buffer) < 2 or '---' not in line_buffer[1]:
             lines.set_pos(anchor)
             return None
-        return line_buffer
+        return line_buffer, start_line
 
 
 class TableRow(BlockToken):
@@ -762,10 +765,11 @@ class TableRow(BlockToken):
     split_pattern = re.compile(r"(?<!\\)\|")
     escaped_pipe_pattern = re.compile(r"(?<!\\)(\\\\)*\\\|")
 
-    def __init__(self, line, row_align=None):
+    def __init__(self, line, line_number, row_align=None):
         self.row_align = row_align or [None]
+        self.line_number = line_number
         cells = filter(None, self.split_pattern.split(line.strip()))
-        self.children = [TableCell(self.escaped_pipe_pattern.sub('\\1|', cell.strip()) if cell else '', align)
+        self.children = [TableCell(self.escaped_pipe_pattern.sub('\\1|', cell.strip()) if cell else '', line_number, align)
                          for cell, align in zip_longest(cells, self.row_align)]
 
 
@@ -780,8 +784,9 @@ class TableCell(BlockToken):
         align (bool): align option for current cell (default to None).
     """
     repr_attributes = ("align",)
-    def __init__(self, content, align=None):
+    def __init__(self, content, line_number, align=None):
         self.align = align
+        self.line_number = line_number
         super().__init__(content, span_token.tokenize_inner)
 
 

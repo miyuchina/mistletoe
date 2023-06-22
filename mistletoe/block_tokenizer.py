@@ -79,9 +79,10 @@ def tokenize_block(iterable, token_types, start_line=1):
     while line is not None:
         for token_type in token_types:
             if token_type.start(line):
+                line_number = lines.line_number() + 1
                 result = token_type.read(lines)
                 if result is not None:
-                    parse_buffer.append((token_type, result))
+                    parse_buffer.append((token_type, result, line_number))
                     break
         else:  # unmatched newlines
             next(lines)
@@ -99,9 +100,10 @@ def make_tokens(parse_buffer):
     and span-level parsing is started here.
     """
     tokens = []
-    for token_type, result in parse_buffer:
+    for token_type, result, line_number in parse_buffer:
         token = token_type(result)
         if token is not None:
+            token.line_number = line_number
             tokens.append(token)
     return tokens
 
