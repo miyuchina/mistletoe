@@ -154,29 +154,22 @@ class TestParagraph(TestToken):
         self.assertIsInstance(token3, block_token.Paragraph)
 
     def test_parse_interrupting_block_tokens(self):
-        lines = [
-            'Paragraph 1\n',
+        interrupting_blocks = [
             '***\n', # thematic break
-            'Paragraph 2\n',
             '## atx\n', # ATX heading
-            'Paragraph 3\n',
-            '<html></html>\n', # HTML block type 1
-            'Paragraph 4\n',
+            '<div>\n', # HTML block type 6
             '> block quote\n',
-            'Paragraph 5\n',
             '1. list\n',
-            'Paragraph 6\n',
-            '```\n',
-            'fenced code block\n',
-            '```\n',
-            'Paragraph 7\n'
+            '``` fenced code block\n'
         ]
-        tokens = block_token.tokenize(lines)
-        for index, token in enumerate(tokens):
-            if index % 2 == 0:
-                self.assertIsInstance(token, block_token.Paragraph)
-            else:
-                self.assertNotIsInstance(token, block_token.Paragraph)
+        for block in interrupting_blocks:
+            lines = ['Paragraph 1\n', block]
+        try:
+            token1, token2 = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch. Lines: '{}'".format(lines)) from e
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertNotIsInstance(token2, block_token.Paragraph)
 
     def test_parse_non_interrupting_block_tokens(self):
         lines = [
@@ -185,7 +178,7 @@ class TestParagraph(TestToken):
             '    indented text\n', # code block
             '| table |\n', # table
             '| ----- |\n',
-            '| row   |\n'
+            '| row   |\n',
             '<custom>\n', # HTML block type 7
             '\n',
             'Paragraph 2\n'
