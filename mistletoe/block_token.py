@@ -173,8 +173,8 @@ class Heading(BlockToken):
         return True
 
     @classmethod
-    def check_interrupts_paragraph(cls, line):
-        return cls.start(line)
+    def check_interrupts_paragraph(cls, lines):
+        return cls.start(lines.peek())
 
     @classmethod
     def read(cls, lines):
@@ -226,8 +226,8 @@ class Quote(BlockToken):
         return stripped.startswith('>')
 
     @classmethod
-    def check_interrupts_paragraph(cls, line):
-        return cls.start(line)
+    def check_interrupts_paragraph(cls, lines):
+        return cls.start(lines.peek())
 
     @classmethod
     def read(cls, lines):
@@ -242,14 +242,12 @@ class Quote(BlockToken):
         in_block_code = BlockCode.start(line)
         blank_line = line.strip() == ''
 
-        # loop
+        # following lines
         next_line = lines.peek()
+        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == Quote]
         while (next_line is not None
                 and next_line.strip() != ''
-                and not Heading.start(next_line)
-                and not CodeFence.start(next_line)
-                and not ThematicBreak.start(next_line)
-                and not List.start(next_line)):
+                and not any(token_type.check_interrupts_paragraph(lines) for token_type in breaking_tokens)):
             stripped = cls.convert_leading_tabs(next_line.lstrip())
             prepend = 0
             if stripped[0] == '>':
@@ -271,8 +269,7 @@ class Quote(BlockToken):
             next(lines)
             next_line = lines.peek()
 
-        # block level tokens are parsed here, so that footnotes
-        # in quotes can be recognized before span-level tokenizing.
+        # parse child block tokens
         Paragraph.parse_setext = False
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
         Paragraph.parse_setext = True
@@ -324,7 +321,7 @@ class Paragraph(BlockToken):
         while (next_line is not None and next_line.strip() != ''):
             # check if a paragraph-breaking token starts on the next line.
             # (except ThematicBreak, because these can be confused with Setext underlines.)
-            if any(token_type.check_interrupts_paragraph(next_line) for token_type in breaking_tokens):
+            if any(token_type.check_interrupts_paragraph(lines) for token_type in breaking_tokens):
                 break
 
             # check if the paragraph being parsed is in fact a Setext heading
@@ -333,7 +330,7 @@ class Paragraph(BlockToken):
                 return SetextHeading(line_buffer)
 
             # finish the check for paragraph-breaking tokens with the special case: ThematicBreak
-            if ThematicBreak.check_interrupts_paragraph(next_line):
+            if ThematicBreak.check_interrupts_paragraph(lines):
                 break
 
             line_buffer.append(next(lines))
@@ -440,8 +437,8 @@ class CodeFence(BlockToken):
         return True
 
     @classmethod
-    def check_interrupts_paragraph(cls, line):
-        return cls.start(line)
+    def check_interrupts_paragraph(cls, lines):
+        return cls.start(lines.peek())
 
     @classmethod
     def read(cls, lines):
@@ -484,10 +481,10 @@ class List(BlockToken):
         return cls.pattern.match(line)
 
     @classmethod
-    def check_interrupts_paragraph(cls, line):
+    def check_interrupts_paragraph(cls, lines):
         # to break a paragraph, the first line may not be empty (beyond the list marker),
         # and the list must either be unordered or start from 1.
-        marker_tuple = ListItem.parse_marker(line)
+        marker_tuple = ListItem.parse_marker(lines.peek())
         if (marker_tuple is not None):
             _, leader, content = marker_tuple
             if not content.strip() == '':
@@ -567,13 +564,6 @@ class ListItem(BlockToken):
         expanded_spaces = match_obj.group(1).expandtabs(4)
         return expanded_spaces[prepend:] + match_obj.group(2) if len(expanded_spaces) >= prepend else None
 
-    @staticmethod
-    def other_token(line):
-        return (Heading.start(line)
-                or Quote.start(line)
-                or CodeFence.start(line)
-                or ThematicBreak.start(line))
-
     @classmethod
     def parse_marker(cls, line):
         """
@@ -629,6 +619,7 @@ class ListItem(BlockToken):
             line_buffer.append(content)
 
         # loop over the following lines, looking for the end of the list item
+        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == List]
         newline_count = 0
         while True:
             if next_line is None:
@@ -643,7 +634,7 @@ class ListItem(BlockToken):
                 # the line doesn't have the indentation to show that it belongs to
                 # the list item, but it should be included anyway by lazy continuation...
                 # ...unless it's the start of another token
-                if cls.other_token(next_line):
+                if any(token_type.check_interrupts_paragraph(lines) for token_type in breaking_tokens):
                     if newline_count:
                         lines.backstep()
                         del line_buffer[-newline_count:]
@@ -983,8 +974,8 @@ class ThematicBreak(BlockToken):
         return cls.pattern.match(line)
 
     @classmethod
-    def check_interrupts_paragraph(cls, line):
-        return cls.start(line)
+    def check_interrupts_paragraph(cls, lines):
+        return cls.start(lines.peek())
 
     @staticmethod
     def read(lines):
@@ -1050,8 +1041,8 @@ class HTMLBlock(BlockToken):
         return False
 
     @classmethod
-    def check_interrupts_paragraph(cls, line):
-        html_block = cls.start(line)
+    def check_interrupts_paragraph(cls, lines):
+        html_block = cls.start(lines.peek())
         return html_block and html_block != 7
 
     @classmethod
