@@ -88,7 +88,7 @@ class BlockToken(token.Token):
           of the current token. Every subclass of BlockToken must define a
           start function (see block_tokenizer.tokenize).
 
-        * BlockToken.read takes the rest of the lines in the ducment as an
+        * BlockToken.read takes the rest of the lines in the document as an
           iterator (including the start line), and consumes all the lines
           that should be read into this token.
 
@@ -236,6 +236,7 @@ class Quote(BlockToken):
         if len(line) > 0 and line[0] == ' ':
             line = line[1:]
         line_buffer = [line]
+        start_line = lines.line_number()
 
         # set booleans
         in_code_fence = CodeFence.start(line)
@@ -271,7 +272,7 @@ class Quote(BlockToken):
 
         # parse child block tokens
         Paragraph.parse_setext = False
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
         Paragraph.parse_setext = True
         return parse_buffer
 
@@ -603,6 +604,7 @@ class ListItem(BlockToken):
 
         # first line
         line = next(lines)
+        start_line = lines.line_number()
         next_line = lines.peek()
         indentation, prepend, leader, content = prev_marker if prev_marker else cls.parse_marker(line)
         if content.strip() == '':
@@ -663,7 +665,7 @@ class ListItem(BlockToken):
 
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
         return (parse_buffer, indentation, prepend, leader), next_marker
 
 
