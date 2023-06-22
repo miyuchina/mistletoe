@@ -7,7 +7,6 @@ class FileWrapper:
     def __init__(self, lines):
         self.lines = lines if isinstance(lines, list) else list(lines)
         self._index = -1
-        self._anchor = 0
 
     def __next__(self):
         if self._index + 1 < len(self.lines):
@@ -21,11 +20,11 @@ class FileWrapper:
     def __repr__(self):
         return repr(self.lines[self._index+1:])
 
-    def anchor(self):
-        self._anchor = self._index
+    def getpos(self):
+        return self._index
 
-    def reset(self):
-        self._index = self._anchor
+    def setpos(self, pos):
+        self._index = pos
 
     def peek(self):
         if self._index + 1 < len(self.lines):
