@@ -1,4 +1,5 @@
 from unittest import TestCase, mock
+from parameterized import parameterized
 import mistletoe.latex_renderer
 from mistletoe.latex_renderer import LaTeXRenderer
 from mistletoe import markdown
@@ -50,13 +51,21 @@ class TestLaTeXRenderer(TestCase):
         output = '\n\\includegraphics{src}\n'
         self._test_token('Image', output, src='src')
 
-    def test_link(self):
-        output = '\\href{target}{inner}'
-        self._test_token('Link', output, target='target')
+    @parameterized.expand([
+        ('page', '\\href{page}{inner}'),
+        ('page%3A+with%3A+escape', '\\href{page\%3A+with\%3A+escape}{inner}'),
+        ('page#target', '\\href{page\#target}{inner}')
+    ])
+    def test_link(self, target, output):
+        self._test_token('Link', output, target=target)
 
-    def test_autolink(self):
-        output = '\\url{target}'
-        self._test_token('AutoLink', output, target='target')
+    @parameterized.expand([
+        ('page', '\\url{page}'),
+        ('page%3A+with%3A+escape', '\\url{page\%3A+with\%3A+escape}'),
+        ('page#target', '\\url{page\#target}')
+    ])
+    def test_autolink(self, target, output):
+        self._test_token('AutoLink', output, target=target)
 
     def test_math(self):
         output = '$ 1 + 2 = 3 $'

@@ -2,11 +2,11 @@
 LaTeX renderer for mistletoe.
 """
 
+import string
 from itertools import chain
+from urllib.parse import quote
 import mistletoe.latex_token as latex_token
 from mistletoe.base_renderer import BaseRenderer
-import string
-
 
 # (customizable) delimiters for inline code
 verb_delimiters = string.punctuation + string.digits
@@ -61,11 +61,12 @@ class LaTeXRenderer(BaseRenderer):
         self.packages['hyperref'] = []
         template = '\\href{{{target}}}{{{inner}}}'
         inner = self.render_inner(token)
-        return template.format(target=token.target, inner=inner)
+        return template.format(target=self.escape_url(token.target),
+                               inner=inner)
 
     def render_auto_link(self, token):
         self.packages['hyperref'] = []
-        return '\\url{{{}}}'.format(token.target)
+        return '\\url{{{}}}'.format(self.escape_url(token.target))
 
     @staticmethod
     def render_math(token):
@@ -174,3 +175,22 @@ class LaTeXRenderer(BaseRenderer):
         self.footnotes.update(token.footnotes)
         return template.format(inner=self.render_inner(token),
                                packages=self.render_packages())
+
+    @staticmethod
+    def escape_url(raw: str) -> str:
+        """
+        Quote unsafe chars in urls & escape as needed for LaTeX's hyperref.
+
+        %-escapes all characters that are neither in the unreserved chars
+        ("always safe" as per RFC 2396 or RFC 3986) nor in the chars set
+        '/#:()*?=%@+,&;'
+
+        Subsequently, LaTeX-escapes '%' and '#' for hyperref's \\url{} to also
+        work if used within macros like \\multicolumn. if \\url{} with urls
+        containing '%' or '#' is used outside of multicolumn-macros, they work
+        regardless of whether these characters are escaped, and the result
+        remains the same (at least for pdflatex from TeX Live 2019).
+        """
+        quoted_url = quote(raw, safe='/#:()*?=%@+,&;')
+        return quoted_url.replace('%', '\\%') \
+                         .replace('#', '\\#')
