@@ -153,11 +153,3 @@ class Scheme(BaseRenderer):
         finally:
             self.env = old_env
         return result
-
-
-if __name__ == '__main__':
-    with Scheme() as renderer:
-        prog = ["(define x (* 2 21))",
-                "x"]
-        print(renderer.render(Program(prog)))
-
