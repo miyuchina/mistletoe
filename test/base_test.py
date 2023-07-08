@@ -14,7 +14,7 @@ class BaseRendererTest(TestCase):
     
     def markdownResultTest(self, markdown, expected):
         output = self.renderer.render(Document(markdown))
-        self.assertEqual(expected, output)
+        self.assertEqual(output, expected)
 
     def filesBasedTest(func):
         """
@@ -35,11 +35,11 @@ class BaseRendererTest(TestCase):
 
             # parse input markdown, call render on it and check the output
             with open('test/samples/{}.md'.format(filename), 'r') as fin:
-                actual = self.renderer.render(Document(fin))
+                output = self.renderer.render(Document(fin))
 
                 with open('test/samples/{}.{}'.format(filename, self.sampleOutputExtension), 'r') as expectedFin:
                     expected = ''.join(expectedFin)
 
-                self.assertEqual(expected, actual)
+                self.assertEqual(output, expected)
         return wrapper
     
