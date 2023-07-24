@@ -20,10 +20,13 @@ class FileWrapper:
     def __repr__(self):
         return repr(self.lines[self._index+1:])
 
-    def getpos(self):
+    def get_pos(self):
+        """Returns the current reading position.
+        The result is an opaque value which can be passed to `set_pos`."""
         return self._index
 
-    def setpos(self, pos):
+    def set_pos(self, pos):
+        """Sets the current reading position."""
         self._index = pos
 
     def peek(self):
