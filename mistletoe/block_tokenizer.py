@@ -7,6 +7,7 @@ class FileWrapper:
     def __init__(self, lines):
         self.lines = lines if isinstance(lines, list) else list(lines)
         self._index = -1
+        self._anchor = 0
 
     def __next__(self):
         if self._index + 1 < len(self.lines):
@@ -29,6 +30,13 @@ class FileWrapper:
         """Sets the current reading position."""
         self._index = pos
 
+    def anchor(self):
+        """@deprecated use `get_pos` instead"""
+        self._anchor = self.get_pos()
+
+    def reset(self):
+        """@deprecated use `set_pos` instead"""
+        self.set_pos(self._anchor)
     def peek(self):
         if self._index + 1 < len(self.lines):
             return self.lines[self._index+1]

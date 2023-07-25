@@ -1,6 +1,7 @@
 import unittest
-from unittest.mock import patch, call
-from mistletoe import block_token, span_token
+from unittest.mock import call, patch
+
+from mistletoe import block_token, block_tokenizer, span_token
 
 
 class TestToken(unittest.TestCase):
@@ -604,3 +605,31 @@ class TestLeafBlockTokenContentProperty(unittest.TestCase):
 
         # option 2: using property getter to access the content
         self.assertEqual(''.join(lines).strip(), tokens[0].content)
+
+
+class TestFileWrapper(unittest.TestCase):
+    def test_get_set_pos(self):
+        lines = [
+            "# heading\n",
+            "somewhat interesting\n",
+            "content\n",
+        ]
+        wrapper = block_tokenizer.FileWrapper(lines)
+        assert next(wrapper) == "# heading\n"
+        anchor = wrapper.get_pos()
+        assert next(wrapper) == "somewhat interesting\n"
+        wrapper.set_pos(anchor)
+        assert next(wrapper) == "somewhat interesting\n"
+
+    def test_anchor_reset(self):
+        lines = [
+            "# heading\n",
+            "somewhat interesting\n",
+            "content\n",
+        ]
+        wrapper = block_tokenizer.FileWrapper(lines)
+        assert next(wrapper) == "# heading\n"
+        wrapper.anchor()
+        assert next(wrapper) == "somewhat interesting\n"
+        wrapper.reset()
+        assert next(wrapper) == "somewhat interesting\n"
