@@ -37,6 +37,7 @@ class FileWrapper:
     def reset(self):
         """@deprecated use `set_pos` instead"""
         self.set_pos(self._anchor)
+
     def peek(self):
         if self._index + 1 < len(self.lines):
             return self.lines[self._index+1]
