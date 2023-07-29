@@ -102,8 +102,8 @@ class BlockToken(token.Token):
 
           If BlockToken.read returns None, the read result is ignored,
           but the token class is responsible for resetting the iterator
-          to a previous state. See block_tokenizer.FileWrapper.anchor,
-          block_tokenizer.FileWrapper.reset.
+          to a previous state. See block_tokenizer.FileWrapper.get_pos,
+          block_tokenizer.FileWrapper.set_pos.
 
     Attributes:
         children (list): inner tokens.
@@ -491,12 +491,13 @@ class List(BlockToken):
         next_marker = None
         matches = []
         while True:
+            anchor = lines.get_pos()
             output, next_marker = ListItem.read(lines, next_marker)
             item_leader = output[2]
             if leader is None:
                 leader = item_leader
             elif not cls.same_marker_type(leader, item_leader):
-                lines.reset()
+                lines.set_pos(anchor)
                 break
             matches.append(output)
             if next_marker is None:
@@ -594,7 +595,6 @@ class ListItem(BlockToken):
     @classmethod
     def read(cls, lines, prev_marker=None):
         next_marker = None
-        lines.anchor()
         line_buffer = []
 
         # first line
@@ -714,12 +714,12 @@ class Table(BlockToken):
 
     @staticmethod
     def read(lines):
-        lines.anchor()
+        anchor = lines.get_pos()
         line_buffer = [next(lines)]
         while lines.peek() is not None and '|' in lines.peek():
             line_buffer.append(next(lines))
         if len(line_buffer) < 2 or '---' not in line_buffer[1]:
-            lines.reset()
+            lines.set_pos(anchor)
             return None
         return line_buffer
 

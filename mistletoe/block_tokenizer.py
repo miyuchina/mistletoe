@@ -21,11 +21,22 @@ class FileWrapper:
     def __repr__(self):
         return repr(self.lines[self._index+1:])
 
+    def get_pos(self):
+        """Returns the current reading position.
+        The result is an opaque value which can be passed to `set_pos`."""
+        return self._index
+
+    def set_pos(self, pos):
+        """Sets the current reading position."""
+        self._index = pos
+
     def anchor(self):
-        self._anchor = self._index
+        """@deprecated use `get_pos` instead"""
+        self._anchor = self.get_pos()
 
     def reset(self):
-        self._index = self._anchor
+        """@deprecated use `set_pos` instead"""
+        self.set_pos(self._anchor)
 
     def peek(self):
         if self._index + 1 < len(self.lines):
