@@ -712,6 +712,13 @@ class Table(BlockToken):
     def start(line):
         return '|' in line
 
+    @classmethod
+    def check_interrupts_paragraph(cls, lines):
+        anchor = lines.get_pos()
+        result = cls.read(lines)
+        lines.set_pos(anchor)
+        return result
+
     @staticmethod
     def read(lines):
         anchor = lines.get_pos()
