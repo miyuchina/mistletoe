@@ -160,10 +160,11 @@ class TestParagraph(TestToken):
             '<div>\n', # HTML block type 6
             '> block quote\n',
             '1. list\n',
-            '``` fenced code block\n'
+            '``` fenced code block\n',
+            ('| table |\n', '| ----- |\n', '| row   |\n'),
         ]
         for block in interrupting_blocks:
-            lines = ['Paragraph 1\n', block]
+            lines = ['Paragraph 1\n', *block]
         try:
             token1, token2 = block_token.tokenize(lines)
         except ValueError as e:
@@ -176,9 +177,6 @@ class TestParagraph(TestToken):
             'Paragraph 1\n',
             '2. list\n', # list doesn't start from 1
             '    indented text\n', # code block
-            '| table |\n', # table
-            '| ----- |\n',
-            '| row   |\n',
             '<custom>\n', # HTML block type 7
             '\n',
             'Paragraph 2\n'
