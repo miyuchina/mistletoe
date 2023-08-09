@@ -412,6 +412,22 @@ class TestTable(unittest.TestCase):
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.Paragraph)
 
+    def test_interrupt_paragraph_option(self):
+        lines = [
+            'Paragraph 1\n',
+            '| table |\n',
+            '| ----- |\n',
+            '| row   |\n',
+        ]
+        try:
+            block_token.Table.interrupt_paragraph = False
+            token, = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch.") from e
+        finally:
+            block_token.Table.interrupt_paragraph = True
+        self.assertIsInstance(token, block_token.Paragraph)
+
 
 class TestTableRow(unittest.TestCase):
     def test_match(self):

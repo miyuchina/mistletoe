@@ -667,11 +667,17 @@ class Table(BlockToken):
     Table token.
     This is a container block token. Its children are TableRow tokens.
 
+    Class attributes:
+        interrupt_paragraph: indicates whether tables should interrupt paragraphs
+        during parsing. The default is true.
+
     Attributes:
         header: header row (TableRow).
         column_align (list): align options for each column (default to [None]).
     """
     repr_attributes = ("column_align",)
+    interrupt_paragraph = True
+
     def __init__(self, lines):
         if '---' in lines[1]:
             self.column_align = [self.parse_align(column)
@@ -714,6 +720,8 @@ class Table(BlockToken):
 
     @classmethod
     def check_interrupts_paragraph(cls, lines):
+        if not cls.interrupt_paragraph:
+            return False
         anchor = lines.get_pos()
         result = cls.read(lines)
         lines.set_pos(anchor)
