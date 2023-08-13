@@ -31,13 +31,13 @@ class TestLaTeXRenderer(TestCase):
     def test_inline_code(self):
         func_path = 'mistletoe.latex_renderer.LaTeXRenderer.render_raw_text'
 
-        for content, output in {'inner': '\\verb|inner|',
+        for content, expected in {'inner': '\\verb|inner|',
                                 'a + b': '\\verb|a + b|',
                                 'a | b': '\\verb!a | b!',
                                 '|ab!|': '\\verb"|ab!|"',
                                }.items():
             with mock.patch(func_path, return_value=content):
-                self._test_token('InlineCode', output, content=content)
+                self._test_token('InlineCode', expected, content=content)
 
         content = mistletoe.latex_renderer.verb_delimiters
         with self.assertRaises(RuntimeError):
@@ -48,56 +48,56 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('Strikethrough', '\\sout{inner}')
 
     def test_image(self):
-        output = '\n\\includegraphics{src}\n'
-        self._test_token('Image', output, src='src')
+        expected = '\n\\includegraphics{src}\n'
+        self._test_token('Image', expected, src='src')
 
     @parameterized.expand([
         ('page', '\\href{page}{inner}'),
         ('page%3A+with%3A+escape', '\\href{page\%3A+with\%3A+escape}{inner}'),
         ('page#target', '\\href{page\#target}{inner}')
     ])
-    def test_link(self, target, output):
-        self._test_token('Link', output, target=target)
+    def test_link(self, target, expected):
+        self._test_token('Link', expected, target=target)
 
     @parameterized.expand([
         ('page', '\\url{page}'),
         ('page%3A+with%3A+escape', '\\url{page\%3A+with\%3A+escape}'),
         ('page#target', '\\url{page\#target}')
     ])
-    def test_autolink(self, target, output):
-        self._test_token('AutoLink', output, target=target)
+    def test_autolink(self, target, expected):
+        self._test_token('AutoLink', expected, target=target)
 
     def test_math(self):
-        output = '$ 1 + 2 = 3 $'
-        self._test_token('Math', output,
+        expected = '$ 1 + 2 = 3 $'
+        self._test_token('Math', expected,
                          children=False, content='$ 1 + 2 = 3 $')
 
     def test_raw_text(self):
-        output = '\\$\\&\\#\\{\\}'
-        self._test_token('RawText', output,
+        expected = '\\$\\&\\#\\{\\}'
+        self._test_token('RawText', expected,
                          children=False, content='$&#{}')
 
     def test_heading(self):
-        output = '\n\\section{inner}\n'
-        self._test_token('Heading', output, level=1)
+        expected = '\n\\section{inner}\n'
+        self._test_token('Heading', expected, level=1)
 
     def test_quote(self):
-        output = '\\begin{displayquote}\ninner\\end{displayquote}\n'
-        self._test_token('Quote', output)
+        expected = '\\begin{displayquote}\ninner\\end{displayquote}\n'
+        self._test_token('Quote', expected)
 
     def test_paragraph(self):
-        output = '\ninner\n'
-        self._test_token('Paragraph', output)
+        expected = '\ninner\n'
+        self._test_token('Paragraph', expected)
 
     def test_block_code(self):
         func_path = 'mistletoe.latex_renderer.LaTeXRenderer.render_raw_text'
         with mock.patch(func_path, return_value='inner'):
-            output = '\n\\begin{lstlisting}[language=sh]\ninner\\end{lstlisting}\n'
-            self._test_token('BlockCode', output, language='sh')
+            expected = '\n\\begin{lstlisting}[language=sh]\ninner\\end{lstlisting}\n'
+            self._test_token('BlockCode', expected, language='sh')
 
     def test_list(self):
-        output = '\\begin{itemize}\ninner\\end{itemize}\n'
-        self._test_token('List', output, start=None)
+        expected = '\\begin{itemize}\ninner\\end{itemize}\n'
+        self._test_token('List', expected, start=None)
 
     def test_list_item(self):
         self._test_token('ListItem', '\\item inner\n')
@@ -105,12 +105,12 @@ class TestLaTeXRenderer(TestCase):
     def test_table_with_header(self):
         func_path = 'mistletoe.latex_renderer.LaTeXRenderer.render_table_row'
         with mock.patch(func_path, autospec=True, return_value='row\n'):
-            output = '\\begin{tabular}{l c r}\nrow\n\\hline\ninner\\end{tabular}\n'
-            self._test_token('Table', output, column_align=[None, 0, 1])
+            expected = '\\begin{tabular}{l c r}\nrow\n\\hline\ninner\\end{tabular}\n'
+            self._test_token('Table', expected, column_align=[None, 0, 1])
 
     def test_table_without_header(self):
-        output = ('\\begin{tabular}\ninner\\end{tabular}\n')
-        self._test_token('Table', output, without_attrs=['header'],
+        expected = ('\\begin{tabular}\ninner\\end{tabular}\n')
+        self._test_token('Table', expected, without_attrs=['header'],
                          column_align=[None])
 
     def test_table_row(self):
@@ -126,11 +126,11 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('LineBreak', '\\newline\n', soft=False)
 
     def test_document(self):
-        output = ('\\documentclass{article}\n'
+        expected = ('\\documentclass{article}\n'
                   '\\begin{document}\n'
                   'inner'
                   '\\end{document}\n')
-        self._test_token('Document', output, footnotes={})
+        self._test_token('Document', expected, footnotes={})
 
 
 class TestHtmlEntity(TestCase):
