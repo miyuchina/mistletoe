@@ -26,7 +26,7 @@ from mistletoe import block_token, span_token
 from mistletoe.base_renderer import BaseRenderer
 import re
 
-class JIRARenderer(BaseRenderer):
+class JiraRenderer(BaseRenderer):
     """
     JIRA renderer class.
 
@@ -39,7 +39,7 @@ class JIRARenderer(BaseRenderer):
         """
         self.listTokens = []
         self.lastChildOfQuotes = []
-        super().__init__(*chain([block_token.HTMLBlock, span_token.HTMLSpan], extras))
+        super().__init__(*chain([block_token.HtmlBlock, span_token.HtmlSpan], extras))
 
     def render_strong(self, token):
         template = '*{}*'
@@ -233,4 +233,8 @@ def escape_url(raw):
     from urllib.parse import quote
     return quote(raw, safe='/#:()*?=%@+,&;')
 
-    
+
+JIRARenderer = JiraRenderer
+"""
+Deprecated name of the `JiraRenderer` class.
+"""

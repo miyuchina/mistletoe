@@ -23,7 +23,7 @@ class TestToken(unittest.TestCase):
         self.mock.assert_any_call(arg)
 
 
-class TestATXHeading(TestToken):
+class TestAtxHeading(TestToken):
     def test_match(self):
         lines = ['### heading 3\n']
         arg = 'heading 3'
@@ -135,7 +135,7 @@ class TestBlockCode(TestToken):
 class TestParagraph(TestToken):
     def setUp(self):
         super().setUp()
-        block_token.add_token(block_token.HTMLBlock)
+        block_token.add_token(block_token.HtmlBlock)
         self.addCleanup(block_token.reset_tokens)
 
     def test_parse(self):
@@ -605,9 +605,9 @@ class TestContains(unittest.TestCase):
         self.assertFalse('foo' in token)
 
 
-class TestHTMLBlock(unittest.TestCase):
+class TestHtmlBlock(unittest.TestCase):
     def setUp(self):
-        block_token.add_token(block_token.HTMLBlock)
+        block_token.add_token(block_token.HtmlBlock)
         self.addCleanup(block_token.reset_tokens)
 
     def test_textarea_block_may_contain_blank_lines(self):
@@ -621,12 +621,12 @@ class TestHTMLBlock(unittest.TestCase):
         document = block_token.Document(lines)
         tokens = document.children
         self.assertEqual(1, len(tokens))
-        self.assertIsInstance(tokens[0], block_token.HTMLBlock)
+        self.assertIsInstance(tokens[0], block_token.HtmlBlock)
 
 
 class TestLeafBlockTokenContentProperty(unittest.TestCase):
     def setUp(self):
-        block_token.add_token(block_token.HTMLBlock)
+        block_token.add_token(block_token.HtmlBlock)
         self.addCleanup(block_token.reset_tokens)
 
     def test_code_fence(self):
@@ -666,7 +666,7 @@ class TestLeafBlockTokenContentProperty(unittest.TestCase):
         document = block_token.Document(lines)
         tokens = document.children
         self.assertEqual(1, len(tokens))
-        self.assertIsInstance(tokens[0], block_token.HTMLBlock)
+        self.assertIsInstance(tokens[0], block_token.HtmlBlock)
 
         # option 1: direct access to the content
         self.assertEqual(''.join(lines).strip(), tokens[0].children[0].content)

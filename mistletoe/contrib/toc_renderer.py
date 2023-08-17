@@ -5,12 +5,12 @@ See `if __name__ == '__main__'` section for sample usage.
 """
 
 import re
-from mistletoe.html_renderer import HTMLRenderer
+from mistletoe.html_renderer import HtmlRenderer
 from mistletoe import block_token
 
-class TOCRenderer(HTMLRenderer):
+class TocRenderer(HtmlRenderer):
     """
-    Extends HTMLRenderer class for table of contents support.
+    Extends HtmlRenderer class for table of contents support.
     """
     def __init__(self, *extras, depth=5, omit_title=True, filter_conds=[], **kwargs):
         """
@@ -68,3 +68,9 @@ class TOCRenderer(HTMLRenderer):
         Helper method; converts rendered heading to plain text.
         """
         return re.sub(r'<.+?>', '', rendered)
+
+
+TOCRenderer = TocRenderer
+"""
+Deprecated name of the `TocRenderer` class.
+"""

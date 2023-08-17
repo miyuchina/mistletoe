@@ -1,4 +1,4 @@
-from mistletoe import HTMLRenderer
+from mistletoe import HtmlRenderer
 from pygments import highlight
 from pygments.formatters.html import HtmlFormatter
 from pygments.lexers import get_lexer_by_name as get_lexer, guess_lexer
@@ -6,7 +6,7 @@ from pygments.styles import get_style_by_name as get_style
 from pygments.util import ClassNotFound
 
 
-class PygmentsRenderer(HTMLRenderer):
+class PygmentsRenderer(HtmlRenderer):
     formatter = HtmlFormatter()
     formatter.noclasses = True
 

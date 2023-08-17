@@ -279,7 +279,7 @@ _declaration = r'(?<!\\)<![A-Z].+?>'
 _cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'
 
 
-class HTMLSpan(SpanToken):
+class HtmlSpan(SpanToken):
     """
     Span-level HTML token.
     This is an inline token without children.
@@ -292,6 +292,12 @@ class HTMLSpan(SpanToken):
                                    re.DOTALL)
     parse_inner = False
     parse_group = 0
+
+
+HTMLSpan = HtmlSpan
+"""
+Deprecated name of the `HtmlSpan` class.
+"""
 
 
 # Note: The following XWiki tokens are based on the XWiki Syntax 2.0 (or above; 1.0 was deprecated years ago already).

@@ -11,11 +11,11 @@ as an "abstract syntax tree" (AST), stored in an instance of `Document`.
 This object contains a hierarchy of
 all the various tokens which were recognized during the parsing process.
 
-In order to see what exactly gets parsed, one can simply use the `ASTRenderer`
+In order to see what exactly gets parsed, one can simply use the `AstRenderer`
 on a given markdown input, for example:
 
 ```sh
-mistletoe text.md --renderer mistletoe.ast_renderer.ASTRenderer
+mistletoe text.md --renderer mistletoe.ast_renderer.AstRenderer
 ```
 
 Say that the input file contains for example:
@@ -166,7 +166,7 @@ There you go: a new token in 5 lines of code.
 ### Side note about precedence
 
 Normally there is no need to override the `precedence` value of a custom token.
-The default value is the same as `InlineCode`, `AutoLink` and `HTMLSpan`,
+The default value is the same as `InlineCode`, `AutoLink` and `HtmlSpan`,
 which means that whichever token comes first will be parsed. In our case:
 
 ```markdown
@@ -193,9 +193,9 @@ of most of them for you. Simply passing your custom token class to
 `super().__init__()` does the trick:
 
 ```python
-from mistletoe.html_renderer import HTMLRenderer
+from mistletoe.html_renderer import HtmlRenderer
 
-class GithubWikiRenderer(HTMLRenderer):
+class GithubWikiRenderer(HtmlRenderer):
     def __init__(self):
         super().__init__(GithubWiki)
 ```
@@ -212,9 +212,9 @@ def render_github_wiki(self, token):
 Cleaning up, we have our new renderer class:
 
 ```python
-from mistletoe.html_renderer import HTMLRenderer, escape_url
+from mistletoe.html_renderer import HtmlRenderer, escape_url
 
-class GithubWikiRenderer(HTMLRenderer):
+class GithubWikiRenderer(HtmlRenderer):
     def __init__(self):
         super().__init__(GithubWiki)
 

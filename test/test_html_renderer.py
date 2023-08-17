@@ -1,10 +1,10 @@
 from unittest import TestCase, mock
-from mistletoe.html_renderer import HTMLRenderer
+from mistletoe.html_renderer import HtmlRenderer
 from parameterized import parameterized
 
 class TestRenderer(TestCase):
     def setUp(self):
-        self.renderer = HTMLRenderer()
+        self.renderer = HtmlRenderer()
         self.renderer.render_inner = mock.Mock(return_value='inner')
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
@@ -20,7 +20,7 @@ class TestRenderer(TestCase):
         self.assertEqual(render_func(mock_token), expected_output)
 
 
-class TestHTMLRenderer(TestRenderer):
+class TestHtmlRenderer(TestRenderer):
     def test_strong(self):
         self._test_token('Strong', '<strong>inner</strong>')
 
@@ -57,7 +57,7 @@ class TestHTMLRenderer(TestRenderer):
                          children=False, content='john & jane')
 
     def test_html_span(self):
-        self._test_token('HTMLSpan', '<some>text</some>',
+        self._test_token('HtmlSpan', '<some>text</some>',
                          children=False, content='<some>text</some>')
 
     def test_heading(self):
@@ -92,7 +92,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('ListItem', expected)
 
     def test_table_with_header(self):
-        func_path = 'mistletoe.html_renderer.HTMLRenderer.render_table_row'
+        func_path = 'mistletoe.html_renderer.HtmlRenderer.render_table_row'
         with mock.patch(func_path, autospec=True) as mock_func:
             mock_func.return_value = 'row'
             expected = ('<table>\n'
@@ -102,7 +102,7 @@ class TestHTMLRenderer(TestRenderer):
             self._test_token('Table', expected)
 
     def test_table_without_header(self):
-        func_path = 'mistletoe.html_renderer.HTMLRenderer.render_table_row'
+        func_path = 'mistletoe.html_renderer.HtmlRenderer.render_table_row'
         with mock.patch(func_path, autospec=True) as mock_func:
             mock_func.return_value = 'row'
             expected = '<table>\n<tbody>\ninner</tbody>\n</table>'
@@ -128,7 +128,7 @@ class TestHTMLRenderer(TestRenderer):
 
     def test_html_block(self):
         content = expected = '<h1>hello</h1>\n<p>this is\na paragraph</p>\n'
-        self._test_token('HTMLBlock', expected,
+        self._test_token('HtmlBlock', expected,
                          children=False, content=content)
 
     def test_line_break(self):
@@ -138,7 +138,7 @@ class TestHTMLRenderer(TestRenderer):
         self._test_token('Document', '', footnotes={})
 
 
-class TestHTMLRendererEscaping(TestCase):
+class TestHtmlRendererEscaping(TestCase):
     @parameterized.expand([
         (False, False, '" and \''),
         (False, True, '" and &#x27;'),
@@ -146,14 +146,14 @@ class TestHTMLRendererEscaping(TestCase):
         (True, True, '&quot; and &#x27;'),
     ])
     def test_escape_html_text(self, escape_double, escape_single, expected):
-        with HTMLRenderer(html_escape_double_quotes=escape_double,
+        with HtmlRenderer(html_escape_double_quotes=escape_double,
                           html_escape_single_quotes=escape_single) as renderer:
             self.assertEqual(renderer.escape_html_text('" and \''), expected)
 
 
-class TestHTMLRendererFootnotes(TestCase):
+class TestHtmlRendererFootnotes(TestCase):
     def setUp(self):
-        self.renderer = HTMLRenderer()
+        self.renderer = HtmlRenderer()
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
 

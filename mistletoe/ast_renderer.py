@@ -5,7 +5,7 @@ Abstract syntax tree renderer for mistletoe.
 import json
 from mistletoe.base_renderer import BaseRenderer
 
-class ASTRenderer(BaseRenderer):
+class AstRenderer(BaseRenderer):
     def render(self, token):
         """
         Returns the string representation of the AST.
@@ -43,3 +43,9 @@ def get_ast(token):
     if 'children' in vars(token):
         node['children'] = [get_ast(child) for child in token.children]
     return node
+
+
+ASTRenderer = AstRenderer
+"""
+Deprecated name of the `AstRenderer` class.
+"""

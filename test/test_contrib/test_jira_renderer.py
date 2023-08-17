@@ -22,17 +22,17 @@
 
 from test.base_test import BaseRendererTest
 from mistletoe.span_token import tokenize_inner
-from mistletoe.contrib.jira_renderer import JIRARenderer
+from mistletoe.contrib.jira_renderer import JiraRenderer
 import random
 import string
 
 filesBasedTest = BaseRendererTest.filesBasedTest
 
-class TestJIRARenderer(BaseRendererTest):
+class TestJiraRenderer(BaseRendererTest):
 
     def setUp(self):
         super().setUp()
-        self.renderer = JIRARenderer()
+        self.renderer = JiraRenderer()
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
         self.sampleOutputExtension = 'jira'
