@@ -56,7 +56,7 @@ def interactive(renderer):
 def parse(args):
     parser = ArgumentParser()
     parser.add_argument('-r', '--renderer', type=_import,
-                        default='mistletoe.HTMLRenderer',
+                        default='mistletoe.HtmlRenderer',
                         help='specify an importable renderer class')
     parser.add_argument('-v', '--version', action='version', version=version_str)
     parser.add_argument('filenames', nargs='*',
@@ -88,6 +88,6 @@ def _import_readline():
 def _print_heading(renderer):
     print('{} (interactive)'.format(version_str))
     print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
-    if renderer is not mistletoe.HTMLRenderer:
+    if renderer is not mistletoe.HtmlRenderer:
         print('Using renderer: {}'.format(renderer.__name__))
 

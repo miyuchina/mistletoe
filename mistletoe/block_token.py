@@ -997,7 +997,7 @@ class ThematicBreak(BlockToken):
         return [next(lines)]
 
 
-class HTMLBlock(BlockToken):
+class HtmlBlock(BlockToken):
     """
     Block-level HTML token.
     This is a leaf block token with a single child of type span_token.RawText,
@@ -1074,6 +1074,12 @@ class HTMLBlock(BlockToken):
                 lines.backstep()
                 break
         return line_buffer
+
+
+HTMLBlock = HtmlBlock
+"""
+Deprecated name of the `HtmlBlock` class.
+"""
 
 
 _token_types = []

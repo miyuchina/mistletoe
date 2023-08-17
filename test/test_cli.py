@@ -3,7 +3,7 @@ from unittest.mock import call, patch, sentinel, mock_open, Mock
 from mistletoe import cli
 
 
-class TestCLI(TestCase):
+class TestCli(TestCase):
     @patch('mistletoe.cli.parse', return_value=Mock(filenames=[], renderer=sentinel.Renderer))
     @patch('mistletoe.cli.interactive')
     def test_main_to_interactive(self, mock_interactive, mock_parse):

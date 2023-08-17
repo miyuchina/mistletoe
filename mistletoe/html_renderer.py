@@ -7,12 +7,12 @@ from itertools import chain
 from urllib.parse import quote
 from mistletoe import block_token
 from mistletoe import span_token
-from mistletoe.block_token import HTMLBlock
-from mistletoe.span_token import HTMLSpan
+from mistletoe.block_token import HtmlBlock
+from mistletoe.span_token import HtmlSpan
 from mistletoe.base_renderer import BaseRenderer
 
 
-class HTMLRenderer(BaseRenderer):
+class HtmlRenderer(BaseRenderer):
     """
     HTML renderer class.
 
@@ -30,7 +30,7 @@ class HTMLRenderer(BaseRenderer):
                 constructor.
         """
         self._suppress_ptag_stack = [False]
-        super().__init__(*chain((HTMLBlock, HTMLSpan), extras), **kwargs)
+        super().__init__(*chain((HtmlBlock, HtmlSpan), extras), **kwargs)
         self.html_escape_double_quotes = html_escape_double_quotes
         self.html_escape_single_quotes = html_escape_single_quotes
 
@@ -94,7 +94,7 @@ class HTMLRenderer(BaseRenderer):
         return self.escape_html_text(token.content)
 
     @staticmethod
-    def render_html_span(token: span_token.HTMLSpan) -> str:
+    def render_html_span(token: span_token.HtmlSpan) -> str:
         return token.content
 
     def render_heading(self, token: block_token.Heading) -> str:
@@ -193,7 +193,7 @@ class HTMLRenderer(BaseRenderer):
         return '\n' if token.soft else '<br />\n'
 
     @staticmethod
-    def render_html_block(token: block_token.HTMLBlock) -> str:
+    def render_html_block(token: block_token.HtmlBlock) -> str:
         return token.content
 
     def render_document(self, token: block_token.Document) -> str:
@@ -224,3 +224,9 @@ class HTMLRenderer(BaseRenderer):
         Escape urls to prevent code injection craziness. (Hopefully.)
         """
         return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))
+
+
+HTMLRenderer = HtmlRenderer
+"""
+Deprecated name of the `HtmlRenderer` class.
+"""

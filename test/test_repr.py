@@ -66,11 +66,11 @@ class TestRepr(unittest.TestCase):
 
     def test_htmlblock(self):
         try:
-            block_token.add_token(block_token.HTMLBlock)
+            block_token.add_token(block_token.HtmlBlock)
             doc = Document("<pre>\nFoo\n</pre>\n")
         finally:
             block_token.reset_tokens()
-        self._check_repr_matches(doc.children[0], "block_token.HTMLBlock with 1 child")
+        self._check_repr_matches(doc.children[0], "block_token.HtmlBlock with 1 child")
         self._check_repr_matches(doc.children[0].children[0], "span_token.RawText content='<pre>\\nFoo\\n</pre>'")
 
     # Span tokens

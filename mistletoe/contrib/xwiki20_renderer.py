@@ -17,7 +17,7 @@ class XWiki20Renderer(BaseRenderer):
         self.lastChildOfQuotes = []
         self.firstChildOfListItems = []
 
-        localExtras = [block_token.HTMLBlock, span_token.HTMLSpan, span_token.XWikiBlockMacroStart, span_token.XWikiBlockMacroEnd]
+        localExtras = [block_token.HtmlBlock, span_token.HtmlSpan, span_token.XWikiBlockMacroStart, span_token.XWikiBlockMacroEnd]
         super().__init__(*chain(localExtras, extras))
 
     def render_strong(self, token):
@@ -73,7 +73,7 @@ class XWiki20Renderer(BaseRenderer):
         return '\n' + token.content
     
     def render_html_span(self, token):
-        # XXX: HTMLSpan parses (contains) only individual opening and closing tags
+        # XXX: HtmlSpan parses (contains) only individual opening and closing tags
         # => no easy way to wrap the whole HTML code into {{html}} like this:
         # 
         # template = '{{{{html wiki="true"}}}}{}{{{{/html}}}}'
@@ -162,7 +162,7 @@ class XWiki20Renderer(BaseRenderer):
         
 
     def render_table(self, token):
-        # Copied from JIRARenderer...
+        # Copied from JiraRenderer...
         #
         # This is actually gross and I wonder if there's a better way to do it.
         #

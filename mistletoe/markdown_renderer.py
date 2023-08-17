@@ -87,7 +87,7 @@ class MarkdownRenderer(BaseRenderer):
     Designed to make as "clean" a roundtrip as possible, markdown -> parsing -> rendering -> markdown,
     except for nonessential whitespace. Except when rendering with word wrapping enabled.
 
-    Includes `HTMLBlock` and `HTMLSpan` tokens in the parsing.
+    Includes `HtmlBlock` and `HtmlSpan` tokens in the parsing.
     """
 
     _whitespace = re.compile(r"\s+")
@@ -102,8 +102,8 @@ class MarkdownRenderer(BaseRenderer):
         super().__init__(
             *chain(
                 (
-                    block_token.HTMLBlock,
-                    span_token.HTMLSpan,
+                    block_token.HtmlBlock,
+                    span_token.HtmlSpan,
                     BlankLine,
                     LinkReferenceDefinitionBlock,
                 ),
@@ -212,7 +212,7 @@ class MarkdownRenderer(BaseRenderer):
             token.content + "\n", wordwrap=token.soft, hard_line_break=not token.soft
         )
 
-    def render_html_span(self, token: span_token.HTMLSpan) -> Iterable[Fragment]:
+    def render_html_span(self, token: span_token.HtmlSpan) -> Iterable[Fragment]:
         yield Fragment(token.content)
 
     def render_link_reference_definition(
@@ -332,7 +332,7 @@ class MarkdownRenderer(BaseRenderer):
         return [token.line]
 
     def render_html_block(
-        self, token: block_token.HTMLBlock, max_line_length: int
+        self, token: block_token.HtmlBlock, max_line_length: int
     ) -> Iterable[str]:
         return token.content.split("\n")
 

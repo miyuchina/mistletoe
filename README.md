@@ -122,16 +122,16 @@ with open('dev-guide.md', 'r') as fin:
 ```
 
 Finally, here's how you would manually specify extra tokens via a renderer.
-In the following example, we use `HTMLRenderer` to render
-the AST. The renderer itself adds `HTMLBlock` and `HTMLSpan` tokens to the parsing
+In the following example, we use `HtmlRenderer` to render
+the AST. The renderer itself adds `HtmlBlock` and `HtmlSpan` tokens to the parsing
 process. The result should be equal to the output obtained from
 the first example above.
 
 ```python
-from mistletoe import Document, HTMLRenderer
+from mistletoe import Document, HtmlRenderer
 
 with open('foo.md', 'r') as fin:
-    with HTMLRenderer() as renderer:     # or: `with HTMLRenderer(AnotherToken1, AnotherToken2) as renderer:`
+    with HtmlRenderer() as renderer:     # or: `with HtmlRenderer(AnotherToken1, AnotherToken2) as renderer:`
         doc = Document(fin)              # parse the lines into AST
         rendered = renderer.render(doc)  # render the AST
         # internal lists of tokens to be parsed are automatically reset when exiting this `with` block
@@ -169,7 +169,7 @@ mistletoe foo.md --renderer mistletoe.latex_renderer.LaTeXRenderer
 and similarly for a renderer in the contrib package:
 
 ```sh
-mistletoe foo.md --renderer mistletoe.contrib.jira_renderer.JIRARenderer
+mistletoe foo.md --renderer mistletoe.contrib.jira_renderer.JiraRenderer
 ```
 
 
