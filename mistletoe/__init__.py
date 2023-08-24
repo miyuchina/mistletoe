@@ -8,6 +8,9 @@ __all__ = ['html_renderer', 'ast_renderer', 'block_token', 'block_tokenizer',
 
 from mistletoe.block_token import Document
 from mistletoe.html_renderer import HtmlRenderer
+# import the old name for backwards compatibility:
+from mistletoe.html_renderer import HTMLRenderer  # noqa: F401
+
 
 def markdown(iterable, renderer=HtmlRenderer):
     """
