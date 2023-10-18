@@ -45,12 +45,12 @@ class TestRepr(unittest.TestCase):
     def test_unordered_list(self):
         doc = Document("* Foo\n* Bar\n* Baz")
         self._check_repr_matches(doc.children[0], "block_token.List with 3 children loose=False start=None")
-        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child leader='*' prepend=2 loose=False")
+        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child leader='*' indentation=0 prepend=2 loose=False")
 
     def test_ordered_list(self):
         doc = Document("1. Foo\n2. Bar\n3. Baz")
         self._check_repr_matches(doc.children[0], "block_token.List with 3 children loose=False start=1")
-        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child leader='1.' prepend=3 loose=False")
+        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child leader='1.' indentation=0 prepend=3 loose=False")
 
     def test_table(self):
         doc = Document("| Foo | Bar | Baz |\n|:--- |:---:| ---:|\n| Foo | Bar | Baz |\n")

@@ -486,7 +486,7 @@ class List(BlockToken):
         # and the list must either be unordered or start from 1.
         marker_tuple = ListItem.parse_marker(lines.peek())
         if (marker_tuple is not None):
-            _, leader, content = marker_tuple
+            _, _, leader, content = marker_tuple
             if not content.strip() == '':
                 return not leader[0].isdigit() or leader in ['1.', '1)']
         return False
@@ -499,7 +499,7 @@ class List(BlockToken):
         while True:
             anchor = lines.get_pos()
             output, next_marker = ListItem.read(lines, next_marker)
-            item_leader = output[2]
+            item_leader = output[3]
             if leader is None:
                 leader = item_leader
             elif not cls.same_marker_type(leader, item_leader):
@@ -532,16 +532,18 @@ class ListItem(BlockToken):
 
     Attributes:
         leader (string): a bullet list marker or an ordered list marker.
+        indentation (int): spaces before the leader.
         prepend (int): the start position of the content, i.e., the indentation required
                        for continuation lines.
         loose (bool): whether the list is loose.
     """
-    repr_attributes = ("leader", "prepend", "loose")
-    pattern = re.compile(r' {0,3}(\d{0,9}[.)]|[+\-*])($|\s+)')
+    repr_attributes = ("leader", "indentation", "prepend", "loose")
+    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
-    def __init__(self, parse_buffer, prepend, leader):
+    def __init__(self, parse_buffer, indentation, prepend, leader):
         self.leader = leader
+        self.indentation = indentation
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
         self.loose = parse_buffer.loose
@@ -574,22 +576,25 @@ class ListItem(BlockToken):
 
         The leader is a bullet list marker, or an ordered list marker.
 
+        The indentation is spaces before the leader.
+
         The prepend is the start position of the content, i.e., the indentation required
         for continuation lines.
         """
         match_obj = cls.pattern.match(line)
         if match_obj is None:
             return None
+        indentation = len(match_obj.group(1))
         prepend = len(match_obj.group(0).expandtabs(4))
-        leader = match_obj.group(1)
+        leader = match_obj.group(2)
         content = line[match_obj.end(0):]
-        n_spaces = prepend - match_obj.end(1)
+        n_spaces = prepend - match_obj.end(2)
         if n_spaces > 4:
             # if there are more than 4 spaces after the leader, we treat them as part of the content
             # with the exception of the first (marker separator) space.
             prepend -= n_spaces - 1
             content = ' ' * (n_spaces - 1) + content
-        return prepend, leader, content
+        return indentation, prepend, leader, content
 
     @classmethod
     def read(cls, lines, prev_marker=None):
@@ -599,10 +604,10 @@ class ListItem(BlockToken):
         # first line
         line = next(lines)
         next_line = lines.peek()
-        prepend, leader, content = prev_marker if prev_marker else cls.parse_marker(line)
+        indentation, prepend, leader, content = prev_marker if prev_marker else cls.parse_marker(line)
         if content.strip() == '':
             # item starting with a blank line: look for the next non-blank line
-            prepend = len(leader) + 1
+            prepend = indentation + len(leader) + 1
             blanks = 1
             while next_line is not None and next_line.strip() == '':
                 blanks += 1
@@ -614,7 +619,7 @@ class ListItem(BlockToken):
                 parse_buffer = tokenizer.ParseBuffer()
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
-                return (parse_buffer, prepend, leader), next_marker
+                return (parse_buffer, indentation, prepend, leader), next_marker
         else:
             line_buffer.append(content)
 
@@ -659,7 +664,7 @@ class ListItem(BlockToken):
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
-        return (parse_buffer, prepend, leader), next_marker
+        return (parse_buffer, indentation, prepend, leader), next_marker
 
 
 class Table(BlockToken):
