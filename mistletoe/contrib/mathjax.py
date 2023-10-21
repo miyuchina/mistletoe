@@ -18,11 +18,11 @@ class MathJaxRenderer(HtmlRenderer, LaTeXRenderer):
 
     def render_math(self, token):
         """
-        Ensure Math tokens are all enclosed in two dollar signs.
+        Convert single dollar sign enclosed expressions to \(\) inline math delimiter for mathjax
         """
-        if token.content.startswith('$$'):
+        if token.content.startswith('$$') or token.content.startswith('\\[') or token.content.startswith('\\('):
             return self.render_raw_text(token)
-        return '${}$'.format(self.render_raw_text(token))
+        return '\({}\)'.format(self.render_raw_text(token).strip('$'))
 
     def render_document(self, token):
         """
