@@ -68,7 +68,7 @@ def tokenize(iterable, token_types):
 
 def tokenize_block(iterable, token_types, start_line=1):
     """
-    Returns a list of pairs (token_type, read_result).
+    Returns a list of tuples (token_type, read_result, line_number).
 
     Footnotes are parsed here, but span-level parsing has not
     started yet.
@@ -93,8 +93,8 @@ def tokenize_block(iterable, token_types, start_line=1):
 
 def make_tokens(parse_buffer):
     """
-    Takes a list of pairs (token_type, read_result) and
-    applies token_type(read_result).
+    Takes a list of tuples (token_type, read_result, line_number),
+    applies token_type(read_result), and sets the line_number attribute.
 
     Footnotes are already parsed before this point,
     and span-level parsing is started here.

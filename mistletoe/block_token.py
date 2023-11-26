@@ -543,7 +543,8 @@ class ListItem(BlockToken):
     pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
-    def __init__(self, parse_buffer, indentation, prepend, leader):
+    def __init__(self, parse_buffer, indentation, prepend, leader, line_number=None):
+        self.line_number = line_number
         self.leader = leader
         self.indentation = indentation
         self.prepend = prepend
@@ -622,7 +623,7 @@ class ListItem(BlockToken):
                 parse_buffer = tokenizer.ParseBuffer()
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
-                return (parse_buffer, indentation, prepend, leader), next_marker
+                return (parse_buffer, indentation, prepend, leader, start_line), next_marker
         else:
             line_buffer.append(content)
 
@@ -667,7 +668,7 @@ class ListItem(BlockToken):
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
-        return (parse_buffer, indentation, prepend, leader), next_marker
+        return (parse_buffer, indentation, prepend, leader, start_line), next_marker
 
 
 class Table(BlockToken):
