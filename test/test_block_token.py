@@ -390,7 +390,7 @@ class TestTable(unittest.TestCase):
             self.assertTrue(hasattr(token, 'header'))
             self.assertEqual(token.column_align, [None, None, None])
             token.children
-            calls = [call(line, line_number, [None, None, None]) for line_number, line in enumerate(lines, start=1) if line_number != 2]
+            calls = [call(line, [None, None, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
             mock.assert_has_calls(calls)
 
     def test_easy_table(self):
@@ -403,7 +403,7 @@ class TestTable(unittest.TestCase):
             self.assertTrue(hasattr(token, 'header'))
             self.assertEqual(token.column_align, [1, None])
             token.children
-            calls = [call(line, line_number, [1, None]) for line_number, line in enumerate(lines, start=1) if line_number != 2]
+            calls = [call(line, [1, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
             mock.assert_has_calls(calls)
 
     def test_not_easy_table(self):
@@ -433,43 +433,43 @@ class TestTableRow(unittest.TestCase):
     def test_match(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '| cell 1 | cell 2 |\n'
-            token = block_token.TableRow(line, 10)
+            token = block_token.TableRow(line, line_number=10)
             self.assertEqual(token.row_align, [None])
-            mock.assert_has_calls([call('cell 1', 10, None), call('cell 2', 10, None)])
+            mock.assert_has_calls([call('cell 1', None, 10), call('cell 2', None, 10)])
 
     def test_easy_table_row(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = 'cell 1 | cell 2\n'
-            token = block_token.TableRow(line, 10)
+            token = block_token.TableRow(line, line_number=10)
             self.assertEqual(token.row_align, [None])
-            mock.assert_has_calls([call('cell 1', 10, None), call('cell 2', 10, None)])
+            mock.assert_has_calls([call('cell 1', None, 10), call('cell 2', None, 10)])
 
     def test_short_row(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '| cell 1 |\n'
-            token = block_token.TableRow(line, 10, [None, None])
+            token = block_token.TableRow(line, [None, None], 10)
             self.assertEqual(token.row_align, [None, None])
-            mock.assert_has_calls([call('cell 1', 10, None), call('', 10, None)])
+            mock.assert_has_calls([call('cell 1', None, 10), call('', None, 10)])
 
     def test_escaped_pipe_in_cell(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '| pipe: `\\|` | cell 2\n'
-            token = block_token.TableRow(line, 10, [None, None])
+            token = block_token.TableRow(line, line_number=10, row_align=[None, None])
             self.assertEqual(token.row_align, [None, None])
-            mock.assert_has_calls([call('pipe: `|`', 10, None), call('cell 2', 10, None)])
+            mock.assert_has_calls([call('pipe: `|`', None, 10), call('cell 2', None, 10)])
     
     @unittest.skip('Even GitHub fails in here, workaround: always put a space before `|`')
     def test_not_really_escaped_pipe_in_cell(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '|ending with a \\\\|cell 2\n'
-            token = block_token.TableRow(line, 10, [None, None])
+            token = block_token.TableRow(line, [None, None], 10)
             self.assertEqual(token.row_align, [None, None])
-            mock.assert_has_calls([call('ending with a \\\\', 10, None), call('cell 2', 10, None)])
+            mock.assert_has_calls([call('ending with a \\\\', None, 10), call('cell 2', None, 10)])
 
 
 class TestTableCell(TestToken):
     def test_match(self):
-        token = block_token.TableCell('cell 2', 13)
+        token = block_token.TableCell('cell 2', line_number=13)
         self._test_token(token, 'cell 2', line_number=13, align=None)
 
 
