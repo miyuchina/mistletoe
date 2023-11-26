@@ -109,6 +109,8 @@ class BlockToken(token.Token):
         children (list): inner tokens.
         line_number (int): starting line (1-based).
     """
+    repr_attributes = ("line_number",)
+
     def __init__(self, lines, tokenize_func):
         self.children = tokenize_func(lines)
 
@@ -139,6 +141,7 @@ class Document(BlockToken):
             lines = lines.splitlines(keepends=True)
         lines = [line if line.endswith('\n') else '{}\n'.format(line) for line in lines]
         self.footnotes = {}
+        self.line_number = 1
         token._root_node = self
         self.children = tokenize(lines)
         token._root_node = None
@@ -152,7 +155,7 @@ class Heading(BlockToken):
     Attributes:
         level (int): heading level.
     """
-    repr_attributes = ("level",)
+    repr_attributes = BlockToken.repr_attributes + ("level",)
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(\n|\s+?#+\s*?$))')
     level = 0
     content = ''
@@ -193,7 +196,7 @@ class SetextHeading(BlockToken):
     Attributes:
         level (int): heading level.
     """
-    repr_attributes = ("level",)
+    repr_attributes = BlockToken.repr_attributes + ("level",)
 
     def __init__(self, lines):
         self.underline = lines.pop().rstrip()
@@ -352,7 +355,7 @@ class BlockCode(BlockToken):
     Attributes:
         language (str): always the empty string.
     """
-    repr_attributes = ("language",)
+    repr_attributes = BlockToken.repr_attributes + ("language",)
     def __init__(self, lines):
         self.language = ''
         self.children = (span_token.RawText(''.join(lines).strip('\n')+'\n'),)
@@ -408,7 +411,7 @@ class CodeFence(BlockToken):
     Attributes:
         language (str): language of code block (default to empty).
     """
-    repr_attributes = ("language",)
+    repr_attributes = BlockToken.repr_attributes + ("language",)
     pattern = re.compile(r'( {0,3})(`{3,}|~{3,})( *(\S*)[^\n]*)')
     _open_info = None
 
@@ -468,7 +471,7 @@ class List(BlockToken):
         loose (bool): whether the list is loose.
         start (NoneType or int): None if unordered, starting number if ordered.
     """
-    repr_attributes = ("loose", "start")
+    repr_attributes = BlockToken.repr_attributes + ("loose", "start")
     pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
@@ -539,7 +542,7 @@ class ListItem(BlockToken):
                        for continuation lines.
         loose (bool): whether the list is loose.
     """
-    repr_attributes = ("leader", "indentation", "prepend", "loose")
+    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose")
     pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
@@ -684,7 +687,7 @@ class Table(BlockToken):
         header: header row (TableRow).
         column_align (list): align options for each column (default to [None]).
     """
-    repr_attributes = ("column_align",)
+    repr_attributes = BlockToken.repr_attributes + ("column_align",)
     interrupt_paragraph = True
 
     def __init__(self, match):
@@ -760,7 +763,7 @@ class TableRow(BlockToken):
     Attributes:
         row_align (list): align options for each column (default to [None]).
     """
-    repr_attributes = ("row_align",)
+    repr_attributes = BlockToken.repr_attributes + ("row_align",)
     # Note: Python regex requires fixed-length look-behind,
     # so we cannot use a more precise alternative: r"(?<!\\(?:\\\\)*)(\|)"
     split_pattern = re.compile(r"(?<!\\)\|")
@@ -784,7 +787,7 @@ class TableCell(BlockToken):
     Attributes:
         align (bool): align option for current cell (default to None).
     """
-    repr_attributes = ("align",)
+    repr_attributes = BlockToken.repr_attributes + ("align",)
     def __init__(self, content, align=None, line_number=None):
         self.align = align
         self.line_number = line_number
