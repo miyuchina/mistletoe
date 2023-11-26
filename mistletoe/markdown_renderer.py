@@ -409,7 +409,7 @@ class MarkdownRenderer(BaseRenderer):
                 if "\n" in fragment.text:
                     lines = fragment.text.split("\n")
                     yield current_line + lines[0]
-                    for inner_line in lines[1:-2]:
+                    for inner_line in lines[1:-1]:
                         yield inner_line
                     current_line = lines[-1]
                 else:

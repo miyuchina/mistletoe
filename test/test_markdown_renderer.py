@@ -90,6 +90,17 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
+    def test_multiline_fragment(self):
+        input = [
+            "[a link](<url-in-angle-brackets> '*emphasized\n",
+            "title\n",
+            "spanning\n",
+            "many\n",
+            "lines*')\n",
+        ]
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
+
     def test_thematic_break(self):
         input = [
             " **  * ** * ** * **\n",
