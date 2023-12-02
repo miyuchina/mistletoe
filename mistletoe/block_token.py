@@ -88,7 +88,7 @@ class BlockToken(token.Token):
           of the current token. Every subclass of BlockToken must define a
           start function (see block_tokenizer.tokenize).
 
-        * BlockToken.read takes the rest of the lines in the ducment as an
+        * BlockToken.read takes the rest of the lines in the document as an
           iterator (including the start line), and consumes all the lines
           that should be read into this token.
 
@@ -107,7 +107,10 @@ class BlockToken(token.Token):
 
     Attributes:
         children (list): inner tokens.
+        line_number (int): starting line (1-based).
     """
+    repr_attributes = ("line_number",)
+
     def __init__(self, lines, tokenize_func):
         self.children = tokenize_func(lines)
 
@@ -138,6 +141,7 @@ class Document(BlockToken):
             lines = lines.splitlines(keepends=True)
         lines = [line if line.endswith('\n') else '{}\n'.format(line) for line in lines]
         self.footnotes = {}
+        self.line_number = 1
         token._root_node = self
         self.children = tokenize(lines)
         token._root_node = None
@@ -151,7 +155,7 @@ class Heading(BlockToken):
     Attributes:
         level (int): heading level.
     """
-    repr_attributes = ("level",)
+    repr_attributes = BlockToken.repr_attributes + ("level",)
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(\n|\s+?#+\s*?$))')
     level = 0
     content = ''
@@ -192,7 +196,7 @@ class SetextHeading(BlockToken):
     Attributes:
         level (int): heading level.
     """
-    repr_attributes = ("level",)
+    repr_attributes = BlockToken.repr_attributes + ("level",)
 
     def __init__(self, lines):
         self.underline = lines.pop().rstrip()
@@ -236,6 +240,7 @@ class Quote(BlockToken):
         if len(line) > 0 and line[0] == ' ':
             line = line[1:]
         line_buffer = [line]
+        start_line = lines.line_number()
 
         # set booleans
         in_code_fence = CodeFence.start(line)
@@ -271,7 +276,7 @@ class Quote(BlockToken):
 
         # parse child block tokens
         Paragraph.parse_setext = False
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
         Paragraph.parse_setext = True
         return parse_buffer
 
@@ -350,7 +355,7 @@ class BlockCode(BlockToken):
     Attributes:
         language (str): always the empty string.
     """
-    repr_attributes = ("language",)
+    repr_attributes = BlockToken.repr_attributes + ("language",)
     def __init__(self, lines):
         self.language = ''
         self.children = (span_token.RawText(''.join(lines).strip('\n')+'\n'),)
@@ -406,7 +411,7 @@ class CodeFence(BlockToken):
     Attributes:
         language (str): language of code block (default to empty).
     """
-    repr_attributes = ("language",)
+    repr_attributes = BlockToken.repr_attributes + ("language",)
     pattern = re.compile(r'( {0,3})(`{3,}|~{3,})( *(\S*)[^\n]*)')
     _open_info = None
 
@@ -466,7 +471,7 @@ class List(BlockToken):
         loose (bool): whether the list is loose.
         start (NoneType or int): None if unordered, starting number if ordered.
     """
-    repr_attributes = ("loose", "start")
+    repr_attributes = BlockToken.repr_attributes + ("loose", "start")
     pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
@@ -537,11 +542,12 @@ class ListItem(BlockToken):
                        for continuation lines.
         loose (bool): whether the list is loose.
     """
-    repr_attributes = ("leader", "indentation", "prepend", "loose")
+    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose")
     pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
-    def __init__(self, parse_buffer, indentation, prepend, leader):
+    def __init__(self, parse_buffer, indentation, prepend, leader, line_number=None):
+        self.line_number = line_number
         self.leader = leader
         self.indentation = indentation
         self.prepend = prepend
@@ -603,6 +609,7 @@ class ListItem(BlockToken):
 
         # first line
         line = next(lines)
+        start_line = lines.line_number()
         next_line = lines.peek()
         indentation, prepend, leader, content = prev_marker if prev_marker else cls.parse_marker(line)
         if content.strip() == '':
@@ -619,7 +626,7 @@ class ListItem(BlockToken):
                 parse_buffer = tokenizer.ParseBuffer()
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
-                return (parse_buffer, indentation, prepend, leader), next_marker
+                return (parse_buffer, indentation, prepend, leader, start_line), next_marker
         else:
             line_buffer.append(content)
 
@@ -663,8 +670,8 @@ class ListItem(BlockToken):
 
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types)
-        return (parse_buffer, indentation, prepend, leader), next_marker
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
+        return (parse_buffer, indentation, prepend, leader, start_line), next_marker
 
 
 class Table(BlockToken):
@@ -680,19 +687,20 @@ class Table(BlockToken):
         header: header row (TableRow).
         column_align (list): align options for each column (default to [None]).
     """
-    repr_attributes = ("column_align",)
+    repr_attributes = BlockToken.repr_attributes + ("column_align",)
     interrupt_paragraph = True
 
-    def __init__(self, lines):
+    def __init__(self, match):
+        lines, start_line = match
         if '---' in lines[1]:
             self.column_align = [self.parse_align(column)
                     for column in self.split_delimiter(lines[1])]
-            self.header = TableRow(lines[0], self.column_align)
-            self.children = [TableRow(line, self.column_align) for line in lines[2:]]
+            self.header = TableRow(lines[0], self.column_align, start_line)
+            self.children = [TableRow(line, self.column_align, start_line + offset) for offset, line in enumerate(lines[2:], start=2)]
         else:
             # note: not reachable, because read() guarantees the presence of three dashes
             self.column_align = [None]
-            self.children = [TableRow(line) for line in lines]
+            self.children = [TableRow(line, line_number=start_line + offset) for offset, line in enumerate(lines)]
 
     @staticmethod
     def split_delimiter(delimiter):
@@ -736,12 +744,13 @@ class Table(BlockToken):
     def read(lines):
         anchor = lines.get_pos()
         line_buffer = [next(lines)]
+        start_line = lines.line_number()
         while lines.peek() is not None and '|' in lines.peek():
             line_buffer.append(next(lines))
         if len(line_buffer) < 2 or '---' not in line_buffer[1]:
             lines.set_pos(anchor)
             return None
-        return line_buffer
+        return line_buffer, start_line
 
 
 class TableRow(BlockToken):
@@ -754,16 +763,17 @@ class TableRow(BlockToken):
     Attributes:
         row_align (list): align options for each column (default to [None]).
     """
-    repr_attributes = ("row_align",)
+    repr_attributes = BlockToken.repr_attributes + ("row_align",)
     # Note: Python regex requires fixed-length look-behind,
     # so we cannot use a more precise alternative: r"(?<!\\(?:\\\\)*)(\|)"
     split_pattern = re.compile(r"(?<!\\)\|")
     escaped_pipe_pattern = re.compile(r"(?<!\\)(\\\\)*\\\|")
 
-    def __init__(self, line, row_align=None):
+    def __init__(self, line, row_align=None, line_number=None):
         self.row_align = row_align or [None]
+        self.line_number = line_number
         cells = filter(None, self.split_pattern.split(line.strip()))
-        self.children = [TableCell(self.escaped_pipe_pattern.sub('\\1|', cell.strip()) if cell else '', align)
+        self.children = [TableCell(self.escaped_pipe_pattern.sub('\\1|', cell.strip()) if cell else '', align, line_number)
                          for cell, align in zip_longest(cells, self.row_align)]
 
 
@@ -777,9 +787,10 @@ class TableCell(BlockToken):
     Attributes:
         align (bool): align option for current cell (default to None).
     """
-    repr_attributes = ("align",)
-    def __init__(self, content, align=None):
+    repr_attributes = BlockToken.repr_attributes + ("align",)
+    def __init__(self, content, align=None, line_number=None):
         self.align = align
+        self.line_number = line_number
         super().__init__(content, span_token.tokenize_inner)
 
 
