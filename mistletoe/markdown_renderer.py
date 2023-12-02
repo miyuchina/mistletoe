@@ -92,11 +92,22 @@ class MarkdownRenderer(BaseRenderer):
 
     _whitespace = re.compile(r"\s+")
 
-    def __init__(self, *extras, max_line_length: int = None):
+    def __init__(
+        self,
+        *extras,
+        max_line_length: int = None,
+        normalize_whitespace=False
+    ):
         """
-        If `max_line_length` is specified, the document is word wrapped to the
-        specified line length when rendered. Otherwise the formatting from the
-        original (parsed) document is retained as much as possible.
+        Args:
+            extras (list): allows subclasses to add even more custom tokens.
+            max_line_length (int): if specified, the document is word wrapped to the
+                specified line length when rendered. Otherwise the formatting from the
+                original (parsed) document is retained as much as possible.
+            normalize_whitespace (bool): if `False`, the renderer will try to preserve
+                as much whitespace as it currently can. For example, you can
+                use this flag to control whether to replace the original
+                spacing after every list item leader with just 1 space.
         """
         block_token.remove_token(block_token.Footnote)
         super().__init__(
@@ -116,6 +127,7 @@ class MarkdownRenderer(BaseRenderer):
             "LinkReferenceDefinition"
         ] = self.render_link_reference_definition
         self.max_line_length = max_line_length
+        self.normalize_whitespace = normalize_whitespace
 
     def render(self, token: token.Token) -> str:
         """
@@ -302,7 +314,7 @@ class MarkdownRenderer(BaseRenderer):
     def render_list_item(
         self, token: block_token.ListItem, max_line_length: int
     ) -> Iterable[str]:
-        indentation = token.prepend - token.indentation
+        indentation = len(token.leader) + 1 if self.normalize_whitespace else token.prepend - token.indentation
         max_child_line_length = (
             max_line_length - indentation if max_line_length else None
         )
