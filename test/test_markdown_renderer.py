@@ -7,9 +7,9 @@ from mistletoe.markdown_renderer import MarkdownRenderer
 
 class TestMarkdownRenderer(unittest.TestCase):
     @staticmethod
-    def roundtrip(input):
+    def roundtrip(input, **rendererArgs):
         """Parses the given markdown input and renders it back to markdown again."""
-        with MarkdownRenderer() as renderer:
+        with MarkdownRenderer(**rendererArgs) as renderer:
             return renderer.render(Document(input))
 
     def test_empty_document(self):
@@ -203,6 +203,35 @@ class TestMarkdownRenderer(unittest.TestCase):
         ]
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
+
+    def test_list_item_indentation_after_leader_normalized(self):
+        # leaders followed by 1 to 5 spaces
+        input = [
+            "- 1 space: ok.\n",
+            "  subsequent line.\n",
+            "-  2 spaces: ok.\n",
+            "   subsequent line.\n",
+            "-   3 spaces: ok.\n",
+            "    subsequent line.\n",
+            "-    4 spaces: ok.\n",
+            "     subsequent line.\n",
+            "-     5 spaces: list item starting with indented code.\n",
+            "  subsequent line.\n",
+        ]
+        output = self.roundtrip(input, normalize_whitespace=True)
+        expected = [
+            "- 1 space: ok.\n",
+            "  subsequent line.\n",
+            "- 2 spaces: ok.\n",
+            "  subsequent line.\n",
+            "- 3 spaces: ok.\n",
+            "  subsequent line.\n",
+            "- 4 spaces: ok.\n",
+            "  subsequent line.\n",
+            "-     5 spaces: list item starting with indented code.\n",
+            "  subsequent line.\n",
+        ]
+        self.assertEqual(output, "".join(expected))
 
     def test_code_blocks(self):
         input = [
