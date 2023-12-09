@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import call, patch
 
+from parameterized import parameterized
+
 from mistletoe import block_token, block_tokenizer, span_token
 
 
@@ -375,17 +377,22 @@ class TestTable(unittest.TestCase):
         self.assertEqual(test_func('------:'), 1)
 
     def test_parse_delimiter(self):
-        test_func = block_token.Table.split_delimiter
-        self.assertEqual(list(test_func('| :--- | :---: | ---:|\n')),
-                [':---', ':---:', '---:'])
+        test_func = lambda s : block_token.Table.split_delimiter(s)
+        self.assertEqual(list(test_func('|-| :--- | :---: | ---:|\n')),
+                ['-', ':---', ':---:', '---:'])
 
-    def test_match(self):
+    @parameterized.expand([
+        ('| --- | --- | --- |\n'),
+        ('| - | - | - |\n'),
+        ('|-|-|-- \n'),
+    ])
+    def test_match(self, delimiter_line):
         lines = ['| header 1 | header 2 | header 3 |\n',
-                 '| --- | --- | --- |\n',
+                delimiter_line,
                  '| cell 1 | cell 2 | cell 3 |\n',
                  '| more 1 | more 2 | more 3 |\n']
         with patch('mistletoe.block_token.TableRow') as mock:
-            token = next(iter(block_token.tokenize(lines)))
+            token, = block_token.tokenize(lines)
             self.assertIsInstance(token, block_token.Table)
             self.assertTrue(hasattr(token, 'header'))
             self.assertEqual(token.column_align, [None, None, None])

@@ -676,7 +676,7 @@ class ListItem(BlockToken):
 
 class Table(BlockToken):
     """
-    Table token.
+    Table token. See its GFM definition at <https://github.github.com/gfm/#tables-extension->.
     This is a container block token. Its children are TableRow tokens.
 
     Class attributes:
@@ -690,20 +690,24 @@ class Table(BlockToken):
     repr_attributes = BlockToken.repr_attributes + ("column_align",)
     interrupt_paragraph = True
 
+    _column_align = r':?-+:?'
+    column_align_pattern = re.compile(_column_align)
+    delimiter_row_pattern = re.compile(r'\s*\|?\s*' + _column_align + '\s*(\|\s*' + _column_align + '\s*)*\|?\s*')
+
     def __init__(self, match):
         lines, start_line = match
-        if '---' in lines[1]:
+        # note: the following condition is currently always true, because read() guarantees the presence of the delimiter row
+        if '-' in lines[1]:
             self.column_align = [self.parse_align(column)
                     for column in self.split_delimiter(lines[1])]
             self.header = TableRow(lines[0], self.column_align, start_line)
             self.children = [TableRow(line, self.column_align, start_line + offset) for offset, line in enumerate(lines[2:], start=2)]
         else:
-            # note: not reachable, because read() guarantees the presence of three dashes
             self.column_align = [None]
             self.children = [TableRow(line, line_number=start_line + offset) for offset, line in enumerate(lines)]
 
-    @staticmethod
-    def split_delimiter(delimiter):
+    @classmethod
+    def split_delimiter(cls, delimiter_row):
         """
         Helper function; returns a list of align options.
 
@@ -713,7 +717,7 @@ class Table(BlockToken):
         Returns:
             a list of align options (None, 0 or 1).
         """
-        return re.findall(r':?---+:?', delimiter)
+        return cls.column_align_pattern.findall(delimiter_row)
 
     @staticmethod
     def parse_align(column):
@@ -740,14 +744,14 @@ class Table(BlockToken):
         lines.set_pos(anchor)
         return result
 
-    @staticmethod
-    def read(lines):
+    @classmethod
+    def read(cls, lines):
         anchor = lines.get_pos()
         line_buffer = [next(lines)]
         start_line = lines.line_number()
         while lines.peek() is not None and '|' in lines.peek():
             line_buffer.append(next(lines))
-        if len(line_buffer) < 2 or '---' not in line_buffer[1]:
+        if len(line_buffer) < 2 or not cls.delimiter_row_pattern.fullmatch(line_buffer[1]):
             lines.set_pos(anchor)
             return None
         return line_buffer, start_line
