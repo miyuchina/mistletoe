@@ -1,4 +1,5 @@
 from unittest import TestCase, mock
+from mistletoe import Document
 from mistletoe.html_renderer import HtmlRenderer
 from parameterized import parameterized
 
@@ -150,6 +151,12 @@ class TestHtmlRendererEscaping(TestCase):
                           html_escape_single_quotes=escape_single) as renderer:
             self.assertEqual(renderer.escape_html_text('" and \''), expected)
 
+    def test_unprocessed_html_tokens_escaped(self):
+        with HtmlRenderer(process_html_tokens=False) as renderer:
+            token = Document(['<div><br> as plain text</div>\n'])
+            expected = '<p>&lt;div&gt;&lt;br&gt; as plain text&lt;/div&gt;</p>\n'
+            self.assertEqual(renderer.render(token), expected)
+
 
 class TestHtmlRendererFootnotes(TestCase):
     def setUp(self):
@@ -158,13 +165,11 @@ class TestHtmlRendererFootnotes(TestCase):
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
     def test_footnote_image(self):
-        from mistletoe import Document
         token = Document(['![alt][foo]\n', '\n', '[foo]: bar "title"\n'])
         expected = '<p><img src="bar" alt="alt" title="title" /></p>\n'
         self.assertEqual(self.renderer.render(token), expected)
 
     def test_footnote_link(self):
-        from mistletoe import Document
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         expected = '<p><a href="target">name</a></p>\n' 
         self.assertEqual(self.renderer.render(token), expected)
