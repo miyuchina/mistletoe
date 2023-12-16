@@ -616,6 +616,18 @@ class TestContains(unittest.TestCase):
         self.assertFalse('foo' in token)
 
 
+class TestParent(unittest.TestCase):
+    def test_parent(self):
+        lines = ['# heading\n', '\n', 'paragraph\n']
+        token = block_token.Document(lines)
+        self.assertEqual(len(token.children), 2)
+        self.assertIsNone(token.parent)
+        for child in token.children:
+            self.assertEqual(child.parent, token)
+            for grandchild in child.children:
+                self.assertEqual(grandchild.parent, child)
+
+
 class TestHtmlBlock(unittest.TestCase):
     def setUp(self):
         block_token.add_token(block_token.HtmlBlock)

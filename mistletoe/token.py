@@ -1,3 +1,5 @@
+from typing import Iterable, Optional
+
 """
 Base token class.
 """
@@ -54,7 +56,7 @@ class Token:
             self.__class__.__name__
         )
 
-        if "children" in vars(self):
+        if self.children is not None:
             count = len(self.children)
             if count == 1:
                 output += " with 1 child"
@@ -69,3 +71,28 @@ class Token:
             output += " {}={}".format(attrname, _short_repr(attrvalue))
         output += " at {:#x}>".format(id(self))
         return output
+
+    @property
+    def parent(self) -> Optional['Token']:
+        """Returns the parent token, if there is any."""
+        return getattr(self, '_parent', None)
+
+    @property
+    def children(self) -> Optional[Iterable['Token']]:
+        """
+        Returns the child (nested) tokens.
+        Returns `None` if the token is a leaf token.
+        """
+        return getattr(self, '_children', None)
+
+    @children.setter
+    def children(self, value: Iterable['Token']):
+        """"
+        Sets new child (nested) tokens.
+        Passed tokens are iterated and their ``parent`` property is set to
+        this token.
+        """
+        self._children = value
+        if value:
+            for child in value:
+                child._parent = self

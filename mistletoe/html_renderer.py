@@ -49,7 +49,7 @@ class HtmlRenderer(BaseRenderer):
         super().__exit__(*args)
 
     def render_to_plain(self, token) -> str:
-        if hasattr(token, 'children'):
+        if token.children is not None:
             inner = [self.render_to_plain(child) for child in token.children]
             return ''.join(inner)
         return html.escape(token.content)

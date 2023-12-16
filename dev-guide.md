@@ -22,6 +22,10 @@ In this category you will find tokens like `RawText`, `Link`, and `Emphasis`.
 Block tokens may have block tokens, span tokens, or no tokens at all as children
 in the AST; this depends on the type of token. Span tokens may *only* have span
 tokens as children.
+Every token has properties called `children` and `parent` that can be used
+for traversing the nodes hierarchy.
+
+### Viewing the AST
 
 In order to see what exactly gets parsed, one can simply use the `AstRenderer`
 on a given markdown input, for example:

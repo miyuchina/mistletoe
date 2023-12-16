@@ -71,7 +71,7 @@ class SpanToken(token.Token):
             self.content = match.group(self.parse_group)
 
     def __contains__(self, text):
-        if hasattr(self, 'children'):
+        if self.children is not None:
             return any(text in child for child in self.children)
         return text in self.content
 

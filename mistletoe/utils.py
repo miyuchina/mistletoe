@@ -20,7 +20,7 @@ def traverse(source, klass=None, depth=None, include_source=False):
     current_depth = 0
     if include_source and (klass is None or isinstance(source, klass)):
         yield TraverseResult(source, None, current_depth)
-    next_children = [(source, c) for c in getattr(source, 'children', [])]
+    next_children = [(source, c) for c in source.children or []]
     while next_children and (depth is None or current_depth < depth):
         current_depth += 1
         new_children = []
@@ -28,6 +28,6 @@ def traverse(source, klass=None, depth=None, include_source=False):
             if klass is None or isinstance(child, klass):
                 yield TraverseResult(child, parent, current_depth)
             new_children.extend(
-                [(child, c) for c in getattr(child, 'children', [])]
+                [(child, c) for c in child.children or []]
             )
         next_children = new_children
