@@ -18,14 +18,13 @@ class MathJaxRenderer(HtmlRenderer, LaTeXRenderer):
 
     def render_math(self, token):
         """
-        Convert single dollar sign inline math expressions
-        (not supported by mathjax by default) to \( \) inline math delimiter enclosed 
-        expressions(supported by mathjax), let double dollar signs remain, to be 
-        rendered as blockmath by mathjax.
+        Convert single dollar sign enclosed math environments to the \( \) syntax, to support
+        default mathjax settings which ignore single dollar signs for compatibility. 
+        https://docs.mathjax.org/en/latest/basic/mathematics.html#tex-and-latex-input
         """
         if token.content.startswith('$$'): 
             return self.render_raw_text(token)
-        return '\({}\)'.format(self.render_raw_text(token).strip('$'))
+        return '\\({}\\)'.format(self.render_raw_text(token).strip('$'))
 
     def render_document(self, token):
         """

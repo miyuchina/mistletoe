@@ -15,9 +15,9 @@ class TestMathJaxRenderer(unittest.TestCase):
 
     def test_render_math(self):
         with MathJaxRenderer() as renderer:
-            raw = ['# heading 1\n', '$$paragraph$$\n', 'with $ math $\n']
+            raw = ['# heading 1\n', '$$\sum\limits_{i=1}^{\infty} \frac{1}{i^p}$$\n', 'with $  x_3 2^{x}  $\n']
             token = Document(raw)
             output = renderer.render(token)
-            target = '<h1>heading 1</h1>\n<p>$$paragraph$$\nwith $$ math $$</p>\n'
+            target = '<h1>heading 1</h1>\n<p>$$\sum\limits_{i=1}^{\infty} \frac{1}{i^p}$$\nwith \(  x_3 2^{x}  \)</p>\n'
             target += self.mathjax_src
             self.assertEqual(output, target)
