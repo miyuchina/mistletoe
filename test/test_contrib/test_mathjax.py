@@ -2,6 +2,7 @@ import unittest
 from mistletoe import Document
 from mistletoe.contrib.mathjax import MathJaxRenderer
 
+
 class TestMathJaxRenderer(unittest.TestCase):
     mathjax_src = '<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>\n'
 

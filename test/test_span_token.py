@@ -69,12 +69,15 @@ class TestInlineCode(TestBranchToken):
 
     def test_parse(self):
         self._test_parse(span_token.InlineCode, '`some text`', 'some text')
+
     def test_parse_in_bold(self):
         self._test_parse_enclosed(span_token.Strong, '**')
         self._test_parse_enclosed(span_token.Strong, '__')
+
     def test_parse_in_emphasis(self):
         self._test_parse_enclosed(span_token.Emphasis, '*')
         self._test_parse_enclosed(span_token.Emphasis, '_')
+
     def test_parse_in_strikethrough(self):
         self._test_parse_enclosed(span_token.Strikethrough, '~~')
 

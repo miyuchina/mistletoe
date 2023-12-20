@@ -38,7 +38,7 @@ def find_core_tokens(string, root):
     while i < len(string):
         if code_match is not None and i == code_match.start():
             if in_delimiter_run is not None:
-                delimiters.append(Delimiter(start, i if not escaped else i-1, string))
+                delimiters.append(Delimiter(start, i if not escaped else i - 1, string))
                 in_delimiter_run = None
                 escaped = False
             _code_matches.append(code_match)
@@ -51,7 +51,7 @@ def find_core_tokens(string, root):
             i += 1
             continue
         if in_delimiter_run is not None and (c != in_delimiter_run or escaped):
-            delimiters.append(Delimiter(start, i if not escaped else i-1, string))
+            delimiters.append(Delimiter(start, i if not escaped else i - 1, string))
             in_delimiter_run = None
         if in_delimiter_run is None and (c == '*' or c == '_') and not escaped:
             in_delimiter_run = c
@@ -59,9 +59,9 @@ def find_core_tokens(string, root):
         if not escaped:
             if c == '[':
                 if not in_image:
-                    delimiters.append(Delimiter(i, i+1, string))
+                    delimiters.append(Delimiter(i, i + 1, string))
                 else:
-                    delimiters.append(Delimiter(i-1, i+1, string))
+                    delimiters.append(Delimiter(i - 1, i + 1, string))
                     in_image = False
             elif c == '!':
                 in_image = True
@@ -121,12 +121,12 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
             n = 2 if closer.number >= 2 and opener.number >= 2 else 1
             start = opener.end - n
             end = closer.start + n
-            match = MatchObj(start, end, (start+n, end-n, string[start+n:end-n]))
+            match = MatchObj(start, end, (start + n, end - n, string[start + n:end - n]))
             match.type = 'Strong' if n == 2 else 'Emphasis'
             match.delimiter = string[start]
             matches.append(match)
             # remove all delimiters in between
-            del delimiters[open_pos+1:curr_pos]
+            del delimiters[open_pos + 1:curr_pos]
             curr_pos -= curr_pos - open_pos - 1
             # remove appropriate number of chars from delimiters
             if not opener.remove(n, left=False):
@@ -160,7 +160,7 @@ def match_link_image(string, offset, delimiter, root=None):
     # inline link
     if follows(string, offset, '('):
         # link destination
-        match_info = match_link_dest(string, offset+1)
+        match_info = match_link_dest(string, offset + 1)
         if match_info is not None:
             dest_start, dest_end, dest = match_info
             # link title
@@ -182,7 +182,7 @@ def match_link_image(string, offset, delimiter, root=None):
     # footnote link
     if follows(string, offset, '['):
         # full footnote link: [label][dest]
-        result = match_link_label(string, offset+1, root)
+        result = match_link_label(string, offset + 1, root)
         if result:
             match_info, (dest, title) = result
             end = match_info[1]
@@ -197,7 +197,7 @@ def match_link_image(string, offset, delimiter, root=None):
         ref = get_link_label(text, root)
         if ref:
             # compact (collapsed) footnote link: [dest][]
-            if follows(string, offset+1, ']'):
+            if follows(string, offset + 1, ']'):
                 dest, title = ref
                 end = offset + 3
                 match = MatchObj(start, end,
@@ -224,18 +224,18 @@ def match_link_image(string, offset, delimiter, root=None):
 
 
 def match_link_dest(string, offset):
-    offset = shift_whitespace(string, offset+1)
+    offset = shift_whitespace(string, offset + 1)
     if offset == len(string):
         return None
     if string[offset] == '<':
         escaped = False
-        for i, c in enumerate(string[offset+1:], start=offset+1):
+        for i, c in enumerate(string[offset + 1:], start=offset + 1):
             if c == '\\' and not escaped:
                 escaped = True
             elif c == '\n' or (c == '<' and not escaped):
                 return None
             elif c == '>' and not escaped:
-                return offset, i+1, string[offset+1:i]
+                return offset, i + 1, string[offset + 1:i]
             elif escaped:
                 escaped = False
         return None
@@ -276,11 +276,11 @@ def match_link_title(string, offset):
     else:
         return None
     escaped = False
-    for i, c in enumerate(string[offset+1:], start=offset+1):
+    for i, c in enumerate(string[offset + 1:], start=offset + 1):
         if c == '\\' and not escaped:
             escaped = True
         elif c == closing and not escaped:
-            return offset, i+1, string[offset+1:i]
+            return offset, i + 1, string[offset + 1:i]
         elif escaped:
             escaped = False
     return None
@@ -300,8 +300,8 @@ def match_link_label(string, offset, root=None):
                 return None
         elif c == ']' and not escaped:
             end = i
-            label = string[start+1:end]
-            match_info = start, end+1, label
+            label = string[start + 1:end]
+            match_info = start, end + 1, label
             if label.strip() != '':
                 ref = root.footnotes.get(normalize_label(label), None)
                 if ref is not None:
@@ -348,7 +348,7 @@ def matching_opener(curr_pos, delimiters, bottom):
     if curr_pos > 0:
         curr_delimiter = delimiters[curr_pos]
         index = curr_pos - 1
-        for delimiter in delimiters[curr_pos-1:bottom:-1]:
+        for delimiter in delimiters[curr_pos - 1:bottom:-1]:
             if (hasattr(delimiter, 'open')
                     and delimiter.open
                     and delimiter.closed_by(curr_delimiter)):
@@ -390,7 +390,7 @@ def is_right_delimiter(start, end, string):
 
 
 def preceded_by(start, string, charset):
-    preceding_char = string[start-1] if start > 0 else ' '
+    preceding_char = string[start - 1] if start > 0 else ' '
     return preceding_char in charset
 
 
@@ -404,7 +404,7 @@ def is_control_char(char):
 
 
 def follows(string, index, char):
-    return index + 1 < len(string) and string[index+1] == char
+    return index + 1 < len(string) and string[index + 1] == char
 
 
 def shift_whitespace(string, index):
@@ -471,17 +471,17 @@ class MatchObj:
     def start(self, n=0):
         if n == 0:
             return self._start
-        return self.fields[n-1][0]
+        return self.fields[n - 1][0]
 
     def end(self, n=0):
         if n == 0:
             return self._end
-        return self.fields[n-1][1]
+        return self.fields[n - 1][1]
 
     def group(self, n=0):
         if n == 0:
             return ''.join([field[2] for field in self.fields])
-        return self.fields[n-1][2]
+        return self.fields[n - 1][2]
 
     def __repr__(self):
         return '<MatchObj fields={} start={} end={}>'.format(self.fields, self._start, self._end)

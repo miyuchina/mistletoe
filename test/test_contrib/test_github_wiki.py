@@ -28,4 +28,3 @@ class TestGithubWiki(TestCase):
         token = next(iter(tokenize_inner('[[wiki|target]]')))
         output = '<a href="target">wiki</a>'
         self.assertEqual(self.renderer.render(token), output)
-

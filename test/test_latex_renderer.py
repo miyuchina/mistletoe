@@ -53,16 +53,16 @@ class TestLaTeXRenderer(TestCase):
 
     @parameterized.expand([
         ('page', '\\href{page}{inner}'),
-        ('page%3A+with%3A+escape', '\\href{page\%3A+with\%3A+escape}{inner}'),
-        ('page#target', '\\href{page\#target}{inner}')
+        ('page%3A+with%3A+escape', '\\href{page\\%3A+with\\%3A+escape}{inner}'),
+        ('page#target', '\\href{page\\#target}{inner}')
     ])
     def test_link(self, target, expected):
         self._test_token('Link', expected, target=target)
 
     @parameterized.expand([
         ('page', '\\url{page}'),
-        ('page%3A+with%3A+escape', '\\url{page\%3A+with\%3A+escape}'),
-        ('page#target', '\\url{page\#target}')
+        ('page%3A+with%3A+escape', '\\url{page\\%3A+with\\%3A+escape}'),
+        ('page#target', '\\url{page\\#target}')
     ])
     def test_autolink(self, target, expected):
         self._test_token('AutoLink', expected, target=target)

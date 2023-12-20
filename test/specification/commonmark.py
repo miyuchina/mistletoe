@@ -11,6 +11,7 @@ KNOWN = []
 Examples (their numbers) from the specification which are known to fail in mistletoe.
 """
 
+
 def run_tests(test_entries, start=None, end=None,
               quiet=False, verbose=False, known=False):
     if known:
@@ -81,7 +82,6 @@ def print_test_entry(test_entry, output, fout=sys.stdout):
     print(file=fout)
 
 
-
 def print_failure_in_sections(results):
     section = results[0][1]
     failed = 0
@@ -124,12 +124,12 @@ def main():
                         help="Ignore tests entries that are known to fail.")
     args = parser.parse_args()
 
-    start   = args.start
-    end     = args.end
+    start = args.start
+    end = args.end
     verbose = args.verbose
-    quiet   = args.quiet
-    tests   = args.tests
-    known   = args.known
+    quiet = args.quiet
+    tests = args.tests
+    known = args.known
     if args.section is not None:
         start, end = locate_section(args.section, tests)
 
@@ -139,4 +139,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

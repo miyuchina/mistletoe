@@ -384,7 +384,7 @@ class MarkdownRenderer(BaseRenderer):
         """
         Renders a sequence of block tokens into a sequence of lines.
         """
-        for token in tokens:
+        for token in tokens:  # noqa: F402
             yield from self.render_map[token.__class__.__name__](
                 token, max_line_length=max_line_length
             )

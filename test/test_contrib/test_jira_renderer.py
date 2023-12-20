@@ -28,6 +28,7 @@ import string
 
 filesBasedTest = BaseRendererTest.filesBasedTest
 
+
 class TestJiraRenderer(BaseRendererTest):
 
     def setUp(self):
@@ -41,7 +42,7 @@ class TestJiraRenderer(BaseRendererTest):
         source = string.ascii_letters + string.digits
         if hasWhitespace:
             source = source + ' \t'
-        
+
         result = ''.join(random.SystemRandom().choice(source) for _ in range(n))
         return result
 
@@ -54,13 +55,13 @@ class TestJiraRenderer(BaseRendererTest):
 
     def test_escape_simple(self):
         self.textFormatTest('---fancy text---', '\\-\\-\\-fancy text\\-\\-\\-')
-        
+
     def test_escape_single_chars(self):
         self.textFormatTest('**fancy \\*@\\* text**', '*fancy \\*@\\* text*')
-        
+
     def test_escape_none_when_whitespaces(self):
         self.textFormatTest('obj = {{ a: (b * c) + d }}', 'obj = {{ a: (b * c) + d }}')
-        
+
     def test_escape_in_inline_code(self):
         # Note: Jira puts inline code into "{{...}}" as seen in this test.
         self.textFormatTest('**code: `a = b + c;// [1]`**',
@@ -69,13 +70,13 @@ class TestJiraRenderer(BaseRendererTest):
     def test_escape_link(self):
         # Note: There seems to be no way of how to escape plain text URL in Jira.
         self.textFormatTest('http://www.example.com', 'http://www.example.com')
-        
+
     def test_render_strong(self):
         self.textFormatTest('**a{}**', '*a{}*')
 
     def test_render_emphasis(self):
         self.textFormatTest('*a{}*', '_a{}_')
-        
+
     def test_render_inline_code(self):
         self.textFormatTest('`a{}b`', '{{{{a{}b}}}}')
 
@@ -87,7 +88,7 @@ class TestJiraRenderer(BaseRendererTest):
         output = self.renderer.render(token)
         expected = '!foo.jpg!'
         self.assertEqual(output, expected)
-    
+
     def test_render_footnote_image(self):
         # token = next(tokenize_inner('![image]\n\n[image]: foo.jpg'))
         # output = self.renderer.render(token)
@@ -111,7 +112,7 @@ class TestJiraRenderer(BaseRendererTest):
         output = self.renderer.render(token)
         expected = '[{body}|{url}|{title}]'.format(url=url, body=body, title=title)
         self.assertEqual(output, expected)
-    
+
     def test_render_footnote_link(self):
         pass
 
@@ -121,7 +122,7 @@ class TestJiraRenderer(BaseRendererTest):
         output = self.renderer.render(token)
         expected = '[{url}]'.format(url=url)
         self.assertEqual(output, expected)
-        
+
     def test_render_escape_sequence(self):
         pass
 
@@ -130,7 +131,7 @@ class TestJiraRenderer(BaseRendererTest):
 
     def test_render_heading(self):
         pass
-        
+
     def test_render_quote(self):
         pass
 

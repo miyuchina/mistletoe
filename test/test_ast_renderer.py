@@ -1,5 +1,6 @@
 import unittest
-from mistletoe import Document, ast_renderer 
+from mistletoe import Document, ast_renderer
+
 
 class TestAstRenderer(unittest.TestCase):
     def test(self):
@@ -36,7 +37,7 @@ class TestAstRenderer(unittest.TestCase):
                           'type': 'RawText',
                           'content': 'world'
                       }]
-                 }]}
+                  }]}
         self.assertEqual(output, expected)
 
     def test_footnotes(self):
@@ -61,7 +62,7 @@ class TestAstRenderer(unittest.TestCase):
                               'content': 'bar'
                           }]
                       }]
-                 }]}
+                  }]}
         output = ast_renderer.get_ast(d)
         self.assertEqual(output, expected)
 
@@ -91,14 +92,15 @@ class TestAstRenderer(unittest.TestCase):
                         "children": [{
                             "type": "RawText",
                             "content": "A",
-                    }]}, {
+                        }]}, {
                         "type": "TableCell",
                         "align": None,
                         'line_number': 1,
                         "children": [{
                             "type": "RawText",
                             "content": "B",
-                    }]}],
+                        }]
+                    }],
                 },
                 "children": [{
                     "type": "TableRow",
@@ -111,14 +113,15 @@ class TestAstRenderer(unittest.TestCase):
                         "children": [{
                             "type": "RawText",
                             "content": "1",
-                    }]}, {
+                        }]}, {
                         "type": "TableCell",
                         "align": None,
                         'line_number': 3,
                         "children": [{
                             "type": "RawText",
                             "content": "2",
-                    }]}],
+                        }]
+                    }],
                 }],
             }],
         }

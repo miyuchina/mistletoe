@@ -141,10 +141,11 @@ class LaTeXRenderer(BaseRenderer):
             head_template = '{inner}\\hline\n'
             head_inner = self.render_table_row(token.header)
             head_rendered = head_template.format(inner=head_inner)
-        else: head_rendered = ''
+        else:
+            head_rendered = ''
         inner = self.render_inner(token)
         align = render_align(token.column_align)
-        return template.format(inner=head_rendered+inner, align=align)
+        return template.format(inner=head_rendered + inner, align=align)
 
     def render_table_row(self, token):
         cells = [self.render(child) for child in token.children]
