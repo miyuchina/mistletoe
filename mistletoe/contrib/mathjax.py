@@ -18,11 +18,11 @@ class MathJaxRenderer(HtmlRenderer, LaTeXRenderer):
 
     def render_math(self, token):
         """
-        Convert single dollar sign enclosed math environments to the \( \) syntax, to support
-        default mathjax settings which ignore single dollar signs for compatibility. 
-        https://docs.mathjax.org/en/latest/basic/mathematics.html#tex-and-latex-input
+        Convert single dollar sign enclosed math expressions to the ``\(...\)`` syntax, to support
+        the default MathJax settings which ignore single dollar signs as described at
+        https://docs.mathjax.org/en/latest/basic/mathematics.html#tex-and-latex-input.
         """
-        if token.content.startswith('$$'): 
+        if token.content.startswith('$$'):
             return self.render_raw_text(token)
         return '\\({}\\)'.format(self.render_raw_text(token).strip('$'))
 
