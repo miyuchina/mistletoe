@@ -3,6 +3,7 @@ from mistletoe import block_token
 from mistletoe.block_token import Document, Heading
 from mistletoe.contrib.toc_renderer import TocRenderer
 
+
 class TestTocRenderer(TestCase):
     def test_parse_rendered_heading(self):
         rendered_heading = '<h3>some <em>text</em></h3>'
@@ -52,7 +53,8 @@ class TestTocRenderer(TestCase):
         renderer._headings = headings
         toc = renderer.toc
         self.assertIsInstance(toc, block_token.List)
-        # for now, we check at least the most nested heading (hierarchy: `List -> ListItem -> {Paragraph -> RawText.content | List -> ...}`):
+        # for now, we check at least the most nested heading
+        # (hierarchy: `List -> ListItem -> {Paragraph -> RawText.content | List -> ...}`):
         heading_item = toc.children[0].children[1].children[1].children[1].children[0]
         self.assertIsInstance(heading_item, block_token.ListItem)
         self.assertEqual(heading_item.children[0].children[0].content, 'subsubheading 1')

@@ -356,9 +356,10 @@ class BlockCode(BlockToken):
         language (str): always the empty string.
     """
     repr_attributes = BlockToken.repr_attributes + ("language",)
+
     def __init__(self, lines):
         self.language = ''
-        self.children = (span_token.RawText(''.join(lines).strip('\n')+'\n'),)
+        self.children = (span_token.RawText(''.join(lines).strip('\n') + '\n'),)
 
     @property
     def content(self):
@@ -393,13 +394,13 @@ class BlockCode(BlockToken):
         count = 0
         for i, c in enumerate(string):
             if c == '\t':
-                return string[i+1:]
+                return string[i + 1:]
             elif c == ' ':
                 count += 1
             else:
                 break
             if count == 4:
-                return string[i+1:]
+                return string[i + 1:]
         return string
 
 
@@ -473,6 +474,7 @@ class List(BlockToken):
     """
     repr_attributes = BlockToken.repr_attributes + ("loose", "start")
     pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
+
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
         self.loose = any(item.loose for item in self.children)
@@ -692,7 +694,7 @@ class Table(BlockToken):
 
     _column_align = r':?-+:?'
     column_align_pattern = re.compile(_column_align)
-    delimiter_row_pattern = re.compile(r'\s*\|?\s*' + _column_align + '\s*(\|\s*' + _column_align + '\s*)*\|?\s*')
+    delimiter_row_pattern = re.compile(r'\s*\|?\s*' + _column_align + r'\s*(\|\s*' + _column_align + r'\s*)*\|?\s*')
 
     def __init__(self, match):
         lines, start_line = match
@@ -792,6 +794,7 @@ class TableCell(BlockToken):
         align (bool): align option for current cell (default to None).
     """
     repr_attributes = BlockToken.repr_attributes + ("align",)
+
     def __init__(self, content, align=None, line_number=None):
         self.align = align
         self.line_number = line_number
@@ -844,7 +847,7 @@ class Footnote(BlockToken):
         _, label_end, label = match_info
 
         # ":"
-        if not follows(string, label_end-1, ':'):
+        if not follows(string, label_end - 1, ':'):
             return None
 
         # optional spaces or tabs (including up to one line ending)
@@ -918,9 +921,9 @@ class Footnote(BlockToken):
                 else:
                     return None
             elif c == ']':
-                label = string[start+1:i]
+                label = string[start + 1:i]
                 if label.strip() != '':
-                    return start, i+1, label
+                    return start, i + 1, label
                 return None
             # only spaces allowed before the opening bracket
             if start == -1 and not (c == " " and i - offset < 3):
@@ -931,13 +934,13 @@ class Footnote(BlockToken):
     def match_link_dest(cls, string, offset):
         if string[offset] == '<':
             escaped = False
-            for i, c in enumerate(string[offset+1:], start=offset+1):
+            for i, c in enumerate(string[offset + 1:], start=offset + 1):
                 if c == '\\' and not escaped:
                     escaped = True
                 elif c == '\n' or (c == '<' and not escaped):
                     return None
                 elif c == '>' and not escaped:
-                    return offset, i+1, string[offset+1:i]
+                    return offset, i + 1, string[offset + 1:i]
                 elif escaped:
                     escaped = False
             return None
@@ -975,11 +978,11 @@ class Footnote(BlockToken):
         else:
             return None
         escaped = False
-        for i, c in enumerate(string[offset+1:], start=offset+1):
+        for i, c in enumerate(string[offset + 1:], start=offset + 1):
             if c == '\\' and not escaped:
                 escaped = True
             elif c == closing and not escaped:
-                return offset, i+1, string[offset+1:i]
+                return offset, i + 1, string[offset + 1:i]
             elif escaped:
                 escaped = False
         return None
@@ -1104,4 +1107,3 @@ Deprecated name of the `HtmlBlock` class.
 
 _token_types = []
 reset_tokens()
-

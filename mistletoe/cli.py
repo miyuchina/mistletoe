@@ -80,7 +80,7 @@ def _import(arg):
 
 def _import_readline():
     try:
-        import readline
+        import readline  # noqa: F401
     except ImportError:
         print('[warning] readline library not available.')
 
@@ -90,4 +90,3 @@ def _print_heading(renderer):
     print('Type Ctrl-D to complete input, or Ctrl-C to exit.')
     if renderer is not mistletoe.HtmlRenderer:
         print('Using renderer: {}'.format(renderer.__name__))
-

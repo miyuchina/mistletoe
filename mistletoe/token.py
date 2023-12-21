@@ -20,7 +20,7 @@ def _short_repr(value):
         chars = len(value)
         threshold = 30
         if chars > threshold:
-            return "{0!r}...+{1}".format(value[:threshold], chars-threshold)
+            return "{0!r}...+{1}".format(value[:threshold], chars - threshold)
     return repr(value)
 
 
@@ -62,7 +62,7 @@ class Token:
                 output += " with {} children".format(count)
 
         if "content" in vars(self):
-           output += " content=" + _short_repr(self.content)
+            output += " content=" + _short_repr(self.content)
 
         for attrname in self.repr_attributes:
             attrvalue = getattr(self, attrname)

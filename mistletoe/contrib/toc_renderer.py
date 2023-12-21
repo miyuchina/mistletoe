@@ -8,6 +8,7 @@ import re
 from mistletoe.html_renderer import HtmlRenderer
 from mistletoe import block_token
 
+
 class TocRenderer(HtmlRenderer):
     """
     Extends HtmlRenderer class for table of contents support.
@@ -47,7 +48,6 @@ class TocRenderer(HtmlRenderer):
         lines = [build_list_item(heading) for heading in self._headings]
         items = block_token.tokenize(lines)
         return items[0]
-
 
     def render_heading(self, token):
         """

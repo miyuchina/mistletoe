@@ -3,6 +3,7 @@ from mistletoe import Document
 from mistletoe.html_renderer import HtmlRenderer
 from parameterized import parameterized
 
+
 class TestRenderer(TestCase):
     def setUp(self):
         self.renderer = HtmlRenderer()
@@ -115,11 +116,11 @@ class TestHtmlRenderer(TestRenderer):
     def test_table_cell(self):
         expected = '<td align="left">inner</td>\n'
         self._test_token('TableCell', expected, align=None)
-        
+
     def test_table_cell0(self):
         expected = '<td align="center">inner</td>\n'
         self._test_token('TableCell', expected, align=0)
-        
+
     def test_table_cell1(self):
         expected = '<td align="right">inner</td>\n'
         self._test_token('TableCell', expected, align=1)
@@ -171,5 +172,5 @@ class TestHtmlRendererFootnotes(TestCase):
 
     def test_footnote_link(self):
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
-        expected = '<p><a href="target">name</a></p>\n' 
+        expected = '<p><a href="target">name</a></p>\n'
         self.assertEqual(self.renderer.render(token), expected)

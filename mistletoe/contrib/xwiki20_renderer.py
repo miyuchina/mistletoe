@@ -2,6 +2,7 @@ from itertools import chain
 from mistletoe import block_token, span_token
 from mistletoe.base_renderer import BaseRenderer
 
+
 class XWiki20Renderer(BaseRenderer):
     """
     XWiki syntax 2.0 renderer class.
@@ -60,7 +61,7 @@ class XWiki20Renderer(BaseRenderer):
     def render_raw_text(self, token, escape=True):
         return (token.content.replace('~', '~~')
                 # Note: It's probably better to leave potential XWiki macros as-is, i. e. don't escape their markers:
-                #.replace('{{', '~{{').replace('}}', '~}}')
+                # .replace('{{', '~{{').replace('}}', '~}}')
                 .replace('[[', '~[[').replace(']]', '~]]')
                 .replace('**', '~**').replace('//', '~//')
                 .replace('##', '~##').replace('--', '~--')
@@ -68,17 +69,17 @@ class XWiki20Renderer(BaseRenderer):
 
     def render_x_wiki_block_macro_start(self, token):
         return token.content + '\n'
-    
+
     def render_x_wiki_block_macro_end(self, token):
         return '\n' + token.content
-    
+
     def render_html_span(self, token):
         # XXX: HtmlSpan parses (contains) only individual opening and closing tags
         # => no easy way to wrap the whole HTML code into {{html}} like this:
-        # 
+        #
         # template = '{{{{html wiki="true"}}}}{}{{{{/html}}}}'
         # return template.format(token.content)
-        # 
+        #
         # => Users must do this themselves after the conversion.
 
         return token.content
@@ -97,19 +98,28 @@ class XWiki20Renderer(BaseRenderer):
         inner = self.render_inner(token)
         del (self.lastChildOfQuotes[-1])
 
-        return (''.join(map(lambda line: '>{}{}'.format('' if line.startswith('>') else ' ', line), inner.splitlines(keepends=True)))
-                + self._block_eol(token)[0:-1])
+        return (
+            "".join(
+                map(
+                    lambda line: ">{}{}".format(
+                        "" if line.startswith(">") else " ", line
+                    ),
+                    inner.splitlines(keepends=True),
+                )
+            )
+            + self._block_eol(token)[0:-1]
+        )
 
     def render_paragraph(self, token):
         return '{}'.format(self.render_inner(token)) + self._block_eol(token)
-    
+
     def render_block_code(self, token):
         template = '{{{{code{attr}}}}}\n{inner}{{{{/code}}}}' + self._block_eol(token)
         if token.language:
             attr = ' language="{}"'.format(token.language)
         else:
             attr = ''
-            
+
         inner = self.render_raw_text(token.children[0], False)
         return template.format(attr=attr, inner=inner)
 
@@ -126,11 +136,11 @@ class XWiki20Renderer(BaseRenderer):
         self.firstChildOfListItems.append(token.children[0])
         inner = self.render_inner(token)
         del (self.firstChildOfListItems[-1])
-        
+
         result = template.format(prefix=prefix, inner=inner.rstrip())
-        
+
         return result
-        
+
     def render_inner(self, token):
         if isinstance(token, block_token.List):
             if token.start:
@@ -156,10 +166,9 @@ class XWiki20Renderer(BaseRenderer):
 
         if isinstance(token, block_token.List):
             del (self.listTokens[-1])
-        
+
         return (''.join(rendered) if not wrap
                 else '{head}(((\n{tail}\n)))\n'.format(head=rendered[0].rstrip(), tail=''.join(rendered[1:]).rstrip()))
-        
 
     def render_table(self, token):
         # Copied from JiraRenderer...
@@ -174,21 +183,21 @@ class XWiki20Renderer(BaseRenderer):
             header = token.header
             head_inner = self.render_table_row(header, True)
             head_rendered = head_template.format(inner=head_inner)
-             
+
         else:
             head_rendered = ''
-            
+
         body_template = '{inner}'
         body_inner = self.render_inner(token)
         body_rendered = body_template.format(inner=body_inner)
-        return template.format(inner=head_rendered+body_rendered)
+        return template.format(inner=head_rendered + body_rendered)
 
     def render_table_row(self, token, is_header=False):
         if is_header:
             template = '{inner}\n'
         else:
             template = '{inner}\n'
-            
+
         inner = ''.join([self.render_table_cell(child, is_header)
                          for child in token.children])
 
@@ -199,7 +208,7 @@ class XWiki20Renderer(BaseRenderer):
             template = '|={inner}'
         else:
             template = '|{inner}'
-        
+
         inner = self.render_inner(token)
         return template.format(inner=inner)
 
@@ -218,6 +227,7 @@ class XWiki20Renderer(BaseRenderer):
     def _block_eol(self, token):
         return ('\n' if ((len(self.firstChildOfListItems) > 0 and token is self.firstChildOfListItems[-1])
                 or (len(self.lastChildOfQuotes) > 0 and token is self.lastChildOfQuotes[-1])) else '\n\n')
+
 
 def escape_url(raw):
     """

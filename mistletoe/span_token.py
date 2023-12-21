@@ -86,6 +86,7 @@ class CoreTokens(SpanToken):
     Replaced with objects of the proper classes in the final stage of parsing.
     """
     precedence = 3
+
     def __new__(self, match):
         return globals()[match.type](match)
 
@@ -159,6 +160,7 @@ class Image(SpanToken):
         label (str): link label, for reference links.
     """
     repr_attributes = ("src", "title")
+
     def __init__(self, match):
         self.src = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
@@ -179,6 +181,7 @@ class Link(SpanToken):
         label (str): link label, for reference links.
     """
     repr_attributes = ("target", "title")
+
     def __init__(self, match):
         self.target = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
@@ -268,15 +271,15 @@ _tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
         'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'title', 'tr', 'track',
         'ul'}
 
-_tag   = r'[A-Za-z][A-Za-z0-9-]*'
+_tag   = r'[A-Za-z][A-Za-z0-9-]*'  # noqa: E221
 _attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^\s"\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 
-_open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'
+_open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'  # noqa: E221
 _closing_tag = r'(?<!\\)</' + _tag + r'\s*>'
-_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'
+_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'  # noqa: E221
 _instruction = r'(?<!\\)<\?.+?\?>'
 _declaration = r'(?<!\\)<![A-Z].+?>'
-_cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'
+_cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'  # noqa: E221
 
 
 class HtmlSpan(SpanToken):
@@ -304,23 +307,25 @@ Deprecated name of the `HtmlSpan` class.
 
 class XWikiBlockMacroStart(SpanToken):
     """
-    A "block" macro opening tag. ("{{macroName<optionalParams>}}<newLine>") 
-    
+    A "block" macro opening tag. ("{{macroName<optionalParams>}}<newLine>")
+
     We want to keep it on a separate line instead of "soft" merging it with the *following* line.
     """
     pattern = re.compile(r'(?<!\\)(\{\{\w+.*?(?<![\\/])\}\})\s*\n')
     parse_inner = False
     parse_group = 1
 
+
 class XWikiBlockMacroEnd(SpanToken):
     """
-    A "block" macro closing tag. ("<onlySpacesAllowed>{{/macroName}}") 
-    
+    A "block" macro closing tag. ("<onlySpacesAllowed>{{/macroName}}")
+
     We want to keep it on a separate line instead of "soft" merging it with the *preceding* line.
     """
     pattern = re.compile(r'^(?:\s*)(\{\{/\w+\}\})', re.MULTILINE)
     parse_inner = False
     parse_group = 1
+
 
 _token_types = []
 reset_tokens()

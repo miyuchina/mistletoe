@@ -47,4 +47,3 @@ def build(files=None):
                 with DocRenderer() as renderer:
                     renderer.files = files
                     print(renderer.render_document(Document(fin), f), file=fout)
-

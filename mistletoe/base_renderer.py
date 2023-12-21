@@ -5,6 +5,7 @@ Base class for renderers.
 import re
 from mistletoe import block_token, span_token
 
+
 class BaseRenderer(object):
     """
     Base class for renderers.
@@ -67,7 +68,7 @@ class BaseRenderer(object):
             'ThematicBreak':  self.render_thematic_break,
             'LineBreak':      self.render_line_break,
             'Document':       self.render_document,
-            }
+        }
         self._extras = extras
 
         for token in extras:

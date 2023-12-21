@@ -6,6 +6,7 @@ import string
 
 filesBasedTest = BaseRendererTest.filesBasedTest
 
+
 class TestXWiki20Renderer(BaseRendererTest):
 
     def setUp(self):
@@ -19,7 +20,7 @@ class TestXWiki20Renderer(BaseRendererTest):
         source = string.ascii_letters + string.digits
         if hasWhitespace:
             source = source + ' \t'
-        
+
         result = ''.join(random.SystemRandom().choice(source) for _ in range(n))
         return result
 
@@ -39,7 +40,7 @@ class TestXWiki20Renderer(BaseRendererTest):
 
     def test_render_emphasis(self):
         self.textFormatTest('*a{}*', '//a{}//')
-        
+
     def test_render_inline_code(self):
         self.textFormatTest('`a{}b`', '{{{{code}}}}a{}b{{{{/code}}}}')
 
@@ -51,7 +52,7 @@ class TestXWiki20Renderer(BaseRendererTest):
         output = self.renderer.render(token)
         expected = '[[image:foo.jpg]]'
         self.assertEqual(output, expected)
-    
+
     def test_render_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         body = self.genRandomString(80, True)
@@ -59,7 +60,7 @@ class TestXWiki20Renderer(BaseRendererTest):
         output = self.renderer.render(token)
         expected = '[[{body}>>{url}]]'.format(url=url, body=body)
         self.assertEqual(output, expected)
-    
+
     def test_render_auto_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         token = next(iter(tokenize_inner('<{url}>'.format(url=url))))
@@ -73,12 +74,12 @@ class TestXWiki20Renderer(BaseRendererTest):
         # expected = 'text styles: {{html wiki="true"}}<i>italic</i>{{/html}}, {{html wiki="true"}}<b>bold</b>{{/html}}\n\n'
         expected = 'text styles: <i>italic</i>, <b>bold</b>\n\n'
         self.markdownResultTest(markdown, expected)
-    
+
     def test_render_html_block(self):
         markdown = 'paragraph\n\n<pre>some <i>cool</i> code</pre>'
         expected = 'paragraph\n\n{{html wiki="true"}}\n<pre>some <i>cool</i> code</pre>\n{{/html}}\n\n'
         self.markdownResultTest(markdown, expected)
-    
+
     def test_render_xwiki_macros_simple(self):
         markdown = """\
 {{warning}}
@@ -93,7 +94,7 @@ Use this feature with //caution//. See {{Wikipedia article="SomeArticle"/}}. {{t
 
 """
         self.markdownResultTest(markdown, expected)
-    
+
     def test_render_xwiki_macros_in_list(self):
         markdown = """\
 * list item
@@ -112,7 +113,7 @@ Use this feature with //caution//. See {{Wikipedia article="SomeArticle"/}}. {{t
 
 """
         self.markdownResultTest(markdown, expected)
-    
+
     @filesBasedTest
     def test_render__basic_blocks(self):
         pass

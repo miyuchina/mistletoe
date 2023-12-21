@@ -5,13 +5,14 @@ Base classes for tests.
 from unittest import TestCase
 from mistletoe.block_token import Document
 
+
 class BaseRendererTest(TestCase):
     """
     Base class for tests of renderers.
     """
     def setUp(self):
         self.maxDiff = None
-    
+
     def markdownResultTest(self, markdown, expected):
         output = self.renderer.render(Document(markdown))
         self.assertEqual(output, expected)
@@ -42,4 +43,3 @@ class BaseRendererTest(TestCase):
 
                 self.assertEqual(output, expected)
         return wrapper
-    

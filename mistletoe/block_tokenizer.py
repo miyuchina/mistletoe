@@ -20,7 +20,7 @@ class FileWrapper:
         return self
 
     def __repr__(self):
-        return repr(self.lines[self._index+1:])
+        return repr(self.lines[self._index + 1:])
 
     def get_pos(self):
         """Returns the current reading position.
@@ -41,7 +41,7 @@ class FileWrapper:
 
     def peek(self):
         if self._index + 1 < len(self.lines):
-            return self.lines[self._index+1]
+            return self.lines[self._index + 1]
         return None
 
     def backstep(self):

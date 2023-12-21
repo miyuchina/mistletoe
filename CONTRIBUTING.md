@@ -91,6 +91,9 @@ things to be aware of:
   that way. That said, it's okay to go over the character limit occasionally.
 * mistletoe uses four spaces instead of a tab to indent. For vim users,
   include `set ts=4 sw=4 ai et` in your `.vimrc`.
+* recommended Python tooling:
+    * [Black][black-formatter] as the code formatter
+    * [flake8][flake8] as the linter (style checker)
 
 Apart from that, stay consistent with the coding style around you. But don't
 get boggled down by this: if you have a genius idea, I'd love to clean up
@@ -108,3 +111,5 @@ I tweet [@mi_before_yu][twitter]. Also yell at me over [email][email].
 [twitter]: https://twitter.com/mi_before_yu
 [email]: mailto:hello@afteryu.me
 [conv-commits]: https://www.conventionalcommits.org/
+[black-formatter]: https://black.readthedocs.io/
+[flake8]: https://flake8.pycqa.org/

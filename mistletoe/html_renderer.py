@@ -170,11 +170,12 @@ class HtmlRenderer(BaseRenderer):
             head_template = '<thead>\n{inner}</thead>\n'
             head_inner = self.render_table_row(token.header, is_header=True)
             head_rendered = head_template.format(inner=head_inner)
-        else: head_rendered = ''
+        else:
+            head_rendered = ''
         body_template = '<tbody>\n{inner}</tbody>\n'
         body_inner = self.render_inner(token)
         body_rendered = body_template.format(inner=body_inner)
-        return template.format(inner=head_rendered+body_rendered)
+        return template.format(inner=head_rendered + body_rendered)
 
     def render_table_row(self, token: block_token.TableRow, is_header=False) -> str:
         template = '<tr>\n{inner}</tr>\n'
@@ -220,7 +221,7 @@ class HtmlRenderer(BaseRenderer):
         Intended for escaping text content. To escape content of an attribute,
         simply call `html.escape()`.
         """
-        s = s.replace("&", "&amp;") # Must be done first!
+        s = s.replace("&", "&amp;")  # Must be done first!
         s = s.replace("<", "&lt;")
         s = s.replace(">", "&gt;")
         if self.html_escape_double_quotes:

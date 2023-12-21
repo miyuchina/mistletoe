@@ -22,8 +22,8 @@ class Expr(span_token.SpanToken):
             elif c == ')':
                 pos = start.pop()
                 end_pos = i + 1
-                content = string[pos+1:i]
-                matches.append(MatchObj(pos, end_pos, (pos+1, i, content)))
+                content = string[pos + 1:i]
+                matches.append(MatchObj(pos, end_pos, (pos + 1, i, content)))
         return matches
 
     def __repr__(self):
@@ -80,15 +80,15 @@ class Scheme(BaseRenderer):
         self.env = ChainMap({
             "define": self.define,
             "lambda": lambda expr_token, *body: Procedure(expr_token, body, self.env),
-            "+":  lambda x, y: self.render(x) + self.render(y),
-            "-":  lambda x, y: self.render(x) - self.render(y),
-            "*":  lambda x, y: self.render(x) * self.render(y),
-            "/":  lambda x, y: self.render(x) / self.render(y),
-            "<":  lambda x, y: self.render(x) < self.render(y),
-            ">":  lambda x, y: self.render(x) > self.render(y),
+            "+": lambda x, y: self.render(x) + self.render(y),
+            "-": lambda x, y: self.render(x) - self.render(y),
+            "*": lambda x, y: self.render(x) * self.render(y),
+            "/": lambda x, y: self.render(x) / self.render(y),
+            "<": lambda x, y: self.render(x) < self.render(y),
+            ">": lambda x, y: self.render(x) > self.render(y),
             "<=": lambda x, y: self.render(x) <= self.render(y),
             ">=": lambda x, y: self.render(x) >= self.render(y),
-            "=":  lambda x, y: self.render(x) == self.render(y),
+            "=": lambda x, y: self.render(x) == self.render(y),
             "true": True,
             "false": False,
             "cons": lambda x, y: (self.render(x), self.render(y)),
