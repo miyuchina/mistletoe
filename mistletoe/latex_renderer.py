@@ -68,10 +68,10 @@ class LaTeXRenderer(BaseRenderer):
         self.packages['hyperref'] = []
         return '\\url{{{}}}'.format(self.escape_url(token.target))
 
-    def render_math(self,token):
-        self.packages['amsmath']=[]
-        self.packages['amsfonts']=[]
-        self.packages['amssymb']=[] 
+    def render_math(self, token):
+        self.packages['amsmath'] = []
+        self.packages['amsfonts'] = []
+        self.packages['amssymb'] = []
         return token.content
 
     def render_escape_sequence(self, token):
