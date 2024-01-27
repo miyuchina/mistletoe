@@ -154,8 +154,7 @@ class TestRawText(unittest.TestCase):
 
     def test_no_children(self):
         token = span_token.RawText('some text')
-        with self.assertRaises(AttributeError):
-            token.children
+        self.assertIsNone(token.children)
 
     def test_valid_html_entities(self):
         tokens = span_token.tokenize_inner('&nbsp; &#21512;')
@@ -190,6 +189,13 @@ class TestContains(unittest.TestCase):
         self.assertTrue('text' in token)
         self.assertTrue('emphasis' in token)
         self.assertFalse('foo' in token)
+
+
+class TestParent(unittest.TestCase):
+    def test_parent(self):
+        token, = span_token.tokenize_inner('**some text**')
+        self.assertIsInstance(token.children[0], span_token.RawText)
+        self.assertEqual(token.children[0].parent, token)
 
 
 class TestHtmlSpan(unittest.TestCase):

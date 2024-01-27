@@ -42,7 +42,7 @@ def get_ast(token):
         node[attrname] = getattr(token, attrname)
     if 'header' in vars(token):
         node['header'] = get_ast(getattr(token, 'header'))
-    if 'children' in vars(token):
+    if token.children is not None:
         node['children'] = [get_ast(child) for child in token.children]
     return node
 
