@@ -138,11 +138,11 @@ class TestMarkdownRenderer(unittest.TestCase):
         ]
         output = self.roundtrip(input)
         expected = [
-            "22) *emphasized list item*\n",
-            "96) \n",
-            "128) here begins a nested list.\n",
-            "     + apples\n",
-            "     + bananas\n",
+            "  22) *emphasized list item*\n",
+            "  96) \n",
+            " 128) here begins a nested list.\n",
+            "       + apples\n",
+            "       + bananas\n",
         ]
         self.assertEqual(output, "".join(expected))
 
@@ -157,8 +157,7 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
-    # we don't currently support keeping margin indentation:
-    def test_list_item_margin_indentation_not_preserved(self):
+    def test_list_item_margin_indentation_preserved(self):
         # 0 to 4 spaces of indentation from the margin
         input = [
             "- 0 space: ok.\n",
@@ -173,6 +172,36 @@ class TestMarkdownRenderer(unittest.TestCase):
             "      subsequent line.\n",
         ]
         output = self.roundtrip(input)
+        expected = [
+            "- 0 space: ok.\n",
+            "  subsequent line.\n",
+            " - 1 space: ok.\n",
+            "   subsequent line.\n",
+            "  - 2 spaces: ok.\n",
+            "    subsequent line.\n",
+            # note: we still always normalize the indentation of all list item lines:
+            "   - 3 spaces: ok.\n",
+            "     subsequent line.\n",
+            "     - 4 spaces: in the paragraph of the above list item.\n",
+            "     subsequent line.\n",
+        ]
+        self.assertEqual(output, "".join(expected))
+
+    def test_list_item_margin_indentation_normalized(self):
+        # 0 to 4 spaces of indentation from the margin
+        input = [
+            "- 0 space: ok.\n",
+            "  subsequent line.\n",
+            " - 1 space: ok.\n",
+            "   subsequent line.\n",
+            "  - 2 spaces: ok.\n",
+            "    subsequent line.\n",
+            "   - 3 spaces: ok.\n",
+            "     subsequent line.\n",
+            "    - 4 spaces: in the paragraph of the above list item.\n",
+            "      subsequent line.\n",
+        ]
+        output = self.roundtrip(input, normalize_whitespace=True)
         expected = [
             "- 0 space: ok.\n",
             "  subsequent line.\n",

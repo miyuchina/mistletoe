@@ -314,17 +314,22 @@ class MarkdownRenderer(BaseRenderer):
     def render_list_item(
         self, token: block_token.ListItem, max_line_length: int
     ) -> Iterable[str]:
-        indentation = len(token.leader) + 1 if self.normalize_whitespace else token.prepend - token.indentation
+        if self.normalize_whitespace:
+            prepend = len(token.leader) + 1
+            indentation = 0
+        else:
+            prepend = token.prepend
+            indentation = token.indentation
         max_child_line_length = (
-            max_line_length - indentation if max_line_length else None
+            max_line_length - prepend if max_line_length else None
         )
         lines = self.blocks_to_lines(
             token.children, max_line_length=max_child_line_length
         )
         return self.prefix_lines(
             list(lines) or [""],
-            token.leader + " " * (indentation - len(token.leader)),
-            " " * indentation
+            " " * indentation + token.leader + " " * (prepend - len(token.leader) - indentation),
+            " " * prepend,
         )
 
     def render_table(
