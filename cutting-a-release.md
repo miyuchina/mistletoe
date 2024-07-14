@@ -12,7 +12,7 @@ For maintainers, here are the basic steps when creating a new release of mistlet
         * install / upgrade Twine: `$ python -m pip install --upgrade twine`
         * if unsure, upload to test PyPi and/or test locally - see [docs](https://packaging.python.org/en/latest/tutorials/packaging-projects/#uploading-the-distribution-archives)
         * do the upload to PyPi: `$ python -m twine upload dist/*`
-            * for the username, use `__token__`, for the password, use your token from PyPi (see docs again how to do that)
+            * authenticate with your token from PyPi (for details, see docs again)
         * check that you can install locally what you uploaded: `$ python -m pip install mistletoe`
 * [create the release in GitHub](https://github.com/miyuchina/mistletoe/releases/new)
     * attach the "dist/*.whl" from the previous step to the release (drag & drop) (source code archives are attached automatically)
