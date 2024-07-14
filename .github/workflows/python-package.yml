@@ -26,9 +26,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+      env:
+        # necessary for older Python versions:
+        # (see https://github.com/actions/setup-python/issues/866)
+        PIP_TRUSTED_HOST: "pypi.python.org pypi.org files.pythonhosted.org"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -60,9 +64,13 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ env.python_version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ env.python_version }}
+      env:
+        # necessary for older Python versions:
+        # (see https://github.com/actions/setup-python/issues/866)
+        PIP_TRUSTED_HOST: "pypi.python.org pypi.org files.pythonhosted.org"
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
