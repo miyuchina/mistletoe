@@ -36,7 +36,7 @@ entire document.
 You might find mistletoe's interactive mode handy when tracking down bugs.
 Type in your input, and you immediately see how mistletoe handles it.
 I created it just for this purpose. To use it, run `mistletoe` (or
-`python3 mistletoe`) in your shell without arguments.
+`python mistletoe`) in your shell without arguments.
 
 Markdown is a very finicky document format to parse, so if something does not
 work as intended, it's probably my fault and not yours.

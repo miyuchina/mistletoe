@@ -10,7 +10,7 @@ The benchmark
 Try the benchmarks yourself by running:
 
 ```sh
-$ python3 test/benchmark.py  # all results in seconds
+$ python test/benchmark.py  # all results in seconds
 Test document: test/samples/syntax.md
 Test iterations: 1000
 Running tests with markdown, mistune, commonmark, mistletoe...
