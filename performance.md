@@ -15,11 +15,11 @@ Test document: test/samples/syntax.md
 Test iterations: 1000
 Running tests with markdown, mistune, commonmark, mistletoe...
 ==============================================================
-markdown: 36,1091867333333    # v3.3.4 from Feb 24, 2021
-mistune: 10,7586129666667     # v0.8.4 from Oct 30, 2019
-commonmark: 43,4187382666667  # v0.9.1 from Oct 04, 2019
-mistletoe: 33,2067990666667   # v0.8.0 from Oct 09, 2021
-# run with Python 3.7.5 on MS Windows 10
+markdown: 24.732995399739593   # v3.6 from Mar 14, 2024
+mistune: 15.494156199973077    # v3.0.2 from Sep 30, 2023
+commonmark: 22.344279299955815 # v0.9.1 from Oct 04, 2019
+mistletoe: 20.372425000183284  # v1.4.0 from Jul 14, 2024
+# run with Python 3.11.9 on MS Windows 10
 ```
 
 We notice that Mistune is the fastest Markdown parser,
