@@ -10,6 +10,7 @@ setup(
     author_email='hello@afteryu.me',
     license='MIT',
     packages=['mistletoe', 'mistletoe.contrib'],
+    package_data={'mistletoe': ['py.typed']},
     entry_points={'console_scripts': ['mistletoe = mistletoe.__main__:main']},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
