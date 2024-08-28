@@ -158,7 +158,7 @@ class LaTeXRenderer(BaseRenderer):
 
     @staticmethod
     def render_thematic_break(token):
-        return '\\hrulefill\n'
+        return '\n\\hrulefill\n'
 
     @staticmethod
     def render_line_break(token):

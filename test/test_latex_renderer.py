@@ -120,7 +120,7 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('TableCell', 'inner')
 
     def test_thematic_break(self):
-        self._test_token('ThematicBreak', '\\hrulefill\n')
+        self._test_token('ThematicBreak', '\n\\hrulefill\n')
 
     def test_line_break(self):
         self._test_token('LineBreak', '\\newline\n', soft=False)
