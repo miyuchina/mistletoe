@@ -64,7 +64,7 @@ def eval_new_child(parent, child):
 
 def relation(x, y):
     if x.end <= y.start:
-        return 0      # x preceeds y
+        return 0      # x precedes y
     if x.end >= y.end:
         if x.parse_start <= y.start and x.parse_end >= y.end:
             return 2  # x contains y
