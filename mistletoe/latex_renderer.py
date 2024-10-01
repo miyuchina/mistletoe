@@ -3,18 +3,10 @@ LaTeX renderer for mistletoe.
 """
 
 import re
-import string
 from itertools import chain
 from urllib.parse import quote
 import mistletoe.latex_token as latex_token
 from mistletoe.base_renderer import BaseRenderer
-
-# (customizable) delimiters for inline code
-verb_delimiters = string.punctuation + string.digits
-for delimiter in '*':  # remove invalid delimiters
-    verb_delimiters.replace(delimiter, '')
-for delimiter in reversed('|!"\'=+'):  # start with most common delimiters
-    verb_delimiters = delimiter + verb_delimiters.replace(delimiter, '')
 
 
 class LaTeXRenderer(BaseRenderer):
@@ -27,7 +19,6 @@ class LaTeXRenderer(BaseRenderer):
         """
         tokens = self._tokens_from_module(latex_token)
         self.packages = {}
-        self.verb_delimiters = verb_delimiters
         super().__init__(*chain(tokens, extras), **kwargs)
 
     def render_strong(self, token):
@@ -37,18 +28,15 @@ class LaTeXRenderer(BaseRenderer):
         return '\\textit{{{}}}'.format(self.render_inner(token))
 
     def render_inline_code(self, token):
-        content = self.render_raw_text(token.children[0], escape=False)
+        # fontenc to get better results for `_{}\` in `\texttt{}`
+        self.packages['fontenc'] = ['T1']
 
-        # search for delimiter not present in content
-        for delimiter in self.verb_delimiters:
-            if delimiter not in content:
-                break
+        content = self.render_raw_text(token.children[0], escape=True)
+        # make \texttt behave like \verb w.r.t. whitespace in inline code
+        content = re.sub(r'\s{2,}', lambda m: '\\ '*len(m.group(0)), content)
 
-        if delimiter in content:  # no delimiter found
-            raise RuntimeError('Unable to find delimiter for verb macro')
-
-        template = '\\verb{delimiter}{content}{delimiter}'
-        return template.format(delimiter=delimiter, content=content)
+        template = '\\texttt{{{content}}}'
+        return template.format(content=content)
 
     def render_strikethrough(self, token):
         self.packages['ulem'] = ['normalem']

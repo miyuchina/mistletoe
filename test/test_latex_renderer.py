@@ -1,9 +1,7 @@
 from unittest import TestCase, mock
 from parameterized import parameterized
-import mistletoe.latex_renderer
 from mistletoe.latex_renderer import LaTeXRenderer
 from mistletoe import markdown
-import markdown
 
 
 class TestLaTeXRenderer(TestCase):
@@ -29,21 +27,19 @@ class TestLaTeXRenderer(TestCase):
     def test_emphasis(self):
         self._test_token('Emphasis', '\\textit{inner}')
 
-    def test_inline_code(self):
+    @parameterized.expand([
+        ('inner', '\\texttt{inner}'),
+        ('a + b', '\\texttt{a + b}'),
+        ('a | b', '\\texttt{a | b}'),
+        ('|ab!|', '\\texttt{|ab!|}'),
+        ('two  spaces', '\\texttt{two\\ \\ spaces}'),
+        ('two\t whitespaces', '\\texttt{two\\ \\ whitespaces}'),
+    ])
+    def test_inline_code(self, content, expected):
         func_path = 'mistletoe.latex_renderer.LaTeXRenderer.render_raw_text'
 
-        for content, expected in {'inner': '\\verb|inner|',
-                                'a + b': '\\verb|a + b|',
-                                'a | b': '\\verb!a | b!',
-                                '|ab!|': '\\verb"|ab!|"',
-                               }.items():
-            with mock.patch(func_path, return_value=content):
-                self._test_token('InlineCode', expected, content=content)
-
-        content = mistletoe.latex_renderer.verb_delimiters
-        with self.assertRaises(RuntimeError):
-            with mock.patch(func_path, return_value=content):
-                self._test_token('InlineCode', None, content=content)
+        with mock.patch(func_path, return_value=content):
+            self._test_token('InlineCode', expected, content=content)
 
     def test_strikethrough(self):
         self._test_token('Strikethrough', '\\sout{inner}')
