@@ -132,6 +132,13 @@ class TestLaTeXRenderer(TestCase):
                   '\\end{document}\n')
         self._test_token('Document', expected, footnotes={})
 
+    @parameterized.expand([
+        ({'ulem': ['normalem']}, '\\usepackage[normalem]{ulem}\n'),
+        ({'hyperref': []}, '\\usepackage[]{hyperref}\n'),
+    ])
+    def test_packages(self, packages, expected):
+        self.renderer.packages = packages
+        self.assertEqual(self.renderer.render_packages(), expected)
 
 class TestHtmlEntity(TestCase):
     def test_html_entity(self):
@@ -151,7 +158,7 @@ class TestLaTeXFootnotes(TestCase):
         from mistletoe import Document
         raw = ['![alt][foo]\n', '\n', '[foo]: bar "title"\n']
         expected = ('\\documentclass{article}\n'
-                  '\\usepackage{graphicx}\n'
+                  '\\usepackage[]{graphicx}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\n\\includegraphics{bar}\n'
@@ -163,7 +170,7 @@ class TestLaTeXFootnotes(TestCase):
         from mistletoe import Document
         raw = ['[name][key]\n', '\n', '[key]: target\n']
         expected = ('\\documentclass{article}\n'
-                  '\\usepackage{hyperref}\n'
+                  '\\usepackage[]{hyperref}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\\href{target}{name}'

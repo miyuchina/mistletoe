@@ -165,8 +165,8 @@ class LaTeXRenderer(BaseRenderer):
         return '\n' if token.soft else '\\newline\n'
 
     def render_packages(self):
-        pattern = '\\usepackage{options}{{{package}}}\n'
-        return ''.join(pattern.format(options=options or '', package=package)
+        pattern = '\\usepackage[{options}]{{{package}}}\n'
+        return ''.join(pattern.format(options=', '.join(options) or '', package=package)
                          for package, options in self.packages.items())
 
     def render_document(self, token):
