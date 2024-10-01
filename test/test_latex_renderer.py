@@ -3,6 +3,7 @@ from parameterized import parameterized
 import mistletoe.latex_renderer
 from mistletoe.latex_renderer import LaTeXRenderer
 from mistletoe import markdown
+import markdown
 
 
 class TestLaTeXRenderer(TestCase):
@@ -13,14 +14,14 @@ class TestLaTeXRenderer(TestCase):
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
     def _test_token(self, token_name, expected_output, children=True,
-                    without_attrs=None, **kwargs):
+                    without_attrs=None, render_func_kwargs={}, **kwargs):
         render_func = self.renderer.render_map[token_name]
         children = mock.MagicMock(spec=list) if children else None
         mock_token = mock.Mock(children=children, **kwargs)
         without_attrs = without_attrs or []
         for attr in without_attrs:
             delattr(mock_token, attr)
-        self.assertEqual(render_func(mock_token), expected_output)
+        self.assertEqual(render_func(mock_token, **render_func_kwargs), expected_output)
 
     def test_strong(self):
         self._test_token('Strong', '\\textbf{inner}')
@@ -72,10 +73,25 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('Math', expected,
                          children=False, content='$ 1 + 2 = 3 $')
 
-    def test_raw_text(self):
-        expected = '\\$\\&\\#\\{\\}'
-        self._test_token('RawText', expected,
-                         children=False, content='$&#{}')
+    @parameterized.expand([
+        ('$', '\\$'),
+        ('&', '\\&'),
+        ('#', '\\#'),
+        ('%', '\\%'),
+        ('_', '\\_'),
+        ('{', '\\{'),
+        ('}', '\\}'),
+        ('~', '\\textasciitilde{}'),
+        ('^', '\\textasciicircum{}'),
+        ('\\', '\\textbackslash{}'),
+    ])
+    def test_raw_text(self, target, expected):
+        self._test_token('RawText', expected, children=False, content=target)
+
+    def test_raw_text_no_escape(self):
+        expected = '$&#%_{}~^\\'
+        self._test_token('RawText', expected, children=False, content=expected,
+                         render_func_kwargs={'escape': False})
 
     def test_heading(self):
         expected = '\n\\section{inner}\n'

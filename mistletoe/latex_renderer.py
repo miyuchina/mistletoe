@@ -2,6 +2,7 @@
 LaTeX renderer for mistletoe.
 """
 
+import re
 import string
 from itertools import chain
 from urllib.parse import quote
@@ -78,11 +79,20 @@ class LaTeXRenderer(BaseRenderer):
         return self.render_inner(token)
 
     def render_raw_text(self, token, escape=True):
-        return (token.content.replace('$', '\\$').replace('#', '\\#')
-                             .replace('{', '\\{').replace('}', '\\}')
-                             .replace('&', '\\&').replace('_', '\\_')
-                             .replace('%', '\\%')
-               ) if escape else token.content
+        """Escape all latex special characters $#&%_{}^~\\ within `token.content`.
+        """
+        if not escape:
+            return token.content
+
+        if not hasattr(self, 'raw_escape_chars'):
+            self.raw_escape_chars = re.compile('([$#&%_{}])')
+
+        content = token.content.replace('\\', '\\textbackslash')
+        content = self.raw_escape_chars.sub(r'\\\1', content)
+        # The \text* commands gobble up whitespace behind them -> {} to prevent that.
+        return content.replace('~', '\\textasciitilde{}') \
+                      .replace('^', '\\textasciicircum{}') \
+                      .replace('\\textbackslash', '\\textbackslash{}')
 
     def render_heading(self, token):
         inner = self.render_inner(token)
