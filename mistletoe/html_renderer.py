@@ -3,43 +3,53 @@ HTML renderer for mistletoe.
 """
 
 import html
-import re
 from itertools import chain
 from urllib.parse import quote
 from mistletoe import block_token
 from mistletoe import span_token
-from mistletoe.block_token import HTMLBlock
-from mistletoe.span_token import HTMLSpan
+from mistletoe.block_token import HtmlBlock
+from mistletoe.span_token import HtmlSpan
 from mistletoe.base_renderer import BaseRenderer
 
 
-class HTMLRenderer(BaseRenderer):
+class HtmlRenderer(BaseRenderer):
     """
     HTML renderer class.
 
     See mistletoe.base_renderer module for more info.
     """
-    def __init__(self, *extras):
+    def __init__(
+        self,
+        *extras,
+        html_escape_double_quotes=False,
+        html_escape_single_quotes=False,
+        process_html_tokens=True,
+        **kwargs
+    ):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
+            html_escape_double_quotes (bool): whether to also escape double
+                quotes when HTML-escaping rendered text.
+            html_escape_single_quotes (bool): whether to also escape single
+                quotes when HTML-escaping rendered text.
+            process_html_tokens (bool): whether to include HTML tokens in the
+                processing. If `False`, HTML markup will be treated as plain
+                text: e.g. input ``<br>`` will be rendered as ``&lt;br&gt;``.
+            **kwargs: additional parameters to be passed to the ancestor's
+                constructor.
         """
         self._suppress_ptag_stack = [False]
-        super().__init__(*chain((HTMLBlock, HTMLSpan), extras))
-        # html.entities.html5 includes entitydefs not ending with ';',
-        # CommonMark seems to hate them, so...
-        self._stdlib_charref = html._charref
-        _charref = re.compile(r'&(#[0-9]+;'
-                              r'|#[xX][0-9a-fA-F]+;'
-                              r'|[^\t\n\f <&#;]{1,32};)')
-        html._charref = _charref
+        final_extras = chain((HtmlBlock, HtmlSpan) if process_html_tokens else (), extras)
+        super().__init__(*final_extras, **kwargs)
+        self.html_escape_double_quotes = html_escape_double_quotes
+        self.html_escape_single_quotes = html_escape_single_quotes
 
     def __exit__(self, *args):
         super().__exit__(*args)
-        html._charref = self._stdlib_charref
 
     def render_to_plain(self, token) -> str:
-        if hasattr(token, 'children'):
+        if token.children is not None:
             inner = [self.render_to_plain(child) for child in token.children]
             return ''.join(inner)
         return html.escape(token.content)
@@ -54,7 +64,7 @@ class HTMLRenderer(BaseRenderer):
 
     def render_inline_code(self, token: span_token.InlineCode) -> str:
         template = '<code>{}</code>'
-        inner = html.escape(token.children[0].content)
+        inner = self.escape_html_text(token.children[0].content)
         return template.format(inner)
 
     def render_strikethrough(self, token: span_token.Strikethrough) -> str:
@@ -92,10 +102,10 @@ class HTMLRenderer(BaseRenderer):
         return self.render_inner(token)
 
     def render_raw_text(self, token: span_token.RawText) -> str:
-        return html.escape(token.content)
+        return self.escape_html_text(token.content)
 
     @staticmethod
-    def render_html_span(token: span_token.HTMLSpan) -> str:
+    def render_html_span(token: span_token.HtmlSpan) -> str:
         return token.content
 
     def render_heading(self, token: block_token.Heading) -> str:
@@ -122,7 +132,7 @@ class HTMLRenderer(BaseRenderer):
             attr = ' class="{}"'.format('language-{}'.format(html.escape(token.language)))
         else:
             attr = ''
-        inner = html.escape(token.children[0].content)
+        inner = self.escape_html_text(token.content)
         return template.format(attr=attr, inner=inner)
 
     def render_list(self, token: block_token.List) -> str:
@@ -160,11 +170,12 @@ class HTMLRenderer(BaseRenderer):
             head_template = '<thead>\n{inner}</thead>\n'
             head_inner = self.render_table_row(token.header, is_header=True)
             head_rendered = head_template.format(inner=head_inner)
-        else: head_rendered = ''
+        else:
+            head_rendered = ''
         body_template = '<tbody>\n{inner}</tbody>\n'
         body_inner = self.render_inner(token)
         body_rendered = body_template.format(inner=body_inner)
-        return template.format(inner=head_rendered+body_rendered)
+        return template.format(inner=head_rendered + body_rendered)
 
     def render_table_row(self, token: block_token.TableRow, is_header=False) -> str:
         template = '<tr>\n{inner}</tr>\n'
@@ -194,7 +205,7 @@ class HTMLRenderer(BaseRenderer):
         return '\n' if token.soft else '<br />\n'
 
     @staticmethod
-    def render_html_block(token: block_token.HTMLBlock) -> str:
+    def render_html_block(token: block_token.HtmlBlock) -> str:
         return token.content
 
     def render_document(self, token: block_token.Document) -> str:
@@ -202,12 +213,22 @@ class HTMLRenderer(BaseRenderer):
         inner = '\n'.join([self.render(child) for child in token.children])
         return '{}\n'.format(inner) if inner else ''
 
-    @staticmethod
-    def escape_html(raw: str) -> str:
+    def escape_html_text(self, s: str) -> str:
         """
-        This method is deprecated. Use `html.escape` instead.
+        Like `html.escape()`, but this  looks into the current rendering options
+        to decide which of the quotes (double, single, or both) to escape.
+
+        Intended for escaping text content. To escape content of an attribute,
+        simply call `html.escape()`.
         """
-        return html.escape(raw)
+        s = s.replace("&", "&amp;")  # Must be done first!
+        s = s.replace("<", "&lt;")
+        s = s.replace(">", "&gt;")
+        if self.html_escape_double_quotes:
+            s = s.replace('"', "&quot;")
+        if self.html_escape_single_quotes:
+            s = s.replace('\'', "&#x27;")
+        return s
 
     @staticmethod
     def escape_url(raw: str) -> str:
@@ -215,3 +236,9 @@ class HTMLRenderer(BaseRenderer):
         Escape urls to prevent code injection craziness. (Hopefully.)
         """
         return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))
+
+
+HTMLRenderer = HtmlRenderer
+"""
+Deprecated name of the `HtmlRenderer` class.
+"""

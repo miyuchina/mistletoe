@@ -1,0 +1,91 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python package
+
+env:
+  package_name: mistletoe
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+
+    # As long as we want to support Python 3.6-, we need to stick to an older version of Ubuntu,
+    # see <https://github.com/actions/setup-python/issues/544>.
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.5", "3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+      env:
+        # necessary for older Python versions:
+        # (see https://github.com/actions/setup-python/issues/866)
+        PIP_TRUSTED_HOST: "pypi.python.org pypi.org files.pythonhosted.org"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt -r test-requirements.txt
+        python -m pip install flake8
+    - name: Lint with flake8
+      run: |
+        # See https://www.flake8rules.com for the list of the rules.
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82,W605 --show-source --statistics
+        # exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --statistics
+    - name: Test with pytest
+      id: unit_tests
+      run: |
+        pytest
+    - name: Test CommonMark compliance
+      if: ${{ success() || steps.unit_tests.conclusion == 'failure' }}
+      run: |
+        python -m test.specification --ignore-known
+
+  coverage:
+
+    needs: build
+    runs-on: ubuntu-latest
+    env:
+      python_version: 3.11
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ env.python_version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.python_version }}
+      env:
+        # necessary for older Python versions:
+        # (see https://github.com/actions/setup-python/issues/866)
+        PIP_TRUSTED_HOST: "pypi.python.org pypi.org files.pythonhosted.org"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt -r test-requirements.txt
+        # note: the following also installs "coverage"
+        python -m pip install coveralls
+    - name: Get coverage report
+      run: |
+        coverage run --source=${package_name} --append -m pytest
+        coverage run --source=${package_name} --append -m test.specification --ignore-known
+        # quick local report output to console:
+        coverage report
+    - name: Upload report to Coveralls
+      # documentation for GitHub setup: https://coveralls-python.readthedocs.io/en/latest/usage/configuration.html#github-actions-support
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        coveralls --service=github

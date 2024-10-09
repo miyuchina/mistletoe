@@ -22,17 +22,18 @@
 
 from test.base_test import BaseRendererTest
 from mistletoe.span_token import tokenize_inner
-from contrib.jira_renderer import JIRARenderer
+from mistletoe.contrib.jira_renderer import JiraRenderer
 import random
 import string
 
 filesBasedTest = BaseRendererTest.filesBasedTest
 
-class TestJIRARenderer(BaseRendererTest):
+
+class TestJiraRenderer(BaseRendererTest):
 
     def setUp(self):
         super().setUp()
-        self.renderer = JIRARenderer()
+        self.renderer = JiraRenderer()
         self.renderer.__enter__()
         self.addCleanup(self.renderer.__exit__, None, None, None)
         self.sampleOutputExtension = 'jira'
@@ -41,26 +42,26 @@ class TestJIRARenderer(BaseRendererTest):
         source = string.ascii_letters + string.digits
         if hasWhitespace:
             source = source + ' \t'
-        
+
         result = ''.join(random.SystemRandom().choice(source) for _ in range(n))
         return result
 
     def textFormatTest(self, inputTemplate, outputTemplate):
         input = self.genRandomString(80, False)
         token = next(iter(tokenize_inner(inputTemplate.format(input))))
+        output = self.renderer.render(token)
         expected = outputTemplate.format(input)
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
+        self.assertEqual(output, expected)
 
     def test_escape_simple(self):
         self.textFormatTest('---fancy text---', '\\-\\-\\-fancy text\\-\\-\\-')
-        
+
     def test_escape_single_chars(self):
         self.textFormatTest('**fancy \\*@\\* text**', '*fancy \\*@\\* text*')
-        
+
     def test_escape_none_when_whitespaces(self):
         self.textFormatTest('obj = {{ a: (b * c) + d }}', 'obj = {{ a: (b * c) + d }}')
-        
+
     def test_escape_in_inline_code(self):
         # Note: Jira puts inline code into "{{...}}" as seen in this test.
         self.textFormatTest('**code: `a = b + c;// [1]`**',
@@ -69,13 +70,13 @@ class TestJIRARenderer(BaseRendererTest):
     def test_escape_link(self):
         # Note: There seems to be no way of how to escape plain text URL in Jira.
         self.textFormatTest('http://www.example.com', 'http://www.example.com')
-        
+
     def test_render_strong(self):
         self.textFormatTest('**a{}**', '*a{}*')
 
     def test_render_emphasis(self):
         self.textFormatTest('*a{}*', '_a{}_')
-        
+
     def test_render_inline_code(self):
         self.textFormatTest('`a{}b`', '{{{{a{}b}}}}')
 
@@ -84,44 +85,44 @@ class TestJIRARenderer(BaseRendererTest):
 
     def test_render_image(self):
         token = next(iter(tokenize_inner('![image](foo.jpg)')))
+        output = self.renderer.render(token)
         expected = '!foo.jpg!'
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
-    
+        self.assertEqual(output, expected)
+
     def test_render_footnote_image(self):
         # token = next(tokenize_inner('![image]\n\n[image]: foo.jpg'))
+        # output = self.renderer.render(token)
         # expected = '!foo.jpg!'
-        # actual = self.renderer.render(token)
-        # self.assertEqual(expected, actual)
+        # self.assertEqual(output, expected)
         pass
 
     def test_render_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         body = self.genRandomString(80, True)
         token = next(iter(tokenize_inner('[{body}]({url})'.format(url=url, body=body))))
+        output = self.renderer.render(token)
         expected = '[{body}|{url}]'.format(url=url, body=body)
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
+        self.assertEqual(output, expected)
 
     def test_render_link_with_title(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         body = self.genRandomString(80, True)
         title = self.genRandomString(20, True)
         token = next(iter(tokenize_inner('[{body}]({url} "{title}")'.format(url=url, body=body, title=title))))
+        output = self.renderer.render(token)
         expected = '[{body}|{url}|{title}]'.format(url=url, body=body, title=title)
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
-    
+        self.assertEqual(output, expected)
+
     def test_render_footnote_link(self):
         pass
 
     def test_render_auto_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         token = next(iter(tokenize_inner('<{url}>'.format(url=url))))
+        output = self.renderer.render(token)
         expected = '[{url}]'.format(url=url)
-        actual = self.renderer.render(token)
-        self.assertEqual(expected, actual)
-        
+        self.assertEqual(output, expected)
+
     def test_render_escape_sequence(self):
         pass
 
@@ -130,7 +131,7 @@ class TestJIRARenderer(BaseRendererTest):
 
     def test_render_heading(self):
         pass
-        
+
     def test_render_quote(self):
         pass
 

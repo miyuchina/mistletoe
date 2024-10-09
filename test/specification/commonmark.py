@@ -1,9 +1,15 @@
 import re
 import sys
 import json
-from mistletoe import markdown
+from mistletoe import Document, HtmlRenderer
 from traceback import print_tb
 from argparse import ArgumentParser
+
+
+KNOWN = []
+"""
+Examples (their numbers) from the specification which are known to fail in mistletoe.
+"""
 
 
 def run_tests(test_entries, start=None, end=None,
@@ -29,7 +35,8 @@ def run_tests(test_entries, start=None, end=None,
 def run_test(test_entry, quiet=False):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
-        output = markdown(test_case).replace('&#x27;', "'")
+        with HtmlRenderer(html_escape_double_quotes=True) as renderer:
+            output = renderer.render(Document(test_case))
         success = test_entry['html'] == output
         if not success and not quiet:
             print_test_entry(test_entry, output)
@@ -75,7 +82,6 @@ def print_test_entry(test_entry, output, fout=sys.stdout):
     print(file=fout)
 
 
-
 def print_failure_in_sections(results):
     section = results[0][1]
     failed = 0
@@ -118,12 +124,12 @@ def main():
                         help="Ignore tests entries that are known to fail.")
     args = parser.parse_args()
 
-    start   = args.start
-    end     = args.end
+    start = args.start
+    end = args.end
     verbose = args.verbose
-    quiet   = args.quiet
-    tests   = args.tests
-    known   = args.known
+    quiet = args.quiet
+    tests = args.tests
+    known = args.known
     if args.section is not None:
         start, end = locate_section(args.section, tests)
 
@@ -133,4 +139,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

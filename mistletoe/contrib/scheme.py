@@ -1,6 +1,8 @@
 import re
 from collections import ChainMap
-from mistletoe import BaseRenderer, span_token, block_token
+from functools import reduce
+from mistletoe.base_renderer import BaseRenderer
+from mistletoe import span_token, block_token
 from mistletoe.core_tokens import MatchObj
 
 
@@ -20,8 +22,8 @@ class Expr(span_token.SpanToken):
             elif c == ')':
                 pos = start.pop()
                 end_pos = i + 1
-                content = string[pos+1:i]
-                matches.append(MatchObj(pos, end_pos, (pos+1, i, content)))
+                content = string[pos + 1:i]
+                matches.append(MatchObj(pos, end_pos, (pos + 1, i, content)))
         return matches
 
     def __repr__(self):
@@ -78,15 +80,15 @@ class Scheme(BaseRenderer):
         self.env = ChainMap({
             "define": self.define,
             "lambda": lambda expr_token, *body: Procedure(expr_token, body, self.env),
-            "+":  lambda x, y: self.render(x) + self.render(y),
-            "-":  lambda x, y: self.render(x) - self.render(y),
-            "*":  lambda x, y: self.render(x) * self.render(y),
-            "/":  lambda x, y: self.render(x) / self.render(y),
-            "<":  lambda x, y: self.render(x) < self.render(y),
-            ">":  lambda x, y: self.render(x) > self.render(y),
+            "+": lambda x, y: self.render(x) + self.render(y),
+            "-": lambda x, y: self.render(x) - self.render(y),
+            "*": lambda x, y: self.render(x) * self.render(y),
+            "/": lambda x, y: self.render(x) / self.render(y),
+            "<": lambda x, y: self.render(x) < self.render(y),
+            ">": lambda x, y: self.render(x) > self.render(y),
             "<=": lambda x, y: self.render(x) <= self.render(y),
             ">=": lambda x, y: self.render(x) >= self.render(y),
-            "=":  lambda x, y: self.render(x) == self.render(y),
+            "=": lambda x, y: self.render(x) == self.render(y),
             "true": True,
             "false": False,
             "cons": lambda x, y: (self.render(x), self.render(y)),
@@ -102,6 +104,9 @@ class Scheme(BaseRenderer):
             "list": lambda *args: reduce(lambda x, y: (y, x), map(self.render, reversed(args)), None),
             "display": lambda *args: print(*map(self.render, args)),
         })
+
+    def render_program(self, token):
+        return self.render_inner(token)
 
     def render_inner(self, token):
         result = None
@@ -148,11 +153,3 @@ class Scheme(BaseRenderer):
         finally:
             self.env = old_env
         return result
-
-
-if __name__ == '__main__':
-    with Scheme() as renderer:
-        prog = ["(define x (* 2 21))",
-                "x"]
-        print(renderer.render(Program(prog)))
-

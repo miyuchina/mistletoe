@@ -81,14 +81,14 @@ with open(&#x27;foo.md&#x27;, &#x27;r&#x27;) as fin:
     rendered = mistletoe.markdown(fin, LaTeXRenderer)
 </code></pre>
 <p>Finally, here&#x27;s how you would manually specify extra tokens and a renderer
-for mistletoe. In the following example, we use <code>HTMLRenderer</code> to render
-the AST, which adds <code>HTMLBlock</code> and <code>HTMLSpan</code> to the normal parsing
+for mistletoe. In the following example, we use <code>HtmlRenderer</code> to render
+the AST, which adds <code>HtmlBlock</code> and <code>HtmlSpan</code> to the normal parsing
 process.
 </p>
-<pre><code class="lang-python">from mistletoe import Document, HTMLRenderer
+<pre><code class="lang-python">from mistletoe import Document, HtmlRenderer
 
 with open(&#x27;foo.md&#x27;, &#x27;r&#x27;) as fin:
-    with HTMLRenderer() as renderer:
+    with HtmlRenderer() as renderer:
         rendered = renderer.render(Document(fin))
 </code></pre>
 <h3>From the command-line</h3>
@@ -209,9 +209,9 @@ of nasty implementation details. Fortunately, mistletoe takes care
 of most of them for you. Simply pass your custom token class to 
 <code>super().__init__()</code> does the trick:
 </p>
-<pre><code class="lang-python">from mistletoe.html_renderer import HTMLRenderer
+<pre><code class="lang-python">from mistletoe.html_renderer import HtmlRenderer
 
-class GithubWikiRenderer(HTMLRenderer):
+class GithubWikiRenderer(HtmlRenderer):
     def __init__(self):
         super().__init__(GithubWiki)
 </code></pre>
@@ -225,9 +225,9 @@ class GithubWikiRenderer(HTMLRenderer):
 </code></pre>
 <p>Cleaning up, we have our new renderer class:
 </p>
-<pre><code class="lang-python">from mistletoe.html_renderer import HTMLRenderer, escape_url
+<pre><code class="lang-python">from mistletoe.html_renderer import HtmlRenderer, escape_url
 
-class GithubWikiRenderer(HTMLRenderer):
+class GithubWikiRenderer(HtmlRenderer):
     def __init__(self):
         super().__init__(GithubWiki)
 

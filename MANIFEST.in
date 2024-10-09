@@ -1,1 +1,10 @@
+# see https://setuptools.pypa.io/en/latest/userguide/miscellaneous.html#controlling-files-in-the-distribution
+
 include LICENSE
+include requirements.txt
+include tox.ini
+
+graft test
+recursive-include ** makefile
+
+global-exclude *~ *.py[cod] *.so __pycache__

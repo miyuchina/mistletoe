@@ -30,7 +30,7 @@ function get_current_branch {
 }
 
 function render_to_file {
-    python3 -m mistletoe "test/samples/syntax.md" > "$1"
+    python -m mistletoe "test/samples/syntax.md" > "$1"
 }
 
 function get_sha {

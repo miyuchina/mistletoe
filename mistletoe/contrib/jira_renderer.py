@@ -26,7 +26,8 @@ from mistletoe import block_token, span_token
 from mistletoe.base_renderer import BaseRenderer
 import re
 
-class JIRARenderer(BaseRenderer):
+
+class JiraRenderer(BaseRenderer):
     """
     JIRA renderer class.
 
@@ -39,7 +40,7 @@ class JIRARenderer(BaseRenderer):
         """
         self.listTokens = []
         self.lastChildOfQuotes = []
-        super().__init__(*chain([block_token.HTMLBlock, span_token.HTMLSpan], extras))
+        super().__init__(*chain([block_token.HtmlBlock, span_token.HtmlSpan], extras))
 
     def render_strong(self, token):
         template = '*{}*'
@@ -76,7 +77,6 @@ class JIRARenderer(BaseRenderer):
     def render_auto_link(self, token):
         template = '[{target}]'
         target = escape_url(token.target)
-        #inner = self.render_inner(token)
         return template.format(target=target)
 
     def render_escape_sequence(self, token):
@@ -114,19 +114,19 @@ class JIRARenderer(BaseRenderer):
             template = 'bq. {inner}' + self._block_eol(token)[0:-1]
         else:
             template = '{{quote}}\n{inner}{{quote}}' + self._block_eol(token)
-            
+
         return template.format(inner=inner)
 
     def render_paragraph(self, token):
         return '{}'.format(self.render_inner(token)) + self._block_eol(token)
-    
+
     def render_block_code(self, token):
         template = '{{code{attr}}}\n{inner}{{code}}' + self._block_eol(token)
         if token.language:
             attr = ':{}'.format(token.language)
         else:
             attr = ''
-            
+
         inner = self.render_raw_text(token.children[0], False)
         return template.format(attr=attr, inner=inner)
 
@@ -139,7 +139,7 @@ class JIRARenderer(BaseRenderer):
         prefix = ''.join(self.listTokens)
         result = template.format(prefix=prefix, inner=self.render_inner(token))
         return result
-        
+
     def render_inner(self, token):
         if isinstance(token, block_token.List):
             if token.start:
@@ -151,10 +151,8 @@ class JIRARenderer(BaseRenderer):
 
         if isinstance(token, block_token.List):
             del (self.listTokens[-1])
-        
-        
+
         return ''.join(rendered)
-        
 
     def render_table(self, token):
         # This is actually gross and I wonder if there's a better way to do it.
@@ -167,21 +165,21 @@ class JIRARenderer(BaseRenderer):
             header = token.header
             head_inner = self.render_table_row(header, True)
             head_rendered = head_template.format(inner=head_inner)
-             
+
         else:
             head_rendered = ''
-            
+
         body_template = '{inner}'
         body_inner = self.render_inner(token)
         body_rendered = body_template.format(inner=body_inner)
-        return template.format(inner=head_rendered+body_rendered)
+        return template.format(inner=head_rendered + body_rendered)
 
     def render_table_row(self, token, is_header=False):
         if is_header:
             template = '{inner}||\n'
         else:
             template = '{inner}|\n'
-            
+
         inner = ''.join([self.render_table_cell(child, is_header)
                          for child in token.children])
 
@@ -192,7 +190,7 @@ class JIRARenderer(BaseRenderer):
             template = '||{inner}'
         else:
             template = '|{inner}'
-        
+
         inner = self.render_inner(token)
         if inner == '':
             inner = ' '
@@ -224,7 +222,12 @@ class JIRARenderer(BaseRenderer):
         like paragraphs really vertically separated, we need to put
         an empty line between them. This function handles these two cases.
         """
-        return '\n' if len(self.listTokens) > 0 or (len(self.lastChildOfQuotes) > 0 and token is self.lastChildOfQuotes[-1]) else '\n\n'
+        return (
+            "\n"
+            if len(self.listTokens) > 0 or (len(self.lastChildOfQuotes) > 0 and token is self.lastChildOfQuotes[-1])
+            else "\n\n"
+        )
+
 
 def escape_url(raw):
     """
@@ -233,4 +236,8 @@ def escape_url(raw):
     from urllib.parse import quote
     return quote(raw, safe='/#:()*?=%@+,&;')
 
-    
+
+JIRARenderer = JiraRenderer
+"""
+Deprecated name of the `JiraRenderer` class.
+"""

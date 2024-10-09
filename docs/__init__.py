@@ -1,4 +1,4 @@
-from mistletoe import Document, HTMLRenderer, __version__
+from mistletoe import Document, HtmlRenderer, __version__
 
 INCLUDE = {'README.md': 'index.html',
            'CONTRIBUTING.md': 'contributing.html'}
@@ -19,7 +19,7 @@ METADATA = """
 """
 
 
-class DocRenderer(HTMLRenderer):
+class DocRenderer(HtmlRenderer):
     def render_link(self, token):
         return super().render_link(self._replace_link(token))
 
@@ -47,4 +47,3 @@ def build(files=None):
                 with DocRenderer() as renderer:
                     renderer.files = files
                     print(renderer.render_document(Document(fin), f), file=fout)
-

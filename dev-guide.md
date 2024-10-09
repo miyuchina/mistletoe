@@ -3,19 +3,35 @@
 This document describes usage of mistletoe and its API
 from the developer's point of view.
 
-Understanding the AST
----------------------
+Understanding the AST and the tokens
+------------------------------------
 
 When a markdown document gets parsed by mistletoe, the result is represented
-as an "abstract syntax tree" (AST), stored in an instance of `Document`.
-This object contains a hierarchy of
-all the various tokens which were recognized during the parsing process.
+as an _abstract syntax tree (AST)_, stored in an instance of `Document`.
+This object contains a hierarchy of all the various _tokens_ which were recognized
+during the parsing process, for example, `Paragraph`, `Heading`, and `RawText`.
 
-In order to see what exactly gets parsed, one can simply use the `ASTRenderer`
+The tokens which represent a line or a block of lines in the input markdown
+are called _block tokens_. Examples include `List`, `Paragraph`, `ThematicBreak`,
+and also the `Document` itself.
+
+The tokens which represent the actual content within a block are called _span tokens_,
+or, with CommonMark terminology, _inline tokens_.
+In this category you will find tokens like `RawText`, `Link`, and `Emphasis`.
+
+Block tokens may have block tokens, span tokens, or no tokens at all as children
+in the AST; this depends on the type of token. Span tokens may *only* have span
+tokens as children.
+Every token has properties called `children` and `parent` that can be used
+for traversing the nodes hierarchy.
+
+### Viewing the AST
+
+In order to see what exactly gets parsed, one can simply use the `AstRenderer`
 on a given markdown input, for example:
 
 ```sh
-mistletoe text.md --renderer mistletoe.ast_renderer.ASTRenderer
+mistletoe text.md --renderer mistletoe.ast_renderer.AstRenderer
 ```
 
 Say that the input file contains for example:
@@ -36,9 +52,11 @@ Then we will get this JSON output from the AST renderer:
 {
   "type": "Document",
   "footnotes": {},
+  "line_number": 1,
   "children": [
     {
       "type": "Heading",
+      "line_number": 1,
       "level": 1,
       "children": [
         {
@@ -49,6 +67,7 @@ Then we will get this JSON output from the AST renderer:
     },
     {
       "type": "Paragraph",
+      "line_number": 3,
       "children": [
         {
           "type": "RawText",
@@ -58,6 +77,7 @@ Then we will get this JSON output from the AST renderer:
     },
     {
       "type": "Heading",
+      "line_number": 5,
       "level": 1,
       "children": [
         {
@@ -68,6 +88,7 @@ Then we will get this JSON output from the AST renderer:
     },
     {
       "type": "Paragraph",
+      "line_number": 7,
       "children": [
         {
           "type": "Link",
@@ -86,12 +107,25 @@ Then we will get this JSON output from the AST renderer:
 }
 ```
 
-When passing this tree to a renderer, it is recursively traversed
+### Line numbers
+
+mistletoe records the starting line of all block tokens that it encounters during
+parsing and stores it as the `line_number` attribute of each token.
+(This feature is not available for span tokens yet.)
+
+Rendering
+---------
+Sometimes all you need is the information from the AST. But more often, you'll
+want to take that information and turn it into some other format like HTML.
+This is called _rendering_. mistletoe provides a set of built-in renderers for
+different formats, and it's also possible to define your own renderer.
+
+When passing an AST to a renderer, the tree is recursively traversed
 and methods corresponding to individual token types get called on the renderer
 in order to create the output in the desired format.
 
-Creating a custom renderer
---------------------------
+Creating a custom token and renderer
+------------------------------------
 
 Here's an example of how to add GitHub-style wiki links to the parsing process,
 and provide a renderer for this new token.
@@ -166,7 +200,7 @@ There you go: a new token in 5 lines of code.
 ### Side note about precedence
 
 Normally there is no need to override the `precedence` value of a custom token.
-The default value is the same as `InlineCode`, `AutoLink` and `HTMLSpan`,
+The default value is the same as `InlineCode`, `AutoLink` and `HtmlSpan`,
 which means that whichever token comes first will be parsed. In our case:
 
 ```markdown
@@ -193,9 +227,9 @@ of most of them for you. Simply passing your custom token class to
 `super().__init__()` does the trick:
 
 ```python
-from mistletoe.html_renderer import HTMLRenderer
+from mistletoe.html_renderer import HtmlRenderer
 
-class GithubWikiRenderer(HTMLRenderer):
+class GithubWikiRenderer(HtmlRenderer):
     def __init__(self):
         super().__init__(GithubWiki)
 ```
@@ -212,9 +246,9 @@ def render_github_wiki(self, token):
 Cleaning up, we have our new renderer class:
 
 ```python
-from mistletoe.html_renderer import HTMLRenderer, escape_url
+from mistletoe.html_renderer import HtmlRenderer, escape_url
 
-class GithubWikiRenderer(HTMLRenderer):
+class GithubWikiRenderer(HtmlRenderer):
     def __init__(self):
         super().__init__(GithubWiki)
 
@@ -244,3 +278,60 @@ with open('foo.md', 'r') as fin:
 For more info, take a look at the `base_renderer` module in mistletoe.
 The docstrings might give you a more granular idea of customizing mistletoe
 to your needs.
+
+Markdown to Markdown parsing-and-rendering
+------------------------------------------
+
+Suppose you have some Markdown that you want to process and then output
+as Markdown again. Thanks to the text-like nature of Markdown, it is often
+possible to do this with text search-and-replace tools... but not always. For
+example, if you want to replace a text fragment in the plain text, but not
+in the embedded code samples, then the search-and-replace approach won't work.
+
+In this case you can use mistletoe's `MarkdownRenderer`:
+1. Parse Markdown to an AST (usually held in a `Document` token).
+2. Make modifications to the AST.
+3. Render back to Markdown using `MarkdownRenderer.render()`.
+
+Here is an example of how you can replace text in selected parts of the AST:
+
+```python
+import mistletoe
+from mistletoe.block_token import BlockToken, Heading, Paragraph, SetextHeading
+from mistletoe.markdown_renderer import MarkdownRenderer
+from mistletoe.span_token import InlineCode, RawText, SpanToken
+
+def update_text(token: SpanToken):
+    """Update the text contents of a span token and its children.
+    `InlineCode` tokens are left unchanged."""
+    if isinstance(token, RawText):
+        token.content = token.content.replace("mistletoe", "The Amazing mistletoe")
+
+    if not isinstance(token, InlineCode) and hasattr(token, "children"):
+        for child in token.children:
+            update_text(child)
+
+def update_block(token: BlockToken):
+    """Update the text contents of paragraphs and headings within this block,
+    and recursively within its children."""
+    if isinstance(token, (Paragraph, SetextHeading, Heading)):
+        for child in token.children:
+            update_text(child)
+
+    for child in token.children:
+        if isinstance(child, BlockToken):
+            update_block(child)
+
+with open("README.md", "r") as fin:
+    with MarkdownRenderer() as renderer:
+        document = mistletoe.Document(fin)
+        update_block(document)
+        md = renderer.render(document)
+        print(md)
+```
+
+The `MarkdownRenderer` can also reflow the text in the document to a given
+maximum line length. And it can do so while preserving the formatting of code
+blocks and other tokens where line breaks matter. To use this feature,
+specify a `max_line_length` parameter in the call to the `MarkdownRenderer`
+constructor.

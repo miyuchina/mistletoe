@@ -3,7 +3,7 @@ from unittest.mock import call, patch, sentinel, mock_open, Mock
 from mistletoe import cli
 
 
-class TestCLI(TestCase):
+class TestCli(TestCase):
     @patch('mistletoe.cli.parse', return_value=Mock(filenames=[], renderer=sentinel.Renderer))
     @patch('mistletoe.cli.interactive')
     def test_main_to_interactive(self, mock_interactive, mock_parse):
@@ -15,7 +15,6 @@ class TestCLI(TestCase):
     def test_main_to_convert(self, mock_convert, mock_parse):
         cli.main(None)
         mock_convert.assert_called_with(['foo.md'], sentinel.Renderer)
-
 
     @patch('importlib.import_module', return_value=Mock(Renderer=sentinel.RendererCls))
     def test_parse_renderer(self, mock_import_module):
@@ -60,6 +59,7 @@ class TestCLI(TestCase):
                          mock_print_heading, mock_import_readline):
         def MockInputFactory(return_values):
             _counter = -1
+
             def mock_input(prompt=''):
                 nonlocal _counter
                 _counter += 1
@@ -122,8 +122,7 @@ class TestCLI(TestCase):
         cli._print_heading(Mock(__name__='Renderer'))
         version = cli.mistletoe.__version__
         msgs = ['mistletoe [version {}] (interactive)'.format(version),
-                'Type Ctrl-D to complete input, or Ctrl-C to exit.', 
+                'Type Ctrl-D to complete input, or Ctrl-C to exit.',
                 'Using renderer: Renderer']
         calls = [call(msg) for msg in msgs]
         mock_print.assert_has_calls(calls)
-

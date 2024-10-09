@@ -26,7 +26,7 @@ import os
 import sys
 import getopt
 import mistletoe
-from contrib.jira_renderer import JIRARenderer
+from mistletoe.contrib.jira_renderer import JiraRenderer
 
 usageString = '%s <markdownfile>' % os.path.basename(sys.argv[0])
 helpString = """
@@ -42,7 +42,7 @@ If no input file is specified, stdin is used.
 Command-line utility to convert Markdown (CommonMark) to JIRA markup.
 
 JIRA markup spec: https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all
-CommonMark spec: http://spec.commonmark.org/0.28/#introduction
+CommonMark spec: http://spec.commonmark.org/0.30/#introduction
 """
 
 
@@ -59,11 +59,11 @@ class CommandLineParser:
             sys.stderr.write(usageString + '\n')
             sys.exit(1)
 
-        app = MarkdownToJIRA()
+        app = MarkdownToJira()
         app.run(optlist, args)
 
 
-class MarkdownToJIRA:
+class MarkdownToJira:
     def __init__(self):
         self.version = "1.0.2"
         self.options = {}
@@ -89,13 +89,19 @@ class MarkdownToJIRA:
             sys.exit(1)
 
         with open(args[0], 'r', encoding='utf-8') if len(args) == 1 else sys.stdin as infile:
-            rendered = mistletoe.markdown(infile, JIRARenderer)
+            rendered = mistletoe.markdown(infile, JiraRenderer)
 
         if self.options['output'] == '-':
             sys.stdout.write(rendered)
         else:
             with open(self.options['output'], 'w', encoding='utf-8') as outfile:
                 outfile.write(rendered)
+
+
+MarkdownToJIRA = MarkdownToJira
+"""
+Deprecated name of the `MarkdownToJira` class.
+"""
 
 
 if __name__ == '__main__':

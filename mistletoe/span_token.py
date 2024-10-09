@@ -15,9 +15,6 @@ __all__ = ['EscapeSequence', 'Strikethrough', 'AutoLink', 'CoreTokens',
            'InlineCode', 'LineBreak', 'RawText']
 
 
-_root_node = None
-
-
 def tokenize_inner(content):
     """
     A wrapper around span_tokenizer.tokenize. Pass in all span-level token
@@ -74,7 +71,7 @@ class SpanToken(token.Token):
             self.content = match.group(self.parse_group)
 
     def __contains__(self, text):
-        if hasattr(self, 'children'):
+        if self.children is not None:
             return any(text in child for child in self.children)
         return text in self.content
 
@@ -89,12 +86,13 @@ class CoreTokens(SpanToken):
     Replaced with objects of the proper classes in the final stage of parsing.
     """
     precedence = 3
+
     def __new__(self, match):
         return globals()[match.type](match)
 
     @classmethod
     def find(cls, string):
-        return core_tokens.find_core_tokens(string, _root_node)
+        return core_tokens.find_core_tokens(string, token._root_node)
 
 
 class Strong(SpanToken):
@@ -103,6 +101,8 @@ class Strong(SpanToken):
     This is an inline token. Its children are inline (span) tokens.
     One of the core tokens.
     """
+    def __init__(self, match):
+        self.delimiter = match.delimiter
 
 
 class Emphasis(SpanToken):
@@ -111,6 +111,8 @@ class Emphasis(SpanToken):
     This is an inline token. Its children are inline (span) tokens.
     One of the core tokens.
     """
+    def __init__(self, match):
+        self.delimiter = match.delimiter
 
 
 class InlineCode(SpanToken):
@@ -124,8 +126,10 @@ class InlineCode(SpanToken):
 
     def __init__(self, match):
         content = match.group(self.parse_group)
+        self.delimiter = match.group(1)
         content = content.replace('\n', ' ')
-        if not content.isspace() and content.startswith(" ") and content.endswith(" "):
+        self.padding = " " if not content.isspace() and content.startswith(" ") and content.endswith(" ") else ""
+        if self.padding:
             content = content[1:-1]
         self.children = (RawText(content),)
 
@@ -153,27 +157,37 @@ class Image(SpanToken):
     Attributes:
         src (str): image source.
         title (str): image title (default to empty).
+        label (str): link label, for reference links.
     """
     repr_attributes = ("src", "title")
+
     def __init__(self, match):
         self.src = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
+        self.dest_type = getattr(match, "dest_type", None)
+        self.label = getattr(match, "label", None)
+        self.title_delimiter = getattr(match, "title_delimiter", None)
 
 
 class Link(SpanToken):
     """
-    Link token. ("[name](target)")
+    Link token. ("[name](target "title")")
     This is an inline token. Its children are inline (span) tokens holding the link text.
     One of the core tokens.
 
     Attributes:
         target (str): link target.
         title (str): link title (default to empty).
+        label (str): link label, for reference links.
     """
     repr_attributes = ("target", "title")
+
     def __init__(self, match):
         self.target = EscapeSequence.strip(match.group(2).strip())
         self.title = EscapeSequence.strip(match.group(3))
+        self.dest_type = getattr(match, "dest_type", None)
+        self.label = getattr(match, "label", None)
+        self.title_delimiter = getattr(match, "title_delimiter", None)
 
 
 class AutoLink(SpanToken):
@@ -182,8 +196,9 @@ class AutoLink(SpanToken):
     This is an inline token with a single child of type RawText.
 
     Attributes:
-        children (iterator): a single RawText node for the link target.
+        children (list): a single RawText node for the link target.
         target (str): link target.
+        mailto (bool): true iff the target looks like an email address, but does not have the "mailto:" prefix.
     """
     repr_attributes = ("target", "mailto")
     pattern = re.compile(r"(?<!\\)(?:\\\\)*<([A-Za-z][A-Za-z0-9+.-]{1,31}:[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
@@ -198,7 +213,7 @@ class AutoLink(SpanToken):
 
 class EscapeSequence(SpanToken):
     """
-    Escape sequence token. ("\*")
+    Escape sequence token. ("\\\\*")
     This is an inline token with a single child of type RawText.
 
     Attributes:
@@ -218,8 +233,11 @@ class EscapeSequence(SpanToken):
 
 class LineBreak(SpanToken):
     """
-    Line break token. Hard or soft.
+    Line break token: hard or soft.
     This is an inline token without children.
+
+    Attributes:
+        soft (bool): true if this is a soft line break.
     """
     repr_attributes = ("soft",)
     pattern = re.compile(r'( *|\\)\n')
@@ -227,9 +245,8 @@ class LineBreak(SpanToken):
     parse_group = 0
 
     def __init__(self, match):
-        content = match.group(1)
-        self.soft = not content.startswith(('  ', '\\'))
-        self.content = ''
+        self.content = match.group(1)
+        self.soft = not self.content.startswith(('  ', '\\'))
 
 
 class RawText(SpanToken):
@@ -254,18 +271,18 @@ _tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',
         'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'title', 'tr', 'track',
         'ul'}
 
-_tag   = r'[A-Za-z][A-Za-z0-9-]*'
-_attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^ "\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
+_tag   = r'[A-Za-z][A-Za-z0-9-]*'  # noqa: E221
+_attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^\s"\'=<>`]+|\'[^\']*?\'|"[^\"]*?"))?)*'
 
-_open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'
+_open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'  # noqa: E221
 _closing_tag = r'(?<!\\)</' + _tag + r'\s*>'
-_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'
+_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'  # noqa: E221
 _instruction = r'(?<!\\)<\?.+?\?>'
 _declaration = r'(?<!\\)<![A-Z].+?>'
-_cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'
+_cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'  # noqa: E221
 
 
-class HTMLSpan(SpanToken):
+class HtmlSpan(SpanToken):
     """
     Span-level HTML token.
     This is an inline token without children.
@@ -279,27 +296,36 @@ class HTMLSpan(SpanToken):
     parse_inner = False
     parse_group = 0
 
+
+HTMLSpan = HtmlSpan
+"""
+Deprecated name of the `HtmlSpan` class.
+"""
+
+
 # Note: The following XWiki tokens are based on the XWiki Syntax 2.0 (or above; 1.0 was deprecated years ago already).
 
 class XWikiBlockMacroStart(SpanToken):
     """
-    A "block" macro opening tag. ("{{macroName<optionalParams>}}<newLine>") 
-    
+    A "block" macro opening tag. ("{{macroName<optionalParams>}}<newLine>")
+
     We want to keep it on a separate line instead of "soft" merging it with the *following* line.
     """
     pattern = re.compile(r'(?<!\\)(\{\{\w+.*?(?<![\\/])\}\})\s*\n')
     parse_inner = False
     parse_group = 1
 
+
 class XWikiBlockMacroEnd(SpanToken):
     """
-    A "block" macro closing tag. ("<onlySpacesAllowed>{{/macroName}}") 
-    
+    A "block" macro closing tag. ("<onlySpacesAllowed>{{/macroName}}")
+
     We want to keep it on a separate line instead of "soft" merging it with the *preceding* line.
     """
     pattern = re.compile(r'^(?:\s*)(\{\{/\w+\}\})', re.MULTILINE)
     parse_inner = False
     parse_group = 1
+
 
 _token_types = []
 reset_tokens()

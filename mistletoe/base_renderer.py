@@ -5,6 +5,7 @@ Base class for renderers.
 import re
 from mistletoe import block_token, span_token
 
+
 class BaseRenderer(object):
     """
     Base class for renderers.
@@ -42,7 +43,7 @@ class BaseRenderer(object):
     """
     _parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
 
-    def __init__(self, *extras):
+    def __init__(self, *extras, **kwargs):
         self.render_map = {
             'Strong':         self.render_strong,
             'Emphasis':       self.render_emphasis,
@@ -67,7 +68,7 @@ class BaseRenderer(object):
             'ThematicBreak':  self.render_thematic_break,
             'LineBreak':      self.render_line_break,
             'Document':       self.render_document,
-            }
+        }
         self._extras = extras
 
         for token in extras:

@@ -1,6 +1,6 @@
 <h1>mistletoe<img src='https://cdn.rawgit.com/miyuchina/mistletoe/master/resources/logo.svg' align='right' width='128' height='128'></h1>
 
-[![Build Status][build-badge]][travis]
+[![Build Status][build-badge]][github-actions]
 [![Coverage Status][cover-badge]][coveralls]
 [![PyPI][pypi-badge]][pypi]
 [![is wheel][wheel-badge]][pypi]
@@ -41,14 +41,16 @@ Output formats
 --------------
 
 Renderers for the following "core" output formats exist within the mistletoe
-module itself:
+main package:
 
 * HTML
 * LaTeX
 * AST (Abstract Syntax Tree; handy for debugging the parsing process)
+* Markdown (Can be used to reflow the text, or make other types of automated
+  changes to Markdown documents)
 
-Renderers for the following output formats are placed
-in the [contrib][contrib] folder:
+Renderers for the following output formats can be found
+in the [contrib][contrib] package:
 
 * HTML with MathJax (_mathjax.py_)
 * HTML with code highlighting (using Pygments) (_pygments\_renderer.py_)
@@ -108,17 +110,28 @@ with open('foo.md', 'r') as fin:
     rendered = mistletoe.markdown(fin, LaTeXRenderer)
 ```
 
+To reflow the text in a Markdown document with a max line length of 20 characters:
+
+```python
+import mistletoe
+from mistletoe.markdown_renderer import MarkdownRenderer
+
+with open('dev-guide.md', 'r') as fin:
+    with MarkdownRenderer(max_line_length=20) as renderer:
+        print(renderer.render(mistletoe.Document(fin)))
+```
+
 Finally, here's how you would manually specify extra tokens via a renderer.
-In the following example, we use `HTMLRenderer` to render
-the AST. The renderer itself adds `HTMLBlock` and `HTMLSpan` tokens to the parsing
+In the following example, we use `HtmlRenderer` to render
+the AST. The renderer itself adds `HtmlBlock` and `HtmlSpan` tokens to the parsing
 process. The result should be equal to the output obtained from
 the first example above.
 
 ```python
-from mistletoe import Document, HTMLRenderer
+from mistletoe import Document, HtmlRenderer
 
 with open('foo.md', 'r') as fin:
-    with HTMLRenderer() as renderer:     # or: `with HTMLRenderer(AnotherToken1, AnotherToken2) as renderer:`
+    with HtmlRenderer() as renderer:     # or: `with HtmlRenderer(AnotherToken1, AnotherToken2) as renderer:`
         doc = Document(fin)              # parse the lines into AST
         rendered = renderer.render(doc)  # render the AST
         # internal lists of tokens to be parsed are automatically reset when exiting this `with` block
@@ -153,11 +166,12 @@ LaTeX:
 mistletoe foo.md --renderer mistletoe.latex_renderer.LaTeXRenderer
 ```
 
-Note: The renderers inside the `contrib` directory are not currently a part of
-the `mistletoe` module when mistletoe is installed as a regular package.
-So if you want to use a renderer from the `contrib` directory, you either
-have to add that directory to Python's [PYTHONPATH][pythonpath]
-or install mistletoe with the `-e` switch (see [Installation](#installation)).
+and similarly for a renderer in the contrib package:
+
+```sh
+mistletoe foo.md --renderer mistletoe.contrib.jira_renderer.JiraRenderer
+```
+
 
 ### mistletoe interactive mode
 
@@ -227,11 +241,11 @@ Copyright & License
   [CC BY 3.0][cc-by].
 * mistletoe is released under [MIT][license].
 
-[build-badge]: https://img.shields.io/travis/miyuchina/mistletoe.svg?style=flat-square
+[build-badge]: https://img.shields.io/github/actions/workflow/status/miyuchina/mistletoe/python-package.yml?style=flat-square
 [cover-badge]: https://img.shields.io/coveralls/miyuchina/mistletoe.svg?style=flat-square
 [pypi-badge]: https://img.shields.io/pypi/v/mistletoe.svg?style=flat-square
 [wheel-badge]: https://img.shields.io/pypi/wheel/mistletoe.svg?style=flat-square
-[travis]: https://travis-ci.org/miyuchina/mistletoe
+[github-actions]: https://github.com/miyuchina/mistletoe/actions/workflows/python-package.yml
 [coveralls]: https://coveralls.io/github/miyuchina/mistletoe?branch=master
 [pypi]: https://pypi.python.org/pypi/mistletoe
 [mistune]: https://github.com/lepture/mistune
@@ -242,8 +256,8 @@ Copyright & License
 [performance]: performance.md
 [oilshell]: https://www.oilshell.org/blog/2018/02/14.html
 [commonmark]: https://spec.commonmark.org/
-[contrib]: https://github.com/miyuchina/mistletoe/tree/master/contrib
-[scheme]: https://github.com/miyuchina/mistletoe/blob/dev/contrib/scheme.py
+[contrib]: https://github.com/miyuchina/mistletoe/tree/master/mistletoe/contrib
+[scheme]: https://github.com/miyuchina/mistletoe/blob/master/mistletoe/contrib/scheme.py
 [contributing]: CONTRIBUTING.md
 [icon]: https://www.freepik.com
 [cc-by]: https://creativecommons.org/licenses/by/3.0/us/

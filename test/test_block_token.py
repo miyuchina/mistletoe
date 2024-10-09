@@ -1,7 +1,9 @@
 import unittest
-from unittest.mock import patch, call
-from mistletoe import block_token, span_token
-from mistletoe.block_tokenizer import FileWrapper
+from unittest.mock import call, patch
+
+from parameterized import parameterized
+
+from mistletoe import block_token, block_tokenizer, span_token
 
 
 class TestToken(unittest.TestCase):
@@ -23,7 +25,7 @@ class TestToken(unittest.TestCase):
         self.mock.assert_any_call(arg)
 
 
-class TestATXHeading(TestToken):
+class TestAtxHeading(TestToken):
     def test_match(self):
         lines = ['### heading 3\n']
         arg = 'heading 3'
@@ -59,18 +61,18 @@ class TestSetextHeading(TestToken):
         self.assertIsInstance(next(tokens), block_token.SetextHeading)
         self.assertIsInstance(next(tokens), block_token.Paragraph)
         self.mock.assert_has_calls([call('some'), call('heading'), call('foobar')])
-        with self.assertRaises(StopIteration) as e:
+        with self.assertRaises(StopIteration):
             next(tokens)
 
 
 class TestQuote(unittest.TestCase):
     def test_match(self):
-        with patch('mistletoe.block_token.Paragraph') as mock:
+        with patch('mistletoe.block_token.Paragraph'):
             token = next(iter(block_token.tokenize(['> line 1\n', '> line 2\n'])))
             self.assertIsInstance(token, block_token.Quote)
 
     def test_lazy_continuation(self):
-        with patch('mistletoe.block_token.Paragraph') as mock:
+        with patch('mistletoe.block_token.Paragraph'):
             token = next(iter(block_token.tokenize(['> line 1\n', 'line 2\n'])))
             self.assertIsInstance(token, block_token.Quote)
 
@@ -85,7 +87,7 @@ class TestCodeFence(TestToken):
         lines = ['~~~sh\n', 'rm dir\n', 'mkdir test\n', '~~~\n']
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.CodeFence, lines, arg, language='sh')
-    
+
     def test_not_match_fenced_code_when_only_inline_code(self):
         lines = ['`~` is called tilde']
         token = next(iter(block_token.tokenize(lines)))
@@ -114,6 +116,11 @@ class TestCodeFence(TestToken):
         arg = 'hey'
         self._test_match(block_token.CodeFence, lines, arg, language='')
 
+    def test_code_fence_with_backticks_and_tildes_in_the_info_string(self):
+        lines = ['~~~ aa ``` ~~~\n', 'foo\n', '~~~\n']
+        arg = 'foo\n'
+        self._test_match(block_token.CodeFence, lines, arg, language='aa')
+
 
 class TestBlockCode(TestToken):
     def test_parse_indented_code(self):
@@ -121,8 +128,18 @@ class TestBlockCode(TestToken):
         arg = 'rm dir\nmkdir test\n'
         self._test_match(block_token.BlockCode, lines, arg, language='')
 
+    def test_parse_indented_code_with_blank_lines(self):
+        lines = ['    chunk1\n', '\n', '    chunk2\n', '  \n', ' \n', ' \n', '    chunk3\n']
+        arg = 'chunk1\n\nchunk2\n\n\n\nchunk3\n'
+        self._test_match(block_token.BlockCode, lines, arg, language='')
+
 
 class TestParagraph(TestToken):
+    def setUp(self):
+        super().setUp()
+        block_token.add_token(block_token.HtmlBlock)
+        self.addCleanup(block_token.reset_tokens)
+
     def test_parse(self):
         lines = ['some\n', 'continuous\n', 'lines\n']
         arg = 'some'
@@ -137,6 +154,53 @@ class TestParagraph(TestToken):
         self.assertIsInstance(token1, block_token.Paragraph)
         self.assertIsInstance(token2, block_token.CodeFence)
         self.assertIsInstance(token3, block_token.Paragraph)
+
+    def test_parse_interrupting_block_tokens(self):
+        interrupting_blocks = [
+            '***\n',  # thematic break
+            '## atx\n',  # ATX heading
+            '<div>\n',  # HTML block type 6
+            '> block quote\n',
+            '1. list\n',
+            '``` fenced code block\n',
+            ('| table |\n', '| ----- |\n', '| row   |\n'),
+        ]
+        for block in interrupting_blocks:
+            lines = ['Paragraph 1\n', *block]
+        try:
+            token1, token2 = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch. Lines: '{}'".format(lines)) from e
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertNotIsInstance(token2, block_token.Paragraph)
+
+    def test_parse_non_interrupting_block_tokens(self):
+        lines = [
+            'Paragraph 1\n',
+            '2. list\n',  # list doesn't start from 1
+            '    indented text\n',  # code block
+            '<custom>\n',  # HTML block type 7
+            '\n',
+            'Paragraph 2\n'
+        ]
+        try:
+            token1, token2 = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch.") from e
+        self.assertIsInstance(token1, block_token.Paragraph)
+        self.assertIsInstance(token2, block_token.Paragraph)
+
+    def test_parse_setext_heading(self):
+        lines = [
+            'Two line\n',
+            'heading\n',
+            '---\n'
+        ]
+        try:
+            token1, = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch.") from e
+        self.assertIsInstance(token1, block_token.SetextHeading)
 
 
 class TestListItem(unittest.TestCase):
@@ -212,10 +276,10 @@ class TestListItem(unittest.TestCase):
         # were replaced by spaces with a tab stop of 4 characters.
         lines = ['title\n',
                  '*\ttabbed item long line\n',
-                 '\n', # break lazy continuation
+                 '\n',  # break lazy continuation
                  '    continuation 1\n',
                  '*   second list item\n',
-                 '\n', # break lazy continuation
+                 '\n',  # break lazy continuation
                  '\tcontinuation 2\n']
         tokens = block_token.tokenize(lines)
         self.assertEqual(len(tokens), 2)
@@ -313,22 +377,28 @@ class TestTable(unittest.TestCase):
         self.assertEqual(test_func('------:'), 1)
 
     def test_parse_delimiter(self):
-        test_func = block_token.Table.split_delimiter
-        self.assertEqual(list(test_func('| :--- | :---: | ---:|\n')),
-                [':---', ':---:', '---:'])
+        def test_func(s):
+            return block_token.Table.split_delimiter(s)
+        self.assertEqual(list(test_func('|-| :--- | :---: | ---:|\n')),
+                ['-', ':---', ':---:', '---:'])
 
-    def test_match(self):
+    @parameterized.expand([
+        ('| --- | --- | --- |\n'),
+        ('| - | - | - |\n'),
+        ('|-|-|-- \n'),
+    ])
+    def test_match(self, delimiter_line):
         lines = ['| header 1 | header 2 | header 3 |\n',
-                 '| --- | --- | --- |\n',
+                delimiter_line,
                  '| cell 1 | cell 2 | cell 3 |\n',
                  '| more 1 | more 2 | more 3 |\n']
         with patch('mistletoe.block_token.TableRow') as mock:
-            token = next(iter(block_token.tokenize(lines)))
+            token, = block_token.tokenize(lines)
             self.assertIsInstance(token, block_token.Table)
             self.assertTrue(hasattr(token, 'header'))
             self.assertEqual(token.column_align, [None, None, None])
             token.children
-            calls = [call(line, [None, None, None]) for line in lines[:1]+lines[2:]]
+            calls = [call(line, [None, None, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
             mock.assert_has_calls(calls)
 
     def test_easy_table(self):
@@ -341,7 +411,7 @@ class TestTable(unittest.TestCase):
             self.assertTrue(hasattr(token, 'header'))
             self.assertEqual(token.column_align, [1, None])
             token.children
-            calls = [call(line, [1, None]) for line in lines[:1] + lines[2:]]
+            calls = [call(line, [1, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
             mock.assert_has_calls(calls)
 
     def test_not_easy_table(self):
@@ -350,49 +420,65 @@ class TestTable(unittest.TestCase):
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.Paragraph)
 
+    def test_interrupt_paragraph_option(self):
+        lines = [
+            'Paragraph 1\n',
+            '| table |\n',
+            '| ----- |\n',
+            '| row   |\n',
+        ]
+        try:
+            block_token.Table.interrupt_paragraph = False
+            token, = block_token.tokenize(lines)
+        except ValueError as e:
+            raise AssertionError("Token number mismatch.") from e
+        finally:
+            block_token.Table.interrupt_paragraph = True
+        self.assertIsInstance(token, block_token.Paragraph)
+
 
 class TestTableRow(unittest.TestCase):
     def test_match(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '| cell 1 | cell 2 |\n'
-            token = block_token.TableRow(line)
+            token = block_token.TableRow(line, line_number=10)
             self.assertEqual(token.row_align, [None])
-            mock.assert_has_calls([call('cell 1', None), call('cell 2', None)])
+            mock.assert_has_calls([call('cell 1', None, 10), call('cell 2', None, 10)])
 
     def test_easy_table_row(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = 'cell 1 | cell 2\n'
-            token = block_token.TableRow(line)
+            token = block_token.TableRow(line, line_number=10)
             self.assertEqual(token.row_align, [None])
-            mock.assert_has_calls([call('cell 1', None), call('cell 2', None)])
+            mock.assert_has_calls([call('cell 1', None, 10), call('cell 2', None, 10)])
 
     def test_short_row(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '| cell 1 |\n'
-            token = block_token.TableRow(line, [None, None])
+            token = block_token.TableRow(line, [None, None], 10)
             self.assertEqual(token.row_align, [None, None])
-            mock.assert_has_calls([call('cell 1', None), call('', None)])
+            mock.assert_has_calls([call('cell 1', None, 10), call('', None, 10)])
 
     def test_escaped_pipe_in_cell(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '| pipe: `\\|` | cell 2\n'
-            token = block_token.TableRow(line, [None, None])
+            token = block_token.TableRow(line, line_number=10, row_align=[None, None])
             self.assertEqual(token.row_align, [None, None])
-            mock.assert_has_calls([call('pipe: `|`', None), call('cell 2', None)])
-    
+            mock.assert_has_calls([call('pipe: `|`', None, 10), call('cell 2', None, 10)])
+
     @unittest.skip('Even GitHub fails in here, workaround: always put a space before `|`')
     def test_not_really_escaped_pipe_in_cell(self):
         with patch('mistletoe.block_token.TableCell') as mock:
             line = '|ending with a \\\\|cell 2\n'
-            token = block_token.TableRow(line, [None, None])
+            token = block_token.TableRow(line, [None, None], 10)
             self.assertEqual(token.row_align, [None, None])
-            mock.assert_has_calls([call('ending with a \\\\', None), call('cell 2', None)])
+            mock.assert_has_calls([call('ending with a \\\\', None, 10), call('cell 2', None, 10)])
 
 
 class TestTableCell(TestToken):
     def test_match(self):
-        token = block_token.TableCell('cell 2')
-        self._test_token(token, 'cell 2', align=None)
+        token = block_token.TableCell('cell 2', line_number=13)
+        self._test_token(token, 'cell 2', line_number=13, align=None)
 
 
 class TestFootnote(unittest.TestCase):
@@ -402,6 +488,7 @@ class TestFootnote(unittest.TestCase):
         token = block_token.Document(lines)
         self.assertEqual(token.footnotes, {"key 1": ("value1", ""),
                                            "key 2": ("value2", "")})
+
     def test_parse_with_title(self):
         lines = ['[key 1]: value1 "title1"\n',
                  '[key 2]: value2\n',
@@ -409,6 +496,22 @@ class TestFootnote(unittest.TestCase):
         token = block_token.Document(lines)
         self.assertEqual(token.footnotes, {"key 1": ("value1", "title1"),
                                            "key 2": ("value2", "title2")})
+
+    def test_parse_with_space_in_every_part(self):
+        lines = ['[Foo bar]:\n',
+                 '<my url>\n',
+                 '\'my title\'\n']
+        token = block_token.Document(lines)
+        self.assertEqual(set(token.footnotes.values()), set({("my url", "my title")}))
+
+    def test_parse_title_must_be_separated_from_link_destination(self):
+        lines = ['[foo]: <bar> (baz)\n']
+        token = block_token.Document(lines)
+        self.assertEqual(set(token.footnotes.values()), set({("bar", "baz")}))
+
+        lines = ['[foo]: <bar>(baz)\n']
+        token = block_token.Document(lines)
+        self.assertEqual(len(token.footnotes), 0)
 
     # this tests an edge case, it shouldn't occur in normal documents:
     # "[key 2]" is part of the paragraph above it, because a link reference definitions cannot interrupt a paragraph.
@@ -418,14 +521,15 @@ class TestFootnote(unittest.TestCase):
                  '[key 2]: value2\n',
                  'something2\n',
                  '\n',
-                 '[key 3]: value3\r\n', # '\r', or any other whitespace may follow on the same line
+                 '[key 3]: value3\r\n',  # '\r', or any other whitespace may follow on the same line
                  'something3\n']
         token = block_token.Document(lines)
         self.assertEqual(token.footnotes, {"key 1": ("value1", ""),
                                            "key 3": ("value3", "")})
         self.assertEqual(len(token.children), 2)
         self.assertIsInstance(token.children[0], block_token.Paragraph)
-        self.assertEqual(len(token.children[0].children), 5) # something1, <line break>, [key 2]: value2, <line break>, something2
+        # children: something1, <line break>, [key 2]: value2, <line break>, something2
+        self.assertEqual(len(token.children[0].children), 5)
         self.assertEqual(token.children[0].children[2].content, "[key 2]: value2")
         self.assertEqual(token.children[1].children[0].content, "something3")
 
@@ -454,28 +558,29 @@ class TestFootnote(unittest.TestCase):
         self.assertIsInstance(token.children[2], block_token.BlockCode)
         self.assertEqual(token.children[2].children[0].content, "[i-am-block-too]: /foo\n")
 
-    def test_parse_opening_bracket_as_paragraph(self): # ... and no error is raised
+    def test_parse_opening_bracket_as_paragraph(self):  # ... and no error is raised
         lines = ['[\n']
         token = block_token.Document(lines)
         self.assertEqual(len(token.footnotes), 0)
         self.assertEqual(len(token.children), 1)
-        
+
         self.assertIsInstance(token.children[0], block_token.Paragraph)
         self.assertEqual(token.children[0].children[0].content, '[')
-    
-    def test_parse_opening_brackets_as_paragraph(self): # ... and no lines are skipped
+
+    def test_parse_opening_brackets_as_paragraph(self):  # ... and no lines are skipped
         lines = ['[\n',
                  '[ \n',
                  ']\n']
         token = block_token.Document(lines)
         self.assertEqual(len(token.footnotes), 0)
         self.assertEqual(len(token.children), 1)
-        
+
         para = token.children[0]
         self.assertIsInstance(para, block_token.Paragraph)
         self.assertEqual(len(para.children), 5,
                 'expected: RawText, LineBreak, RawText, LineBreak, RawText')
         self.assertEqual(para.children[0].content, '[')
+
 
 class TestDocument(unittest.TestCase):
     def test_store_footnote(self):
@@ -509,3 +614,113 @@ class TestContains(unittest.TestCase):
         self.assertTrue('heading' in token)
         self.assertTrue('code' in token)
         self.assertFalse('foo' in token)
+
+
+class TestParent(unittest.TestCase):
+    def test_parent(self):
+        lines = ['# heading\n', '\n', 'paragraph\n']
+        token = block_token.Document(lines)
+        self.assertEqual(len(token.children), 2)
+        self.assertIsNone(token.parent)
+        for child in token.children:
+            self.assertEqual(child.parent, token)
+            for grandchild in child.children:
+                self.assertEqual(grandchild.parent, child)
+
+
+class TestHtmlBlock(unittest.TestCase):
+    def setUp(self):
+        block_token.add_token(block_token.HtmlBlock)
+        self.addCleanup(block_token.reset_tokens)
+
+    def test_textarea_block_may_contain_blank_lines(self):
+        lines = ['<textarea>\n',
+                 '\n',
+                 '*foo*\n',
+                 '\n',
+                 '_bar_\n',
+                 '\n',
+                 '</textarea>\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.HtmlBlock)
+
+
+class TestLeafBlockTokenContentProperty(unittest.TestCase):
+    def setUp(self):
+        block_token.add_token(block_token.HtmlBlock)
+        self.addCleanup(block_token.reset_tokens)
+
+    def test_code_fence(self):
+        lines = ['```\n',
+                 'line 1\n',
+                 'line 2\n',
+                 '```\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.CodeFence)
+
+        # option 1: direct access to the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].children[0].content)
+
+        # option 2: using property getter to access the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].content)
+
+    def test_block_code(self):
+        lines = ['    line 1\n',
+                 '    line 2\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.BlockCode)
+
+        # option 1: direct access to the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].children[0].content)
+
+        # option 2: using property getter to access the content
+        self.assertEqual('line 1\nline 2\n', tokens[0].content)
+
+    def test_html_block(self):
+        lines = ['<div>\n',
+                 'text\n'
+                 '</div>\n']
+        document = block_token.Document(lines)
+        tokens = document.children
+        self.assertEqual(1, len(tokens))
+        self.assertIsInstance(tokens[0], block_token.HtmlBlock)
+
+        # option 1: direct access to the content
+        self.assertEqual(''.join(lines).strip(), tokens[0].children[0].content)
+
+        # option 2: using property getter to access the content
+        self.assertEqual(''.join(lines).strip(), tokens[0].content)
+
+
+class TestFileWrapper(unittest.TestCase):
+    def test_get_set_pos(self):
+        lines = [
+            "# heading\n",
+            "somewhat interesting\n",
+            "content\n",
+        ]
+        wrapper = block_tokenizer.FileWrapper(lines)
+        assert next(wrapper) == "# heading\n"
+        anchor = wrapper.get_pos()
+        assert next(wrapper) == "somewhat interesting\n"
+        wrapper.set_pos(anchor)
+        assert next(wrapper) == "somewhat interesting\n"
+
+    def test_anchor_reset(self):
+        lines = [
+            "# heading\n",
+            "somewhat interesting\n",
+            "content\n",
+        ]
+        wrapper = block_tokenizer.FileWrapper(lines)
+        assert next(wrapper) == "# heading\n"
+        wrapper.anchor()
+        assert next(wrapper) == "somewhat interesting\n"
+        wrapper.reset()
+        assert next(wrapper) == "somewhat interesting\n"

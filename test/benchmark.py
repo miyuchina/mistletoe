@@ -33,6 +33,7 @@ def run_markdown(package):
     with open(TEST_FILE, 'r', encoding='utf-8') as fin:
         return package.markdown(fin.read(), extensions=['fenced_code', 'tables'])
 
+
 @benchmark('mistune')
 def run_mistune(package):
     with open(TEST_FILE, 'r', encoding='utf-8') as fin:
@@ -59,7 +60,7 @@ def run(package_name):
 def run_all(package_names):
     prompt = 'Running tests with {}...'.format(', '.join(package_names))
     print(prompt)
-    print('='*len(prompt))
+    print('=' * len(prompt))
     for package_name in package_names:
         run(package_name)
 

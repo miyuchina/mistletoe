@@ -29,6 +29,12 @@ class TestStrong(TestBranchToken):
         self._test_parse(span_token.Strong, '**some text**', 'some text')
         self._test_parse(span_token.Strong, '__some text__', 'some text')
 
+    def test_strong_when_both_delimiter_run_lengths_are_multiples_of_3(self):
+        tokens = iter(span_token.tokenize_inner('foo******bar*********baz'))
+        self._test_token(next(tokens), 'foo', children=False)
+        self._test_token(next(tokens), 'bar', children=True)
+        self._test_token(next(tokens), '***baz', children=False)
+
 
 class TestEmphasis(TestBranchToken):
     def test_parse(self):
@@ -63,12 +69,15 @@ class TestInlineCode(TestBranchToken):
 
     def test_parse(self):
         self._test_parse(span_token.InlineCode, '`some text`', 'some text')
+
     def test_parse_in_bold(self):
         self._test_parse_enclosed(span_token.Strong, '**')
         self._test_parse_enclosed(span_token.Strong, '__')
+
     def test_parse_in_emphasis(self):
         self._test_parse_enclosed(span_token.Emphasis, '*')
         self._test_parse_enclosed(span_token.Emphasis, '_')
+
     def test_parse_in_strikethrough(self):
         self._test_parse_enclosed(span_token.Strikethrough, '~~')
 
@@ -107,6 +116,10 @@ class TestLink(TestBranchToken):
         child = next(iter(token.children))
         self._test_token(child, 'alt', src='src')
 
+    def test_parse_angle_bracketed_inline_link_with_space(self):
+        self._test_parse(span_token.Link, '[link](</my uri> \'a title\')',
+            'link', target='/my uri', title='a title')
+
 
 class TestAutoLink(TestBranchToken):
     def test_parse(self):
@@ -141,14 +154,33 @@ class TestRawText(unittest.TestCase):
 
     def test_no_children(self):
         token = span_token.RawText('some text')
-        with self.assertRaises(AttributeError):
-            token.children
+        self.assertIsNone(token.children)
+
+    def test_valid_html_entities(self):
+        tokens = span_token.tokenize_inner('&nbsp; &#21512;')
+        self.assertEqual(tokens[0].content, '\xa0 \u5408')
+
+    def test_invalid_html_entities(self):
+        text = '&nbsp &x; &#; &#x; &#87654321; &#abcdef0; &ThisIsNotDefined; &hi?;'
+        tokens = span_token.tokenize_inner(text)
+        self.assertEqual(tokens[0].content, text)
 
 
 class TestLineBreak(unittest.TestCase):
-    def test_parse(self):
+    def test_parse_soft_break(self):
+        token, = span_token.tokenize_inner('\n')
+        self.assertIsInstance(token, span_token.LineBreak)
+        self.assertTrue(token.soft)
+
+    def test_parse_hard_break_with_double_blanks(self):
         token, = span_token.tokenize_inner('  \n')
         self.assertIsInstance(token, span_token.LineBreak)
+        self.assertFalse(token.soft)
+
+    def test_parse_hard_break_with_backslash(self):
+        _, token, = span_token.tokenize_inner(' \\\n')
+        self.assertIsInstance(token, span_token.LineBreak)
+        self.assertFalse(token.soft)
 
 
 class TestContains(unittest.TestCase):
@@ -158,3 +190,25 @@ class TestContains(unittest.TestCase):
         self.assertTrue('emphasis' in token)
         self.assertFalse('foo' in token)
 
+
+class TestParent(unittest.TestCase):
+    def test_parent(self):
+        token, = span_token.tokenize_inner('**some text**')
+        self.assertIsInstance(token.children[0], span_token.RawText)
+        self.assertEqual(token.children[0].parent, token)
+
+
+class TestHtmlSpan(unittest.TestCase):
+    def setUp(self):
+        span_token.add_token(span_token.HtmlSpan)
+        self.addCleanup(span_token.reset_tokens)
+
+    def test_parse(self):
+        tokens = span_token.tokenize_inner('<a>')
+        self.assertIsInstance(tokens[0], span_token.HtmlSpan)
+        self.assertEqual('<a>', tokens[0].content)
+
+    def test_parse_with_illegal_whitespace(self):
+        tokens = span_token.tokenize_inner('< a><\nfoo><bar/ >\n<foo bar=baz\nbim!bop />')
+        for t in tokens:
+            self.assertNotIsInstance(t, span_token.HtmlSpan)
