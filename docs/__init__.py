@@ -1,7 +1,12 @@
 from mistletoe import Document, HtmlRenderer, __version__
 
-INCLUDE = {'README.md': 'index.html',
-           'CONTRIBUTING.md': 'contributing.html'}
+INCLUDE = {
+    "README.md": "index.html",
+    "CONTRIBUTING.md": "contributing.html",
+    "cutting-a-release.md": "cutting-a-release.html",
+    "dev-guide.md": "dev-guide.html",
+    "performance.md": "performance.html",
+}
 
 METADATA = """
 <head>
