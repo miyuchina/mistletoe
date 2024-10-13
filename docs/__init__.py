@@ -31,7 +31,8 @@ class DocRenderer(HtmlRenderer):
                 if v == filename:
                     self.footnotes[k] = new_link
         subtitle = ' | {}'.format('version ' + __version__ if name == 'README.md' else name.split('.')[0].lower())
-        return pattern.format(METADATA.format(subtitle), self.render_inner(token))
+        body = '\n'.join([self.render(child) for child in token.children])
+        return pattern.format(METADATA.format(subtitle), body)
 
     def _replace_link(self, token):
         token.target = getattr(self, 'files', {}).get(token.target, token.target)
