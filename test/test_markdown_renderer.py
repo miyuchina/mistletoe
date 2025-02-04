@@ -370,6 +370,19 @@ class TestMarkdownRenderer(unittest.TestCase):
         ]
         self.assertEqual(output, "".join(expected))
 
+    def test_definition_list(self):
+        input = [
+            "Term1\n",
+            ": definition1\n",
+            "\n",
+            "Term2\n",
+            ": definition2-A\n",
+            ": definition2-B\n",
+        ]
+        output = self.roundtrip(input)
+        print("output:\n", output)
+        self.assertEqual(output, "".join(input))
+
     def test_direct_rendering_of_block_token(self):
         input = [
             "Line 1\n",

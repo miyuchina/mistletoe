@@ -1,7 +1,6 @@
 """
 Block-level tokenizer for mistletoe.
 """
-
 from types import MethodType
 
 

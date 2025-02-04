@@ -332,6 +332,21 @@ class MarkdownRenderer(BaseRenderer):
             " " * prepend,
         )
 
+    def render_definition_list(
+        self, token: block_token.DefinitionList, max_line_length: int
+    ) -> Iterable[str]:
+        lines = []
+        last_group_index = len(token.defs) - 1
+        for i, def_group in enumerate(token.defs):
+            for j, token in enumerate(def_group):
+                token_lines = list(self.blocks_to_lines([token], max_line_length=max_line_length))
+                if j:  # => description/value, starting with 2nd token
+                    token_lines[0] = ": " + token_lines[0]
+                lines.extend(token_lines)
+            if i != last_group_index:
+                lines.append("")
+        return lines
+
     def render_table(
         self, token: block_token.Table, max_line_length: int
     ) -> Iterable[str]:

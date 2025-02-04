@@ -1,3 +1,4 @@
+from textwrap import dedent
 from unittest import TestCase, mock
 from mistletoe import Document
 from mistletoe.html_renderer import HtmlRenderer
@@ -173,4 +174,31 @@ class TestHtmlRendererFootnotes(TestCase):
     def test_footnote_link(self):
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         expected = '<p><a href="target">name</a></p>\n'
+        self.assertEqual(self.renderer.render(token), expected)
+
+
+class TestHtmlDefinitionList(TestCase):
+    def setUp(self):
+        self.renderer = HtmlRenderer()
+        self.renderer.__enter__()
+        self.addCleanup(self.renderer.__exit__, None, None, None)
+
+    def test_definition_list(self):
+        token = Document([
+            'Term1\n',
+            ': definition1\n',
+            '\n',
+            'Term2\n',
+            ': definition2-A\n',
+            ': definition2-B\n',
+        ])
+        expected = dedent('''
+        <dl>
+          <dt>Term1</dt>
+          <dd>definition1</dd>
+          <dt>Term2</dt>
+          <dd>definition2-A</dd>
+          <dd>definition2-B</dd>
+        </dl>
+        ''').lstrip()
         self.assertEqual(self.renderer.render(token), expected)
