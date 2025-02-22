@@ -81,7 +81,7 @@ class LaTeXRenderer(BaseRenderer):
         return (token.content.replace('$', '\\$').replace('#', '\\#')
                              .replace('{', '\\{').replace('}', '\\}')
                              .replace('&', '\\&').replace('_', '\\_')
-                             .replace('%', '\\%').replace('^','\\^{}')
+                             .replace('%', '\\%').replace('^', '\\^{}')
                ) if escape else token.content
 
     def render_heading(self, token):
