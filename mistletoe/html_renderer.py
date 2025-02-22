@@ -160,6 +160,18 @@ class HtmlRenderer(BaseRenderer):
                 inner_template = inner_template[:-1]
         return '<li>{}</li>'.format(inner_template.format(inner))
 
+    def render_definition_list(self, token: block_token.DefinitionList) -> str:
+        html = '<dl>\n'
+        for def_group in token.defs:
+            for j, token in enumerate(def_group):
+                inner = '\n'.join([self.render(child) for child in token.children])
+                if j == 0:  # => term/name
+                    html += '  <dt>' + inner + '</dt>\n'
+                else:  # => description/value, starting with 2nd token
+                    html += '  <dd>' + inner + '</dd>\n'
+        html += '</dl>'
+        return html
+
     def render_table(self, token: block_token.Table) -> str:
         # This is actually gross and I wonder if there's a better way to do it.
         #

@@ -72,6 +72,14 @@ class Token:
         output += " at {:#x}>".format(id(self))
         return output
 
+    def __eq__(self, other):
+        if self.__class__ != other.__class__:
+            return False
+        for attrname in self.repr_attributes:
+            if getattr(self, attrname) != getattr(other, attrname):
+                return False
+        return True
+
     @property
     def parent(self) -> Optional['Token']:
         """Returns the parent token, if there is any."""

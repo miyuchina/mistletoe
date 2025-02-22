@@ -18,8 +18,9 @@ from mistletoe.core_tokens import (
 """
 Tokens to be included in the parsing process, in the order specified.
 """
-__all__ = ['BlockCode', 'Heading', 'Quote', 'CodeFence', 'ThematicBreak',
-           'List', 'Table', 'Footnote', 'Paragraph']
+__all__ = ['BlockCode', 'DefinitionList', 'DefinitionTerm', 'DefinitionDesc',
+           'Heading', 'Quote', 'CodeFence', 'ThematicBreak', 'List',
+           'Table', 'Footnote', 'Paragraph']
 
 
 def tokenize(lines):
@@ -313,6 +314,7 @@ class Paragraph(BlockToken):
     def __init__(self, lines):
         content = ''.join([line.lstrip() for line in lines]).strip()
         super().__init__(content, span_token.tokenize_inner)
+        self.line_number = 1
 
     @staticmethod
     def start(line):
@@ -1097,6 +1099,51 @@ class HtmlBlock(BlockToken):
                 lines.backstep()
                 break
         return line_buffer
+
+
+class DefinitionList(BlockToken):
+    """
+    Attributes:
+        defs (list): containing
+        * first a DefinitionTerm token
+        * then one or several DefinitionDesc tokens
+    """
+    START_MARKER = ": "
+
+    def __init__(self, defs):
+        self.defs = defs
+        self.children = [token for def_group in self.defs for token in def_group]
+
+    @classmethod
+    def start(cls, line, lines: 'tokenizer.FileReader'):
+        next_line = lines.peek(2) or ""
+        return next_line.startswith(cls.START_MARKER)
+
+    @classmethod
+    def read(cls, lines):
+        defs = [[]]
+        def_index = 0
+        for line in lines:
+            if line.startswith(cls.START_MARKER):
+                line = line[len(cls.START_MARKER):]
+                defs[def_index].append(DefinitionDesc([line]))
+            elif line == '\n':
+                if cls.start(line, lines):
+                    defs.append([])
+                    def_index += 1
+                else:
+                    break
+            else:
+                defs[def_index].append(DefinitionTerm([line]))
+        return defs
+
+
+class DefinitionTerm(Paragraph):
+    pass
+
+
+class DefinitionDesc(Paragraph):
+    pass
 
 
 HTMLBlock = HtmlBlock
