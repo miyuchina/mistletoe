@@ -2,9 +2,6 @@
 Block-level tokenizer for mistletoe.
 """
 
-from types import MethodType
-
-
 class FileReader:
     def __init__(self, lines, start_line=1, index=-1):
         self.lines = lines if isinstance(lines, list) else list(lines)
@@ -92,20 +89,14 @@ def tokenize_block(iterable, token_types, start_line=1):
     line = lines.peek()
     while line is not None:
         for token_type in token_types:
-            bound_func = token_type.start
-            # Using .__code__.co_argcount has some shortcomings
-            # (it ignores *args & parameters with default values),
-            # but it is a lot faster than using inspect.signature():
-            func_args_count = bound_func.__code__.co_argcount
-            if isinstance(bound_func, MethodType):
-                func_args_count -= 1
             # We need to support two cases:
             # * a start() method accepting only a single `line` parameter
             # * a start() method accepting both a `line` and a `lines` parameter, e.g. DefinitionList
+            func_args_count = token_type.start_args_count()
             if func_args_count == 1:
-                is_start = bound_func(line)
+                is_start = token_type.start(line)
             elif func_args_count == 2:
-                is_start = bound_func(line, lines.reader())
+                is_start = token_type.start(line, lines.reader())
             else:
                 raise NotImplementedError(
                     f"start() method of {token_type} has an incorrect number of parameters: {func_args_count}"
