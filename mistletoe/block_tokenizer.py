@@ -99,7 +99,7 @@ def tokenize_block(iterable, token_types, start_line=1):
                 is_start = token_type.start(line, lines.reader())
             else:
                 raise NotImplementedError(
-                    f"start() method of {token_type} has an incorrect number of parameters: {func_args_count}"
+                    "start() method of {} has an incorrect number of parameters: {}".format(token_type, func_args_count)
                 )
             if is_start:
                 line_number = lines.line_number() + 1
