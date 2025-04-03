@@ -69,6 +69,9 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('Math', expected,
                          children=False, content='$ 1 + 2 = 3 $')
 
+    def test_escape_sequence(self):
+        self._test_token('EscapeSequence', 'inner')
+
     @parameterized.expand([
         ('$', '\\$'),
         ('&', '\\&'),
