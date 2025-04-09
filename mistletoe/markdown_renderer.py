@@ -400,16 +400,16 @@ class MarkdownRenderer(BaseRenderer):
         """
         Renders a sequence of span (inline) tokens into a sequence of lines.
         """
-        fragments = self.make_fragments(tokens)
+        fragments = self.make_fragments(tokens, max_line_length)
         return self.fragments_to_lines(fragments, max_line_length=max_line_length)
 
-    def make_fragments(self, tokens: Iterable[span_token.SpanToken]
+    def make_fragments(self, tokens: Iterable[span_token.SpanToken], max_line_length: int
     ) -> Iterable[Fragment]:
         """
         Renders a sequence of span (inline) tokens into a sequence of Fragments.
         """
         return chain.from_iterable(
-            [self.render_map[token.__class__.__name__](token) for token in tokens]
+            [self.render_map[token.__class__.__name__](token, max_line_length) for token in tokens]
         )
 
     @classmethod

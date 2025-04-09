@@ -58,7 +58,10 @@ def remove_token(token_cls):
     Arguments:
         token_cls (BlockToken): token to be removed from the parsing process.
     """
-    _token_types.remove(token_cls)
+    try:
+        _token_types.remove(token_cls)
+    except ValueError:
+        pass
 
 
 def reset_tokens():
