@@ -138,7 +138,7 @@ class MarkdownRenderer(BaseRenderer):
         else:
             lines = self.span_to_lines([token], max_line_length=self.max_line_length)
 
-        return "".join(map(lambda line: line + "\n", lines))
+        return "\n".join(lines) + "\n"
 
     # rendering of span/inline tokens.
     # rendered into sequences of Fragments.
@@ -419,14 +419,16 @@ class MarkdownRenderer(BaseRenderer):
         if not max_line_length:
             # plain rendering: merge all fragments and split on newlines
             for fragment in fragments:
-                if "\n" in fragment.text:
-                    lines = fragment.text.split("\n")
+                if isinstance(fragment, Fragment):
+                    fragment = fragment.text
+                if "\n" in fragment:
+                    lines = fragment.split("\n")
                     yield current_line + lines[0]
                     for inner_line in lines[1:-1]:
                         yield inner_line
                     current_line = lines[-1]
                 else:
-                    current_line += fragment.text
+                    current_line += fragment
         else:
             # render with word wrapping
             for word in cls.make_words(fragments):
