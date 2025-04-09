@@ -134,9 +134,7 @@ class MarkdownRenderer(BaseRenderer):
         Renders the tree of tokens rooted at the given token into markdown.
         """
         if isinstance(token, block_token.BlockToken):
-            lines = self.render_map[token.__class__.__name__](
-                token, max_line_length=self.max_line_length
-            )
+            lines = self.render_map[token.__class__.__name__](token)
         else:
             lines = self.span_to_lines([token], max_line_length=self.max_line_length)
 
@@ -254,12 +252,12 @@ class MarkdownRenderer(BaseRenderer):
     # rendered into sequences of lines (strings), to be joined by newlines.
 
     def render_document(
-        self, token: block_token.Document, max_line_length: int
+        self, token: block_token.Document
     ) -> Iterable[str]:
-        return self.blocks_to_lines(token.children, max_line_length=max_line_length)
+        return self.blocks_to_lines(token.children)
 
     def render_heading(
-        self, token: block_token.Heading, max_line_length: int
+        self, token: block_token.Heading
     ) -> Iterable[str]:
         # note: no word wrapping, because atx headings always fit on a single line.
         line = "#" * token.level
@@ -271,33 +269,33 @@ class MarkdownRenderer(BaseRenderer):
         return [line]
 
     def render_setext_heading(
-        self, token: block_token.SetextHeading, max_line_length: int
+        self, token: block_token.SetextHeading
     ) -> Iterable[str]:
-        yield from self.span_to_lines(token.children, max_line_length=max_line_length)
+        yield from self.span_to_lines(token.children, max_line_length=self.max_line_length)
         yield token.underline
 
     def render_quote(
-        self, token: block_token.Quote, max_line_length: int
+        self, token: block_token.Quote
     ) -> Iterable[str]:
-        max_child_line_length = max_line_length - 2 if max_line_length else None
-        lines = self.blocks_to_lines(
-            token.children, max_line_length=max_child_line_length
-        )
+        max_line_length = self.max_line_length
+        self.max_line_length = max_line_length - 2 if max_line_length else None
+        lines = self.blocks_to_lines(token.children)
+        self.max_line_length = max_line_length
         return self.prefix_lines(lines or [""], "> ")
 
     def render_paragraph(
-        self, token: block_token.Paragraph, max_line_length: int
+        self, token: block_token.Paragraph
     ) -> Iterable[str]:
-        return self.span_to_lines(token.children, max_line_length=max_line_length)
+        return self.span_to_lines(token.children, max_line_length=self.max_line_length)
 
     def render_block_code(
-        self, token: block_token.BlockCode, max_line_length: int
+        self, token: block_token.BlockCode
     ) -> Iterable[str]:
         lines = token.content[:-1].split("\n")
         return self.prefix_lines(lines, "    ")
 
     def render_fenced_code_block(
-        self, token: block_token.BlockCode, max_line_length: int
+        self, token: block_token.BlockCode
     ) -> Iterable[str]:
         indentation = " " * token.indentation
         yield indentation + token.delimiter + token.info_string
@@ -307,12 +305,12 @@ class MarkdownRenderer(BaseRenderer):
         yield indentation + token.delimiter
 
     def render_list(
-        self, token: block_token.List, max_line_length: int
+        self, token: block_token.List
     ) -> Iterable[str]:
-        return self.blocks_to_lines(token.children, max_line_length=max_line_length)
+        return self.blocks_to_lines(token.children)
 
     def render_list_item(
-        self, token: block_token.ListItem, max_line_length: int
+        self, token: block_token.ListItem
     ) -> Iterable[str]:
         if self.normalize_whitespace:
             prepend = len(token.leader) + 1
@@ -320,12 +318,10 @@ class MarkdownRenderer(BaseRenderer):
         else:
             prepend = token.prepend
             indentation = token.indentation
-        max_child_line_length = (
-            max_line_length - prepend if max_line_length else None
-        )
-        lines = self.blocks_to_lines(
-            token.children, max_line_length=max_child_line_length
-        )
+        max_line_length = self.max_line_length
+        self.max_line_length = max_line_length - prepend if max_line_length else None
+        lines = self.blocks_to_lines(token.children)
+        self.max_line_length = max_line_length
         return self.prefix_lines(
             list(lines) or [""],
             " " * indentation + token.leader + " " * (prepend - len(token.leader) - indentation),
@@ -333,7 +329,7 @@ class MarkdownRenderer(BaseRenderer):
         )
 
     def render_table(
-        self, token: block_token.Table, max_line_length: int
+        self, token: block_token.Table
     ) -> Iterable[str]:
         # note: column widths are not preserved; they are automatically adjusted to fit the contents.
         content = [self.table_row_to_text(token.header), []]
@@ -346,24 +342,24 @@ class MarkdownRenderer(BaseRenderer):
         ]
 
     def render_thematic_break(
-        self, token: block_token.ThematicBreak, max_line_length: int
+        self, token: block_token.ThematicBreak
     ) -> Iterable[str]:
         return [token.line]
 
     def render_html_block(
-        self, token: block_token.HtmlBlock, max_line_length: int
+        self, token: block_token.HtmlBlock
     ) -> Iterable[str]:
         return token.content.split("\n")
 
     def render_link_reference_definition_block(
-        self, token: LinkReferenceDefinitionBlock, max_line_length: int
+        self, token: LinkReferenceDefinitionBlock
     ) -> Iterable[str]:
         # each link reference definition starts on a new line
         for child in token.children:
-            yield from self.span_to_lines([child], max_line_length=max_line_length)
+            yield from self.span_to_lines([child], max_line_length=self.max_line_length)
 
     def render_blank_line(
-        self, token: BlankLine, max_line_length: int
+        self, token: BlankLine
     ) -> Iterable[str]:
         return [""]
 
@@ -384,15 +380,13 @@ class MarkdownRenderer(BaseRenderer):
         yield trailer or leader
 
     def blocks_to_lines(
-        self, tokens: Iterable[block_token.BlockToken], max_line_length: int
+        self, tokens: Iterable[block_token.BlockToken]
     ) -> Iterable[str]:
         """
         Renders a sequence of block tokens into a sequence of lines.
         """
         for token in tokens:  # noqa: F402
-            yield from self.render_map[token.__class__.__name__](
-                token, max_line_length=max_line_length
-            )
+            yield from self.render_map[token.__class__.__name__](token)
 
     def span_to_lines(
         self, tokens: Iterable[span_token.SpanToken], max_line_length: int
@@ -400,16 +394,16 @@ class MarkdownRenderer(BaseRenderer):
         """
         Renders a sequence of span (inline) tokens into a sequence of lines.
         """
-        fragments = self.make_fragments(tokens, max_line_length)
+        fragments = self.make_fragments(tokens)
         return self.fragments_to_lines(fragments, max_line_length=max_line_length)
 
-    def make_fragments(self, tokens: Iterable[span_token.SpanToken], max_line_length: int
+    def make_fragments(self, tokens: Iterable[span_token.SpanToken]
     ) -> Iterable[Fragment]:
         """
         Renders a sequence of span (inline) tokens into a sequence of Fragments.
         """
         return chain.from_iterable(
-            [self.render_map[token.__class__.__name__](token, max_line_length) for token in tokens]
+            [self.render_map[token.__class__.__name__](token) for token in tokens]
         )
 
     @classmethod
