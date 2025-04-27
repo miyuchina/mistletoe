@@ -1,10 +1,15 @@
 from setuptools import setup
 import mistletoe
 
+with open('README.md', 'r', encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='mistletoe',
     version=mistletoe.__version__,
     description='A fast, extensible Markdown parser in pure Python.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     url='https://github.com/miyuchina/mistletoe',
     author='Mi Yu',
     author_email='hello@afteryu.me',
