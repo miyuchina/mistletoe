@@ -17,7 +17,9 @@ jobs:
 
     # As long as we want to support Python 3.6-, we need to stick to an older version of Ubuntu,
     # see <https://github.com/actions/setup-python/issues/544>.
-    runs-on: ubuntu-20.04
+    #
+    # Update: ubuntu-20.04 is no longer available, see <https://github.com/actions/runner-images/issues/11101>.
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
