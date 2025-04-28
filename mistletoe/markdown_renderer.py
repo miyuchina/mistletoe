@@ -22,7 +22,7 @@ class BlankLine(block_token.BlockToken):
         self.children = []
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         return cls.pattern.match(line)
 
     @classmethod
