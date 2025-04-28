@@ -68,6 +68,9 @@ class BaseRenderer(object):
             'ThematicBreak':  self.render_thematic_break,
             'LineBreak':      self.render_line_break,
             'Document':       self.render_document,
+            'DefinitionList': self.render_definition_list,
+            'DefinitionTerm': self.render_paragraph,
+            'DefinitionDesc': self.render_paragraph,
         }
         self._extras = extras
 
@@ -187,6 +190,9 @@ class BaseRenderer(object):
         return self.render_inner(token)
 
     def render_list_item(self, token: block_token.ListItem) -> str:
+        return self.render_inner(token)
+
+    def render_definition_list(self, token: block_token.DefinitionList) -> str:
         return self.render_inner(token)
 
     def render_table(self, token: block_token.Table) -> str:
