@@ -4,6 +4,8 @@ Built-in span-level token classes.
 
 import html
 import re
+from contextvars import ContextVar
+
 import mistletoe.span_tokenizer as tokenizer
 from mistletoe import core_tokens, token
 
@@ -28,7 +30,7 @@ def tokenize_inner(content):
 
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
-    return tokenizer.tokenize(content, _token_types)
+    return tokenizer.tokenize(content, _token_types.get())
 
 
 def add_token(token_cls, position=1):
@@ -39,7 +41,7 @@ def add_token(token_cls, position=1):
     Arguments:
         token_cls (SpanToken): token to be included in the parsing process.
     """
-    _token_types.insert(position, token_cls)
+    _token_types.get().insert(position, token_cls)
 
 
 def remove_token(token_cls):
@@ -50,7 +52,7 @@ def remove_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be removed from the parsing process.
     """
-    _token_types.remove(token_cls)
+    _token_types.get().remove(token_cls)
 
 
 def reset_tokens():
@@ -58,7 +60,7 @@ def reset_tokens():
     Resets global _token_types to all token classes in __all__.
     """
     global _token_types
-    _token_types = [globals()[cls_name] for cls_name in __all__]
+    _token_types.set([globals()[cls_name] for cls_name in __all__])
 
 
 class SpanToken(token.Token):
@@ -135,8 +137,8 @@ class InlineCode(SpanToken):
 
     @classmethod
     def find(cls, string):
-        matches = core_tokens._code_matches
-        core_tokens._code_matches = []
+        matches = core_tokens._code_matches.get()
+        core_tokens._code_matches.set([])
         return matches
 
 
@@ -327,5 +329,6 @@ class XWikiBlockMacroEnd(SpanToken):
     parse_group = 1
 
 
-_token_types = []
+""" Use together with IsolatedContext to ensure no side effects when parsing markdown documents."""
+_token_types = ContextVar('span_token_types', default=[])
 reset_tokens()

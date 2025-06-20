@@ -3,6 +3,7 @@ Built-in block-level token classes.
 """
 
 import re
+from contextvars import ContextVar
 from itertools import zip_longest
 import mistletoe.block_tokenizer as tokenizer
 from mistletoe import token, span_token
@@ -35,7 +36,7 @@ def tokenize(lines):
 
     See also: block_tokenizer.tokenize, span_token.tokenize_inner.
     """
-    return tokenizer.tokenize(lines, _token_types)
+    return tokenizer.tokenize(lines, _token_types.get())
 
 
 def add_token(token_cls, position=0):
@@ -47,7 +48,7 @@ def add_token(token_cls, position=0):
         token_cls (SpanToken): token to be included in the parsing process.
         position (int): the position for the token class to be inserted into.
     """
-    _token_types.insert(position, token_cls)
+    _token_types.get().insert(position, token_cls)
 
 
 def remove_token(token_cls):
@@ -58,7 +59,7 @@ def remove_token(token_cls):
     Arguments:
         token_cls (BlockToken): token to be removed from the parsing process.
     """
-    _token_types.remove(token_cls)
+    _token_types.get().remove(token_cls)
 
 
 def reset_tokens():
@@ -66,7 +67,7 @@ def reset_tokens():
     Resets global _token_types to all token classes in __all__.
     """
     global _token_types
-    _token_types = [globals()[cls_name] for cls_name in __all__]
+    _token_types.set([globals()[cls_name] for cls_name in __all__])
 
 
 class BlockToken(token.Token):
@@ -249,7 +250,7 @@ class Quote(BlockToken):
 
         # following lines
         next_line = lines.peek()
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == Quote]
+        breaking_tokens = [t for t in _token_types.get() if hasattr(t, 'check_interrupts_paragraph') and not t == Quote]
         while (next_line is not None
                 and next_line.strip() != ''
                 and not any(token_type.check_interrupts_paragraph(lines) for token_type in breaking_tokens)):
@@ -276,7 +277,7 @@ class Quote(BlockToken):
 
         # parse child block tokens
         Paragraph.parse_setext = False
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types.get(), start_line=start_line)
         Paragraph.parse_setext = True
         return parse_buffer
 
@@ -322,7 +323,7 @@ class Paragraph(BlockToken):
     def read(cls, lines):
         line_buffer = [next(lines)]
         next_line = lines.peek()
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
+        breaking_tokens = [t for t in _token_types.get() if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
         while (next_line is not None and next_line.strip() != ''):
             # check if a paragraph-breaking token starts on the next line.
             # (except ThematicBreak, because these can be confused with Setext underlines.)
@@ -633,7 +634,7 @@ class ListItem(BlockToken):
             line_buffer.append(content)
 
         # loop over the following lines, looking for the end of the list item
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == List]
+        breaking_tokens = [t for t in _token_types.get() if hasattr(t, 'check_interrupts_paragraph') and not t == List]
         newline_count = 0
         while True:
             if next_line is None:
@@ -672,7 +673,7 @@ class ListItem(BlockToken):
 
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types.get(), start_line=start_line)
         return (parse_buffer, indentation, prepend, leader, start_line), next_marker
 
 
@@ -1104,6 +1105,6 @@ HTMLBlock = HtmlBlock
 Deprecated name of the `HtmlBlock` class.
 """
 
-
-_token_types = []
+""" Use together with IsolatedContext to ensure no side effects when parsing markdown documents."""
+_token_types = ContextVar('block_token_types', default=[])
 reset_tokens()
