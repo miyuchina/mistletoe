@@ -4,6 +4,7 @@ Built-in block-level token classes.
 
 import re
 from itertools import zip_longest
+from typing import Iterable, Union
 import mistletoe.block_tokenizer as tokenizer
 from mistletoe import token, span_token
 from mistletoe.core_tokens import (
@@ -136,7 +137,19 @@ class Document(BlockToken):
         footnotes (dictionary): link reference definitions.
     """
 
-    def __init__(self, lines):
+    def __init__(self, lines: Union[str, Iterable[str]]):
+        """
+        Instantiates this token and its content by parsing the input lines.
+
+        Args:
+            lines: input markdown to be tokenized. If a string is provided,
+                it will be split into lines.
+
+                CAUTION: If the input lines end with Windows line endings (``\\r\\n``),
+                the parsing process will not work correctly. For performance reasons,
+                clients need to normalize such line endings themselves, before passing
+                them to this function, e.g. by calling ``lines.replace('\\r', '')``.
+        """
         if isinstance(lines, str):
             lines = lines.splitlines(keepends=True)
         lines = [line if line.endswith('\n') else '{}\n'.format(line) for line in lines]
