@@ -7,7 +7,7 @@ For maintainers, here are the basic steps when creating a new release of mistlet
     * official documentation: [Packaging Python Projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
     * install / upgrade the build tool: `$ python -m pip install --upgrade build`
     * make sure there are no old relicts in the local "dist" folder
-    * build the Wheel artifact ("dist/*.whl"): `$ python -m build`
+    * build distribution archives (sdist and Wheel files in "dist/*"): `$ python -m build`
     * upload the distribution archives to PyPi:
         * install / upgrade Twine: `$ python -m pip install --upgrade twine`
         * if unsure, upload to test PyPi and/or test locally - see [docs](https://packaging.python.org/en/latest/tutorials/packaging-projects/#uploading-the-distribution-archives)
