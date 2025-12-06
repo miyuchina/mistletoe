@@ -752,7 +752,7 @@ class Table(BlockToken):
 
     @classmethod
     def check_interrupts_paragraph(cls, lines):
-        if not cls.interrupt_paragraph:
+        if not cls.interrupt_paragraph or not cls.start(lines.peek()):
             return False
         anchor = lines.get_pos()
         result = cls.read(lines)
@@ -762,13 +762,22 @@ class Table(BlockToken):
     @classmethod
     def read(cls, lines):
         anchor = lines.get_pos()
+
+        # read the first line (header row)
         line_buffer = [next(lines)]
         start_line = lines.line_number()
-        while lines.peek() is not None and '|' in lines.peek():
-            line_buffer.append(next(lines))
-        if len(line_buffer) < 2 or not cls.delimiter_row_pattern.fullmatch(line_buffer[1]):
+
+        # read the second line (delimiter row)
+        delimiter_row = next(lines, None)
+        if delimiter_row is None or not cls.delimiter_row_pattern.fullmatch(delimiter_row):
             lines.set_pos(anchor)
             return None
+
+        line_buffer.append(delimiter_row)
+        # read remaining lines (table body)
+        while lines.peek() is not None and '|' in lines.peek():
+            line_buffer.append(next(lines))
+
         return line_buffer, start_line
 
 
