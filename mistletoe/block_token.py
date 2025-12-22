@@ -1043,6 +1043,111 @@ class ThematicBreak(BlockToken):
         return [next(lines)]
 
 
+class HTMLAttributes(BlockToken):
+    """
+    Block-level HTMLAttributes token.
+
+    Attributes:
+        raw_attr_str (str): the raw HTML attributes.
+        parent_props (dict): parsed from raw_attr_str
+        child_props (dict): parsed from raw_attr_str
+    """
+
+    # Configurable properties
+    start_str = "${"
+    end_str = "}"
+    parent_child_partition_str = " > "
+    mapping_delimeter = ":"
+    allow_auto_ids = ['Heading']
+    enable_auto_ids = False
+    enable_auto_tabindex = True
+    tabindex = 1;
+    id_index = -1;
+
+    def __init__(self, line: str):
+        pattr,_,cattr = line.partition(self.parent_child_partition_str)
+        self.raw_attr_str: str = line.strip()
+        self.parent_props: dict = self.set_props(pattr)
+        self.child_props: dict = self.set_props(cattr)
+    
+    def set_props(self, attr_str: str):
+        """Parses raw attribute string into dicts"""
+        def get_props(prop):
+            if self.mapping_delimeter in prop:
+                key, _, value = prop.partition(self.mapping_delimeter)
+                return key, value
+            return None, None
+        attr_map = {}
+        for prop in attr_str.split(', '):
+            k, v = get_props(prop.strip())
+            if k and v: attr_map[k] = v
+        return attr_map
+
+    def apply_props(self, token, is_child: bool = None):
+        """Applies props recursively to parent and child tokens"""
+
+        has_nested_children = self.check_for_children(token)
+        token_props = self.parent_props if not is_child else self.child_props
+        auto_id = self.get_auto_id(token)
+        token.html_props = self.serialize(token_props, auto_id)
+        if not has_nested_children: 
+            return
+        for chld in token.children:
+            is_child_key = not isinstance(chld, List)
+            if not is_child_key:
+                self.id_index += 1
+                token_props = self.parent_props
+                child_key = "{}-{}".format(token_props.get("id","item"), str(self.id_index))
+                token_props['id'] = child_key
+            self.apply_props(chld, is_child_key)
+
+    def serialize(self, props: dict, auto_id: str = '') -> str:
+        """Serializes the props into html attribute strings"""
+        if auto_id and not props.get('id') and self.enable_auto_ids:
+            props['id'] = auto_id
+        if HTMLAttributes.enable_auto_tabindex:
+            props['tabindex'] = props.get('tabindex', 1)
+        propstr = "".join([f' {k}="{v}"' for k, v in props.items()])
+        if HTMLAttributes.enable_auto_tabindex: del props['tabindex']
+        return propstr
+            
+    @classmethod
+    def configure(cls, options: dict) -> str:
+        """Override default class configuration fields"""
+        only_fields = ("start_str", "end_str", "parent_child_partition_str", "mapping_delimeter", "allow_auto_ids", "enable_auto_ids", "enable_auto_tabindex")
+        for k, v in options.items():
+            if k not in only_fields: continue
+            setattr(cls, k, v)
+
+    @classmethod
+    def get_auto_id(cls, token) -> str:
+        """Automatically generate ids for Heading elements or any specified token type"""
+        allow_auto_id = hasattr(token, 'content') and cls.enable_auto_ids and token.__class__.__name__ in cls.allow_auto_ids
+        auto_id = token.content.lower().replace(' ','-') if allow_auto_id else ''
+        return auto_id
+
+    
+    @classmethod
+    def check_for_children(cls, token):
+        return hasattr(token, "children") and token.__class__.__name__ != "RawText"
+
+    @classmethod
+    def clear(cls):
+        cls.id_index = -1
+        cls.tabindex = 1
+
+    @classmethod
+    def start(cls, line):
+        return line.strip().startswith(cls.start_str) and line.strip().endswith(cls.end_str)
+
+    @classmethod
+    def read(cls, lines):
+        line = lines.peek()
+        l = line.strip().lstrip(cls.start_str).rstrip(cls.end_str)
+        next(lines)
+        return l
+
+
 class HtmlBlock(BlockToken):
     """
     Block-level HTML token.

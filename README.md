@@ -252,6 +252,7 @@ Copyright & License
 [python-markdown]: https://github.com/waylan/Python-Markdown
 [python-markdown2]: https://github.com/trentm/python-markdown2
 [commonmark-py]: https://github.com/rtfd/CommonMark-py
+[features]: features.md
 [performance]: performance.md
 [oilshell]: https://www.oilshell.org/blog/2018/02/14.html
 [commonmark]: https://spec.commonmark.org/
