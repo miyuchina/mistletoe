@@ -49,7 +49,15 @@ def run_test(test_entry, quiet=False):
 
 def load_tests(specfile):
     with open(specfile, 'r', encoding='utf-8') as fin:
-        return json.load(fin)
+        tests = json.load(fin)
+
+    # alter the tests for our needs
+    for test in tests:
+        # CommonMark states that "Renderers may make different decisions about how to escape or normalize URLs in the output.".
+        # So we unescape square brackets in URLs to match mistletoe's behavior.
+        test['html'] = test['html'].replace('%5B', '[').replace('%5D', ']')
+
+    return tests
 
 
 def locate_section(section, tests):
