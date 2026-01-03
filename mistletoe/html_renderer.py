@@ -10,6 +10,7 @@ from mistletoe import span_token
 from mistletoe.block_token import HtmlBlock
 from mistletoe.span_token import HtmlSpan
 from mistletoe.base_renderer import BaseRenderer
+from mistletoe.base_renderer import URI_SAFE_CHARACTERS
 
 
 class HtmlRenderer(BaseRenderer):
@@ -235,7 +236,7 @@ class HtmlRenderer(BaseRenderer):
         """
         Escape urls to prevent code injection craziness. (Hopefully.)
         """
-        return html.escape(quote(raw, safe='/#:()*?=%@+,&;'))
+        return html.escape(quote(raw, safe=URI_SAFE_CHARACTERS))
 
 
 HTMLRenderer = HtmlRenderer

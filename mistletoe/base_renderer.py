@@ -203,3 +203,9 @@ class BaseRenderer(object):
 
     def render_document(self, token: block_token.Document) -> str:
         return self.render_inner(token)
+
+
+# Safe characters for URL quoting. These are basically all the URI
+# reserved characters as per [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-2.2).
+# Plus we add the percent character (%) to avoid double-escaping.
+URI_SAFE_CHARACTERS = ":/?#[]@!$&'()*+,;=%"

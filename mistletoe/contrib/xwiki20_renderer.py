@@ -1,6 +1,6 @@
 from itertools import chain
 from mistletoe import block_token, span_token
-from mistletoe.base_renderer import BaseRenderer
+from mistletoe.base_renderer import BaseRenderer, URI_SAFE_CHARACTERS
 
 
 class XWiki20Renderer(BaseRenderer):
@@ -234,4 +234,4 @@ def escape_url(raw):
     Escape urls to prevent code injection craziness. (Hopefully.)
     """
     from urllib.parse import quote
-    return quote(raw, safe='/#:()*?=%@+,&;')
+    return quote(raw, safe=URI_SAFE_CHARACTERS)
