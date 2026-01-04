@@ -13,8 +13,8 @@ class TestGithubWiki(TestCase):
 
     def test_parse(self):
         MockRawText = mock.Mock()
-        RawText = span_token._token_types.pop()
-        span_token._token_types.append(MockRawText)
+        RawText = span_token._token_types.get().pop()
+        span_token._token_types.get().append(MockRawText)
         try:
             tokens = tokenize_inner('text with [[wiki | target]]')
             token = tokens[1]
@@ -22,7 +22,7 @@ class TestGithubWiki(TestCase):
             self.assertEqual(token.target, 'target')
             MockRawText.assert_has_calls([mock.call('text with '), mock.call('wiki')])
         finally:
-            span_token._token_types[-1] = RawText
+            span_token._token_types.get()[-1] = RawText
 
     def test_render(self):
         token = next(iter(tokenize_inner('[[wiki|target]]')))
