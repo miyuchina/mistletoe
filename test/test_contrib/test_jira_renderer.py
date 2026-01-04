@@ -113,6 +113,12 @@ class TestJiraRenderer(BaseRendererTest):
         expected = '[{body}|{url}|{title}]'.format(url=url, body=body, title=title)
         self.assertEqual(output, expected)
 
+    def test_render_link_with_escapes(self):
+        token = next(iter(tokenize_inner('[A link with \\[brackets\\]](http://wwww.example.com/some[complex]url "[A title]")')))
+        output = self.renderer.render(token)
+        expected = '[A link with \\[brackets\\]|http://wwww.example.com/some\\[complex\\]url|\\[A title\\]]'
+        self.assertEqual(output, expected)
+
     def test_render_footnote_link(self):
         pass
 

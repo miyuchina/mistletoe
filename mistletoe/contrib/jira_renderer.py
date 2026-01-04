@@ -68,7 +68,7 @@ class JiraRenderer(BaseRenderer):
         inner = self.render_inner(token)
         target = escape_url(token.target)
         if token.title:
-            title = '|{}'.format(token.title)
+            title = '|{}'.format(escape_link_chars(token.title))
         else:
             title = ''
 
@@ -231,10 +231,21 @@ class JiraRenderer(BaseRenderer):
 
 def escape_url(raw):
     """
-    Escape urls to prevent code injection craziness. (Hopefully.)
+    Escapes the URL part of a Jira link.
     """
     from urllib.parse import quote
-    return quote(raw, safe=URI_SAFE_CHARACTERS)
+    return escape_link_chars(quote(raw, safe=URI_SAFE_CHARACTERS))
+
+
+def escape_link_chars(s: str) -> str:
+    """
+    Escapes special characters that are used in the Jira link syntax.
+    """
+    s = s.replace("[", "\\[")
+    s = s.replace("]", "\\]")
+    # Note: Escaping pipe doesn't seem to have an effect in the tested Jira version.
+    s = s.replace("|", "\\|")
+    return s
 
 
 JIRARenderer = JiraRenderer
