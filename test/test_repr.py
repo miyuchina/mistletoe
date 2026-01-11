@@ -103,6 +103,15 @@ class TestRepr(unittest.TestCase):
         doc = Document("Foo <http://www.example.org/>\n")
         self._check_repr_matches(doc.children[0].children[1], "span_token.AutoLink with 1 child target='http://www.example.org/' mailto=False")
 
+        doc = Document("Foo <http://example.com>\n")
+        self._check_repr_matches(doc.children[0].children[1], "span_token.AutoLink with 1 child target='http://example.com' mailto=False")
+
+        doc = Document("Foo <user@example.com>\n")
+        self._check_repr_matches(doc.children[0].children[1], "span_token.AutoLink with 1 child target='user@example.com' mailto=True")
+
+        doc = Document("Foo <http://example.com/@user/1234>\n")
+        self._check_repr_matches(doc.children[0].children[1], "span_token.AutoLink with 1 child target='http://example.com/@user/1234' mailto=False")
+
     def test_escapesequence(self):
         doc = Document("\\*\n")
         self._check_repr_matches(doc.children[0].children[0], "span_token.EscapeSequence with 1 child")
