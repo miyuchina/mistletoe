@@ -178,7 +178,7 @@ class Heading(BlockToken):
         super().__init__(content, span_token.tokenize_inner)
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         match_obj = cls.pattern.match(line)
         if match_obj is None:
             return False
@@ -191,7 +191,7 @@ class Heading(BlockToken):
 
     @classmethod
     def check_interrupts_paragraph(cls, lines):
-        return cls.start(lines.peek())
+        return cls.start(lines.peek(), lines)
 
     @classmethod
     def read(cls, lines):
@@ -218,7 +218,7 @@ class SetextHeading(BlockToken):
         super().__init__(content, span_token.tokenize_inner)
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         raise NotImplementedError()
 
     @classmethod
@@ -236,7 +236,7 @@ class Quote(BlockToken):
         self.children = tokenizer.make_tokens(parse_buffer)
 
     @staticmethod
-    def start(line):
+    def start(line, lines):
         stripped = line.lstrip(' ')
         if len(line) - len(stripped) > 3:
             return False
@@ -244,7 +244,7 @@ class Quote(BlockToken):
 
     @classmethod
     def check_interrupts_paragraph(cls, lines):
-        return cls.start(lines.peek())
+        return cls.start(lines.peek(), lines)
 
     @classmethod
     def read(cls, lines):
@@ -256,8 +256,8 @@ class Quote(BlockToken):
         start_line = lines.line_number()
 
         # set booleans
-        in_code_fence = CodeFence.start(line)
-        in_block_code = BlockCode.start(line)
+        in_code_fence = CodeFence.start(line, lines)
+        in_block_code = BlockCode.start(line, lines)
         blank_line = line.strip() == ''
 
         # following lines
@@ -274,8 +274,8 @@ class Quote(BlockToken):
                 if stripped[1] == ' ':
                     prepend += 1
                 stripped = stripped[prepend:]
-                in_code_fence = CodeFence.start(stripped)
-                in_block_code = BlockCode.start(stripped)
+                in_code_fence = CodeFence.start(stripped, lines)
+                in_block_code = BlockCode.start(stripped, lines)
                 blank_line = stripped.strip() == ''
                 line_buffer.append(stripped)
             elif in_code_fence or in_block_code or blank_line:
@@ -328,7 +328,7 @@ class Paragraph(BlockToken):
         super().__init__(content, span_token.tokenize_inner)
 
     @staticmethod
-    def start(line):
+    def start(line, lines):
         return line.strip() != ''
 
     @classmethod
@@ -380,7 +380,7 @@ class BlockCode(BlockToken):
         return self.children[0].content
 
     @staticmethod
-    def start(line):
+    def start(line, lines):
         return line.replace('\t', '    ', 1).startswith('    ')
 
     @classmethod
@@ -443,7 +443,7 @@ class CodeFence(BlockToken):
         return self.children[0].content
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         match_obj = cls.pattern.match(line)
         if not match_obj:
             return False
@@ -457,7 +457,7 @@ class CodeFence(BlockToken):
 
     @classmethod
     def check_interrupts_paragraph(cls, lines):
-        return cls.start(lines.peek())
+        return cls.start(lines.peek(), lines)
 
     @classmethod
     def read(cls, lines):
@@ -497,7 +497,7 @@ class List(BlockToken):
             self.start = int(leader[:-1])
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         return cls.pattern.match(line)
 
     @classmethod
@@ -747,7 +747,7 @@ class Table(BlockToken):
         return (0 if column[0] == ':' else 1) if column[-1] == ':' else None
 
     @staticmethod
-    def start(line):
+    def start(line, lines):
         return '|' in line
 
     @classmethod
@@ -837,7 +837,7 @@ class Footnote(BlockToken):
         return None
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         return line.lstrip().startswith('[')
 
     @classmethod
@@ -1031,12 +1031,12 @@ class ThematicBreak(BlockToken):
         self.line = lines[0].strip('\n')
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         return cls.pattern.match(line)
 
     @classmethod
     def check_interrupts_paragraph(cls, lines):
-        return cls.start(lines.peek())
+        return cls.start(lines.peek(), lines)
 
     @staticmethod
     def read(lines):
@@ -1064,7 +1064,7 @@ class HtmlBlock(BlockToken):
         return self.children[0].content
 
     @classmethod
-    def start(cls, line):
+    def start(cls, line, lines):
         stripped = line.lstrip()
         if len(line) - len(stripped) >= 4:
             return False
@@ -1103,7 +1103,7 @@ class HtmlBlock(BlockToken):
 
     @classmethod
     def check_interrupts_paragraph(cls, lines):
-        html_block = cls.start(lines.peek())
+        html_block = cls.start(lines.peek(), lines)
         return html_block and html_block != 7
 
     @classmethod
