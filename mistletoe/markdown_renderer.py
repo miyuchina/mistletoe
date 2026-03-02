@@ -297,7 +297,7 @@ class MarkdownRenderer(BaseRenderer):
         return self.prefix_lines(lines, "    ")
 
     def render_fenced_code_block(
-        self, token: block_token.BlockCode, max_line_length: Optional[int]
+        self, token: block_token.CodeFence, max_line_length: Optional[int]
     ) -> Iterable[str]:
         indentation = " " * token.indentation
         yield indentation + token.delimiter + token.info_string
