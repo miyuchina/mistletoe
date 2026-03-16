@@ -1,5 +1,30 @@
 """
-Telegraph DOM renderer for mistletoe.
+Render mistletoe tokens into Telegraph DOM nodes.
+
+Telegraph pages are created by sending a list of node dictionaries to the
+Telegraph API. This renderer converts Markdown into that node structure using
+mistletoe's parsing pipeline, so code that already relies on mistletoe can
+publish to Telegraph without adding a second Markdown implementation.
+
+The output format follows Telegraph's Node schema documented at
+https://telegra.ph/api#Node and is suitable for the ``content`` field used by
+``createPage`` and related API methods. Supported Markdown features include
+paragraphs, links, emphasis, strong text, inline code, images, blockquotes,
+lists, code fences, thematic breaks, and raw HTML passthrough.
+
+Heading levels are mapped to Telegraph's limited typography model: ``#`` maps
+to ``h3``, ``##`` maps to ``h4``, and deeper headings are rendered as
+paragraphs containing ``strong`` nodes. Soft line breaks become spaces so words
+do not collapse when Markdown producers emit embedded newlines around inline
+elements.
+
+Example:
+
+    >>> from mistletoe.contrib.telegraph import md_to_telegraph
+    >>> nodes = md_to_telegraph('# Hello\\n\\nThis is **bold** text.')
+    >>> payload = {'title': 'Hello', 'content': nodes}
+    >>> # POST payload to https://api.telegra.ph/createPage with your
+    >>> # access token, author metadata, and other Telegraph parameters.
 """
 
 from typing import Any, Dict, List, Union
@@ -7,7 +32,7 @@ from typing import Any, Dict, List, Union
 from mistletoe import Document, block_token, span_token
 from mistletoe.base_renderer import BaseRenderer
 
-__all__ = ["TelegraphRenderer", "TelegraphRendered", "md_to_telegraph"]
+__all__ = ["TelegraphRenderer", "md_to_telegraph"]
 
 
 Node = Union[Dict[str, Any], str]
@@ -159,9 +184,6 @@ class TelegraphRenderer(BaseRenderer):
             text.replace("&nbsp;", "").replace("&#160;", "").replace("\xa0", "")
         )
         return normalized.strip() == ""
-
-
-TelegraphRendered = TelegraphRenderer
 
 
 def md_to_telegraph(markdown_text):
