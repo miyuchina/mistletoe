@@ -307,7 +307,7 @@ def update_text(token: SpanToken):
     if isinstance(token, RawText):
         token.content = token.content.replace("mistletoe", "The Amazing mistletoe")
 
-    if not isinstance(token, InlineCode) and hasattr(token, "children"):
+    if not isinstance(token, InlineCode) and token.children is not None:
         for child in token.children:
             update_text(child)
 
