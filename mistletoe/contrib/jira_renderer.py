@@ -191,7 +191,7 @@ class JiraRenderer(BaseRenderer):
         else:
             template = '|{inner}'
 
-        inner = self.render_inner(token)
+        inner = self.render_inner(token).replace("|", "\\|")
         if inner == '':
             inner = ' '
         return template.format(inner=inner)
