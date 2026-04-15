@@ -218,6 +218,20 @@ public static void main(String[] args) {
 """
         self.markdownResultTest(markdown, expected)
 
+    def test_table_pipe_in_cell(self):
+        """ Escape pipe in cells """
+        markdown = """\
+| A     | B |
+|-----------|
+| 1\\|1 | 2 |
+"""
+        expected = """\
+||A||B||
+|1\\|1|2|
+
+"""
+        self.markdownResultTest(markdown, expected)
+
     @filesBasedTest
     def test_render__basic_blocks(self):
         pass
