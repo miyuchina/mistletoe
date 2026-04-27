@@ -512,7 +512,19 @@ class MarkdownRenderer(BaseRenderer):
         """
         Renders each table cell on a table row to text. No word wrapping.
         """
-        return [next(self.span_to_lines(col.children, max_line_length=None), "") for col in row.children]
+        return [
+            self.escape_table_cell_text(
+                next(self.span_to_lines(col.children, max_line_length=None), "")
+            )
+            for col in row.children
+        ]
+
+    @staticmethod
+    def escape_table_cell_text(text: str) -> str:
+        """
+        Escapes text that would otherwise be parsed as a table delimiter.
+        """
+        return text.replace("|", r"\|")
 
     @classmethod
     def calculate_table_column_widths(cls, col_text) -> Sequence[int]:
