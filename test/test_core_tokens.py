@@ -30,6 +30,7 @@ class TestCoreTokens(TestCase):
         self.assertEqual(delimiter.number, 1)
         self.assertEqual(delimiter.start, 5)
         self.assertEqual(delimiter.end, 6)
+        self.assertEqual(delimiter.type, '*')
 
     def test_delimiter_remove_right(self):
         delimiter = Delimiter(4, 6, 'abcd**')
@@ -37,6 +38,15 @@ class TestCoreTokens(TestCase):
         self.assertEqual(delimiter.number, 1)
         self.assertEqual(delimiter.start, 4)
         self.assertEqual(delimiter.end, 5)
+        self.assertEqual(delimiter.type, '*')
+
+    def test_delimiter_remove_right_from_longer_run(self):
+        delimiter = Delimiter(4, 8, 'abcd****')
+        self.assertTrue(delimiter.remove(1, left=False))
+        self.assertEqual(delimiter.number, 3)
+        self.assertEqual(delimiter.start, 4)
+        self.assertEqual(delimiter.end, 7)
+        self.assertEqual(delimiter.type, '***')
 
     def test_delimiter_remove_empty(self):
         delimiter = Delimiter(4, 6, 'abcd**')
