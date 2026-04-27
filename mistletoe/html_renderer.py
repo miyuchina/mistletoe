@@ -3,7 +3,9 @@ HTML renderer for mistletoe.
 """
 
 import html
+import re
 from itertools import chain
+from typing import Iterable, Optional
 from urllib.parse import quote
 from mistletoe import block_token
 from mistletoe import span_token
@@ -11,6 +13,11 @@ from mistletoe.block_token import HtmlBlock
 from mistletoe.span_token import HtmlSpan
 from mistletoe.base_renderer import BaseRenderer
 from mistletoe.base_renderer import URI_SAFE_CHARACTERS
+
+
+DEFAULT_ALLOWED_URL_SCHEMES = frozenset(('http', 'https', 'mailto', 'tel'))
+HARMFUL_LINK_TARGET = '#harmful-link'
+_URL_SCHEME = re.compile(r'^[A-Za-z][A-Za-z0-9+.-]*:')
 
 
 class HtmlRenderer(BaseRenderer):
@@ -25,6 +32,7 @@ class HtmlRenderer(BaseRenderer):
         html_escape_double_quotes=False,
         html_escape_single_quotes=False,
         process_html_tokens=True,
+        allowed_url_schemes: Optional[Iterable[str]] = DEFAULT_ALLOWED_URL_SCHEMES,
         **kwargs
     ):
         """
@@ -37,6 +45,9 @@ class HtmlRenderer(BaseRenderer):
             process_html_tokens (bool): whether to include HTML tokens in the
                 processing. If `False`, HTML markup will be treated as plain
                 text: e.g. input ``<br>`` will be rendered as ``&lt;br&gt;``.
+            allowed_url_schemes (set): URL schemes to allow in links and images.
+                URLs without a scheme are always allowed. Set this to ``None``
+                to allow all schemes.
             **kwargs: additional parameters to be passed to the ancestor's
                 constructor.
         """
@@ -45,6 +56,12 @@ class HtmlRenderer(BaseRenderer):
         super().__init__(*final_extras, **kwargs)
         self.html_escape_double_quotes = html_escape_double_quotes
         self.html_escape_single_quotes = html_escape_single_quotes
+        if allowed_url_schemes is None:
+            self.allowed_url_schemes = None
+        else:
+            self.allowed_url_schemes = frozenset(
+                scheme.lower() for scheme in allowed_url_schemes
+            )
 
     def __exit__(self, *args):
         super().__exit__(*args)
@@ -94,7 +111,7 @@ class HtmlRenderer(BaseRenderer):
     def render_auto_link(self, token: span_token.AutoLink) -> str:
         template = '<a href="{target}">{inner}</a>'
         if token.mailto:
-            target = 'mailto:{}'.format(token.target)
+            target = self.escape_url('mailto:{}'.format(token.target))
         else:
             target = self.escape_url(token.target)
         inner = self.render_inner(token)
@@ -232,12 +249,21 @@ class HtmlRenderer(BaseRenderer):
             s = s.replace('\'', "&#x27;")
         return s
 
-    @staticmethod
-    def escape_url(raw: str) -> str:
+    def escape_url(self, raw: str) -> str:
         """
         Escape urls to prevent code injection craziness. (Hopefully.)
         """
+        if not self.is_url_allowed(raw):
+            return HARMFUL_LINK_TARGET
         return html.escape(quote(raw, safe=URI_SAFE_CHARACTERS))
+
+    def is_url_allowed(self, raw: str) -> bool:
+        if self.allowed_url_schemes is None:
+            return True
+        match = _URL_SCHEME.match(html.unescape(raw).lstrip())
+        if match is None:
+            return True
+        return match.group(0)[:-1].lower() in self.allowed_url_schemes
 
 
 HTMLRenderer = HtmlRenderer
