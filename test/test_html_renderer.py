@@ -159,6 +159,90 @@ class TestHtmlRendererEscaping(TestCase):
             self.assertEqual(renderer.render(token), expected)
 
 
+class TestHtmlRendererUrlSchemes(TestCase):
+    def render_document(self, lines, **kwargs):
+        with HtmlRenderer(**kwargs) as renderer:
+            return renderer.render(Document(lines))
+
+    @parameterized.expand([
+        ('[x](javascript:alert(1))\n', '<p><a href="#harmful-link">x</a></p>\n'),
+        ('[x](JAVASCRIPT:alert(1))\n', '<p><a href="#harmful-link">x</a></p>\n'),
+        ('[x](vbscript:alert(1))\n', '<p><a href="#harmful-link">x</a></p>\n'),
+        ('[x](data:text/html,<svg>)\n', '<p><a href="#harmful-link">x</a></p>\n'),
+        ('[x](ftp://example.com)\n', '<p><a href="#harmful-link">x</a></p>\n'),
+        ('[x](custom:thing)\n', '<p><a href="#harmful-link">x</a></p>\n'),
+        ('![x](javascript:alert(1))\n', '<p><img src="#harmful-link" alt="x" /></p>\n'),
+        ('<javascript:alert(1)>\n', '<p><a href="#harmful-link">javascript:alert(1)</a></p>\n'),
+    ])
+    def test_disallowed_url_schemes(self, markdown, expected):
+        self.assertEqual(self.render_document([markdown]), expected)
+
+    @parameterized.expand([
+        ('[x](jav&#x61;script:alert(1))\n', '<p><a href="#harmful-link">x</a></p>\n'),
+        ('[x](javascript&#58;alert(1))\n', '<p><a href="#harmful-link">x</a></p>\n'),
+    ])
+    def test_disallowed_url_schemes_with_entities(self, markdown, expected):
+        self.assertEqual(self.render_document([markdown]), expected)
+
+    @parameterized.expand([
+        ('[x](http://example.com)\n', '<p><a href="http://example.com">x</a></p>\n'),
+        ('[x](https://example.com/a?b=1#c)\n',
+         '<p><a href="https://example.com/a?b=1#c">x</a></p>\n'),
+        ('[x](mailto:user@example.com)\n',
+         '<p><a href="mailto:user@example.com">x</a></p>\n'),
+        ('[x](tel:+123456789)\n', '<p><a href="tel:+123456789">x</a></p>\n'),
+        ('[x](/path)\n', '<p><a href="/path">x</a></p>\n'),
+        ('[x](relative/path)\n', '<p><a href="relative/path">x</a></p>\n'),
+        ('[x](?q=1)\n', '<p><a href="?q=1">x</a></p>\n'),
+        ('[x](#section)\n', '<p><a href="#section">x</a></p>\n'),
+        ('<user@example.com>\n',
+         '<p><a href="mailto:user@example.com">user@example.com</a></p>\n'),
+    ])
+    def test_default_allowed_url_schemes(self, markdown, expected):
+        self.assertEqual(self.render_document([markdown]), expected)
+
+    def test_reference_link_url_scheme_is_filtered(self):
+        token = Document(['[x][foo]\n', '\n', '[foo]: javascript:alert(1)\n'])
+        expected = '<p><a href="#harmful-link">x</a></p>\n'
+        with HtmlRenderer() as renderer:
+            self.assertEqual(renderer.render(token), expected)
+
+    def test_reference_image_url_scheme_is_filtered(self):
+        token = Document(['![x][foo]\n', '\n', '[foo]: javascript:alert(1)\n'])
+        expected = '<p><img src="#harmful-link" alt="x" /></p>\n'
+        with HtmlRenderer() as renderer:
+            self.assertEqual(renderer.render(token), expected)
+
+    def test_allowed_url_schemes_can_be_restricted(self):
+        markdown = ['[http](http://example.com) [https](https://example.com)\n']
+        expected = (
+            '<p><a href="#harmful-link">http</a> '
+            '<a href="https://example.com">https</a></p>\n'
+        )
+        self.assertEqual(
+            self.render_document(markdown, allowed_url_schemes={'https'}),
+            expected,
+        )
+
+    def test_allowed_url_schemes_can_be_extended(self):
+        markdown = ['[custom](custom:thing)\n']
+        expected = '<p><a href="custom:thing">custom</a></p>\n'
+        self.assertEqual(
+            self.render_document(
+                markdown,
+                allowed_url_schemes={'https', 'custom'},
+            ),
+            expected,
+        )
+
+    def test_allowed_url_schemes_can_be_disabled(self):
+        markdown = ['[x](javascript:alert(1))\n']
+        expected = '<p><a href="javascript:alert(1)">x</a></p>\n'
+        self.assertEqual(
+            self.render_document(markdown, allowed_url_schemes=None),
+            expected,
+        )
+
 class TestHtmlRendererFootnotes(TestCase):
     def setUp(self):
         self.renderer = HtmlRenderer()
