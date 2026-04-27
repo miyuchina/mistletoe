@@ -338,6 +338,15 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
+    def test_table_escapes_pipes_in_cells(self):
+        input = [
+            "| Left column | Right column                  |\n",
+            "| ----------- | ----------------------------- |\n",
+            "| left baz    | right foo \\| between pipes \\| |\n",
+        ]
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
+
     def test_table_with_varying_column_counts(self):
         input = [
             "   |   header | x |  \n",
