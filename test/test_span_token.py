@@ -35,6 +35,24 @@ class TestStrong(TestBranchToken):
         self._test_token(next(tokens), 'bar', children=True)
         self._test_token(next(tokens), '***baz', children=False)
 
+    def test_overlapping_delimiter_runs_do_not_crash(self):
+        tokens = list(span_token.tokenize_inner('**a****a*'))
+        self.assertEqual(len(tokens), 3)
+        self.assertIsInstance(tokens[0], span_token.Strong)
+        self.assertIsInstance(tokens[2], span_token.Emphasis)
+        self.mock.assert_any_call('*')
+
+    def test_issue_261_asterisk_sequences_do_not_crash(self):
+        cases = [
+            '**IKXZXPTB****AJFHV *Pbjovp*VSN*',
+            '**IKXZXPTB****AJFHV*Pbjovp*',
+            'Ch******her R**a, Bu*****ly In****nt, j**n ko***ob, '
+            'ji*yu, M**s, Ch****us, M*',
+        ]
+        for case in cases:
+            with self.subTest(case=case):
+                self.assertTrue(list(span_token.tokenize_inner(case)))
+
 
 class TestEmphasis(TestBranchToken):
     def test_parse(self):

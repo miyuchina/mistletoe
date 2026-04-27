@@ -596,6 +596,16 @@ class TestDocument(unittest.TestCase):
         self.assertIsInstance(document.children[0], block_token.Paragraph)
         self.assertEqual(len(document.children), 1)
 
+    def test_issue_261_table_cell_asterisk_sequences_do_not_crash(self):
+        lines = [
+            '| Qiup | Xmfakdshhgvdj |\n',
+            '| --- | --- |\n',
+            '| **NMH9920F** | **IKXZXPTB****AJFHV *Pbjovp*VSN* |\n',
+        ]
+        document = block_token.Document(lines)
+        self.assertEqual(len(document.children), 1)
+        self.assertIsInstance(document.children[0], block_token.Table)
+
 
 class TestThematicBreak(unittest.TestCase):
     def test_match(self):
