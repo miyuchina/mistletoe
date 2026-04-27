@@ -439,9 +439,10 @@ class Delimiter:
             self.number = self.end - self.start
             self.type = self.type[n:]
             return True
+        # Trim closing markers from the right so type matches start/end.
         self.end = self.end - n
         self.number = self.end - self.start
-        self.type = self.type[:n]
+        self.type = self.type[:-n]
         return True
 
     def closed_by(self, other):
