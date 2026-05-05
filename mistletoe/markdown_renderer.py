@@ -408,9 +408,20 @@ class MarkdownRenderer(BaseRenderer):
         """
         Renders a sequence of span (inline) tokens into a sequence of Fragments.
         """
-        return chain.from_iterable(
-            [self.render_map[token.__class__.__name__](token) for token in tokens]
-        )
+        token_list = list(tokens)
+        for i, token in enumerate(token_list):
+            if (
+                isinstance(token, span_token.LineBreak)
+                and token.soft
+                and (
+                    (i + 1 < len(token_list) and isinstance(token_list[i + 1], span_token.HtmlSpan))
+                    or (i > 0 and isinstance(token_list[i - 1], span_token.HtmlSpan))
+                )
+            ):
+                yield Fragment("\n", hard_line_break=True)
+            else:
+                yield from self.render_map[token.__class__.__name__](token)
+
 
     @classmethod
     def fragments_to_lines(
