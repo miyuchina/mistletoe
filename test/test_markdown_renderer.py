@@ -647,6 +647,28 @@ class TestMarkdownFormatting(unittest.TestCase):
                 "> > hills of hay\n"
             )
 
+    def test_wordwrap_paragraph_with_html_span_on_own_line(self):
+        with MarkdownRenderer() as renderer:
+            paragraph = block_token.Paragraph(
+                [
+                    "Some long sentence that will be reflowed by the word wrapper.\n",
+                    "</template>\n",
+                    "More text after the tag.\n",
+                ]
+            )
+
+            renderer.max_line_length = 50
+            lines = renderer.render(paragraph)
+
+            # then the closing tag must remain on its own line — not collapsed
+            # onto the end of the previous line, and not merged with the next line
+            assert lines == (
+                "Some long sentence that will be reflowed by the\n"
+                "word wrapper.\n"
+                "</template>\n"
+                "More text after the tag.\n"
+            )
+
     def test_wordwrap_tables(self):
         with MarkdownRenderer(max_line_length=30) as renderer:
             # given a markdown table
