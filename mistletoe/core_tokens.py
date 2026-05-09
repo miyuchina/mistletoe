@@ -1,5 +1,6 @@
 import re
 import sys
+from contextvars import ContextVar
 from unicodedata import category
 
 
@@ -23,7 +24,8 @@ punctuation = set.union(
 code_pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
 
 
-_code_matches = []
+""" Use together with IsolatedContext to ensure no side effects when parsing markdown documents."""
+_code_matches = ContextVar('code_matches', default=[])
 
 
 def find_core_tokens(string, root):
@@ -41,7 +43,7 @@ def find_core_tokens(string, root):
                 delimiters.append(Delimiter(start, i if not escaped else i - 1, string))
                 in_delimiter_run = None
                 escaped = False
-            _code_matches.append(code_match)
+            _code_matches.get().append(code_match)
             i = code_match.end()
             code_match = code_pattern.search(string, i)
             continue
