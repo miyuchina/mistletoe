@@ -724,3 +724,22 @@ class TestFileWrapper(unittest.TestCase):
         assert next(wrapper) == "somewhat interesting\n"
         wrapper.reset()
         assert next(wrapper) == "somewhat interesting\n"
+
+
+class TestDefinitionList(unittest.TestCase):
+    def test_match(self):
+        token = next(iter(block_token.tokenize([
+            "Term1\n",
+            ": definition1\n",
+            "\n",
+            "Term2\n",
+            ": definition2-A\n",
+            ": definition2-B\n"
+        ])))
+        self.assertIsInstance(token, block_token.DefinitionList)
+        self.assertEqual(len(token.defs), 2)
+        self.assertEqual(token.defs[0][0], block_token.DefinitionTerm(["Term1\n"]))
+        self.assertEqual(token.defs[0][1], block_token.DefinitionDesc(["definition1\n"]))
+        self.assertEqual(token.defs[1][0], block_token.DefinitionTerm(["Term2\n"]))
+        self.assertEqual(token.defs[1][1], block_token.DefinitionDesc(["definition2-A\n"]))
+        self.assertEqual(token.defs[1][2], block_token.DefinitionDesc(["definition2-B\n"]))
