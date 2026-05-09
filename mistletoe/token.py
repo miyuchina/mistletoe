@@ -1,3 +1,4 @@
+from types import MethodType
 from typing import Iterable, Optional
 
 """
@@ -49,6 +50,7 @@ class Token:
     """
 
     repr_attributes = ()
+    _start_args_count = None  # Cache for the number of args of the start() method
 
     def __repr__(self):
         output = "<{}.{}".format(
@@ -71,6 +73,22 @@ class Token:
             output += " {}={}".format(attrname, _short_repr(attrvalue))
         output += " at {:#x}>".format(id(self))
         return output
+
+    @classmethod
+    def start_args_count(cls):
+        """
+        Returns the number of arguments accepted by the start() method.
+        The return value should be 1 or 2.
+        """
+        if cls._start_args_count is None:
+            func = cls.start
+            # Using .__code__.co_argcount has some shortcomings
+            # (it ignores *args & parameters with default values),
+            # but it is a lot faster than using inspect.signature():
+            cls._start_args_count = func.__code__.co_argcount
+            if isinstance(func, MethodType):
+                cls._start_args_count -= 1
+        return cls._start_args_count
 
     @property
     def parent(self) -> Optional['Token']:
