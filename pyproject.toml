@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mistletoe"
+dynamic = ["version"]
+description = "A fast, extensible Markdown parser in pure Python."
+readme = "README.md"
+requires-python = ">=3.5,<4"
+license = {text = "MIT"}
+authors = [
+    {name = "Mi Yu", email = "hello@afteryu.me"},
+]
+keywords = ["markdown", "lexer", "parser", "development"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+
+[project.optional-dependencies]
+pygments = [
+    "Pygments>=2.11.2,<=2.16",
+]
+
+[project.scripts]
+mistletoe = "mistletoe.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/miyuchina/mistletoe"
+
+[dependency-groups]
+test = [
+    "parameterized",
+    "pytest",
+]
+lint = [
+    "flake8",
+]
+coverage = [
+    "coveralls",
+]
+dev = [
+    {include-group = "test"},
+    {include-group = "lint"},
+    {include-group = "coverage"},
+]
+
+[tool.setuptools]
+packages = ["mistletoe", "mistletoe.contrib"]
+zip-safe = false
+
+[tool.setuptools.dynamic]
+version = {attr = "mistletoe.__version__"}
+
+[tool.setuptools.package-data]
+mistletoe = ["py.typed"]
+
+[tool.uv.dependency-groups]
+test = {requires-python = ">=3.7"}
+lint = {requires-python = ">=3.7"}
+coverage = {requires-python = ">=3.7"}
+dev = {requires-python = ">=3.7"}
