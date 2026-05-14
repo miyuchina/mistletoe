@@ -5,13 +5,11 @@ For maintainers, here are the basic steps when creating a new release of mistlet
 * set a release version & commit [chore: version <x.y.z>](https://github.com/miyuchina/mistletoe/commit/35dfaa0a95e8abb1cdceb8e449f9590905dca439)
 * publish artifacts of the release
     * official documentation: [Packaging Python Projects](https://packaging.python.org/en/latest/tutorials/packaging-projects/)
-    * install / upgrade the build tool: `$ python -m pip install --upgrade build`
     * make sure there are no old relicts in the local "dist" folder
-    * build distribution archives (sdist and Wheel files in "dist/*"): `$ python -m build`
+    * build distribution archives (sdist and Wheel files in "dist/*"): `$ uv build`
     * upload the distribution archives to PyPi:
-        * install / upgrade Twine: `$ python -m pip install --upgrade twine`
         * if unsure, upload to test PyPi and/or test locally - see [docs](https://packaging.python.org/en/latest/tutorials/packaging-projects/#uploading-the-distribution-archives)
-        * do the upload to PyPi: `$ python -m twine upload dist/*`
+        * do the upload to PyPi: `$ uvx twine upload dist/*`
             * authenticate with your token from PyPi (for details, see docs again)
         * check that you can install locally what you uploaded: `$ python -m pip install mistletoe`
 * [create the release in GitHub](https://github.com/miyuchina/mistletoe/releases/new)
