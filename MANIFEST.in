@@ -1,9 +1,8 @@
 # see https://setuptools.pypa.io/en/latest/userguide/miscellaneous.html#controlling-files-in-the-distribution
 
 include LICENSE
-include requirements.txt
-include test-requirements.txt
-include tox.ini
+include .flake8
+include uv.lock
 
 graft test
 recursive-include ** makefile
