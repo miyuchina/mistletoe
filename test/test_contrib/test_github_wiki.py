@@ -1,3 +1,4 @@
+import time
 from unittest import TestCase, mock
 from mistletoe import span_token, Document, token
 from mistletoe.span_token import tokenize_inner
@@ -28,3 +29,29 @@ class TestGithubWiki(TestCase):
         token = next(iter(tokenize_inner('[[wiki|target]]')))
         output = '<a href="target">wiki</a>'
         self.assertEqual(self.renderer.render(token), output)
+
+    def test_parse_variant_spacing_and_pipes(self):
+        test_cases = [
+            ('[[wiki | target]]', 'wiki', 'target'),
+            ('[[ wiki | target ]]', 'wiki', 'target'),
+            ('[[a | b | c]]', 'a', 'b | c'),
+        ]
+        for source, label, target in test_cases:
+            with self.subTest(source=source):
+                token = next(iter(tokenize_inner(source)))
+                self.assertIsInstance(token, GithubWiki)
+                self.assertEqual(token.target, target)
+                self.assertEqual(self.renderer.render_inner(token), label)
+
+    def test_malformed_input_is_rejected_quickly(self):
+        malformed_inputs = [
+            '[[' + ' ' * 10000 + '|' + ' ' * 10000 + ']',
+            '[[' + ' ' * 10000 + ']]',
+        ]
+        for source in malformed_inputs:
+            with self.subTest(length=len(source)):
+                start = time.perf_counter()
+                match = GithubWiki.pattern.match(source)
+                elapsed = time.perf_counter() - start
+                self.assertLess(elapsed, 1.0)
+                self.assertIsNone(match)
