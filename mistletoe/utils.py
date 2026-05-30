@@ -31,3 +31,4 @@ def traverse(source, klass=None, depth=None, include_source=False):
                 [(child, c) for c in child.children or []]
             )
         next_children = new_children
+
