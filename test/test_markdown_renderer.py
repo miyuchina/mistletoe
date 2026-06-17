@@ -12,6 +12,16 @@ class TestMarkdownRenderer(unittest.TestCase):
         with MarkdownRenderer(**rendererArgs) as renderer:
             return renderer.render(Document(input))
 
+    def test_instantiated_twice_without_context_manager(self):
+        # MarkdownRenderer.__init__ removes the Footnote token from the global
+        # block_token._token_types. When the renderer is not used as a context
+        # manager, __exit__ (which calls reset_tokens) never runs, so a second
+        # instantiation must not crash trying to remove an already-absent token.
+        self.addCleanup(block_token.reset_tokens)
+        self.addCleanup(span_token.reset_tokens)
+        MarkdownRenderer()
+        MarkdownRenderer()
+
     def test_empty_document(self):
         input = []
         output = self.roundtrip(input)

@@ -56,10 +56,15 @@ def remove_token(token_cls):
     Allows external manipulation of the parsing process.
     This function is usually called in BaseRenderer.__exit__.
 
+    Does nothing if the token class is not currently registered, so that it is
+    safe to call repeatedly (e.g. when a renderer that removes a token is
+    instantiated more than once without being used as a context manager).
+
     Arguments:
         token_cls (BlockToken): token to be removed from the parsing process.
     """
-    _token_types.remove(token_cls)
+    if token_cls in _token_types:
+        _token_types.remove(token_cls)
 
 
 def reset_tokens():
