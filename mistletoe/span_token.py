@@ -50,7 +50,8 @@ def remove_token(token_cls):
     Arguments:
         token_cls (SpanToken): token to be removed from the parsing process.
     """
-    _token_types.remove(token_cls)
+    if token_cls in _token_types:
+        _token_types.remove(token_cls)
 
 
 def reset_tokens():
