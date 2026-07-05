@@ -94,7 +94,7 @@ class HtmlRenderer(BaseRenderer):
     def render_auto_link(self, token: span_token.AutoLink) -> str:
         template = '<a href="{target}">{inner}</a>'
         if token.mailto:
-            target = 'mailto:{}'.format(token.target)
+            target = self.escape_url('mailto:{}'.format(token.target))
         else:
             target = self.escape_url(token.target)
         inner = self.render_inner(token)
