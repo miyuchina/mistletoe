@@ -48,6 +48,20 @@ class TestAtxHeading(TestToken):
         self.assertIsInstance(token2, block_token.Heading)
         self.assertIsInstance(token3, block_token.Paragraph)
 
+    def test_content_is_per_instance(self):
+        # Regression for #212: each heading must report its own raw text
+        # rather than the last-parsed heading's (which used to leak through a
+        # shared class attribute).
+        lines = ['# first\n', '\n', '## second\n', '\n', '### third\n']
+        headings = [
+            token
+            for token in block_token.tokenize(lines)
+            if isinstance(token, block_token.Heading)
+        ]
+        self.assertEqual(
+            [heading.content for heading in headings], ['first', 'second', 'third']
+        )
+
 
 class TestSetextHeading(TestToken):
     def test_match(self):

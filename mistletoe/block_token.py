@@ -172,11 +172,22 @@ class Heading(BlockToken):
     repr_attributes = BlockToken.repr_attributes + ("level",)
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(\n|\s+?#+\s*?$))')
     level = 0
-    content = ''
+    _content = ''
 
     def __init__(self, match):
         self.level, content, self.closing_sequence = match
+        self._content = content
         super().__init__(content, span_token.tokenize_inner)
+
+    @property
+    def content(self):
+        """The raw text of the heading line.
+
+        Stored per-instance rather than as a class attribute mutated by
+        ``start()`` on every parse, which used to make every heading report
+        the last heading's text (see #212).
+        """
+        return self._content
 
     @classmethod
     def start(cls, line):
@@ -184,9 +195,9 @@ class Heading(BlockToken):
         if match_obj is None:
             return False
         cls.level = len(match_obj.group(1))
-        cls.content = (match_obj.group(2) or '').strip()
-        if set(cls.content) == {'#'}:
-            cls.content = ''
+        cls._content = (match_obj.group(2) or '').strip()
+        if set(cls._content) == {'#'}:
+            cls._content = ''
         cls.closing_sequence = (match_obj.group(3) or '').strip()
         return True
 
@@ -197,7 +208,7 @@ class Heading(BlockToken):
     @classmethod
     def read(cls, lines):
         next(lines)
-        return cls.level, cls.content, cls.closing_sequence
+        return cls.level, cls._content, cls.closing_sequence
 
 
 class SetextHeading(BlockToken):
