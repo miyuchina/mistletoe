@@ -114,6 +114,14 @@ Use this feature with //caution//. See {{Wikipedia article="SomeArticle"/}}. {{t
 """
         self.markdownResultTest(markdown, expected)
 
+    def test_render_empty_quote(self):
+        # an empty blockquote (">") has no last child; must not raise IndexError
+        self.markdownResultTest('>\n', '\n')
+
+    def test_render_empty_list_item(self):
+        # an empty list item ("- ") has no first child; must not raise IndexError
+        self.markdownResultTest('- \n', '* \n\n')
+
     @filesBasedTest
     def test_render__basic_blocks(self):
         pass

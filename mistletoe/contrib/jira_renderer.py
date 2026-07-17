@@ -106,9 +106,13 @@ class JiraRenderer(BaseRenderer):
         return template.format(level=token.level, inner=inner) + self._block_eol(token)
 
     def render_quote(self, token):
-        self.lastChildOfQuotes.append(token.children[-1])
+        # an empty blockquote (">") has no last child to track
+        tracked = bool(token.children)
+        if tracked:
+            self.lastChildOfQuotes.append(token.children[-1])
         inner = self.render_inner(token)
-        del (self.lastChildOfQuotes[-1])
+        if tracked:
+            del (self.lastChildOfQuotes[-1])
 
         if len(token.children) == 1 and isinstance(token.children[0], block_token.Paragraph):
             template = 'bq. {inner}' + self._block_eol(token)[0:-1]
