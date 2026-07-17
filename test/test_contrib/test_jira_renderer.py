@@ -232,6 +232,10 @@ public static void main(String[] args) {
 """
         self.markdownResultTest(markdown, expected)
 
+    def test_render_empty_quote(self):
+        # an empty blockquote (">") has no last child; must not raise IndexError
+        self.markdownResultTest('>\n', '{quote}\n{quote}\n\n')
+
     @filesBasedTest
     def test_render__basic_blocks(self):
         pass

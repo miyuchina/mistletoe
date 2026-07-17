@@ -94,9 +94,13 @@ class XWiki20Renderer(BaseRenderer):
         return template.format(level='=' * token.level, inner=inner) + self._block_eol(token)
 
     def render_quote(self, token):
-        self.lastChildOfQuotes.append(token.children[-1])
+        # an empty blockquote (">") has no last child to track
+        tracked = bool(token.children)
+        if tracked:
+            self.lastChildOfQuotes.append(token.children[-1])
         inner = self.render_inner(token)
-        del (self.lastChildOfQuotes[-1])
+        if tracked:
+            del (self.lastChildOfQuotes[-1])
 
         return (
             "".join(
@@ -133,9 +137,13 @@ class XWiki20Renderer(BaseRenderer):
         if '1' in self.listTokens:
             prefix += '.'
 
-        self.firstChildOfListItems.append(token.children[0])
+        # an empty list item ("- ") has no first child to track
+        tracked = bool(token.children)
+        if tracked:
+            self.firstChildOfListItems.append(token.children[0])
         inner = self.render_inner(token)
-        del (self.firstChildOfListItems[-1])
+        if tracked:
+            del (self.firstChildOfListItems[-1])
 
         result = template.format(prefix=prefix, inner=inner.rstrip())
 
