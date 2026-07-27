@@ -2,6 +2,7 @@
 LaTeX renderer for mistletoe.
 """
 
+import re
 import string
 from itertools import chain
 from urllib.parse import quote
@@ -14,6 +15,15 @@ for delimiter in '*':  # remove invalid delimiters
     verb_delimiters.replace(delimiter, '')
 for delimiter in reversed('|!"\'=+'):  # start with most common delimiters
     verb_delimiters = delimiter + verb_delimiters.replace(delimiter, '')
+
+# characters that would otherwise end or comment out a macro argument
+latex_path_escapes = {
+    '\\': '\\textbackslash{}',
+    '{': '\\{',
+    '}': '\\}',
+    '%': '\\%',
+    '#': '\\#',
+}
 
 
 class LaTeXRenderer(BaseRenderer):
@@ -55,7 +65,8 @@ class LaTeXRenderer(BaseRenderer):
 
     def render_image(self, token):
         self.packages['graphicx'] = []
-        return '\n\\includegraphics{{{}}}\n'.format(token.src)
+        src = self.escape_latex_path(token.src)
+        return '\n\\includegraphics{{{}}}\n'.format(src)
 
     def render_link(self, token):
         self.packages['hyperref'] = []
@@ -193,3 +204,17 @@ class LaTeXRenderer(BaseRenderer):
         quoted_url = quote(raw, safe=URI_SAFE_CHARACTERS)
         return quoted_url.replace('%', '\\%') \
                          .replace('#', '\\#')
+
+    @staticmethod
+    def escape_latex_path(raw: str) -> str:
+        """
+        LaTeX-escape a path used as an argument of a macro.
+
+        Contrary to `escape_url()`, no percent-encoding is done here:
+        the argument of \\includegraphics is a file path, not a URL, so
+        e. g. 'my file.png' has to stay 'my file.png'. Only characters
+        which would break out of the macro argument get escaped.
+        """
+        return re.sub(r'[\\{}%#]',
+                      lambda match: latex_path_escapes[match.group()],
+                      raw)
