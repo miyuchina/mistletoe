@@ -1,6 +1,5 @@
 from unittest import TestCase, mock
 from parameterized import parameterized
-import mistletoe.latex_renderer
 from mistletoe.latex_renderer import LaTeXRenderer
 from mistletoe import markdown
 
@@ -13,14 +12,14 @@ class TestLaTeXRenderer(TestCase):
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
     def _test_token(self, token_name, expected_output, children=True,
-                    without_attrs=None, **kwargs):
+                    without_attrs=None, render_func_kwargs={}, **kwargs):
         render_func = self.renderer.render_map[token_name]
         children = mock.MagicMock(spec=list) if children else None
         mock_token = mock.Mock(children=children, **kwargs)
         without_attrs = without_attrs or []
         for attr in without_attrs:
             delattr(mock_token, attr)
-        self.assertEqual(render_func(mock_token), expected_output)
+        self.assertEqual(render_func(mock_token, **render_func_kwargs), expected_output)
 
     def test_strong(self):
         self._test_token('Strong', '\\textbf{inner}')
@@ -28,21 +27,19 @@ class TestLaTeXRenderer(TestCase):
     def test_emphasis(self):
         self._test_token('Emphasis', '\\textit{inner}')
 
-    def test_inline_code(self):
+    @parameterized.expand([
+        ('inner', '\\texttt{inner}'),
+        ('a + b', '\\texttt{a + b}'),
+        ('a | b', '\\texttt{a | b}'),
+        ('|ab!|', '\\texttt{|ab!|}'),
+        ('two  spaces', '\\texttt{two\\ \\ spaces}'),
+        ('two\t whitespaces', '\\texttt{two\\ \\ whitespaces}'),
+    ])
+    def test_inline_code(self, content, expected):
         func_path = 'mistletoe.latex_renderer.LaTeXRenderer.render_raw_text'
 
-        for content, expected in {'inner': '\\verb|inner|',
-                                'a + b': '\\verb|a + b|',
-                                'a | b': '\\verb!a | b!',
-                                '|ab!|': '\\verb"|ab!|"',
-                               }.items():
-            with mock.patch(func_path, return_value=content):
-                self._test_token('InlineCode', expected, content=content)
-
-        content = mistletoe.latex_renderer.verb_delimiters
-        with self.assertRaises(RuntimeError):
-            with mock.patch(func_path, return_value=content):
-                self._test_token('InlineCode', None, content=content)
+        with mock.patch(func_path, return_value=content):
+            self._test_token('InlineCode', expected, content=content)
 
     def test_strikethrough(self):
         self._test_token('Strikethrough', '\\sout{inner}')
@@ -72,10 +69,28 @@ class TestLaTeXRenderer(TestCase):
         self._test_token('Math', expected,
                          children=False, content='$ 1 + 2 = 3 $')
 
-    def test_raw_text(self):
-        expected = '\\$\\&\\#\\{\\}'
-        self._test_token('RawText', expected,
-                         children=False, content='$&#{}')
+    def test_escape_sequence(self):
+        self._test_token('EscapeSequence', 'inner')
+
+    @parameterized.expand([
+        ('$', '\\$'),
+        ('&', '\\&'),
+        ('#', '\\#'),
+        ('%', '\\%'),
+        ('_', '\\_'),
+        ('{', '\\{'),
+        ('}', '\\}'),
+        ('~', '\\textasciitilde{}'),
+        ('^', '\\textasciicircum{}'),
+        ('\\', '\\textbackslash{}'),
+    ])
+    def test_raw_text(self, target, expected):
+        self._test_token('RawText', expected, children=False, content=target)
+
+    def test_raw_text_no_escape(self):
+        expected = '$&#%_{}~^\\'
+        self._test_token('RawText', expected, children=False, content=expected,
+                         render_func_kwargs={'escape': False})
 
     def test_heading(self):
         expected = '\n\\section{inner}\n'
@@ -132,6 +147,13 @@ class TestLaTeXRenderer(TestCase):
                   '\\end{document}\n')
         self._test_token('Document', expected, footnotes={})
 
+    @parameterized.expand([
+        ({'ulem': ['normalem']}, '\\usepackage[normalem]{ulem}\n'),
+        ({'hyperref': []}, '\\usepackage[]{hyperref}\n'),
+    ])
+    def test_packages(self, packages, expected):
+        self.renderer.packages = packages
+        self.assertEqual(self.renderer.render_packages(), expected)
 
 class TestHtmlEntity(TestCase):
     def test_html_entity(self):
@@ -151,7 +173,7 @@ class TestLaTeXFootnotes(TestCase):
         from mistletoe import Document
         raw = ['![alt][foo]\n', '\n', '[foo]: bar "title"\n']
         expected = ('\\documentclass{article}\n'
-                  '\\usepackage{graphicx}\n'
+                  '\\usepackage[]{graphicx}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\n\\includegraphics{bar}\n'
@@ -163,7 +185,7 @@ class TestLaTeXFootnotes(TestCase):
         from mistletoe import Document
         raw = ['[name][key]\n', '\n', '[key]: target\n']
         expected = ('\\documentclass{article}\n'
-                  '\\usepackage{hyperref}\n'
+                  '\\usepackage[]{hyperref}\n'
                   '\\begin{document}\n'
                   '\n'
                   '\\href{target}{name}'
