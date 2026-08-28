@@ -1,8 +1,6 @@
 import unittest
 from unittest.mock import call, patch
 
-from parameterized import parameterized
-
 from mistletoe import block_token, block_tokenizer, span_token
 
 
@@ -382,24 +380,26 @@ class TestTable(unittest.TestCase):
         self.assertEqual(list(test_func('|-| :--- | :---: | ---:|\n')),
                 ['-', ':---', ':---:', '---:'])
 
-    @parameterized.expand([
-        ('| --- | --- | --- |\n'),
-        ('| - | - | - |\n'),
-        ('|-|-|-- \n'),
-    ])
-    def test_match(self, delimiter_line):
-        lines = ['| header 1 | header 2 | header 3 |\n',
-                delimiter_line,
-                 '| cell 1 | cell 2 | cell 3 |\n',
-                 '| more 1 | more 2 | more 3 |\n']
-        with patch('mistletoe.block_token.TableRow') as mock:
-            token, = block_token.tokenize(lines)
-            self.assertIsInstance(token, block_token.Table)
-            self.assertTrue(hasattr(token, 'header'))
-            self.assertEqual(token.column_align, [None, None, None])
-            token.children
-            calls = [call(line, [None, None, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
-            mock.assert_has_calls(calls)
+    def test_match(self):
+        delimiter_lines = (
+            '| --- | --- | --- |\n',
+            '| - | - | - |\n',
+            '|-|-|-- \n',
+        )
+        for delimiter_line in delimiter_lines:
+            with self.subTest(delimiter_line=delimiter_line):
+                lines = ['| header 1 | header 2 | header 3 |\n',
+                         delimiter_line,
+                         '| cell 1 | cell 2 | cell 3 |\n',
+                         '| more 1 | more 2 | more 3 |\n']
+                with patch('mistletoe.block_token.TableRow') as mock:
+                    token, = block_token.tokenize(lines)
+                    self.assertIsInstance(token, block_token.Table)
+                    self.assertTrue(hasattr(token, 'header'))
+                    self.assertEqual(token.column_align, [None, None, None])
+                    token.children
+                    calls = [call(line, [None, None, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
+                    mock.assert_has_calls(calls)
 
     def test_easy_table(self):
         lines = ['header 1 | header 2\n',
