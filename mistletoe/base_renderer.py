@@ -104,10 +104,13 @@ class BaseRenderer(object):
         in the renderer subclass, so that whitespace won't seem to
         appear magically for anyone reading your program.
 
+        Leaf tokens whose ``children`` attribute is ``None`` render as an
+        empty string.
+
         Arguments:
-            token: a branch node who has children attribute.
+            token: a token with a children attribute.
         """
-        return ''.join(map(self.render, token.children))
+        return ''.join(map(self.render, token.children or ()))
 
     def __enter__(self):
         """
