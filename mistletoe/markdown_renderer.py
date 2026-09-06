@@ -146,7 +146,7 @@ class MarkdownRenderer(BaseRenderer):
     # rendered into sequences of Fragments.
 
     def render_raw_text(self, token) -> Iterable[Fragment]:
-        yield Fragment(token.content, wordwrap=True)
+        yield Fragment(self.escape_unicode_whitespace(token.content), wordwrap=True)
 
     def render_strong(self, token: span_token.Strong) -> Iterable[Fragment]:
         return self.embed_span(Fragment(token.delimiter * 2), token.children)
@@ -155,10 +155,10 @@ class MarkdownRenderer(BaseRenderer):
         return self.embed_span(Fragment(token.delimiter), token.children)
 
     def render_inline_code(self, token: span_token.InlineCode) -> Iterable[Fragment]:
-        return self.embed_span(
+        yield from (
             Fragment(token.delimiter + token.padding),
-            token.children,
-            Fragment(token.padding + token.delimiter)
+            Fragment(token.children[0].content, wordwrap=True),
+            Fragment(token.padding + token.delimiter),
         )
 
     def render_strikethrough(
@@ -536,6 +536,14 @@ class MarkdownRenderer(BaseRenderer):
         Escapes text that would otherwise be parsed as a table delimiter.
         """
         return text.replace("|", r"\|")
+
+    @staticmethod
+    def escape_unicode_whitespace(text: str) -> str:
+        """Keep Unicode separators from becoming Markdown whitespace syntax."""
+        return "".join(
+            f"&#{ord(char)};" if ord(char) >= 0xA0 and char.isspace() else char
+            for char in text
+        )
 
     @classmethod
     def calculate_table_column_widths(cls, col_text) -> Sequence[int]:

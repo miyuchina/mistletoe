@@ -1,5 +1,6 @@
 import unittest
 
+import mistletoe
 from mistletoe import block_token, span_token
 from mistletoe.block_token import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
@@ -52,6 +53,30 @@ class TestMarkdownRenderer(unittest.TestCase):
 
     def test_escaped_chars(self):
         input = ["\\*escaped, not emphasized\\*\n"]
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
+
+    def test_entity_whitespace_preserves_inline_structure(self):
+        input = ["**&#160;start&#8194;middle&#8239;end**\n"]
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
+
+    def test_commonmark_entity_whitespace_roundtrip(self):
+        input = (
+            "&nbsp; &amp; &copy; &AElig; &Dcaron;\n"
+            "&frac34; &HilbertSpace; &DifferentialD;\n"
+            "&ClockwiseContourIntegral; &ngE;\n"
+        )
+        output = self.roundtrip(input)
+        self.assertEqual(mistletoe.markdown(output), mistletoe.markdown(input))
+
+    def test_entity_whitespace_preserves_paragraph_boundaries(self):
+        input = ["&#160;leading and trailing&#12288;\n"]
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
+
+    def test_unicode_whitespace_in_code_span_remains_literal(self):
+        input = ["`\u00a0code\u3000`\n"]
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
