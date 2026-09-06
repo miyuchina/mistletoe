@@ -2,21 +2,25 @@ import unittest
 
 from mistletoe import Document
 from mistletoe.contrib.pygments_renderer import PygmentsRenderer
-from parameterized import parameterized
 from pygments.util import ClassNotFound
 
 
 class TestPygmentsRenderer(unittest.TestCase):
-    @parameterized.expand([(True,), (False,)])
-    def test_render_no_language(self, fail_on_unsupported_language: bool):
-        renderer = PygmentsRenderer(fail_on_unsupported_language=fail_on_unsupported_language)
-        token = Document(['```\n', 'no language\n', '```\n'])
-        output = renderer.render(token)
-        expected = (
-            '<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;">'
-            '<span></span>no language\n</pre></div>\n\n'
-        )
-        self.assertEqual(output, expected)
+    def test_render_no_language(self):
+        for fail_on_unsupported_language in (True, False):
+            with self.subTest(
+                fail_on_unsupported_language=fail_on_unsupported_language
+            ):
+                renderer = PygmentsRenderer(
+                    fail_on_unsupported_language=fail_on_unsupported_language
+                )
+                token = Document(['```\n', 'no language\n', '```\n'])
+                output = renderer.render(token)
+                expected = (
+                    '<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;">'
+                    '<span></span>no language\n</pre></div>\n\n'
+                )
+                self.assertEqual(output, expected)
 
     def test_render_known_language(self):
         renderer = PygmentsRenderer()
