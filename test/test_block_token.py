@@ -737,7 +737,7 @@ class TestRemoveToken(unittest.TestCase):
         block_token.remove_token(block_token.BlockCode)
         self.assertNotIn(block_token.BlockCode, block_token._token_types)
 
-        # Check second removal does not raise error (pull request #281 issue #262)
+        # Check second removal does not raise error (see issue #262)
         try:
             block_token.remove_token(block_token.BlockCode)
         except ValueError:
