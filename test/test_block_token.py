@@ -133,6 +133,24 @@ class TestBlockCode(TestToken):
         arg = 'chunk1\n\nchunk2\n\n\n\nchunk3\n'
         self._test_match(block_token.BlockCode, lines, arg, language='')
 
+    @parameterized.expand([
+        ('tab_only', '\t\n'),
+        ('four_spaces', '    \n'),
+        ('over_four_spaces', '     \n'),
+        ('spaces_then_tab', '  \t\n'),
+    ])
+    def test_blank_line_does_not_start_code(self, _, line):
+        # A line containing only spaces or tabs is a blank line and must not
+        # begin an indented code block (CommonMark 0.30, "Blank lines").
+        self.assertFalse(block_token.BlockCode.start(line))
+
+    def test_blank_line_not_parsed_as_code(self):
+        lines = ['foo\n', '\t\n', 'bar\n']
+        tokens = block_token.tokenize(lines)
+        self.assertEqual(len(tokens), 2)
+        self.assertIsInstance(tokens[0], block_token.Paragraph)
+        self.assertIsInstance(tokens[1], block_token.Paragraph)
+
 
 class TestParagraph(TestToken):
     def setUp(self):

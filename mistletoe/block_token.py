@@ -382,7 +382,7 @@ class BlockCode(BlockToken):
 
     @staticmethod
     def start(line):
-        return line.replace('\t', '    ', 1).startswith('    ')
+        return line.strip() != '' and line.replace('\t', '    ', 1).startswith('    ')
 
     @classmethod
     def read(cls, lines):
