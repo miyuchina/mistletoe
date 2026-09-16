@@ -230,3 +230,21 @@ class TestHtmlSpan(unittest.TestCase):
         tokens = span_token.tokenize_inner('< a><\nfoo><bar/ >\n<foo bar=baz\nbim!bop />')
         for t in tokens:
             self.assertNotIsInstance(t, span_token.HtmlSpan)
+
+
+class TestRemoveToken(unittest.TestCase):
+    def setUp(self):
+        self.addCleanup(span_token.reset_tokens)
+
+    def test_remove_token_from_processing(self):
+        # Check that token exists
+        self.assertIn(span_token.RawText, span_token._token_types)
+
+        span_token.remove_token(span_token.RawText)
+        self.assertNotIn(span_token.RawText, span_token._token_types)
+
+        # Check that second removal does not raise error (see issue #262)
+        try:
+            span_token.remove_token(span_token.RawText)
+        except ValueError:
+            self.fail("Idempotent removal failed")

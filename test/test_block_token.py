@@ -724,3 +724,21 @@ class TestFileWrapper(unittest.TestCase):
         assert next(wrapper) == "somewhat interesting\n"
         wrapper.reset()
         assert next(wrapper) == "somewhat interesting\n"
+
+
+class TestRemoveToken(unittest.TestCase):
+    def setUp(self):
+        self.addCleanup(block_token.reset_tokens)
+
+    def test_remove_token_from_processing(self):
+        # Check that token exists
+        self.assertIn(block_token.BlockCode, block_token._token_types)
+
+        block_token.remove_token(block_token.BlockCode)
+        self.assertNotIn(block_token.BlockCode, block_token._token_types)
+
+        # Check that second removal does not raise error (see issue #262)
+        try:
+            block_token.remove_token(block_token.BlockCode)
+        except ValueError:
+            self.fail("Idempotent removal failed")
