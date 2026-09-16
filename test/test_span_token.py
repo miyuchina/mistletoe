@@ -239,11 +239,11 @@ class TestRemoveToken(unittest.TestCase):
     def test_remove_token_from_processing(self):
         # Check that token exists
         self.assertIn(span_token.RawText, span_token._token_types)
-        
+
         span_token.remove_token(span_token.RawText)
         self.assertNotIn(span_token.RawText, span_token._token_types)
 
-        # Check second removal does not raise error (pull request #281 issue #262)
+        # Check that second removal does not raise error (see issue #262)
         try:
             span_token.remove_token(span_token.RawText)
         except ValueError:
