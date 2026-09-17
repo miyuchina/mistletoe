@@ -2,6 +2,7 @@ __pycache__/
 *.swp
 out.html
 venv/
+.venv/
 .coverage
 htmlcov
 .pylintrc
