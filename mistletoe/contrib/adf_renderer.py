@@ -80,8 +80,6 @@ def get_adt(token, marks=None):
     if node["type"] is not None:
         if node["type"] == "doc":
             node["version"] = 1
-        elif node["type"] != "orderedList":
-            node["attrs"] = {}
 
         if "content" in vars(token):
             node["text"] = getattr(token, "content").replace("\n", "")
