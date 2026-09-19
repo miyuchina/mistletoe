@@ -42,7 +42,7 @@ class XWiki20Renderer(BaseRenderer):
     def render_image(self, token):
         template = '[[image:{src}]]'
         self.render_inner(token)
-        return template.format(src=token.src)
+        return template.format(src=escape_url(token.src))
 
     def render_link(self, token):
         template = '[[{inner}>>{target}]]'
@@ -234,4 +234,12 @@ def escape_url(raw):
     Escape urls to prevent code injection craziness. (Hopefully.)
     """
     from urllib.parse import quote
-    return quote(raw, safe=URI_SAFE_CHARACTERS)
+    return escape_wiki_chars(quote(raw, safe=URI_SAFE_CHARACTERS))
+
+
+def escape_wiki_chars(s: str) -> str:
+    """
+    Escapes special characters that are used in the XWiki link syntax.
+    """
+    # Note: The tilde has to go first, it is XWiki's escape character.
+    return s.replace('~', '~~').replace(']]', '~]]')

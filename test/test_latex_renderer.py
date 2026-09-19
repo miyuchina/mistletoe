@@ -47,9 +47,19 @@ class TestLaTeXRenderer(TestCase):
     def test_strikethrough(self):
         self._test_token('Strikethrough', '\\sout{inner}')
 
-    def test_image(self):
-        expected = '\n\\includegraphics{src}\n'
-        self._test_token('Image', expected, src='src')
+    @parameterized.expand([
+        ('src', '\n\\includegraphics{src}\n'),
+        ('a}b', '\n\\includegraphics{a\\}b}\n'),
+        ('a{b', '\n\\includegraphics{a\\{b}\n'),
+        ('a%b', '\n\\includegraphics{a\\%b}\n'),
+        ('a#b', '\n\\includegraphics{a\\#b}\n'),
+        ('a\\newpage b', '\n\\includegraphics{a\\textbackslash{}newpage b}\n'),
+        # a path is not a URL, so it must not get percent-encoded
+        ('dir/my file.png', '\n\\includegraphics{dir/my file.png}\n'),
+        ('a~b_c.png', '\n\\includegraphics{a~b_c.png}\n'),
+    ])
+    def test_image(self, src, expected):
+        self._test_token('Image', expected, src=src)
 
     @parameterized.expand([
         ('page', '\\href{page}{inner}'),
