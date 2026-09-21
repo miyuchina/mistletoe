@@ -2,13 +2,11 @@
 Block-level tokenizer for mistletoe.
 """
 
-
-class FileWrapper:
-    def __init__(self, lines, start_line=1):
+class FileReader:
+    def __init__(self, lines, start_line=1, index=-1):
         self.lines = lines if isinstance(lines, list) else list(lines)
         self.start_line = start_line
-        self._index = -1
-        self._anchor = 0
+        self._index = index
 
     def __next__(self):
         if self._index + 1 < len(self.lines):
@@ -27,6 +25,20 @@ class FileWrapper:
         The result is an opaque value which can be passed to `set_pos`."""
         return self._index
 
+    def peek(self, n=1):
+        if self._index + n < len(self.lines):
+            return self.lines[self._index + n]
+        return None
+
+    def line_number(self):
+        return self.start_line + self._index
+
+
+class FileWrapper(FileReader):
+    def __init__(self, lines, start_line=1):
+        super().__init__(lines, start_line)
+        self._anchor = 0
+
     def set_pos(self, pos):
         """Sets the current reading position."""
         self._index = pos
@@ -39,17 +51,16 @@ class FileWrapper:
         """@deprecated use `set_pos` instead"""
         self.set_pos(self._anchor)
 
-    def peek(self):
-        if self._index + 1 < len(self.lines):
-            return self.lines[self._index + 1]
-        return None
-
     def backstep(self):
         if self._index != -1:
             self._index -= 1
 
-    def line_number(self):
-        return self.start_line + self._index
+    def reader(self):
+        """
+        Return a FileReader with read-only access to the same file,
+        positioned at the index.
+        """
+        return FileReader(self.lines, self.start_line, self._index)
 
 
 def tokenize(iterable, token_types):
@@ -78,7 +89,7 @@ def tokenize_block(iterable, token_types, start_line=1):
     line = lines.peek()
     while line is not None:
         for token_type in token_types:
-            if token_type.start(line):
+            if token_type.start(line, lines.reader()):
                 line_number = lines.line_number() + 1
                 result = token_type.read(lines)
                 if result is not None:
