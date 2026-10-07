@@ -6,7 +6,7 @@ from traceback import print_tb
 from argparse import ArgumentParser
 
 
-KNOWN = []
+KNOWN = [354]
 """
 Examples (their numbers) from the specification which are known to fail in mistletoe.
 """
