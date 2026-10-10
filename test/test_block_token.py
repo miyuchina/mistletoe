@@ -1,8 +1,10 @@
 import unittest
+import warnings
 from unittest.mock import call, patch
 
 from parameterized import parameterized
 
+from mistletoe import markdown
 from mistletoe import block_token, block_tokenizer, span_token
 
 
@@ -367,6 +369,52 @@ class TestList(unittest.TestCase):
                  '  + bar\n']
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.List)
+
+
+class TestBlockNestingLimit(unittest.TestCase):
+    def test_below_limit_does_not_warn(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter('error', UserWarning)
+            markdown('1. ' * (block_tokenizer.MAX_BLOCK_NESTING - 1) + 'x')
+
+    def test_ordered_list_markers_on_one_line(self):
+        limit = block_tokenizer.MAX_BLOCK_NESTING
+        with self.assertWarnsRegex(UserWarning, 'Maximum block nesting depth of 100 reached'):
+            html = markdown('1. ' * limit + 'x')
+        self.assertEqual(html.count('<ol>'), limit)
+
+        with self.assertWarns(UserWarning):
+            html = markdown('1. ' * 250 + 'x')
+        self.assertEqual(html.count('<ol>'), limit)
+        self.assertEqual(html.count('1. '), 250 - limit)
+        self.assertIn('1. x</li>', html)
+
+    def test_indented_list_lines(self):
+        source = ''.join('  ' * i + '- a\n' for i in range(300))
+        with self.assertWarns(UserWarning):
+            html = markdown(source)
+        self.assertEqual(html.count('<ul>'), block_tokenizer.MAX_BLOCK_NESTING)
+        self.assertEqual(html.count('- a'), 300 - block_tokenizer.MAX_BLOCK_NESTING)
+        self.assertIn('- a\n- a</li>', html)
+
+    def test_quotes_and_mixed_containers(self):
+        limit = block_tokenizer.MAX_BLOCK_NESTING
+        with self.assertWarns(UserWarning):
+            html = markdown('>' * (limit + 2) + ' x')
+        self.assertEqual(html.count('<blockquote>'), limit)
+        self.assertIn('<p>&gt;&gt; x</p>', html)
+
+        with self.assertWarns(UserWarning):
+            html = markdown('>' * 60 + ' ' + '1. ' * 45 + 'x')
+        self.assertEqual(html.count('<blockquote>'), 60)
+        self.assertEqual(html.count('<ol>'), limit - 60)
+        self.assertIn('1. x</li>', html)
+
+    def test_content_after_capped_container(self):
+        source = '1. ' * (block_tokenizer.MAX_BLOCK_NESTING + 2) + 'x\n\nafter\n'
+        with self.assertWarns(UserWarning):
+            html = markdown(source)
+        self.assertTrue(html.endswith('<p>after</p>\n'))
 
 
 class TestTable(unittest.TestCase):
