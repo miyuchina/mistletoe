@@ -232,6 +232,8 @@ class Quote(BlockToken):
     Block quote token. (["> # heading\\n", "> paragraph\\n"])
     This is a container block token. Its children are block tokens - container or leaf ones.
     """
+    nesting_container = True
+
     def __init__(self, parse_buffer):
         # span-level tokenizing happens here.
         self.children = tokenizer.make_tokens(parse_buffer)
@@ -263,7 +265,7 @@ class Quote(BlockToken):
 
         # following lines
         next_line = lines.peek()
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == Quote]
+        breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == Quote]
         while (next_line is not None
                 and next_line.strip() != ''
                 and not any(token_type.check_interrupts_paragraph(lines) for token_type in breaking_tokens)):
@@ -290,7 +292,7 @@ class Quote(BlockToken):
 
         # parse child block tokens
         Paragraph.parse_setext = False
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
         Paragraph.parse_setext = True
         return parse_buffer
 
@@ -336,7 +338,7 @@ class Paragraph(BlockToken):
     def read(cls, lines):
         line_buffer = [next(lines)]
         next_line = lines.peek()
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
+        breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
         while (next_line is not None and next_line.strip() != ''):
             # check if a paragraph-breaking token starts on the next line.
             # (except ThematicBreak, because these can be confused with Setext underlines.)
@@ -486,6 +488,8 @@ class List(BlockToken):
         loose (bool): whether the list is loose.
         start (NoneType or int): None if unordered, starting number if ordered.
     """
+    nesting_container = True
+
     repr_attributes = BlockToken.repr_attributes + ("loose", "start")
     pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
 
@@ -647,7 +651,7 @@ class ListItem(BlockToken):
             line_buffer.append(content)
 
         # loop over the following lines, looking for the end of the list item
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == List]
+        breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == List]
         newline_count = 0
         while True:
             if next_line is None:
@@ -686,7 +690,7 @@ class ListItem(BlockToken):
 
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
         return (parse_buffer, indentation, prepend, leader, start_line), next_marker
 
 
