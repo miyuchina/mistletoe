@@ -188,10 +188,18 @@ class MarkdownRenderer(BaseRenderer):
             dest_part = "<" + target + ">" if token.dest_type == "angle_uri" else target
             yield Fragment(dest_part)
             if token.title:
+                # escape special characters unescaped during parsing
+                title = token.title.replace("\\", "\\\\").replace("&", "&amp;")
+                delimiters = (
+                    "()" if token.title_delimiter == "(" else token.title_delimiter
+                )
+                for delimiter in delimiters:
+                    title = title.replace(delimiter, "\\" + delimiter)
+
                 yield from (
                     Fragment(" ", wordwrap=True),
                     Fragment(token.title_delimiter),
-                    Fragment(token.title, wordwrap=True),
+                    Fragment(title, wordwrap=True),
                     Fragment(
                         ")" if token.title_delimiter == "(" else token.title_delimiter,
                     ),

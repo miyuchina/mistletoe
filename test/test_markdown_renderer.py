@@ -1,6 +1,8 @@
 import unittest
 
-from mistletoe import block_token, span_token
+from parameterized import parameterized
+
+from mistletoe import block_token, markdown, span_token
 from mistletoe.block_token import Document
 from mistletoe.markdown_renderer import MarkdownRenderer
 
@@ -100,6 +102,36 @@ class TestMarkdownRenderer(unittest.TestCase):
         ]
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
+
+    @parameterized.expand([
+        ("double_quote", r'"a\"b"'),
+        ("single_quote", r"'a\'b'"),
+        ("parentheses", r'(a\(b\))'),
+        ("backslash", r'"a\\!b"'),
+        ("trailing_backslash", r'"a\\"'),
+        ("literal_entity", '"a&amp;quot;b"'),
+        ("numeric_entity", '"a&amp;#34;b"'),
+        ("ordinary", '"a & b"'),
+    ])
+    def test_link_titles_preserve_semantics(self, name, title):
+        for image_prefix in ("", "!"):
+            for destination in ("url", "<url>"):
+                for reference in (False, True):
+                    with self.subTest(image_prefix=image_prefix, destination=destination,
+                                      reference=reference):
+                        if reference:
+                            source = "{}[a][ref]\n\n[ref]: {} {}\n".format(
+                                image_prefix, destination, title)
+                        else:
+                            source = "{}[a]({} {})\n".format(
+                                image_prefix, destination, title)
+                        output = self.roundtrip(source)
+                        # Parsing decodes title escapes/entities. Rendering may
+                        # normalize their spelling (e.g. '&' to '&amp;'), so the
+                        # first pass preserves meaning, not necessarily text.
+                        self.assertEqual(markdown(output), markdown(source))
+                        # The normalized Markdown must then be stable.
+                        self.assertEqual(self.roundtrip(output), output)
 
     def test_thematic_break(self):
         input = [
