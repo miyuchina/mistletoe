@@ -114,19 +114,23 @@ class TestMarkdownRenderer(unittest.TestCase):
         ("ordinary", '"a & b"'),
     ])
     def test_link_titles_preserve_semantics(self, name, title):
-        for prefix in ("", "!"):
+        for image_prefix in ("", "!"):
             for destination in ("url", "<url>"):
                 for reference in (False, True):
-                    with self.subTest(prefix=prefix, destination=destination,
+                    with self.subTest(image_prefix=image_prefix, destination=destination,
                                       reference=reference):
                         if reference:
                             source = "{}[a][ref]\n\n[ref]: {} {}\n".format(
-                                prefix, destination, title)
+                                image_prefix, destination, title)
                         else:
                             source = "{}[a]({} {})\n".format(
-                                prefix, destination, title)
+                                image_prefix, destination, title)
                         output = self.roundtrip(source)
+                        # Parsing decodes title escapes/entities. Rendering may
+                        # normalize their spelling (e.g. '&' to '&amp;'), so the
+                        # first pass preserves meaning, not necessarily text.
                         self.assertEqual(markdown(output), markdown(source))
+                        # The normalized Markdown must then be stable.
                         self.assertEqual(self.roundtrip(output), output)
 
     def test_thematic_break(self):
