@@ -559,7 +559,7 @@ class ListItem(BlockToken):
         loose (bool): whether the list is loose.
     """
     repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "checkbox")
-    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])(\t| {1,4}\[[x | ]\])?($|\s+)')
+    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])((\t| {1,4})\[[x | ]\])?($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
     def __init__(self, parse_buffer, indentation, prepend, leader, checkbox, line_number=None):
