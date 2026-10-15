@@ -152,7 +152,14 @@ class HtmlRenderer(BaseRenderer):
 
     def render_list_item(self, token: block_token.ListItem) -> str:
         if len(token.children) == 0:
-            return '<li></li>'
+            if token.is_checked() is True:  # Avoid mock function problems
+                print("what")
+                return '<li><label><input type="checkbox" checked/></label></li>'
+            elif not token.is_checked():
+                return '<li><label><input type="checkbox"/></label></li>'
+            else:
+                return '<li></li>'           
+
         inner = '\n'.join([self.render(child) for child in token.children])
         inner_template = '\n{}\n'
         if self._suppress_ptag_stack[-1]:
@@ -160,7 +167,17 @@ class HtmlRenderer(BaseRenderer):
                 inner_template = inner_template[1:]
             if token.children[-1].__class__.__name__ == 'Paragraph':
                 inner_template = inner_template[:-1]
-        return '<li>{}</li>'.format(inner_template.format(inner))
+
+        if token.checkbox is None:
+            outer_template = "<li>{}</li>"
+        else:
+            outer_template = (
+                '<li><label>{}<input type="checkbox" {}/></label></li>'.format(
+                    "{}", "checked" if token.is_checked() else ""
+                )
+            )
+
+        return outer_template.format(inner_template.format(inner))
 
     def render_table(self, token: block_token.Table) -> str:
         # This is actually gross and I wonder if there's a better way to do it.
