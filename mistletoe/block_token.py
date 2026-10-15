@@ -559,7 +559,7 @@ class ListItem(BlockToken):
         loose (bool): whether the list is loose.
     """
     repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "checkbox")
-    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])((\t| {1,4})\[[x | ]\])?($|\s+)')
+    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])((?:\t| {1,4})\[[x | ]\])?($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
     def __init__(self, parse_buffer, indentation, prepend, leader, checkbox, line_number=None):
@@ -608,6 +608,7 @@ class ListItem(BlockToken):
         if match_obj is None:
             return None
         indentation = len(match_obj.group(1))
+        # Subtract group 3 as we do not it to be included in the prepend length
         prepend = len(match_obj.group(0).expandtabs(4)) - len(match_obj.group(3)) if match_obj.group(3) else len(match_obj.group(0).expandtabs(4))
         leader = match_obj.group(2)
         checkbox = "x" in match_obj.group(3) if match_obj.group(3) is not None else None
