@@ -270,6 +270,19 @@ class TestListItem(unittest.TestCase):
         list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
 
+    def test_checkbox_list(self):
+        lines = ['* [x] Checked\n',
+                 '* [ ] Unchecked',
+                 '* No check\n']
+
+        list_item_checked = block_token.tokenize(lines)[0].children[0]
+        list_item_unchecked = block_token.tokenize(lines)[0].children[1]
+        list_item_no_check = block_token.tokenize(lines)[0].children[2]
+
+        self.assertEqual(list_item_checked.checkbox, True)
+        self.assertEqual(list_item_unchecked.checkbox, False)
+        self.assertIsNone(list_item_no_check.checkbox)
+
     def test_tabbed_list_items(self):
         # according to the CommonMark spec:
         # in contexts where spaces help to define block structure, tabs behave as if they
