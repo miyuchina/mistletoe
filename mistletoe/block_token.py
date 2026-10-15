@@ -608,8 +608,13 @@ class ListItem(BlockToken):
         if match_obj is None:
             return None
         indentation = len(match_obj.group(1))
+
         # Subtract group 3 as we do not it to be included in the prepend length
-        prepend = len(match_obj.group(0).expandtabs(4)) - len(match_obj.group(3)) if match_obj.group(3) else len(match_obj.group(0).expandtabs(4))
+        # We only want anything matched before group 3
+        prepend = (len(match_obj.group(0).expandtabs(4)) - len(match_obj.group(3))
+            if match_obj.group(3)
+            else len(match_obj.group(0).expandtabs(4)))
+
         leader = match_obj.group(2)
         checkbox = "x" in match_obj.group(3) if match_obj.group(3) is not None else None
         content = line[match_obj.end(0):]
