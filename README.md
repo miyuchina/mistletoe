@@ -98,9 +98,25 @@ with open('foo.md', 'r') as fin:
     rendered = mistletoe.markdown(fin)
 ```
 
-`mistletoe.markdown()` uses mistletoe's default settings: allowing HTML mixins
-and rendering to HTML. The function also accepts an additional argument
-`renderer`. To produce LaTeX output:
+`mistletoe.markdown()` uses `HtmlRenderer` with its default settings to render
+Markdown to HTML. Raw HTML tags in the input are preserved in the output.
+
+To treat raw HTML as plain text instead, use
+`HtmlRenderer(process_html_tokens=False)` directly. Create the `Document`
+inside the renderer's context so that this setting also applies during parsing:
+
+```python
+from mistletoe import Document, HtmlRenderer
+
+with HtmlRenderer(process_html_tokens=False) as renderer:
+    rendered = renderer.render(Document('Hello <em>world</em>!'))
+# rendered: '<p>Hello &lt;em&gt;world&lt;/em&gt;!</p>\n'
+```
+
+The `renderer` argument to `mistletoe.markdown()` accepts a renderer class or
+another callable that creates a renderer; renderer options such as
+`process_html_tokens` are not arguments to `mistletoe.markdown()` itself.
+To produce LaTeX output:
 
 ```python
 import mistletoe
