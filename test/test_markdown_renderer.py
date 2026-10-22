@@ -1,3 +1,4 @@
+import io
 import unittest
 
 from mistletoe import block_token, span_token
@@ -26,8 +27,7 @@ class TestMarkdownRenderer(unittest.TestCase):
             "lines, no final line break.",
         ]
         output = self.roundtrip(input)
-        # note: a line break is always added at the end of a paragraph.
-        self.assertEqual(output, "".join(input) + "\n")
+        self.assertEqual(output, "".join(input))
 
     def test_line_breaks(self):
         input = [
@@ -396,6 +396,71 @@ class TestMarkdownRenderer(unittest.TestCase):
             lines = renderer.render(raw_text)
         assert lines == input + "\n"
 
+    def test_preserves_missing_terminal_newline(self):
+        with MarkdownRenderer() as renderer:
+            self.assertEqual(renderer.render(Document("a")), "a")
+
+        samples = [
+            "a",
+            "Paragraph one.\n\nParagraph two.",
+            "# heading",
+            "- item\n- next",
+            "> quote\n> continued",
+            "```\ncode\n```",
+            "    indented\n    code  ",
+        ]
+        for sample in samples:
+            with self.subTest(sample=sample):
+                terminated = sample + "\n"
+                self.assertEqual(self.roundtrip(sample), sample)
+                self.assertEqual(self.roundtrip(terminated), terminated)
+                self.assertEqual(self.roundtrip(sample.splitlines(keepends=True)), sample)
+                self.assertEqual(
+                    self.roundtrip(terminated.splitlines(keepends=True)), terminated
+                )
+                self.assertEqual(
+                    self.roundtrip(iter(sample.splitlines(keepends=True))), sample
+                )
+                self.assertEqual(self.roundtrip(io.StringIO(sample)), sample)
+                self.assertEqual(self.roundtrip(io.StringIO(terminated)), terminated)
+        # Internal lines without LF are still normalized; only the terminator is preserved.
+        self.assertEqual(self.roundtrip(["alpha", "beta"]), "alpha\nbeta")
+        self.assertEqual(self.roundtrip(["alpha", "beta\n"]), "alpha\nbeta\n")
+
+    def test_terminal_newline_on_blank_lines(self):
+        self.assertEqual(self.roundtrip(""), "")
+        self.assertEqual(self.roundtrip([]), "")
+        self.assertEqual(self.roundtrip(iter(())), "")
+        self.assertEqual(self.roundtrip("\n"), "\n")
+        self.assertEqual(self.roundtrip("\n\n"), "\n\n")
+        self.assertEqual(self.roundtrip(" \n"), "\n")
+        self.assertEqual(self.roundtrip(["a\n", "\n", "\n"]), "a\n\n\n")
+        self.assertEqual(self.roundtrip(["\n", "\n"]), "\n\n")
+        # Drop the single missing terminator, not every trailing blank line.
+        self.assertEqual(self.roundtrip(["a\n", "\n", ""]), "a\n\n")
+        self.assertEqual(self.roundtrip(["\n", "\n", ""]), "\n\n")
+        self.assertEqual(self.roundtrip(["\n", ""]), "\n")
+
+    def test_terminal_newline_is_stable(self):
+        samples = [
+            "a",
+            "a\n",
+            "a\n\n\n",
+            "# heading\n\n- item",
+            "# heading\n\n- item\n",
+        ]
+        with MarkdownRenderer() as renderer:
+            for sample in samples:
+                with self.subTest(sample=sample):
+                    document = Document(sample)
+                    self.assertEqual(document.trailing_newline, sample.endswith("\n"))
+                    first = renderer.render(document)
+                    second = renderer.render(document)
+                    self.assertEqual(first, sample)
+                    self.assertEqual(second, first)
+                    self.assertEqual(document.trailing_newline, sample.endswith("\n"))
+                    self.assertEqual(renderer.render(Document(first)), sample)
+
 
 class TestMarkdownFormatting(unittest.TestCase):
     def test_wordwrap_plain_paragraph(self):
@@ -684,3 +749,25 @@ class TestMarkdownFormatting(unittest.TestCase):
 
             # then the table is rendered without any word wrapping
             assert lines == "".join(input)
+
+    def test_wordwrap_preserves_missing_terminal_newline(self):
+        source = "A short paragraph without any long words or hard line breaks."
+        with MarkdownRenderer(max_line_length=30) as renderer:
+            document = Document(source)
+            wrapped = renderer.render(document)
+            assert "\n" in wrapped
+            assert not wrapped.endswith("\n")
+            assert renderer.render(document) == wrapped
+            assert renderer.render(Document(source + "\n")) == wrapped + "\n"
+            assert renderer.render(Document(wrapped)) == wrapped
+
+    def test_normalize_whitespace_preserves_missing_terminal_newline(self):
+        source = "-  item\n  continuation"
+        with MarkdownRenderer(normalize_whitespace=True) as renderer:
+            document = Document(source)
+            normalized = renderer.render(document)
+            assert not normalized.endswith("\n")
+            assert normalized != source
+            assert renderer.render(document) == normalized
+            assert renderer.render(Document(source + "\n")) == normalized + "\n"
+            assert renderer.render(Document(normalized)) == normalized
