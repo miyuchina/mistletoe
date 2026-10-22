@@ -491,7 +491,7 @@ class List(BlockToken):
     nesting_container = True
 
     repr_attributes = BlockToken.repr_attributes + ("loose", "start")
-    pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
+    pattern = re.compile(r' {0,3}(?:\d{1,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
 
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
@@ -563,7 +563,7 @@ class ListItem(BlockToken):
         loose (bool): whether the list is loose.
     """
     repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose")
-    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
+    pattern = re.compile(r'( {0,3})(\d{1,9}[.)]|[+\-*])($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
     def __init__(self, parse_buffer, indentation, prepend, leader, line_number=None):
