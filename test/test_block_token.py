@@ -219,6 +219,9 @@ class TestListItem(unittest.TestCase):
                      '1item 1\n',
                      '2| item 2\n',
                      '1234567890. item x\n',
+                     '. no number\n',
+                     ') no number\n',
+                     ')\n',
                      '    * too many spaces\n']
         for line in bad_lines:
             self.assertFalse(block_token.ListItem.parse_marker(line))
@@ -368,6 +371,12 @@ class TestList(unittest.TestCase):
                  '  + bar\n']
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.List)
+
+    def test_ordered_marker_without_number(self):
+        lines = [') foo\n',
+                 '.\n']
+        token, = block_token.tokenize(lines)
+        self.assertIsInstance(token, block_token.Paragraph)
 
 
 class TestBlockNestingLimit(unittest.TestCase):
