@@ -511,7 +511,7 @@ class List(BlockToken):
         # and the list must either be unordered or start from 1.
         marker_tuple = ListItem.parse_marker(lines.peek())
         if (marker_tuple is not None):
-            _, _, leader, content = marker_tuple
+            _, _, leader, _, content = marker_tuple
             if not content.strip() == '':
                 return not leader[0].isdigit() or leader in ['1.', '1)']
         return False
@@ -562,16 +562,17 @@ class ListItem(BlockToken):
                        for continuation lines.
         loose (bool): whether the list is loose.
     """
-    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose")
-    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
+    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "checkbox")
+    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])((?:\t| {1,4})\[[x | ]\])?($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
-    def __init__(self, parse_buffer, indentation, prepend, leader, line_number=None):
+    def __init__(self, parse_buffer, indentation, prepend, leader, checkbox, line_number=None):
         self.line_number = line_number
         self.leader = leader
         self.indentation = indentation
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
+        self.checkbox = checkbox
         self.loose = parse_buffer.loose
 
     @classmethod
@@ -611,8 +612,15 @@ class ListItem(BlockToken):
         if match_obj is None:
             return None
         indentation = len(match_obj.group(1))
-        prepend = len(match_obj.group(0).expandtabs(4))
+
+        # Subtract group 3 as we do not it to be included in the prepend length
+        # We only want anything matched before group 3
+        prepend = (len(match_obj.group(0).expandtabs(4)) - len(match_obj.group(3))
+            if match_obj.group(3)
+            else len(match_obj.group(0).expandtabs(4)))
+
         leader = match_obj.group(2)
+        checkbox = "x" in match_obj.group(3) if match_obj.group(3) is not None else None
         content = line[match_obj.end(0):]
         n_spaces = prepend - match_obj.end(2)
         if n_spaces > 4:
@@ -620,7 +628,7 @@ class ListItem(BlockToken):
             # with the exception of the first (marker separator) space.
             prepend -= n_spaces - 1
             content = ' ' * (n_spaces - 1) + content
-        return indentation, prepend, leader, content
+        return indentation, prepend, leader, checkbox, content
 
     @classmethod
     def read(cls, lines, prev_marker=None):
@@ -631,7 +639,7 @@ class ListItem(BlockToken):
         line = next(lines)
         start_line = lines.line_number()
         next_line = lines.peek()
-        indentation, prepend, leader, content = prev_marker if prev_marker else cls.parse_marker(line)
+        indentation, prepend, leader, checkbox, content = prev_marker if prev_marker else cls.parse_marker(line)
         if content.strip() == '':
             # item starting with a blank line: look for the next non-blank line
             prepend = indentation + len(leader) + 1
@@ -646,7 +654,7 @@ class ListItem(BlockToken):
                 parse_buffer = tokenizer.ParseBuffer()
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
-                return (parse_buffer, indentation, prepend, leader, start_line), next_marker
+                return (parse_buffer, indentation, prepend, leader, checkbox, start_line), next_marker
         else:
             line_buffer.append(content)
 
@@ -691,7 +699,7 @@ class ListItem(BlockToken):
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
-        return (parse_buffer, indentation, prepend, leader, start_line), next_marker
+        return (parse_buffer, indentation, prepend, leader, checkbox, start_line), next_marker
 
 
 class Table(BlockToken):

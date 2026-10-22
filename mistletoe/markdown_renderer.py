@@ -326,9 +326,14 @@ class MarkdownRenderer(BaseRenderer):
         lines = self.blocks_to_lines(
             token.children, max_line_length=max_child_line_length
         )
+
+        checkbox = ""
+        if token.checkbox is not None:
+            checkbox = " [x]" if token.checkbox else " [ ]"
+
         return self.prefix_lines(
             list(lines) or [""],
-            " " * indentation + token.leader + " " * (prepend - len(token.leader) - indentation),
+            " " * indentation + token.leader + checkbox + " " * (prepend - len(token.leader) - indentation),
             " " * prepend,
         )
 
