@@ -86,6 +86,9 @@ class MarkdownRenderer(BaseRenderer):
 
     Designed to make as "clean" a roundtrip as possible, markdown -> parsing -> rendering -> markdown,
     except for nonessential whitespace. Except when rendering with word wrapping enabled.
+    A missing terminal newline is preserved: if the parsed document did not end
+    with a line terminator, exactly one final line feed added by rendering is
+    omitted. Trailing blank lines and other trailing whitespace are kept.
 
     Includes `HtmlBlock` and `HtmlSpan` tokens in the parsing.
     """
@@ -99,6 +102,9 @@ class MarkdownRenderer(BaseRenderer):
         normalize_whitespace: bool = False,
     ):
         """
+        Word wrapping and whitespace normalization preserve a missing terminal
+        newline on the rendered document.
+
         Args:
             extras (list): allows subclasses to add even more custom tokens.
             max_line_length (int): if specified, the document is word wrapped to the
@@ -132,6 +138,11 @@ class MarkdownRenderer(BaseRenderer):
     def render(self, token: token.Token) -> str:
         """
         Renders the tree of tokens rooted at the given token into markdown.
+
+        An unterminated ``Document`` (``trailing_newline`` is false) is returned
+        without the single final line feed added to rendered lines. Standalone
+        block and span tokens keep a trailing line feed. Internal separators
+        and trailing blank lines stay in place.
         """
         if isinstance(token, block_token.BlockToken):
             lines = self.render_map[token.__class__.__name__](
@@ -140,7 +151,14 @@ class MarkdownRenderer(BaseRenderer):
         else:
             lines = self.span_to_lines([token], max_line_length=self.max_line_length)
 
-        return "".join(map(lambda line: line + "\n", lines))
+        rendered = "".join(map(lambda line: line + "\n", lines))
+        if (
+            isinstance(token, block_token.Document)
+            and not token.trailing_newline
+            and rendered.endswith("\n")
+        ):
+            rendered = rendered[:-1]
+        return rendered
 
     # rendering of span/inline tokens.
     # rendered into sequences of Fragments.
