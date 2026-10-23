@@ -53,6 +53,17 @@ comments.
 
 ## Writing code
 
+### Running tests
+
+Install the test dependencies with `python -m pip install -r requirements.txt -r test-requirements.txt`,
+then run `python -m pytest` or `make test`. Pytest runs both the pytest classes
+and the remaining unittest classes; direct unittest discovery runs only the latter.
+To run one parametrized case, use its node ID, for example:
+
+```sh
+python -m pytest 'test/test_base_renderer.py::TestBaseRenderer::test_line_break_override[soft_lf]'
+```
+
 ### Atomic commits
 
 * minimal cosmetic changes are fine to mix in with your commits, but try feel

@@ -1,15 +1,19 @@
 from unittest import TestCase, mock
+
+import pytest
+
 import mistletoe.latex_renderer
 from mistletoe.latex_renderer import LaTeXRenderer
 from mistletoe import markdown
 
 
-class TestLaTeXRenderer(TestCase):
-    def setUp(self):
-        self.renderer = LaTeXRenderer()
-        self.renderer.render_inner = mock.Mock(return_value='inner')
-        self.renderer.__enter__()
-        self.addCleanup(self.renderer.__exit__, None, None, None)
+class TestLaTeXRenderer:
+    @pytest.fixture(autouse=True)
+    def setup_renderer(self):
+        with LaTeXRenderer() as renderer:
+            self.renderer = renderer
+            self.renderer.render_inner = mock.Mock(return_value='inner')
+            yield
 
     def _test_token(self, token_name, expected_output, children=True,
                     without_attrs=None, **kwargs):
@@ -19,7 +23,7 @@ class TestLaTeXRenderer(TestCase):
         without_attrs = without_attrs or []
         for attr in without_attrs:
             delattr(mock_token, attr)
-        self.assertEqual(render_func(mock_token), expected_output)
+        assert render_func(mock_token) == expected_output
 
     def test_strong(self):
         self._test_token('Strong', '\\textbf{inner}')
@@ -39,7 +43,7 @@ class TestLaTeXRenderer(TestCase):
                 self._test_token('InlineCode', expected, content=content)
 
         content = mistletoe.latex_renderer.verb_delimiters
-        with self.assertRaises(RuntimeError):
+        with pytest.raises(RuntimeError):
             with mock.patch(func_path, return_value=content):
                 self._test_token('InlineCode', None, content=content)
 
@@ -50,23 +54,21 @@ class TestLaTeXRenderer(TestCase):
         expected = '\n\\includegraphics{src}\n'
         self._test_token('Image', expected, src='src')
 
-    def test_link(self):
-        for target, expected in [
-            ('page', '\\href{page}{inner}'),
-            ('page%3A+with%3A+escape', '\\href{page\\%3A+with\\%3A+escape}{inner}'),
-            ('page#target', '\\href{page\\#target}{inner}')
-        ]:
-            with self.subTest(target=target):
-                self._test_token('Link', expected, target=target)
+    @pytest.mark.parametrize('target, expected', [
+        ('page', '\\href{page}{inner}'),
+        ('page%3A+with%3A+escape', '\\href{page\\%3A+with\\%3A+escape}{inner}'),
+        ('page#target', '\\href{page\\#target}{inner}')
+    ], ids=['plain', 'escaped', 'fragment'])
+    def test_link(self, target, expected):
+        self._test_token('Link', expected, target=target)
 
-    def test_autolink(self):
-        for target, expected in [
-            ('page', '\\url{page}'),
-            ('page%3A+with%3A+escape', '\\url{page\\%3A+with\\%3A+escape}'),
-            ('page#target', '\\url{page\\#target}')
-        ]:
-            with self.subTest(target=target):
-                self._test_token('AutoLink', expected, target=target)
+    @pytest.mark.parametrize('target, expected', [
+        ('page', '\\url{page}'),
+        ('page%3A+with%3A+escape', '\\url{page\\%3A+with\\%3A+escape}'),
+        ('page#target', '\\url{page\\#target}')
+    ], ids=['plain', 'escaped', 'fragment'])
+    def test_autolink(self, target, expected):
+        self._test_token('AutoLink', expected, target=target)
 
     def test_math(self):
         expected = '$ 1 + 2 = 3 $'

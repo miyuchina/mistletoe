@@ -1,16 +1,20 @@
 import time
-from unittest import TestCase, mock
+from unittest import mock
+
+import pytest
+
 from mistletoe import span_token, Document, token
 from mistletoe.span_token import tokenize_inner
 from mistletoe.contrib.github_wiki import GithubWiki, GithubWikiRenderer
 
 
-class TestGithubWiki(TestCase):
-    def setUp(self):
+class TestGithubWiki:
+    @pytest.fixture(autouse=True)
+    def setup_renderer(self):
         token._root_node = Document([])
-        self.renderer = GithubWikiRenderer()
-        self.renderer.__enter__()
-        self.addCleanup(self.renderer.__exit__, None, None, None)
+        with GithubWikiRenderer() as renderer:
+            self.renderer = renderer
+            yield
 
     def test_parse(self):
         MockRawText = mock.Mock()
@@ -19,8 +23,8 @@ class TestGithubWiki(TestCase):
         try:
             tokens = tokenize_inner('text with [[wiki | target]]')
             token = tokens[1]
-            self.assertIsInstance(token, GithubWiki)
-            self.assertEqual(token.target, 'target')
+            assert isinstance(token, GithubWiki)
+            assert token.target == 'target'
             MockRawText.assert_has_calls([mock.call('text with '), mock.call('wiki')])
         finally:
             span_token._token_types[-1] = RawText
@@ -28,28 +32,26 @@ class TestGithubWiki(TestCase):
     def test_render(self):
         token = next(iter(tokenize_inner('[[wiki|target]]')))
         output = '<a href="target">wiki</a>'
-        self.assertEqual(self.renderer.render(token), output)
+        assert self.renderer.render(token) == output
 
-    def test_parse_variant_spacing_and_pipes(self):
-        for source, label, target in [
-            ('[[wiki | target]]', 'wiki', 'target'),
-            ('[[ wiki | target ]]', 'wiki', 'target'),
-            ('[[a | b | c]]', 'a', 'b | c'),
-        ]:
-            with self.subTest(source=source):
-                token = next(iter(tokenize_inner(source)))
-                self.assertIsInstance(token, GithubWiki)
-                self.assertEqual(token.target, target)
-                self.assertEqual(self.renderer.render_inner(token), label)
+    @pytest.mark.parametrize('source, label, target', [
+        ('[[wiki | target]]', 'wiki', 'target'),
+        ('[[ wiki | target ]]', 'wiki', 'target'),
+        ('[[a | b | c]]', 'a', 'b | c'),
+    ], ids=['standard', 'padded', 'extra-pipe'])
+    def test_parse_variant_spacing_and_pipes(self, source, label, target):
+        token = next(iter(tokenize_inner(source)))
+        assert isinstance(token, GithubWiki)
+        assert token.target == target
+        assert self.renderer.render_inner(token) == label
 
-    def test_malformed_input_is_rejected_quickly(self):
-        for name, source in [
-            ('missing_closing_marker', '[[' + ' ' * 200 + '|' + ' ' * 200 + ']'),
-            ('missing_pipe', '[[' + ' ' * 6000 + ']]'),
-        ]:
-            with self.subTest(name=name):
-                start = time.perf_counter()
-                match = GithubWiki.pattern.match(source)
-                elapsed = time.perf_counter() - start
-                self.assertLess(elapsed, 1.0)
-                self.assertIsNone(match)
+    @pytest.mark.parametrize('source', [
+        '[[' + ' ' * 200 + '|' + ' ' * 200 + ']',
+        '[[' + ' ' * 6000 + ']]',
+    ], ids=['missing_closing_marker', 'missing_pipe'])
+    def test_malformed_input_is_rejected_quickly(self, source):
+        start = time.perf_counter()
+        match = GithubWiki.pattern.match(source)
+        elapsed = time.perf_counter() - start
+        assert elapsed < 1.0
+        assert match is None
