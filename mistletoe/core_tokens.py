@@ -34,8 +34,16 @@ def find_core_tokens(string, root):
     in_image = False
     start = 0
     i = 0
-    code_match = code_pattern.search(string)
+    code_matches = iter(code_pattern.finditer(string))
+    code_match = next(code_matches, None)
+    bracket_prefix = _unescaped_bracket_prefix(string) if root and root.footnotes else None
     while i < len(string):
+        while code_match is not None and code_match.start() < i:
+            # A link can skip an opening backtick. If its match crosses the
+            # end of that link, search again from the first unskipped position.
+            if code_match.end() > i:
+                code_matches = iter(code_pattern.finditer(string, i))
+            code_match = next(code_matches, None)
         if code_match is not None and i == code_match.start():
             if in_delimiter_run is not None:
                 delimiters.append(Delimiter(start, i if not escaped else i - 1, string))
@@ -43,7 +51,7 @@ def find_core_tokens(string, root):
                 escaped = False
             _code_matches.append(code_match)
             i = code_match.end()
-            code_match = code_pattern.search(string, i)
+            code_match = next(code_matches, None)
             continue
         c = string[i]
         if c == '\\' and not escaped:
@@ -66,8 +74,7 @@ def find_core_tokens(string, root):
             elif c == '!':
                 in_image = True
             elif c == ']':
-                i = find_link_image(string, i, delimiters, matches, root)
-                code_match = code_pattern.search(string, i)
+                i = find_link_image(string, i, delimiters, matches, root, bracket_prefix)
             elif in_image:
                 in_image = False
         else:
@@ -79,16 +86,30 @@ def find_core_tokens(string, root):
     return matches
 
 
-def find_link_image(string, offset, delimiters, matches, root=None):
-    i = len(delimiters) - 1
-    for delimiter in delimiters[::-1]:
+def _unescaped_bracket_prefix(string):
+    """Count unescaped square brackets up to each position in a span."""
+    counts = [0]
+    escaped = False
+    for c in string:
+        if c == '\\' and not escaped:
+            escaped = True
+            counts.append(counts[-1])
+            continue
+        counts.append(counts[-1] + (not escaped and c in '[]'))
+        escaped = False
+    return counts
+
+
+def find_link_image(string, offset, delimiters, matches, root=None, bracket_prefix=None):
+    for i in range(len(delimiters) - 1, -1, -1):
+        delimiter = delimiters[i]
         # found a link/image delimiter
         if delimiter.type in ('[', '!['):
             # not active, remove delimiter
             if not delimiter.active:
-                delimiters.remove(delimiter)
+                delimiters.pop(i)
                 return offset
-            match = match_link_image(string, offset, delimiter, root)
+            match = match_link_image(string, offset, delimiter, root, bracket_prefix)
             # found match
             if match:
                 # parse for emphasis
@@ -101,9 +122,8 @@ def find_link_image(string, offset, delimiters, matches, root=None):
                 # shift index till end of match
                 return match.end() - 1
             # no match, remove delimiter
-            delimiters.remove(delimiter)
+            delimiters.pop(i)
             return offset
-        i -= 1
     # no link/image delimiter
     return offset
 
@@ -151,12 +171,11 @@ def process_emphasis(string, stack_bottom, delimiters, matches):
     del delimiters[stack_bottom:]
 
 
-def match_link_image(string, offset, delimiter, root=None):
+def match_link_image(string, offset, delimiter, root=None, bracket_prefix=None):
     image = delimiter.type == '!['
     start = delimiter.start
     text_start = start + delimiter.number
     text_end = offset
-    text = string[text_start:text_end]
     # inline link
     if follows(string, offset, '('):
         # link destination
@@ -172,7 +191,7 @@ def match_link_image(string, offset, delimiter, root=None):
                 if paren_index < len(string) and string[paren_index] == ')':
                     end = paren_index + 1
                     match = MatchObj(start, end,
-                                      (text_start, text_end, text),
+                                      (text_start, text_end, string[text_start:text_end]),
                                       (dest_start, dest_end, dest),
                                       (title_start, title_end, title))
                     match.type = 'Link' if not image else 'Image'
@@ -187,14 +206,18 @@ def match_link_image(string, offset, delimiter, root=None):
             match_info, (dest, title) = result
             end = match_info[1]
             match = MatchObj(start, end,
-                              (text_start, text_end, text),
+                              (text_start, text_end, string[text_start:text_end]),
                               (-1, -1, dest),
                               (-1, -1, title))
             match.type = 'Link' if not image else 'Image'
             match.label = match_info[2]
             match.dest_type = "full"
             return match
-        ref = get_link_label(text, root)
+        ref = None
+        text = None
+        if root and root.footnotes and (bracket_prefix is None or bracket_prefix[text_start] == bracket_prefix[text_end]):
+            text = string[text_start:text_end]
+            ref = get_link_label(text, root)
         if ref:
             # compact (collapsed) footnote link: [dest][]
             if follows(string, offset + 1, ']'):
@@ -209,7 +232,11 @@ def match_link_image(string, offset, delimiter, root=None):
                 return match
         return None
     # shortcut footnote link: [dest]
-    ref = get_link_label(text, root)
+    ref = None
+    text = None
+    if root and root.footnotes and (bracket_prefix is None or bracket_prefix[text_start] == bracket_prefix[text_end]):
+        text = string[text_start:text_end]
+        ref = get_link_label(text, root)
     if ref:
         dest, title = ref
         end = offset + 1
