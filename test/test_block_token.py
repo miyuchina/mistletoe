@@ -272,16 +272,16 @@ class TestListItem(unittest.TestCase):
 
     def test_checkbox_list(self):
         lines = ['* [x] Checked\n',
-                 '* [ ] Unchecked',
+                 '* [ ] Unchecked\n',
                  '* No check\n']
 
         list_item_checked = block_token.tokenize(lines)[0].children[0]
         list_item_unchecked = block_token.tokenize(lines)[0].children[1]
         list_item_no_check = block_token.tokenize(lines)[0].children[2]
 
-        self.assertEqual(list_item_checked.checkbox, True)
-        self.assertEqual(list_item_unchecked.checkbox, False)
-        self.assertIsNone(list_item_no_check.checkbox)
+        self.assertEqual(list_item_checked.is_checked(), True)
+        self.assertEqual(list_item_unchecked.is_checked(), False)
+        self.assertIsNone(list_item_no_check.is_checked())
 
     def test_tabbed_list_items(self):
         # according to the CommonMark spec:
