@@ -301,9 +301,10 @@ class MarkdownRenderer(BaseRenderer):
     ) -> Iterable[str]:
         indentation = " " * token.indentation
         yield indentation + token.delimiter + token.info_string
-        yield from self.prefix_lines(
-            token.content[:-1].split("\n"), indentation
-        )
+        if token.content:
+            yield from self.prefix_lines(
+                token.content[:-1].split("\n"), indentation
+            )
         yield indentation + token.delimiter
 
     def render_list(
