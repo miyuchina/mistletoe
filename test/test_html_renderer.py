@@ -1,6 +1,5 @@
 from unittest import TestCase, mock
 from mistletoe import Document
-import mistletoe
 from mistletoe.html_renderer import HtmlRenderer
 
 
