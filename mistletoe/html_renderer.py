@@ -154,7 +154,7 @@ class HtmlRenderer(BaseRenderer):
         if len(token.children) == 0:
             if token.is_checked() is True:  # Avoid mock function problems
                 return '<li><label><input type="checkbox" checked/></label></li>'
-            elif not token.is_checked():
+            elif token.is_checked() is False:  # And problems using 'None'
                 return '<li><label><input type="checkbox"/></label></li>'
             else:
                 return '<li></li>'
@@ -167,7 +167,7 @@ class HtmlRenderer(BaseRenderer):
             if token.children[-1].__class__.__name__ == 'Paragraph':
                 inner_template = inner_template[:-1]
 
-        if token.checkbox is None:
+        if token.is_checked() is None:
             outer_template = "<li>{}</li>"
         else:
             inner = inner.replace(token.checkbox, "", 1)  # Replace first [ ] or [x]
