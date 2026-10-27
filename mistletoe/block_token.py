@@ -632,7 +632,7 @@ class ListItem(BlockToken):
         checkbox = "x" in match_obj.group(3) if match_obj.group(3) is not None else None
         content = line[match_obj.end(0):]
         checkbox_match_obj = cls.checkbox_pattern.match(content)
-        checkbox = checkbox_match_obj.group(0).strip() if checkbox_match_obj is not None else None
+        checkbox = checkbox_match_obj.group(0) if checkbox_match_obj is not None else None
         n_spaces = prepend - match_obj.end(2)
         if n_spaces > 4:
             # if there are more than 4 spaces after the leader, we treat them as part of the content

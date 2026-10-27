@@ -1,5 +1,6 @@
 from unittest import TestCase, mock
 from mistletoe import Document
+import mistletoe
 from mistletoe.html_renderer import HtmlRenderer
 
 
@@ -11,13 +12,17 @@ class TestRenderer(TestCase):
         self.addCleanup(self.renderer.__exit__, None, None, None)
 
     def _test_token(self, token_name, expected_output, children=True,
-                    without_attrs=None, **kwargs):
+                    without_attrs=None, func_return_vals=None, **kwargs):
         render_func = self.renderer.render_map[token_name]
         children = mock.MagicMock(spec=list) if children else None
         mock_token = mock.Mock(children=children, **kwargs)
         without_attrs = without_attrs or []
         for attr in without_attrs:
             delattr(mock_token, attr)
+        func_return_vals = func_return_vals or {}
+        for func, return_val in func_return_vals.items():
+            getattr(mock_token, func).return_value = return_val
+
         self.assertEqual(render_func(mock_token), expected_output)
 
 
@@ -96,6 +101,14 @@ class TestHtmlRenderer(TestRenderer):
     def test_list_item(self):
         expected = '<li></li>'
         self._test_token('ListItem', expected)
+
+    def test_tasklist_item_checked(self):
+        expected = '<li><label><input type="checkbox" checked/></label></li>'
+        self._test_token('ListItem', expected, func_return_vals={"is_checked": True})
+
+    def test_tasklist_item_unchecked(self):
+        expected = '<li><label><input type="checkbox"/></label></li>'
+        self._test_token('ListItem', expected, func_return_vals={"is_checked": False})
 
     def test_table_with_header(self):
         func_path = 'mistletoe.html_renderer.HtmlRenderer.render_table_row'

@@ -153,12 +153,11 @@ class HtmlRenderer(BaseRenderer):
     def render_list_item(self, token: block_token.ListItem) -> str:
         if len(token.children) == 0:
             if token.is_checked() is True:  # Avoid mock function problems
-                print("what")
                 return '<li><label><input type="checkbox" checked/></label></li>'
             elif not token.is_checked():
                 return '<li><label><input type="checkbox"/></label></li>'
             else:
-                return '<li></li>'           
+                return '<li></li>'
 
         inner = '\n'.join([self.render(child) for child in token.children])
         inner_template = '\n{}\n'
@@ -171,6 +170,7 @@ class HtmlRenderer(BaseRenderer):
         if token.checkbox is None:
             outer_template = "<li>{}</li>"
         else:
+            inner = inner.replace(token.checkbox, "", 1)  # Replace first [ ] or [x]
             outer_template = (
                 '<li><label>{}<input type="checkbox" {}/></label></li>'.format(
                     "{}", "checked" if token.is_checked() else ""
