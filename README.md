@@ -62,7 +62,7 @@ in the [contrib][contrib] package:
 
 Installation
 ------------
-mistletoe is tested for Python 3.5 and above. Install mistletoe with pip:
+mistletoe requires Python 3.11 or later, below Python 4. Install mistletoe with pip:
 
 ```sh
 pip3 install mistletoe
