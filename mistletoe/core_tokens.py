@@ -67,7 +67,12 @@ def find_core_tokens(string, root):
                 in_image = True
             elif c == ']':
                 i = find_link_image(string, i, delimiters, matches, root)
-                code_match = code_pattern.search(string, i)
+                # `find_link_image` only moves `i` forward over the unchanged
+                # string, so the cached code-span match is still valid unless `i`
+                # has passed it. Re-scanning on every `]` is quadratic when the
+                # text has unresolved links and no code spans.
+                if code_match is not None and code_match.start() < i:
+                    code_match = code_pattern.search(string, i)
             elif in_image:
                 in_image = False
         else:
@@ -223,6 +228,50 @@ def match_link_image(string, offset, delimiter, root=None):
     return None
 
 
+_link_dest_cache_string = None
+_link_dest_cache_tables = None
+
+
+def _link_dest_tables(string):
+    """Single pass per `string` for `match_link_dest`: for each index, the next
+    whitespace, the next backslash, and the index of the `)` that closes a
+    destination starting there. Cached per string so repeated unclosed `(` do
+    not each rescan to the end (which is quadratic)."""
+    global _link_dest_cache_string, _link_dest_cache_tables
+    if _link_dest_cache_string is not string:
+        n = len(string)
+        next_ws = [n] * (n + 1)
+        next_bs = [n] * (n + 1)
+        w = n
+        b = n
+        for pos in range(n - 1, -1, -1):
+            c = string[pos]
+            if c in whitespace:
+                w = pos
+            if c == '\\':
+                b = pos
+            next_ws[pos] = w
+            next_bs[pos] = b
+        # `bal[i]` is the index of the `)` that balances a destination whose
+        # paren depth starts at 1 at `i`, or `n` if it never closes.
+        bal = [n] * (n + 1)
+        stack = []
+        depth = 0
+        for pos in range(n + 1):
+            while stack and depth < stack[-1][1]:
+                bal[stack.pop()[0]] = pos - 1
+            stack.append((pos, depth))
+            if pos < n:
+                c = string[pos]
+                if c == '(':
+                    depth += 1
+                elif c == ')':
+                    depth -= 1
+        _link_dest_cache_string = string
+        _link_dest_cache_tables = (next_ws, next_bs, bal)
+    return _link_dest_cache_tables
+
+
 def match_link_dest(string, offset):
     offset = shift_whitespace(string, offset + 1)
     if offset == len(string):
@@ -240,6 +289,16 @@ def match_link_dest(string, offset):
                 escaped = False
         return None
     else:
+        # No backslash before the destination ends -> the scan is just a run up
+        # to the first whitespace or the balancing `)`, which the tables give in
+        # O(1). Fall back to the character scan only when an escape could change
+        # the result.
+        next_ws, next_bs, bal = _link_dest_tables(string)
+        end = min(next_ws[offset], bal[offset])
+        if next_bs[offset] >= end:
+            if end < len(string):
+                return offset, end, string[offset:end]
+            return None
         escaped = False
         count = 1
         for i, c in enumerate(string[offset:], start=offset):
