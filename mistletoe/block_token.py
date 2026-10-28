@@ -627,7 +627,6 @@ class ListItem(BlockToken):
         prepend = len(match_obj.group(0).expandtabs(4))
 
         leader = match_obj.group(2)
-        checkbox = "x" in match_obj.group(3) if match_obj.group(3) is not None else None
         content = line[match_obj.end(0):]
         tasklist_match_obj = cls.tasklist_pattern.match(content)
         tasklist_marker = tasklist_match_obj.group(0) if tasklist_match_obj is not None else None
