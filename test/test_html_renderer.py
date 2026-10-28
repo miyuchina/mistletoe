@@ -198,3 +198,15 @@ class TestHtmlRendererFootnotes(TestCase):
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         expected = '<p><a href="target">name</a></p>\n'
         self.assertEqual(self.renderer.render(token), expected)
+
+
+class TestHtmlRendererTasklist(TestCase):
+    def setUp(self):
+        self.renderer = HtmlRenderer()
+        self.renderer.__enter__()
+        self.addCleanup(self.renderer.__exit__, None, None, None)
+
+    def test_tasklist_with_content(self):
+        token = Document(["- [x] foo"])
+        expected = '<ul>\n<li><label>foo<input type="checkbox" checked/></label></li>\n</ul>\n'
+        self.assertEqual(self.renderer.render(token), expected)
