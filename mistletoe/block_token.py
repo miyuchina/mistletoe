@@ -561,6 +561,8 @@ class ListItem(BlockToken):
         prepend (int): the start position of the content, i.e., the indentation required
                        for continuation lines.
         loose (bool): whether the list is loose.
+        tasklist_marker (string): the string matching on the characters defined in
+                                  tasklist_pattern
     """
     repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "tasklist_marker")
     pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
@@ -607,8 +609,8 @@ class ListItem(BlockToken):
     @classmethod
     def parse_marker(cls, line):
         """
-        Returns a tuple (prepend, leader, content) iff the line has a valid leader and at
-        least one space separating leader and content, or if the content is empty, in which
+        Returns a tuple (prepend, leader, tasklist_marker, content) iff the line has a valid leader
+        and at least one space separating leader and content, or if the content is empty, in which
         case there need not be any spaces.
         The return value is None if the line doesn't have a valid marker.
 
@@ -618,6 +620,9 @@ class ListItem(BlockToken):
 
         The prepend is the start position of the content, i.e., the indentation required
         for continuation lines.
+
+        The tasklist_marker are the characters that match from tasklist_pattern, i.e., the
+        `[x]` or `[ ]` plus any trailing whitelist characters.
         """
         match_obj = cls.pattern.match(line)
         if match_obj is None:
