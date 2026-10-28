@@ -562,27 +562,27 @@ class ListItem(BlockToken):
                        for continuation lines.
         loose (bool): whether the list is loose.
     """
-    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "checkbox")
+    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "tasklist_marker")
     pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
-    checkbox_pattern = re.compile(r'\[[xX ]\]\s+')
+    tasklist_pattern = re.compile(r'\[[xX ]\]\s+')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
-    def __init__(self, parse_buffer, indentation, prepend, leader, checkbox, line_number=None):
+    def __init__(self, parse_buffer, indentation, prepend, leader, tasklist_marker, line_number=None):
         self.line_number = line_number
         self.leader = leader
         self.indentation = indentation
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
-        self.checkbox = checkbox
+        self.tasklist_marker = tasklist_marker
         self.loose = parse_buffer.loose
 
     def is_checked(self):
         """
-        Returns boolean value if checkbox/taskbox is 'checked' or not. If the
-        checkbox is not present in the text, returns None.
+        Returns boolean value if tasklist is 'checked' or not. If the
+        tasklist is not present in the text, returns None.
         """
-        if self.checkbox:
-            return True if 'x'.casefold() in self.checkbox else False
+        if self.tasklist_marker:
+            return True if 'x'.casefold() in self.tasklist_marker else False
         else:
             return None
 
@@ -624,22 +624,20 @@ class ListItem(BlockToken):
             return None
         indentation = len(match_obj.group(1))
 
-        # Subtract group 3 as we do not it to be included in the prepend length
-        # We only want anything matched before group 3
         prepend = len(match_obj.group(0).expandtabs(4))
 
         leader = match_obj.group(2)
         checkbox = "x" in match_obj.group(3) if match_obj.group(3) is not None else None
         content = line[match_obj.end(0):]
-        checkbox_match_obj = cls.checkbox_pattern.match(content)
-        checkbox = checkbox_match_obj.group(0) if checkbox_match_obj is not None else None
+        tasklist_match_obj = cls.tasklist_pattern.match(content)
+        tasklist_marker = tasklist_match_obj.group(0) if tasklist_match_obj is not None else None
         n_spaces = prepend - match_obj.end(2)
         if n_spaces > 4:
             # if there are more than 4 spaces after the leader, we treat them as part of the content
             # with the exception of the first (marker separator) space.
             prepend -= n_spaces - 1
             content = ' ' * (n_spaces - 1) + content
-        return indentation, prepend, leader, checkbox, content
+        return indentation, prepend, leader, tasklist_marker, content
 
     @classmethod
     def read(cls, lines, prev_marker=None):
@@ -650,7 +648,7 @@ class ListItem(BlockToken):
         line = next(lines)
         start_line = lines.line_number()
         next_line = lines.peek()
-        indentation, prepend, leader, checkbox, content = prev_marker if prev_marker else cls.parse_marker(line)
+        indentation, prepend, leader, tasklist_marker, content = prev_marker if prev_marker else cls.parse_marker(line)
         if content.strip() == '':
             # item starting with a blank line: look for the next non-blank line
             prepend = indentation + len(leader) + 1
@@ -665,7 +663,7 @@ class ListItem(BlockToken):
                 parse_buffer = tokenizer.ParseBuffer()
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
-                return (parse_buffer, indentation, prepend, leader, checkbox, start_line), next_marker
+                return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line), next_marker
         else:
             line_buffer.append(content)
 
@@ -710,7 +708,7 @@ class ListItem(BlockToken):
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
-        return (parse_buffer, indentation, prepend, leader, checkbox, start_line), next_marker
+        return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line), next_marker
 
 
 class Table(BlockToken):

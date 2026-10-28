@@ -271,7 +271,7 @@ class TestListItem(unittest.TestCase):
         list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
 
-    def test_checkbox_list(self):
+    def test_task_list(self):
         lines = ['* [x] Checked\n',
                  '* [ ] Unchecked\n',
                  '* No check\n']

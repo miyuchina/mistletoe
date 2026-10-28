@@ -170,7 +170,7 @@ class HtmlRenderer(BaseRenderer):
         if token.is_checked() is None:
             outer_template = "<li>{}</li>"
         else:
-            inner = inner.replace(token.checkbox, "", 1)  # Replace first [ ] or [x]
+            inner = inner.replace(token.tasklist_marker, "", 1)  # Replace first [ ] or [x]
             outer_template = (
                 '<li><label>{}<input type="checkbox" {}/></label></li>'.format(
                     "{}", "checked" if token.is_checked() else ""
