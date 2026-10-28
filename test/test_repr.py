@@ -45,12 +45,17 @@ class TestRepr(unittest.TestCase):
     def test_unordered_list(self):
         doc = Document("* Foo\n* Bar\n* Baz")
         self._check_repr_matches(doc.children[0], "block_token.List with 3 children line_number=1 loose=False start=None")
-        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child line_number=1 leader='*' indentation=0 prepend=2 loose=False")
+        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child line_number=1 leader='*' indentation=0 prepend=2 loose=False tasklist_marker=None")
 
     def test_ordered_list(self):
         doc = Document("1. Foo\n2. Bar\n3. Baz")
         self._check_repr_matches(doc.children[0], "block_token.List with 3 children line_number=1 loose=False start=1")
-        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child line_number=1 leader='1.' indentation=0 prepend=3 loose=False")
+        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child line_number=1 leader='1.' indentation=0 prepend=3 loose=False tasklist_marker=None")
+
+    def test_task_list(self):
+        doc = Document("* [x] Checked\n* [ ] Unchecked")
+        self._check_repr_matches(doc.children[0], "block_token.List with 2 children line_number=1 loose=False start=None")
+        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child line_number=1 leader='*' indentation=0 prepend=2 loose=False tasklist_marker='[x] '")
 
     def test_table(self):
         doc = Document("| Foo | Bar | Baz |\n|:--- |:---:| ---:|\n| Foo | Bar | Baz |\n")
