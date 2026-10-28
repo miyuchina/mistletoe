@@ -1,6 +1,9 @@
 from unittest import TestCase
+
+import mistletoe
 from mistletoe.core_tokens import (MatchObj, Delimiter, follows, shift_whitespace,
-        is_control_char, deactivate_delimiters, preceded_by, succeeded_by)
+        is_control_char, deactivate_delimiters, preceded_by, succeeded_by,
+        match_link_dest)
 
 
 class TestCoreTokens(TestCase):
@@ -15,6 +18,21 @@ class TestCoreTokens(TestCase):
         self.assertEqual(match.group(), 'ab')
         self.assertEqual(match.group(1), 'a')
         self.assertEqual(match.group(2), 'b')
+
+    def test_match_link_dest(self):
+        # offset is the index of the opening '('
+        self.assertEqual(match_link_dest('(http://a)', 0), (1, 9, 'http://a'))
+        self.assertEqual(match_link_dest('(a(b)c)', 0), (1, 6, 'a(b)c'))
+        self.assertEqual(match_link_dest('(a b)', 0), (1, 2, 'a'))
+        self.assertEqual(match_link_dest('(<a b>)', 0), (1, 6, 'a b'))
+        self.assertIsNone(match_link_dest('(unclosed', 0))
+
+    def test_many_unclosed_link_parens(self):
+        # Each unclosed '[...](' used to rescan the rest of the text, which is
+        # quadratic; this renders to literal text and must stay fast.
+        n = 20000
+        doc = '[a](' * n
+        self.assertEqual(mistletoe.markdown(doc), '<p>' + '[a](' * n + '</p>\n')
 
     def test_delimiter(self):
         delimiter = Delimiter(4, 6, 'abcd**')
