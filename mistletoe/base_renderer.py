@@ -89,10 +89,23 @@ class BaseRenderer(object):
 
         Basically a janky way to do polymorphism.
 
+        Token classes can be registered by another renderer that is
+        active at the same time (e.g. `BlankLine` and
+        `LinkReferenceDefinitionBlock` from `MarkdownRenderer`), because
+        the parse tree is shared by all active renderers. Such tokens
+        have no render function here, and are rendered transparently:
+        childless tokens (such as `BlankLine`) render to the empty
+        string, and tokens with children keep their rendered content.
+
         Arguments:
             token: whose __class__.__name__ is in self.render_map.
         """
-        return self.render_map[token.__class__.__name__](token)
+        render_func = self.render_map.get(token.__class__.__name__)
+        if render_func is None:
+            # Transparent fallback: childless tokens render to '',
+            # tokens with children keep their rendered content.
+            return self.render_inner(token) if getattr(token, 'children', None) else ''
+        return render_func(token)
 
     def render_inner(self, token) -> str:
         """
