@@ -7,7 +7,7 @@ name = "mistletoe"
 dynamic = ["version"]
 description = "A fast, extensible Markdown parser in pure Python."
 readme = "README.md"
-requires-python = ">=3.11,<4"
+requires-python = ">=3.10,<4"
 license = "MIT"
 license-files = ["LICENSE"]
 
