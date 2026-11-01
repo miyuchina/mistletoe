@@ -1,3 +1,4 @@
+import io
 import unittest
 import warnings
 from unittest.mock import call, patch
@@ -643,6 +644,60 @@ class TestDocument(unittest.TestCase):
         document = block_token.Document(lines)
         self.assertIsInstance(document.children[0], block_token.Paragraph)
         self.assertEqual(len(document.children), 1)
+
+    def test_trailing_newline(self):
+        # Strings, lists, one-shot generators, and file-like iterators share a terminal state.
+        cases = [
+            ("a", False),
+            ("a\n", True),
+            ("a\r\n", True),
+            ("a\r", True),
+            ("a\nb", False),
+            ("a\nb\n", True),
+            ("", False),
+            ("\n", True),
+            ("\n\n", True),
+        ]
+        for text, terminated in cases:
+            with self.subTest(text=repr(text)):
+                self.assertEqual(block_token.Document(text).trailing_newline, terminated)
+                self.assertEqual(
+                    block_token.Document(text.splitlines(keepends=True)).trailing_newline,
+                    terminated,
+                )
+                self.assertEqual(
+                    block_token.Document(iter(text.splitlines(keepends=True))).trailing_newline,
+                    terminated,
+                )
+                self.assertEqual(
+                    block_token.Document(io.StringIO(text)).trailing_newline,
+                    terminated,
+                )
+
+        # CR and CRLF count only when they terminate the last line.
+        self.assertTrue(block_token.Document(["b", "a\r"]).trailing_newline)
+        self.assertTrue(block_token.Document(["b\n", "a\r\n"]).trailing_newline)
+        self.assertFalse(block_token.Document(["a\r", "b"]).trailing_newline)
+        self.assertFalse(block_token.Document(iter(())).trailing_newline)
+
+        # A one-shot generator is consumed once; internal lines still gain LF.
+        def lines():
+            yield "alpha"
+            yield "beta\n"
+
+        source = lines()
+        document = block_token.Document(source)
+        self.assertEqual(list(source), [])
+        self.assertTrue(document.trailing_newline)
+        self.assertEqual(len(document.children), 1)
+        paragraph = document.children[0]
+        self.assertEqual(paragraph.children[0].content, "alpha")
+        self.assertIsInstance(paragraph.children[1], span_token.LineBreak)
+        self.assertEqual(paragraph.children[2].content, "beta")
+
+        open_ended = block_token.Document(iter(["alpha\n", "beta"]))
+        self.assertFalse(open_ended.trailing_newline)
+        self.assertIsInstance(open_ended.children[0].children[1], span_token.LineBreak)
 
 
 class TestThematicBreak(unittest.TestCase):
