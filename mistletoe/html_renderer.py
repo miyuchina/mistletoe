@@ -212,7 +212,13 @@ class HtmlRenderer(BaseRenderer):
 
     def render_document(self, token: block_token.Document) -> str:
         self.footnotes.update(token.footnotes)
-        inner = '\n'.join([self.render(child) for child in token.children])
+        # Skip children that render to the empty string, i.e. tokens that
+        # only exist for other active renderers (BlankLine,
+        # LinkReferenceDefinitionBlock), so that the output is the same
+        # whether or not those renderers are active.
+        inner = '\n'.join([rendered for rendered in
+                          (self.render(child) for child in token.children)
+                          if rendered != ''])
         return '{}\n'.format(inner) if inner else ''
 
     def escape_html_text(self, s: str) -> str:

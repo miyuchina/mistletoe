@@ -186,3 +186,38 @@ class TestHtmlRendererFootnotes(TestCase):
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         expected = '<p><a href="target">name</a></p>\n'
         self.assertEqual(self.renderer.render(token), expected)
+
+
+class TestHtmlRendererWithOtherRendererActive(TestCase):
+    """Rendering must not break when another renderer is active.
+
+    MarkdownRenderer registers the BlankLine and
+    LinkReferenceDefinitionBlock tokens globally, and these tokens show
+    up in the parse tree of documents created while it is active.
+    """
+
+    def test_render_with_markdown_renderer_active(self):
+        from mistletoe.markdown_renderer import MarkdownRenderer
+        with MarkdownRenderer():
+            with HtmlRenderer() as renderer:
+                output = renderer.render(Document('a\n\nb'))
+        expected = '<p>a</p>\n<p>b</p>\n'
+        self.assertEqual(output, expected)
+
+    def test_render_matches_single_renderer_output(self):
+        from mistletoe.markdown_renderer import MarkdownRenderer
+        sample = 'a\n\nb\n\n# Heading\n\n- one\n- two\n'
+        with HtmlRenderer() as renderer:
+            expected = renderer.render(Document(sample))
+        with MarkdownRenderer():
+            with HtmlRenderer() as renderer:
+                output = renderer.render(Document(sample))
+        self.assertEqual(output, expected)
+
+    def test_render_link_reference_definitions_transparently(self):
+        from mistletoe.markdown_renderer import MarkdownRenderer
+        with MarkdownRenderer():
+            with HtmlRenderer() as renderer:
+                output = renderer.render(Document('[r]: /r\n\ntext'))
+        expected = '<p>text</p>\n'
+        self.assertEqual(output, expected)
