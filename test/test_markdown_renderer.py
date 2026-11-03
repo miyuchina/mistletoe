@@ -291,6 +291,26 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
+    def test_empty_fenced_code_blocks(self):
+        for input in (
+            "```\n```\n",
+            "~~~\n~~~\n",
+            "```python\n```\n",
+            "  ```\n  ```\n",
+            "> ```\n> ```\n",
+            "- ```\n  ```\n",
+        ):
+            with self.subTest(input=input):
+                self.assertEqual(self.roundtrip(input), input)
+
+    def test_empty_unclosed_fenced_code_block(self):
+        self.assertEqual(self.roundtrip("```\n"), "```\n```\n")
+
+    def test_fenced_code_blocks_preserve_blank_content(self):
+        for input in ("```\n\n```\n", "```\n\n\n```\n"):
+            with self.subTest(input=input):
+                self.assertEqual(self.roundtrip(input), input)
+
     def test_html_block(self):
         input = [
             "<h1>some text <img src='https://cdn.rawgit.com/' align='right'></h1>\n",
