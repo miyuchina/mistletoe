@@ -278,7 +278,7 @@ _attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^\s"\'=<>`]+|\'[^\']*?\
 
 _open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'  # noqa: E221
 _closing_tag = r'(?<!\\)</' + _tag + r'\s*>'
-_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'  # noqa: E221
+_comment     = r'(?<!\\)<!--(?:-?>|.*?-->)'  # noqa: E221
 _instruction = r'(?<!\\)<\?.+?\?>'
 _declaration = r'(?<!\\)<![A-Z].+?>'
 _cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'  # noqa: E221
@@ -295,8 +295,30 @@ class HtmlSpan(SpanToken):
     pattern = re.compile('|'.join([_open_tag, _closing_tag, _comment,
                                    _instruction, _declaration, _cdata]),
                                    re.DOTALL)
+    _tag_pattern = re.compile('|'.join([_open_tag, _closing_tag,
+                                        _instruction, _declaration, _cdata]),
+                                        re.DOTALL)
+    _comment_pattern = re.compile(_comment, re.DOTALL)
     parse_inner = False
     parse_group = 0
+
+    @classmethod
+    def find(cls, string):
+        # No comment can end after the last "-->". Bounding the comment search
+        # there keeps each unclosed "<!--" from rescanning the rest of the string.
+        comment_end = string.rfind('-->') + 3
+        tag = cls._tag_pattern.search(string)
+        comment = cls._comment_pattern.search(string, 0, comment_end)
+        while tag or comment:
+            if comment is None or (tag is not None and tag.start() < comment.start()):
+                match = tag
+            else:
+                match = comment
+            yield match
+            if tag is not None and tag.start() < match.end():
+                tag = cls._tag_pattern.search(string, match.end())
+            if comment is not None and comment.start() < match.end():
+                comment = cls._comment_pattern.search(string, match.end(), comment_end)
 
 
 HTMLSpan = HtmlSpan
