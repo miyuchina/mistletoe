@@ -92,7 +92,14 @@ class BaseRenderer(object):
         Arguments:
             token: whose __class__.__name__ is in self.render_map.
         """
-        return self.render_map[token.__class__.__name__](token)
+        render_func = self.render_map.get(token.__class__.__name__)
+        if render_func is None:
+            # Token was registered by another active renderer (e.g. BlankLine
+            # from MarkdownRenderer).  Render its children if it has any,
+            # otherwise produce no output.
+            children = getattr(token, 'children', None)
+            return self.render_inner(token) if children else ''
+        return render_func(token)
 
     def render_inner(self, token) -> str:
         """
