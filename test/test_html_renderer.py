@@ -186,3 +186,24 @@ class TestHtmlRendererFootnotes(TestCase):
         token = Document(['[name][foo]\n', '\n', '[foo]: target\n'])
         expected = '<p><a href="target">name</a></p>\n'
         self.assertEqual(self.renderer.render(token), expected)
+
+
+class TestMultipleRenderers(TestCase):
+    """Using two renderers simultaneously must not crash (issue #318)."""
+
+    def test_html_renderer_with_markdown_renderer_active(self):
+        from mistletoe.markdown_renderer import MarkdownRenderer
+        with HtmlRenderer() as html, MarkdownRenderer():
+            result = html.render(Document('a\n\nb'))
+        self.assertEqual(result, '<p>a</p>\n<p>b</p>\n')
+
+    def test_html_renderer_with_blank_line_in_document(self):
+        from mistletoe.markdown_renderer import MarkdownRenderer
+        with HtmlRenderer() as html, MarkdownRenderer():
+            result = html.render(Document('first\n\nsecond\n\nthird'))
+        self.assertEqual(result, '<p>first</p>\n<p>second</p>\n<p>third</p>\n')
+
+    def test_html_renderer_still_renders_normally_alone(self):
+        with HtmlRenderer() as renderer:
+            result = renderer.render(Document('a\n\nb'))
+        self.assertEqual(result, '<p>a</p>\n<p>b</p>\n')
