@@ -41,7 +41,7 @@ class BaseRenderer(object):
         _extras (list): a list of custom tokens to be added to the
                         parsing process.
     """
-    _parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
+    _parse_name = re.compile(r"([A-Z][a-z0-9]+|[A-Z]+(?![a-z0-9]))")
 
     def __init__(self, *extras, **kwargs):
         self.render_map = {
