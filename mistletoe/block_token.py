@@ -382,6 +382,11 @@ class BlockCode(BlockToken):
         """Returns the code block content."""
         return self.children[0].content
 
+    @content.setter
+    def content(self, value):
+        """Sets the code block content."""
+        self.children[0].content = value
+
     @staticmethod
     def start(line):
         return line.replace('\t', '    ', 1).startswith('    ')
@@ -444,6 +449,11 @@ class CodeFence(BlockToken):
     def content(self):
         """Returns the code block content."""
         return self.children[0].content
+
+    @content.setter
+    def content(self, value):
+        """Sets the code block content."""
+        self.children[0].content = value
 
     @classmethod
     def start(cls, line):
@@ -1067,6 +1077,11 @@ class HtmlBlock(BlockToken):
     def content(self):
         """Returns the raw HTML content."""
         return self.children[0].content
+
+    @content.setter
+    def content(self, value):
+        """Sets the code block content."""
+        self.children[0].content = value
 
     @classmethod
     def start(cls, line):
