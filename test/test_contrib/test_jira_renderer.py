@@ -89,6 +89,12 @@ class TestJiraRenderer(BaseRendererTest):
         expected = '!foo.jpg!'
         self.assertEqual(output, expected)
 
+    def test_render_image_with_escapes(self):
+        token = next(iter(tokenize_inner('![image](<a!b|c[d].jpg>)')))
+        output = self.renderer.render(token)
+        expected = '!a\\!b%7Cc\\[d\\].jpg!'
+        self.assertEqual(output, expected)
+
     def test_render_footnote_image(self):
         # token = next(tokenize_inner('![image]\n\n[image]: foo.jpg'))
         # output = self.renderer.render(token)

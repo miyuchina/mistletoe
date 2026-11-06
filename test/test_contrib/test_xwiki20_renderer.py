@@ -53,6 +53,12 @@ class TestXWiki20Renderer(BaseRendererTest):
         expected = '[[image:foo.jpg]]'
         self.assertEqual(output, expected)
 
+    def test_render_image_with_escapes(self):
+        token = next(iter(tokenize_inner('![image](<a]]b~c d.jpg>)')))
+        output = self.renderer.render(token)
+        expected = '[[image:a~]]b~~c%20d.jpg]]'
+        self.assertEqual(output, expected)
+
     def test_render_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         body = self.genRandomString(80, True)
@@ -61,11 +67,23 @@ class TestXWiki20Renderer(BaseRendererTest):
         expected = '[[{body}>>{url}]]'.format(url=url, body=body)
         self.assertEqual(output, expected)
 
+    def test_render_link_with_escapes(self):
+        token = next(iter(tokenize_inner('[the link](<a]]b~c d.jpg>)')))
+        output = self.renderer.render(token)
+        expected = '[[the link>>a~]]b~~c%20d.jpg]]'
+        self.assertEqual(output, expected)
+
     def test_render_auto_link(self):
         url = 'http://{0}.{1}.{2}'.format(self.genRandomString(5), self.genRandomString(5), self.genRandomString(3))
         token = next(iter(tokenize_inner('<{url}>'.format(url=url))))
         output = self.renderer.render(token)
         expected = '[[{url}]]'.format(url=url)
+        self.assertEqual(output, expected)
+
+    def test_render_auto_link_with_escapes(self):
+        token = next(iter(tokenize_inner('<http://example.com/~user/a]]b>')))
+        output = self.renderer.render(token)
+        expected = '[[http://example.com/~~user/a~]]b]]'
         self.assertEqual(output, expected)
 
     def test_render_html_span(self):

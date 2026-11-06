@@ -61,7 +61,7 @@ class JiraRenderer(BaseRenderer):
     def render_image(self, token):
         template = '!{src}!'
         self.render_inner(token)
-        return template.format(src=token.src)
+        return template.format(src=escape_image_url(token.src))
 
     def render_link(self, token):
         template = '[{inner}|{target}{title}]'
@@ -235,6 +235,15 @@ def escape_url(raw):
     """
     from urllib.parse import quote
     return escape_link_chars(quote(raw, safe=URI_SAFE_CHARACTERS))
+
+
+def escape_image_url(raw):
+    """
+    Escapes the URL part of a Jira image.
+    """
+    # '!' delimits the image syntax, so it needs escaping on top of
+    # the characters which are already special within links.
+    return escape_url(raw).replace("!", "\\!")
 
 
 def escape_link_chars(s: str) -> str:
