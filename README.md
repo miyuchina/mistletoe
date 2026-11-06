@@ -59,6 +59,7 @@ in the [contrib][contrib] package:
 * Jira Markdown (_jira\_renderer.py_)
 * XWiki Syntax (_xwiki20\_renderer.py_)
 * Scheme (_scheme.py_)
+* Atlassian Document Format (ADF) (_adf\_renderer.py_)
 
 Installation
 ------------
