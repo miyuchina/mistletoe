@@ -102,11 +102,11 @@ class TestHtmlRenderer(TestRenderer):
         self._test_token('ListItem', expected)
 
     def test_tasklist_item_checked(self):
-        expected = '<li><label><input type="checkbox" checked/></label></li>'
+        expected = '<li><input type="checkbox" checked/></li>'
         self._test_token('ListItem', expected, func_return_vals={"is_checked": True})
 
     def test_tasklist_item_unchecked(self):
-        expected = '<li><label><input type="checkbox"/></label></li>'
+        expected = '<li><input type="checkbox"/></li>'
         self._test_token('ListItem', expected, func_return_vals={"is_checked": False})
 
     def test_table_with_header(self):
@@ -208,5 +208,10 @@ class TestHtmlRendererTasklist(TestCase):
 
     def test_tasklist_with_content(self):
         token = Document(["- [x] foo"])
-        expected = '<ul>\n<li><label>foo<input type="checkbox" checked/></label></li>\n</ul>\n'
+        expected = '<ul>\n<li><input type="checkbox" checked/> foo</li>\n</ul>\n'
+        self.assertEqual(self.renderer.render(token), expected)
+
+    def test_task_list_with_link(self):
+        token = Document(["- [x] task\n", "\n", "[x]: /url\n"])
+        expected = '<ul>\n<li><input type="checkbox" checked/> task</li>\n</ul>\n'
         self.assertEqual(self.renderer.render(token), expected)
