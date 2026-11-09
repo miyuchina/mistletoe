@@ -578,15 +578,42 @@ class ListItem(BlockToken):
         self.tasklist_marker = tasklist_marker
         self.loose = parse_buffer.loose
 
+        self.insert_tasklist_marker()
+
     def is_checked(self):
         """
         Returns boolean value if tasklist is 'checked' or not. If the
         tasklist is not present in the text, returns None.
         """
         if self.tasklist_marker:
-            return True if 'x'.casefold() in self.tasklist_marker else False
+            return True if 'x' in self.tasklist_marker.casefold() else False
         else:
             return None
+
+    def insert_tasklist_marker(self):
+        """
+        Insert or create the tasklist marker into a RawText field.
+
+        Edge case for shortcut links if shortcut == '[x]' or '[X]'
+        This can not be handled in core_tokens.py or span_tokenizer.py
+        because it needs context that the current text is inside a list
+        which we do not provide. It might be worthwhile to rewrite this
+        later because this is terrible
+        """
+        if (
+            self.tasklist_marker is not None
+            and len(self.children) >= 1
+            and isinstance(self.children[0], Paragraph)
+        ):
+            paragraph = self.children[0]
+            if len(paragraph.children) >= 1 and isinstance(
+                paragraph.children[0], span_token.RawText
+            ):
+                raw = paragraph.children[0]
+                raw.content = self.tasklist_marker + raw.content
+            else:
+                paragraph.children.insert(0, span_token.RawText(self.tasklist_marker))
+
 
     @classmethod
     def parse_continuation(cls, line, prepend):
@@ -633,14 +660,23 @@ class ListItem(BlockToken):
 
         leader = match_obj.group(2)
         content = line[match_obj.end(0):]
-        tasklist_match_obj = cls.tasklist_pattern.match(content)
-        tasklist_marker = tasklist_match_obj.group(0) if tasklist_match_obj is not None else None
         n_spaces = prepend - match_obj.end(2)
         if n_spaces > 4:
             # if there are more than 4 spaces after the leader, we treat them as part of the content
             # with the exception of the first (marker separator) space.
             prepend -= n_spaces - 1
             content = ' ' * (n_spaces - 1) + content
+            tasklist_marker = None
+        else:
+            tasklist_match_obj = cls.tasklist_pattern.match(content)
+            tasklist_marker = (
+                tasklist_match_obj.group(0)
+                if tasklist_match_obj is not None
+                else None
+            )
+            # Exclude the tasklist marker from tokenization, as it might be interpreted
+            # as another token other than RawText
+            content = content[tasklist_match_obj.end(0):] if tasklist_match_obj else content
         return indentation, prepend, leader, tasklist_marker, content
 
     @classmethod
@@ -712,7 +748,7 @@ class ListItem(BlockToken):
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
         parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
-        return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line), next_marker
+        return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line,), next_marker
 
 
 class Table(BlockToken):
