@@ -11,12 +11,12 @@ import re
 _markdown_charref = re.compile(r'&(#[0-9]{1,7};'
                                r'|#[xX][0-9a-fA-F]{1,6};'
                                r'|[^\t\n\f <&#;]{1,32};)')
-_stdlib_charref = html._charref
+_stdlib_charref: re.Pattern[str] = getattr(html, '_charref')
 
 
 def tokenize(string, token_types):
     try:
-        html._charref = _markdown_charref
+        setattr(html, '_charref', _markdown_charref)
         *token_types, fallback_token = token_types
         tokens = find_tokens(string, token_types, fallback_token)
         token_buffer = []
@@ -27,7 +27,7 @@ def tokenize(string, token_types):
             token_buffer.append(prev)
         return make_tokens(token_buffer, 0, len(string), string, fallback_token)
     finally:
-        html._charref = _stdlib_charref
+        setattr(html, '_charref', _stdlib_charref)
 
 
 def find_tokens(string, token_types, fallback_token):

@@ -149,7 +149,7 @@ class LaTeXRenderer(BaseRenderer):
         align = render_align(token.column_align)
         return template.format(inner=head_rendered + inner, align=align)
 
-    def render_table_row(self, token):
+    def render_table_row(self, token) -> str:
         cells = [self.render(child) for child in token.children]
         return ' & '.join(cells) + ' \\\\\n'
 
@@ -157,11 +157,11 @@ class LaTeXRenderer(BaseRenderer):
         return self.render_inner(token)
 
     @staticmethod
-    def render_thematic_break(token):
+    def render_thematic_break(token) -> str:
         return '\n\\hrulefill\n'
 
     @staticmethod
-    def render_line_break(token):
+    def render_line_break(token) -> str:
         return '\n' if token.soft else '\\newline\n'
 
     def render_packages(self):

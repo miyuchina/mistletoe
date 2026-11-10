@@ -4,7 +4,7 @@ Markdown renderer for mistletoe.
 
 import re
 from itertools import chain
-from typing import Iterable, Optional, Sequence
+from typing import Iterable, Iterator, Optional, Sequence, Union
 
 from mistletoe import block_token, span_token, token
 from mistletoe.base_renderer import BaseRenderer
@@ -57,6 +57,8 @@ class LinkReferenceDefinitionBlock(block_token.Footnote):
     to keep the tokens in the AST.
     """
 
+    children: Iterable[LinkReferenceDefinition]
+
     def __new__(cls, *args, **kwargs):
         obj = object.__new__(cls)
         obj.__init__(*args, **kwargs)
@@ -74,6 +76,10 @@ class Fragment:
     Attributes:
         text (str): markdown fragment.
     """
+
+    # Optional metadata installed through extras; consumers use getattr defaults.
+    wordwrap: bool
+    hard_line_break: bool
 
     def __init__(self, text: str, **extras):
         self.text = text
@@ -95,13 +101,13 @@ class MarkdownRenderer(BaseRenderer):
     def __init__(
         self,
         *extras,
-        max_line_length: Optional[int] = None,
+        max_line_length: Optional[float] = None,
         normalize_whitespace: bool = False,
     ):
         """
         Args:
             extras (list): allows subclasses to add even more custom tokens.
-            max_line_length (int): if specified, the document is word wrapped to the
+            max_line_length (float): if specified, the document is word wrapped to the
                 specified line length when rendered. Otherwise the formatting from the
                 original (parsed) document is retained as much as possible.
             normalize_whitespace (bool): if `False`, the renderer will try to preserve
@@ -174,7 +180,7 @@ class MarkdownRenderer(BaseRenderer):
         return self.render_link_or_image(token, token.target)
 
     def render_link_or_image(
-        self, token: span_token.SpanToken, target: str
+        self, token: Union[span_token.Link, span_token.Image], target: str
     ) -> Iterable[Fragment]:
         yield from self.embed_span(
             Fragment("["),
@@ -254,12 +260,12 @@ class MarkdownRenderer(BaseRenderer):
     # rendered into sequences of lines (strings), to be joined by newlines.
 
     def render_document(
-        self, token: block_token.Document, max_line_length: Optional[int]
+        self, token: block_token.Document, max_line_length: Optional[float]
     ) -> Iterable[str]:
         return self.blocks_to_lines(token.children, max_line_length=max_line_length)
 
     def render_heading(
-        self, token: block_token.Heading, max_line_length: Optional[int]
+        self, token: block_token.Heading, max_line_length: Optional[float]
     ) -> Iterable[str]:
         # note: no word wrapping, because atx headings always fit on a single line.
         line = "#" * token.level
@@ -271,13 +277,13 @@ class MarkdownRenderer(BaseRenderer):
         return [line]
 
     def render_setext_heading(
-        self, token: block_token.SetextHeading, max_line_length: Optional[int]
+        self, token: block_token.SetextHeading, max_line_length: Optional[float]
     ) -> Iterable[str]:
         yield from self.span_to_lines(token.children, max_line_length=max_line_length)
         yield token.underline
 
     def render_quote(
-        self, token: block_token.Quote, max_line_length: Optional[int]
+        self, token: block_token.Quote, max_line_length: Optional[float]
     ) -> Iterable[str]:
         max_child_line_length = max_line_length - 2 if max_line_length else None
         lines = self.blocks_to_lines(
@@ -286,18 +292,18 @@ class MarkdownRenderer(BaseRenderer):
         return self.prefix_lines(lines or [""], "> ")
 
     def render_paragraph(
-        self, token: block_token.Paragraph, max_line_length: Optional[int]
+        self, token: block_token.Paragraph, max_line_length: Optional[float]
     ) -> Iterable[str]:
         return self.span_to_lines(token.children, max_line_length=max_line_length)
 
     def render_block_code(
-        self, token: block_token.BlockCode, max_line_length: Optional[int]
+        self, token: block_token.BlockCode, max_line_length: Optional[float]
     ) -> Iterable[str]:
         lines = token.content[:-1].split("\n")
         return self.prefix_lines(lines, "    ")
 
     def render_fenced_code_block(
-        self, token: block_token.CodeFence, max_line_length: Optional[int]
+        self, token: block_token.CodeFence, max_line_length: Optional[float]
     ) -> Iterable[str]:
         indentation = " " * token.indentation
         yield indentation + token.delimiter + token.info_string
@@ -307,12 +313,12 @@ class MarkdownRenderer(BaseRenderer):
         yield indentation + token.delimiter
 
     def render_list(
-        self, token: block_token.List, max_line_length: Optional[int]
+        self, token: block_token.List, max_line_length: Optional[float]
     ) -> Iterable[str]:
         return self.blocks_to_lines(token.children, max_line_length=max_line_length)
 
     def render_list_item(
-        self, token: block_token.ListItem, max_line_length: Optional[int]
+        self, token: block_token.ListItem, max_line_length: Optional[float]
     ) -> Iterable[str]:
         if self.normalize_whitespace:
             prepend = len(token.leader) + 1
@@ -333,7 +339,7 @@ class MarkdownRenderer(BaseRenderer):
         )
 
     def render_table(
-        self, token: block_token.Table, max_line_length: Optional[int]
+        self, token: block_token.Table, max_line_length: Optional[float]
     ) -> Iterable[str]:
         # note: column widths are not preserved; they are automatically adjusted to fit the contents.
         content = [self.table_row_to_text(token.header), []]
@@ -346,24 +352,24 @@ class MarkdownRenderer(BaseRenderer):
         ]
 
     def render_thematic_break(
-        self, token: block_token.ThematicBreak, max_line_length: Optional[int]
+        self, token: block_token.ThematicBreak, max_line_length: Optional[float]
     ) -> Iterable[str]:
         return [token.line]
 
     def render_html_block(
-        self, token: block_token.HtmlBlock, max_line_length: Optional[int]
+        self, token: block_token.HtmlBlock, max_line_length: Optional[float]
     ) -> Iterable[str]:
         return token.content.split("\n")
 
     def render_link_reference_definition_block(
-        self, token: LinkReferenceDefinitionBlock, max_line_length: Optional[int]
+        self, token: LinkReferenceDefinitionBlock, max_line_length: Optional[float]
     ) -> Iterable[str]:
         # each link reference definition starts on a new line
         for child in token.children:
             yield from self.span_to_lines([child], max_line_length=max_line_length)
 
     def render_blank_line(
-        self, token: BlankLine, max_line_length: Optional[int]
+        self, token: BlankLine, max_line_length: Optional[float]
     ) -> Iterable[str]:
         return [""]
 
@@ -384,7 +390,7 @@ class MarkdownRenderer(BaseRenderer):
         yield trailer or leader
 
     def blocks_to_lines(
-        self, tokens: Iterable[block_token.BlockToken], max_line_length: Optional[int]
+        self, tokens: Iterable[block_token.BlockToken], max_line_length: Optional[float]
     ) -> Iterable[str]:
         """
         Renders a sequence of block tokens into a sequence of lines.
@@ -395,8 +401,8 @@ class MarkdownRenderer(BaseRenderer):
             )
 
     def span_to_lines(
-        self, tokens: Iterable[span_token.SpanToken], max_line_length: Optional[int]
-    ) -> Iterable[str]:
+        self, tokens: Iterable[span_token.SpanToken], max_line_length: Optional[float]
+    ) -> Iterator[str]:
         """
         Renders a sequence of span (inline) tokens into a sequence of lines.
         """
@@ -425,8 +431,8 @@ class MarkdownRenderer(BaseRenderer):
 
     @classmethod
     def fragments_to_lines(
-        cls, fragments: Iterable[Fragment], max_line_length: Optional[int] = None
-    ) -> Iterable[str]:
+        cls, fragments: Iterable[Fragment], max_line_length: Optional[float] = None
+    ) -> Iterator[str]:
         """
         Renders a sequence of Fragments into lines.
         With word wrapping, if a `max_line_length` is given, or else following the
@@ -543,7 +549,7 @@ class MarkdownRenderer(BaseRenderer):
         Calculates column widths for a table.
         """
         MINIMUM_COLUMN_WIDTH = 3
-        col_widths = []
+        col_widths: list[int] = []
         for row in col_text:
             while len(col_widths) < len(row):
                 col_widths.append(MINIMUM_COLUMN_WIDTH)

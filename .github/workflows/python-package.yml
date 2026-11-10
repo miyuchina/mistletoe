@@ -52,6 +52,35 @@ jobs:
       run: |
         uv run --no-sync python -m test.specification --ignore-known
 
+  typing:
+
+    name: Typing (${{ matrix.checker }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - checker: mypy
+          command: mypy
+        - checker: pyright
+          command: pyright
+        - checker: ty
+          command: ty check
+
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        persist-credentials: false
+    - name: Set up uv
+      uses: astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa # v10.3.1
+      with:
+        version: "0.13.4"
+        enable-cache: true
+    - name: Install dependencies
+      run: uv sync --dev --all-extras --locked --python 3.13
+    - name: Check types
+      run: uv run --no-sync ${{ matrix.command }}
+
   coverage:
 
     needs: build
