@@ -4,19 +4,28 @@ Inline tokenizer for mistletoe.
 
 import html
 import re
+from contextvars import ContextVar
+from mistletoe import core_tokens
 
 
-# replacement for html._charref which matches only entitydefs ending with ';',
+# Match only entity references ending with a semicolon,
 # according to the CommonMark spec.
 _markdown_charref = re.compile(r'&(#[0-9]{1,7};'
                                r'|#[xX][0-9a-fA-F]{1,6};'
                                r'|[^\t\n\f <&#;]{1,32};)')
-_stdlib_charref: re.Pattern[str] = getattr(html, '_charref')
+_in_tokenize = ContextVar('mistletoe_inline_parsing', default=False)
+
+
+def unescape(string):
+    if _in_tokenize.get():
+        return _markdown_charref.sub(lambda match: html.unescape(match.group()), string)
+    return html.unescape(string)
 
 
 def tokenize(string, token_types):
+    inline_state = _in_tokenize.set(True)
+    code_state = core_tokens._code_matches.set(())
     try:
-        setattr(html, '_charref', _markdown_charref)
         *token_types, fallback_token = token_types
         tokens = find_tokens(string, token_types, fallback_token)
         token_buffer = []
@@ -27,7 +36,8 @@ def tokenize(string, token_types):
             token_buffer.append(prev)
         return make_tokens(token_buffer, 0, len(string), string, fallback_token)
     finally:
-        setattr(html, '_charref', _stdlib_charref)
+        core_tokens._code_matches.reset(code_state)
+        _in_tokenize.reset(inline_state)
 
 
 def find_tokens(string, token_types, fallback_token):
@@ -78,7 +88,7 @@ def make_tokens(tokens, start, end, string, fallback_token):
     prev_end = start
     for token in tokens:
         if token.start > prev_end:
-            t = fallback_token(html.unescape(string[prev_end:token.start]))
+            t = fallback_token(unescape(string[prev_end:token.start]))
             if t is not None:
                 result.append(t)
         t = token.make()
@@ -86,7 +96,7 @@ def make_tokens(tokens, start, end, string, fallback_token):
             result.append(t)
         prev_end = token.end
     if prev_end != end:
-        result.append(fallback_token(html.unescape(string[prev_end:end])))
+        result.append(fallback_token(unescape(string[prev_end:end])))
     return result
 
 
