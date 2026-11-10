@@ -105,6 +105,19 @@ class TestCli(TestCase):
         error_msg = '[error] cannot find renderer "Renderer" from module "foo".'
         mock_exit.assert_called_with(error_msg)
 
+    @patch('mistletoe.cli._import_readline')
+    @patch('mistletoe.cli._print_heading')
+    @patch('mistletoe.markdown', return_value='rendered text')
+    @patch('builtins.print')
+    def test_interactive_empty_stdin_exits(self, mock_print, mock_markdown,
+                                           mock_print_heading,
+                                           mock_import_readline):
+        with patch('builtins.input', side_effect=EOFError):
+            cli.interactive(sentinel.RendererCls)
+
+        mock_markdown.assert_not_called()
+        mock_print.assert_called_with()
+
     @patch('builtins.__import__')
     @patch('builtins.print')
     def test_import_readline_success(self, mock_print, mock_import):
