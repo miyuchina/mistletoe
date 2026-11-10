@@ -3,6 +3,8 @@ import warnings
 from unittest.mock import call, patch
 
 
+import pytest
+
 from mistletoe import markdown
 from mistletoe import block_token, block_tokenizer, span_token
 
@@ -416,38 +418,36 @@ class TestBlockNestingLimit(unittest.TestCase):
         self.assertTrue(html.endswith('<p>after</p>\n'))
 
 
-class TestTable(unittest.TestCase):
+class TestTable:
     def test_parse_align(self):
         test_func = block_token.Table.parse_align
-        self.assertEqual(test_func(':------'), None)
-        self.assertEqual(test_func(':-----:'), 0)
-        self.assertEqual(test_func('------:'), 1)
+        assert test_func(':------') is None
+        assert test_func(':-----:') == 0
+        assert test_func('------:') == 1
 
     def test_parse_delimiter(self):
         def test_func(s):
             return block_token.Table.split_delimiter(s)
-        self.assertEqual(list(test_func('|-| :--- | :---: | ---:|\n')),
-                ['-', ':---', ':---:', '---:'])
+        assert list(test_func('|-| :--- | :---: | ---:|\n')) == ['-', ':---', ':---:', '---:']
 
-    def test_match(self):
-        for delimiter_line in [
-            '| --- | --- | --- |\n',
-            '| - | - | - |\n',
-            '|-|-|-- \n',
-        ]:
-            with self.subTest(delimiter_line=delimiter_line):
-                lines = ['| header 1 | header 2 | header 3 |\n',
-                        delimiter_line,
-                         '| cell 1 | cell 2 | cell 3 |\n',
-                         '| more 1 | more 2 | more 3 |\n']
-                with patch('mistletoe.block_token.TableRow') as mock:
-                    token, = block_token.tokenize(lines)
-                    self.assertIsInstance(token, block_token.Table)
-                    self.assertTrue(hasattr(token, 'header'))
-                    self.assertEqual(token.column_align, [None, None, None])
-                    token.children
-                    calls = [call(line, [None, None, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
-                    mock.assert_has_calls(calls)
+    @pytest.mark.parametrize('delimiter_line', [
+        '| --- | --- | --- |\n',
+        '| - | - | - |\n',
+        '|-|-|-- \n',
+    ], ids=['spaced', 'single-dashes', 'compact'])
+    def test_match(self, delimiter_line):
+        lines = ['| header 1 | header 2 | header 3 |\n',
+                delimiter_line,
+                 '| cell 1 | cell 2 | cell 3 |\n',
+                 '| more 1 | more 2 | more 3 |\n']
+        with patch('mistletoe.block_token.TableRow') as mock:
+            token, = block_token.tokenize(lines)
+            assert isinstance(token, block_token.Table)
+            assert hasattr(token, 'header')
+            assert token.column_align == [None, None, None]
+            token.children
+            calls = [call(line, [None, None, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
+            mock.assert_has_calls(calls)
 
     def test_easy_table(self):
         lines = ['header 1 | header 2\n',
@@ -455,9 +455,9 @@ class TestTable(unittest.TestCase):
                  '  cell 1 | cell 2\n']
         with patch('mistletoe.block_token.TableRow') as mock:
             token, = block_token.tokenize(lines)
-            self.assertIsInstance(token, block_token.Table)
-            self.assertTrue(hasattr(token, 'header'))
-            self.assertEqual(token.column_align, [1, None])
+            assert isinstance(token, block_token.Table)
+            assert hasattr(token, 'header')
+            assert token.column_align == [1, None]
             token.children
             calls = [call(line, [1, None], line_number) for line_number, line in enumerate(lines, start=1) if line_number != 2]
             mock.assert_has_calls(calls)
@@ -466,7 +466,7 @@ class TestTable(unittest.TestCase):
         lines = ['not header 1 | not header 2\n',
                  'foo | bar\n']
         token, = block_token.tokenize(lines)
-        self.assertIsInstance(token, block_token.Paragraph)
+        assert isinstance(token, block_token.Paragraph)
 
     def test_interrupt_paragraph_option(self):
         lines = [
@@ -482,7 +482,7 @@ class TestTable(unittest.TestCase):
             raise AssertionError("Token number mismatch.") from e
         finally:
             block_token.Table.interrupt_paragraph = True
-        self.assertIsInstance(token, block_token.Paragraph)
+        assert isinstance(token, block_token.Paragraph)
 
 
 class TestTableRow(unittest.TestCase):
