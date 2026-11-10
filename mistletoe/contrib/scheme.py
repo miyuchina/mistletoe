@@ -68,14 +68,15 @@ class Procedure:
 
 class Scheme(BaseRenderer):
     def __init__(self):
+        super().__init__()
         self.render_map = {
             "Program": self.render_program,
             "Expr": self.render_expr,
             "Number": self.render_number,
             "Variable": self.render_variable,
         }
-        block_token._token_types = []
-        span_token._token_types = [Expr, Number, Variable, Whitespace]
+        self._block_tokens = ()
+        self._span_tokens = (Expr, Number, Variable, Whitespace)
 
         self.env = ChainMap({
             "define": self.define,

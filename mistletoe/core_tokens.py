@@ -1,5 +1,6 @@
 import re
 import sys
+from contextvars import ContextVar
 from unicodedata import category
 
 
@@ -23,10 +24,11 @@ punctuation = set.union(
 code_pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
 
 
-_code_matches: list[re.Match[str]] = []
+_code_matches: ContextVar[tuple[re.Match[str], ...]] = ContextVar('mistletoe_code_matches', default=())
 
 
 def find_core_tokens(string, root):
+    inline_codes = []
     delimiters = []
     matches = []
     escaped = False
@@ -50,7 +52,7 @@ def find_core_tokens(string, root):
                 delimiters.append(Delimiter(start, i if not escaped else i - 1, string))
                 in_delimiter_run = None
                 escaped = False
-            _code_matches.append(code_match)
+            inline_codes.append(code_match)
             i = code_match.end()
             code_match = next(code_matches, None)
             continue
@@ -84,6 +86,7 @@ def find_core_tokens(string, root):
     if in_delimiter_run:
         delimiters.append(Delimiter(start, i, string))
     process_emphasis(string, None, delimiters, matches)
+    _code_matches.set(tuple(inline_codes))
     return matches
 
 

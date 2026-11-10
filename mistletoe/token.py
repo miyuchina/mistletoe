@@ -1,3 +1,4 @@
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, Iterable, Optional
 
 if TYPE_CHECKING:
@@ -13,7 +14,7 @@ Stores a reference to the current document (root) token during parsing.
 
 Footnotes are stored in the document token by accessing this reference.
 """
-_root_node: Optional["Document"] = None
+_root_node: ContextVar[Optional['Document']] = ContextVar('mistletoe_root_node', default=None)
 
 
 def _short_repr(value):

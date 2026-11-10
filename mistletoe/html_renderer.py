@@ -212,7 +212,7 @@ class HtmlRenderer(BaseRenderer):
 
     def render_document(self, token: block_token.Document) -> str:
         self.footnotes.update(token.footnotes)
-        inner = '\n'.join([self.render(child) for child in token.children])
+        inner = '\n'.join(filter(None, map(self.render, token.children)))
         return '{}\n'.format(inner) if inner else ''
 
     def escape_html_text(self, s: str) -> str:
