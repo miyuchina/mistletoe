@@ -45,6 +45,11 @@ def interactive(renderer):
             prompt, more = ('... ', True) if more else ('>>> ', True)
             contents.append(input(prompt) + '\n')
         except EOFError:
+            if not contents:
+                # stdin is closed with nothing to render (e.g. empty pipe):
+                # exit instead of spinning on EOF forever.
+                print()
+                break
             print('\n' + mistletoe.markdown(contents, renderer), end='')
             more = False
             contents = []
