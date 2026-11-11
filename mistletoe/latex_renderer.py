@@ -11,7 +11,7 @@ from mistletoe.base_renderer import BaseRenderer, URI_SAFE_CHARACTERS
 # (customizable) delimiters for inline code
 verb_delimiters = string.punctuation + string.digits
 for delimiter in '*':  # remove invalid delimiters
-    verb_delimiters.replace(delimiter, '')
+    verb_delimiters = verb_delimiters.replace(delimiter, '')
 for delimiter in reversed('|!"\'=+'):  # start with most common delimiters
     verb_delimiters = delimiter + verb_delimiters.replace(delimiter, '')
 

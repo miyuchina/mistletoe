@@ -1,9 +1,42 @@
 from unittest import TestCase
+from time import perf_counter
+from mistletoe import markdown
 from mistletoe.core_tokens import (MatchObj, Delimiter, follows, shift_whitespace,
         is_control_char, deactivate_delimiters, preceded_by, succeeded_by)
 
 
 class TestCoreTokens(TestCase):
+    def test_balanced_brackets_complete_promptly(self):
+        source = '[' * 31000 + ']' * 31000
+        for reference in ('', '\n\n[ref]: /url\n'):
+            with self.subTest(reference=bool(reference)):
+                start = perf_counter()
+                rendered = markdown(source + reference)
+                self.assertLess(perf_counter() - start, 5)
+                self.assertEqual(rendered, '<p>{}</p>\n'.format(source))
+
+    def test_reference_links_with_nested_brackets(self):
+        source = '[ref] [[ref]] [a][ref] [ref][]\n\n[ref]: /url\n'
+        self.assertEqual(
+            markdown(source),
+            '<p><a href="/url">ref</a> [<a href="/url">ref</a>] '
+            '<a href="/url">a</a> <a href="/url">ref</a></p>\n',
+        )
+
+    def test_code_spans_inside_and_after_links(self):
+        self.assertEqual(
+            markdown('[a `inside`](url) `after`'),
+            '<p><a href="url">a <code>inside</code></a> <code>after</code></p>\n',
+        )
+        self.assertEqual(
+            markdown('[x](url`skip`) `after`'),
+            '<p><a href="url%60skip%60">x</a> <code>after</code></p>\n',
+        )
+        self.assertEqual(
+            markdown('[x](u`v) `good`'),
+            '<p><a href="u%60v">x</a> <code>good</code></p>\n',
+        )
+
     def test_match_obj(self):
         match = MatchObj(0, 2, (0, 1, 'a'), (1, 2, 'b'))
         self.assertEqual(match.start(), 0)
