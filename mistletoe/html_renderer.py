@@ -167,15 +167,16 @@ class HtmlRenderer(BaseRenderer):
             if token.children[-1].__class__.__name__ == 'Paragraph':
                 inner_template = inner_template[:-1]
 
-        if token.is_checked() is None:
-            outer_template = "<li>{}</li>"
-        else:
-            inner = inner.replace(token.tasklist_marker.strip(), "", 1)  # Replace first [ ] or [x]
-            outer_template = (
-                '<li><input type="checkbox" {}/>{}</li>'.format(
-                    "checked" if token.is_checked() else "", "{}"
-                )
+        outer_template = "<li>{}</li>"
+        if token.is_checked() is not None:
+            input_tag = '<input type="checkbox" {}/>'.format(
+                "checked" if token.is_checked() else ""
             )
+            inner = inner.replace(
+                token.tasklist_marker.strip(),
+                input_tag,
+                1,
+            )  # Replace first [ ] or [x]
 
         return outer_template.format(inner_template.format(inner))
 

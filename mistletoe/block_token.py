@@ -327,7 +327,19 @@ class Paragraph(BlockToken):
         return super().__new__(cls)
 
     def __init__(self, lines, tasklist=None):
-        content = ''.join([line.lstrip() for line in lines]).strip()
+        if tasklist is None:
+            content = ''.join([line.lstrip() for line in lines]).strip()
+        else:
+            content = ''
+            tasklist_seen = False
+            for line in lines:
+                if tasklist_seen:
+                    content = content + line.lstrip()
+                else:  # Prevents issue of whitespace characters being removed
+                    content = content + line
+                    tasklist_seen = True
+            content = content.rstrip()
+
         super().__init__(content, span_token.tokenize_inner)
 
         if tasklist is not None:
@@ -337,7 +349,6 @@ class Paragraph(BlockToken):
             else:
                 self.children.insert(0, span_token.RawText(tasklist))
 
-
     @staticmethod
     def start(line):
         return line.strip() != ''
@@ -345,8 +356,6 @@ class Paragraph(BlockToken):
     @classmethod
     def read(cls, lines, tasklist=None):
         line_buffer = [next(lines)]
-        if tasklist and len(line_buffer) > 0:
-            line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
         next_line = lines.peek()
         breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
         while (next_line is not None and next_line.strip() != ''):
@@ -358,6 +367,8 @@ class Paragraph(BlockToken):
             # check if the paragraph being parsed is in fact a Setext heading
             if cls.parse_setext and cls.is_setext_heading(next_line):
                 line_buffer.append(next(lines))
+                if tasklist and len(line_buffer) > 0:
+                    line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
                 return SetextHeading(line_buffer)
 
             # finish the check for paragraph-breaking tokens with the special case: ThematicBreak
@@ -366,6 +377,9 @@ class Paragraph(BlockToken):
 
             line_buffer.append(next(lines))
             next_line = lines.peek()
+
+        if tasklist and len(line_buffer) > 0:
+            line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
         return line_buffer
 
     @classmethod
@@ -576,7 +590,7 @@ class ListItem(BlockToken):
     """
     repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "tasklist_marker")
     pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
-    tasklist_pattern = re.compile(r'\[[xX ]\]\s+')
+    tasklist_pattern = re.compile(r'(\[[xX ]\])\s+')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
     def __init__(self, parse_buffer, indentation, prepend, leader, tasklist_marker, line_number=None):
@@ -617,6 +631,17 @@ class ListItem(BlockToken):
         return expanded_spaces[prepend:] + match_obj.group(2) if len(expanded_spaces) >= prepend else None
 
     @classmethod
+    def parse_tasklist_marker(cls, line):
+        tasklist_match_obj = cls.tasklist_pattern.match(line)
+        tasklist_marker = (
+            tasklist_match_obj.group(1)
+            if tasklist_match_obj is not None
+            else None
+        )
+
+        return tasklist_marker
+
+    @classmethod
     def parse_marker(cls, line):
         """
         Returns a tuple (prepend, leader, tasklist_marker, content) iff the line has a valid leader
@@ -651,12 +676,7 @@ class ListItem(BlockToken):
             content = ' ' * (n_spaces - 1) + content
             tasklist_marker = None
         else:
-            tasklist_match_obj = cls.tasklist_pattern.match(content)
-            tasklist_marker = (
-                tasklist_match_obj.group(0)
-                if tasklist_match_obj is not None
-                else None
-            )
+            tasklist_marker = cls.parse_tasklist_marker(content)
 
         return indentation, prepend, leader, tasklist_marker, content
 
@@ -685,6 +705,8 @@ class ListItem(BlockToken):
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
                 return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line), next_marker
+            elif blanks == 1 and next_line is not None and next_line.lstrip() != '':
+                tasklist_marker = cls.parse_tasklist_marker(next_line.lstrip())
         else:
             line_buffer.append(content)
 

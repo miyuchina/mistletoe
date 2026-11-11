@@ -55,7 +55,7 @@ class TestRepr(unittest.TestCase):
     def test_task_list(self):
         doc = Document("* [x] Checked\n* [ ] Unchecked")
         self._check_repr_matches(doc.children[0], "block_token.List with 2 children line_number=1 loose=False start=None")
-        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child line_number=1 leader='*' indentation=0 prepend=2 loose=False tasklist_marker='[x] '")
+        self._check_repr_matches(doc.children[0].children[0], "block_token.ListItem with 1 child line_number=1 leader='*' indentation=0 prepend=2 loose=False tasklist_marker='[x]'")
 
     def test_table(self):
         doc = Document("| Foo | Bar | Baz |\n|:--- |:---:| ---:|\n| Foo | Bar | Baz |\n")
