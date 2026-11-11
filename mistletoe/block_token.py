@@ -320,23 +320,33 @@ class Paragraph(BlockToken):
     setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
     parse_setext = True  # can be disabled by Quote
 
-    def __new__(cls, lines):
+    def __new__(cls, lines, _=None):
         if not isinstance(lines, list):
             # setext heading token, return directly
             return lines
         return super().__new__(cls)
 
-    def __init__(self, lines):
+    def __init__(self, lines, tasklist=None):
         content = ''.join([line.lstrip() for line in lines]).strip()
         super().__init__(content, span_token.tokenize_inner)
+
+        if tasklist is not None:
+            if len(self.children) >= 1 and isinstance(self.children[0], span_token.RawText):
+                raw = self.children[0]
+                raw.content = tasklist + raw.content
+            else:
+                self.children.insert(0, span_token.RawText(tasklist))
+
 
     @staticmethod
     def start(line):
         return line.strip() != ''
 
     @classmethod
-    def read(cls, lines):
+    def read(cls, lines, tasklist=None):
         line_buffer = [next(lines)]
+        if tasklist and len(line_buffer) > 0:
+            line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
         next_line = lines.peek()
         breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
         while (next_line is not None and next_line.strip() != ''):
@@ -578,8 +588,6 @@ class ListItem(BlockToken):
         self.tasklist_marker = tasklist_marker
         self.loose = parse_buffer.loose
 
-        self.insert_tasklist_marker()
-
     def is_checked(self):
         """
         Returns boolean value if tasklist is 'checked' or not. If the
@@ -589,31 +597,6 @@ class ListItem(BlockToken):
             return True if 'x' in self.tasklist_marker.casefold() else False
         else:
             return None
-
-    def insert_tasklist_marker(self):
-        """
-        Insert or create the tasklist marker into a RawText field.
-
-        Edge case for shortcut links if shortcut == '[x]' or '[X]'
-        This can not be handled in core_tokens.py or span_tokenizer.py
-        because it needs context that the current text is inside a list
-        which we do not provide. It might be worthwhile to rewrite this
-        later because this is terrible
-        """
-        if (
-            self.tasklist_marker is not None
-            and len(self.children) >= 1
-            and isinstance(self.children[0], Paragraph)
-        ):
-            paragraph = self.children[0]
-            if len(paragraph.children) >= 1 and isinstance(
-                paragraph.children[0], span_token.RawText
-            ):
-                raw = paragraph.children[0]
-                raw.content = self.tasklist_marker + raw.content
-            else:
-                paragraph.children.insert(0, span_token.RawText(self.tasklist_marker))
-
 
     @classmethod
     def parse_continuation(cls, line, prepend):
@@ -674,9 +657,7 @@ class ListItem(BlockToken):
                 if tasklist_match_obj is not None
                 else None
             )
-            # Exclude the tasklist marker from tokenization, as it might be interpreted
-            # as another token other than RawText
-            content = content[tasklist_match_obj.end(0):] if tasklist_match_obj else content
+
         return indentation, prepend, leader, tasklist_marker, content
 
     @classmethod
@@ -747,7 +728,13 @@ class ListItem(BlockToken):
 
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
+        parse_buffer = tokenizer.tokenize_block(
+            line_buffer,
+            _token_types,
+            start_line=start_line,
+            depth=lines.depth + 1,
+            tasklist=tasklist_marker,
+        )
         return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line,), next_marker
 
 
