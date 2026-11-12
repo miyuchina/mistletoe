@@ -337,7 +337,6 @@ class Paragraph(BlockToken):
             else:
                 self.children.insert(0, span_token.RawText(tasklist))
 
-
     @staticmethod
     def start(line):
         return line.strip() != ''
@@ -345,8 +344,6 @@ class Paragraph(BlockToken):
     @classmethod
     def read(cls, lines, tasklist=None):
         line_buffer = [next(lines)]
-        if tasklist and len(line_buffer) > 0:
-            line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
         next_line = lines.peek()
         breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
         while (next_line is not None and next_line.strip() != ''):
@@ -366,6 +363,9 @@ class Paragraph(BlockToken):
 
             line_buffer.append(next(lines))
             next_line = lines.peek()
+
+        if tasklist and len(line_buffer) > 0:
+            line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
         return line_buffer
 
     @classmethod
