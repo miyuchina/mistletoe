@@ -4,6 +4,8 @@ Block-level tokenizer for mistletoe.
 
 import warnings
 
+from mistletoe import block_token
+
 
 # Lists and quotes share a limit so their combined depth stays safe to render.
 MAX_BLOCK_NESTING = 100
@@ -74,7 +76,7 @@ def tokenize(iterable, token_types):
     return make_tokens(tokenize_block(iterable, token_types))
 
 
-def tokenize_block(iterable, token_types, start_line=1, depth=0):
+def tokenize_block(iterable, token_types, start_line=1, depth=0, tasklist=None):
     """
     Returns a list of tuples (token_type, read_result, line_number).
 
@@ -93,13 +95,21 @@ def tokenize_block(iterable, token_types, start_line=1, depth=0):
     lines = FileWrapper(iterable, start_line=start_line, depth=depth, token_types=token_types)
     parse_buffer = ParseBuffer()
     line = lines.peek()
+    use_tasklist = True  # This should only apply to the first Paragraph seen inside ListItem
     while line is not None:
         for token_type in token_types:
             if token_type.start(line):
                 line_number = lines.line_number() + 1
-                result = token_type.read(lines)
+                if token_type is block_token.Paragraph and tasklist and use_tasklist:
+                    result = token_type.read(lines, tasklist=tasklist)
+                else:
+                    result = token_type.read(lines)
                 if result is not None:
-                    parse_buffer.append((token_type, result, line_number))
+                    if use_tasklist:
+                        parse_buffer.append((token_type, result, line_number, tasklist))
+                        use_tasklist = False
+                    else:
+                        parse_buffer.append((token_type, result, line_number, None))
                     break
         else:  # unmatched newlines
             next(lines)
@@ -117,8 +127,11 @@ def make_tokens(parse_buffer):
     and span-level parsing is started here.
     """
     tokens = []
-    for token_type, result, line_number in parse_buffer:
-        token = token_type(result)
+    for token_type, result, line_number, result_tasklist in parse_buffer:
+        if token_type is block_token.Paragraph and result_tasklist:
+            token = token_type(result, result_tasklist)
+        else:
+            token = token_type(result)
         if token is not None:
             token.line_number = line_number
             tokens.append(token)

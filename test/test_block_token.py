@@ -271,6 +271,64 @@ class TestListItem(unittest.TestCase):
         list_item = block_token.tokenize(lines)[0].children[0]
         self.assertEqual(list_item.loose, False)
 
+    def test_task_list(self):
+        lines = ['* [x] Checked\n',
+                 '* [ ] Unchecked\n',
+                 '* No check\n']
+
+        tokenized_lines = block_token.tokenize(lines)
+        list_item_checked = tokenized_lines[0].children[0]
+        list_item_unchecked = tokenized_lines[0].children[1]
+        list_item_no_check = tokenized_lines[0].children[2]
+
+        self.assertTrue(list_item_checked.is_checked())
+        self.assertFalse(list_item_unchecked.is_checked())
+        self.assertIsNone(list_item_no_check.is_checked())
+
+    def test_task_list_with_ref_link(self):
+        # Edge case where reference shortcut links can replace
+        # tasklist markers if they match all characters
+        lines = ['* [x] task\n',
+                 '\n',
+                 '[x]: /url\n']
+
+        document = block_token.Document(lines)
+        list_item = document.children[0].children[0]
+
+        self.assertTrue(list_item.is_checked())
+        self.assertEqual(document.footnotes, {"x": ("/url", "")})
+
+    def test_task_list_with_hex(self):
+        # Edge case where other BlockTokens would be interpreted
+        # as Heading rather than RawText inside task lists
+        lines = ['* [x] #\n']
+
+        tokenized_lines = block_token.tokenize(lines)
+        list_item_checked = tokenized_lines[0].children[0]
+        list_content = list_item_checked.children[0].children[0]
+
+        self.assertTrue(list_item_checked.is_checked())
+        self.assertEqual(list_content.content, "[x] #")
+
+    def test_task_list_multiple_paragraphs(self):
+        lines = ["* [x] first\n",
+                 "\n",
+                 "  second\n"]
+
+        tokenized_lines = block_token.tokenize(lines)
+        first_paragraph = tokenized_lines[0].children[0].children[0]
+        second_paragraph = tokenized_lines[0].children[0].children[1]
+
+        self.assertEqual(first_paragraph.children[0].content, "[x] first")
+        self.assertNotIn("[x]", second_paragraph.children[0].content)
+
+    def test_task_list_with_alone_tasklist_marker(self):
+        lines = ["- [x]\n"]
+
+        list_item_checked = block_token.tokenize(lines)[0].children[0]
+        self.assertTrue(list_item_checked.is_checked())
+        self.assertEqual(list_item_checked.tasklist_marker, '[x]\n')
+
     def test_tabbed_list_items(self):
         # according to the CommonMark spec:
         # in contexts where spaces help to define block structure, tabs behave as if they
