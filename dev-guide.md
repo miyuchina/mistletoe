@@ -127,6 +127,39 @@ in order to create the output in the desired format.
 Creating a custom token and renderer
 ------------------------------------
 
+### Parsing configuration and concurrency
+
+Renderer extras configure that renderer alone. They become active when entering
+the renderer's context, rather than when constructing it. Each renderer starts
+from the current context's ambient token registrations plus its own extras;
+it does not inherit the extras of an enclosing renderer.
+
+`renderer.parse(source)` returns a `Document` parsed with that renderer's tokens,
+without requiring a context manager. Inside the renderer's own context, it also
+honors token registrations made since entering. Under another renderer's context,
+it temporarily selects its own configuration and restores the caller's on return
+or failure. It does not invoke custom `__enter__` or `__exit__` hooks.
+
+The functions `block_token.add_token`, `span_token.add_token`, `remove_token`,
+and `reset_tokens` update only the current context. Inside a renderer context,
+they configure that active scope. Outside one, they configure ambient defaults
+for subsequent parsing and renderer construction in that context. Exiting a
+renderer restores the preceding registrations rather than resetting to built-in
+defaults. `reset_tokens` explicitly selects the built-in defaults in the current
+scope. Token ordering and the functions' arguments are unchanged.
+
+Custom token method signatures are unchanged. Stateful tokens must keep their
+temporary parsing data local to a call or in context-local storage, rather than
+writing class attributes between `start` and `read`. Renderer constructors should
+pass extra tokens to `super().__init__` instead of registering them globally.
+Renderers that exclude built-in tokens can declare an `_excluded_tokens` tuple,
+as `MarkdownRenderer` does for `Footnote`. Direct mutation of the private
+`_token_types` lists or `_root_node` global is no longer supported.
+
+Separate renderer instances can parse and render concurrently. This guarantee
+does not extend to concurrently sharing a mutable renderer instance or to custom
+tokens and renderers that maintain their own shared mutable state.
+
 Here's an example of how to add GitHub-style wiki links to the parsing process,
 and provide a renderer for this new token.
 

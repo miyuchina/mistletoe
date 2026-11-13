@@ -150,13 +150,37 @@ with open('foo.md', 'r') as fin:
     with HtmlRenderer() as renderer:     # or: `with HtmlRenderer(AnotherToken1, AnotherToken2) as renderer:`
         doc = Document(fin)              # parse the lines into AST
         rendered = renderer.render(doc)  # render the AST
-        # internal lists of tokens to be parsed are automatically reset when exiting this `with` block
+        # the enclosing parsing configuration is restored when exiting this `with` block
 ```
 
-**Important**: As can be seen from the example above,
-the parsing phase is currently tightly connected with initiation
-and closing of a renderer. Therefore, you should never call `Document(...)`
-outside of a `with ... as renderer` block, unless you know what you are doing.
+`Document(...)` uses the innermost active renderer's parsing rules. Outside a
+renderer context, it uses the default token types and any tokens registered in
+the current context. Constructing a renderer does not activate its parsing rules.
+
+Use `renderer.parse(source)` to explicitly select a renderer's parsing rules.
+This works inside or outside a `with` block, including when another renderer is
+active:
+
+```python
+from mistletoe import HtmlRenderer
+from mistletoe.markdown_renderer import MarkdownRenderer
+
+html = HtmlRenderer()
+with MarkdownRenderer() as markdown:
+    html_output = html.render(html.parse('a\n\nb'))
+    markdown_output = markdown.render(markdown.parse('a\n\nb'))
+```
+
+Parsing and rendering are safe to run concurrently with separate renderer
+instances in threads or asyncio tasks. Nested renderer contexts restore the
+enclosing configuration, including after exceptions. A renderer instance keeps
+mutable rendering state and should not be shared concurrently. Custom tokens
+and renderers must also avoid shared mutable state.
+
+Token registration is local to the current context. Asyncio tasks inherit their
+creator's configuration, and subsequent token registrations are isolated between
+tasks. Custom tokens can be
+passed as renderer extras to configure each renderer explicitly.
 
 ### Usage from command-line
 

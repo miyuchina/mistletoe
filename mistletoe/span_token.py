@@ -2,9 +2,9 @@
 Built-in span-level token classes.
 """
 
-import html
 import re
 from typing import Iterable, Optional, Sequence, Union
+from mistletoe._state import TokenRegistry
 import mistletoe.span_tokenizer as tokenizer
 from mistletoe import core_tokens, token
 
@@ -29,38 +29,36 @@ def tokenize_inner(content):
 
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
-    return tokenizer.tokenize(content, _token_types)
+    return tokenizer.tokenize(content, _token_types.get())
 
 
 def add_token(token_cls, position=1):
     """
     Allows external manipulation of the parsing process.
-    This function is called in BaseRenderer.__enter__.
+    Registrations affect only the current parsing context.
 
     Arguments:
         token_cls (SpanToken): token to be included in the parsing process.
     """
-    _token_types.insert(position, token_cls)
+    _token_types.add(token_cls, position)
 
 
 def remove_token(token_cls):
     """
     Allows external manipulation of the parsing process.
-    This function is called in BaseRenderer.__exit__.
+    Registrations affect only the current parsing context.
 
     Arguments:
         token_cls (SpanToken): token to be removed from the parsing process.
     """
-    if token_cls in _token_types:
-        _token_types.remove(token_cls)
+    _token_types.remove(token_cls)
 
 
 def reset_tokens():
     """
-    Resets global _token_types to all token classes in __all__.
+    Resets the current context's token types to the classes in __all__.
     """
-    global _token_types
-    _token_types = [globals()[cls_name] for cls_name in __all__]
+    _token_types.reset()
 
 
 class SpanToken(token.Token):
@@ -97,7 +95,7 @@ class CoreTokens(SpanToken):
 
     @classmethod
     def find(cls, string):
-        return core_tokens.find_core_tokens(string, token._root_node)
+        return core_tokens.find_core_tokens(string, token._root_node.get())
 
 
 class Strong(SpanToken):
@@ -146,8 +144,8 @@ class InlineCode(SpanToken):
 
     @classmethod
     def find(cls, string):
-        matches = core_tokens._code_matches
-        core_tokens._code_matches = []
+        matches = core_tokens._code_matches.get()
+        core_tokens._code_matches.set(())
         return matches
 
 
@@ -250,7 +248,7 @@ class EscapeSequence(SpanToken):
 
     @classmethod
     def strip(cls, string):
-        return html.unescape(cls.pattern.sub(r'\1', string))
+        return tokenizer.unescape(cls.pattern.sub(r'\1', string))
 
 
 class LineBreak(SpanToken):
@@ -349,5 +347,6 @@ class XWikiBlockMacroEnd(SpanToken):
     parse_group = 1
 
 
-_token_types: list[type[SpanToken]] = []
-reset_tokens()
+_token_types = TokenRegistry[SpanToken](
+    'span_token_types', lambda: tuple(globals()[name] for name in __all__)
+)

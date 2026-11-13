@@ -5,10 +5,11 @@ from mistletoe import span_token
 
 class TestBranchToken(unittest.TestCase):
     def setUp(self):
-        self.addCleanup(lambda: span_token._token_types.__setitem__(-1, span_token.RawText))
+        previous_types = span_token._token_types.get()
+        self.addCleanup(span_token._token_types.set, previous_types)
         patcher = patch('mistletoe.span_token.RawText')
         self.mock = patcher.start()
-        span_token._token_types[-1] = self.mock
+        span_token._token_types.set((*previous_types[:-1], self.mock))
         self.addCleanup(patcher.stop)
 
     def _test_parse(self, token_cls, raw, arg, **kwargs):
@@ -238,10 +239,10 @@ class TestRemoveToken(unittest.TestCase):
 
     def test_remove_token_from_processing(self):
         # Check that token exists
-        self.assertIn(span_token.RawText, span_token._token_types)
+        self.assertIn(span_token.RawText, span_token._token_types.get())
 
         span_token.remove_token(span_token.RawText)
-        self.assertNotIn(span_token.RawText, span_token._token_types)
+        self.assertNotIn(span_token.RawText, span_token._token_types.get())
 
         # Check that second removal does not raise error (see issue #262)
         try:

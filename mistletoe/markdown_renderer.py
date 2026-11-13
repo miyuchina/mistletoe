@@ -96,6 +96,7 @@ class MarkdownRenderer(BaseRenderer):
     Includes `HtmlBlock` and `HtmlSpan` tokens in the parsing.
     """
 
+    _excluded_tokens = (block_token.Footnote,)
     _whitespace = re.compile(r"\s+")
 
     def __init__(
@@ -115,7 +116,6 @@ class MarkdownRenderer(BaseRenderer):
                 use this flag to control whether to replace the original
                 spacing after every list item leader with just 1 space.
         """
-        block_token.remove_token(block_token.Footnote)
         super().__init__(
             *chain(
                 (
