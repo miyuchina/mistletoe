@@ -2,7 +2,7 @@
 
 set -e
 
-VERSION="0.30"
+VERSION="0.31.2"
 URL="https://spec.commonmark.org/$VERSION/spec.json"
 
 function main {
