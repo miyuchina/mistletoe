@@ -4,6 +4,7 @@ Built-in span-level token classes.
 
 import html
 import re
+from typing import Iterable, Optional, Sequence, Union
 import mistletoe.span_tokenizer as tokenizer
 from mistletoe import core_tokens, token
 
@@ -63,6 +64,9 @@ def reset_tokens():
 
 
 class SpanToken(token.Token):
+    children: Optional[Iterable['SpanToken']]
+    pattern: re.Pattern[str]
+
     parse_inner = True
     parse_group = 1
     precedence = 5
@@ -77,7 +81,7 @@ class SpanToken(token.Token):
         return text in self.content
 
     @classmethod
-    def find(cls, string):
+    def find(cls, string) -> Iterable[Union[re.Match[str], core_tokens.MatchObj]]:
         return cls.pattern.finditer(string)
 
 
@@ -88,7 +92,7 @@ class CoreTokens(SpanToken):
     """
     precedence = 3
 
-    def __new__(self, match):
+    def __new__(cls, match):
         return globals()[match.type](match)
 
     @classmethod
@@ -102,6 +106,8 @@ class Strong(SpanToken):
     This is an inline token. Its children are inline (span) tokens.
     One of the core tokens.
     """
+    children: Iterable[SpanToken]
+
     def __init__(self, match):
         self.delimiter = match.delimiter
 
@@ -112,6 +118,8 @@ class Emphasis(SpanToken):
     This is an inline token. Its children are inline (span) tokens.
     One of the core tokens.
     """
+    children: Iterable[SpanToken]
+
     def __init__(self, match):
         self.delimiter = match.delimiter
 
@@ -121,6 +129,8 @@ class InlineCode(SpanToken):
     Inline code token. ("`some code`")
     This is an inline token with a single child of type RawText.
     """
+    children: Sequence['RawText']
+
     pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
     parse_inner = False
     parse_group = 2
@@ -146,6 +156,8 @@ class Strikethrough(SpanToken):
     Strikethrough token. ("~~some text~~")
     This is an inline token. Its children are inline (span) tokens.
     """
+    children: Iterable[SpanToken]
+
     pattern = re.compile(r"(?<!\\)(?:\\\\)*~~(.+?)~~", re.DOTALL)
 
 
@@ -160,6 +172,8 @@ class Image(SpanToken):
         title (str): image title (default to empty).
         label (str): link label, for reference links.
     """
+    children: Iterable[SpanToken]
+
     repr_attributes = ("src", "title")
 
     def __init__(self, match):
@@ -181,6 +195,8 @@ class Link(SpanToken):
         title (str): link title (default to empty).
         label (str): link label, for reference links.
     """
+    children: Iterable[SpanToken]
+
     repr_attributes = ("target", "title")
 
     def __init__(self, match):
@@ -201,6 +217,8 @@ class AutoLink(SpanToken):
         target (str): link target.
         mailto (bool): true iff the target looks like an email address, but does not have the "mailto:" prefix.
     """
+    children: Sequence['RawText']
+
     repr_attributes = ("target", "mailto")
     pattern = re.compile(r"(?<!\\)(?:\\\\)*<(([A-Za-z][A-Za-z0-9+.-]{1,31}):[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
     parse_inner = False
@@ -221,6 +239,8 @@ class EscapeSequence(SpanToken):
     Attributes:
         children (iterator): a single RawText node containing the escaped character.
     """
+    children: Sequence['RawText']
+
     pattern = re.compile(r"\\([!\"#$%&'()*+,-./:;<=>?@\[\\\]^_`{|}~])")
     parse_inner = False
     precedence = 2
@@ -329,5 +349,5 @@ class XWikiBlockMacroEnd(SpanToken):
     parse_group = 1
 
 
-_token_types = []
+_token_types: list[type[SpanToken]] = []
 reset_tokens()

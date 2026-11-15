@@ -55,7 +55,7 @@ class Variable(span_token.SpanToken):
 class Whitespace(span_token.SpanToken):
     parse_inner = False
 
-    def __new__(self, _):
+    def __new__(cls, _):
         return None
 
 

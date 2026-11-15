@@ -11,7 +11,7 @@ from mistletoe.base_renderer import BaseRenderer, URI_SAFE_CHARACTERS
 # (customizable) delimiters for inline code
 verb_delimiters = string.punctuation + string.digits
 for delimiter in '*':  # remove invalid delimiters
-    verb_delimiters.replace(delimiter, '')
+    verb_delimiters = verb_delimiters.replace(delimiter, '')
 for delimiter in reversed('|!"\'=+'):  # start with most common delimiters
     verb_delimiters = delimiter + verb_delimiters.replace(delimiter, '')
 
@@ -149,7 +149,7 @@ class LaTeXRenderer(BaseRenderer):
         align = render_align(token.column_align)
         return template.format(inner=head_rendered + inner, align=align)
 
-    def render_table_row(self, token):
+    def render_table_row(self, token) -> str:
         cells = [self.render(child) for child in token.children]
         return ' & '.join(cells) + ' \\\\\n'
 
@@ -157,11 +157,11 @@ class LaTeXRenderer(BaseRenderer):
         return self.render_inner(token)
 
     @staticmethod
-    def render_thematic_break(token):
+    def render_thematic_break(token) -> str:
         return '\n\\hrulefill\n'
 
     @staticmethod
-    def render_line_break(token):
+    def render_line_break(token) -> str:
         return '\n' if token.soft else '\\newline\n'
 
     def render_packages(self):

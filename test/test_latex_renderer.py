@@ -34,6 +34,7 @@ class TestLaTeXRenderer(TestCase):
                                 'a + b': '\\verb|a + b|',
                                 'a | b': '\\verb!a | b!',
                                 '|ab!|': '\\verb"|ab!|"',
+                                '|!"\'=+#$%&()': '\\verb,|!"\'=+#$%&(),',
                                }.items():
             with mock.patch(func_path, return_value=content):
                 self._test_token('InlineCode', expected, content=content)
