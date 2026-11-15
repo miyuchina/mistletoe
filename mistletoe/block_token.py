@@ -4,7 +4,7 @@ Built-in block-level token classes.
 
 import re
 from itertools import zip_longest
-from typing import Iterable, Union
+from typing import Iterable, Optional, Sequence, Union
 import mistletoe.block_tokenizer as tokenizer
 from mistletoe import token, span_token
 from mistletoe.core_tokens import (
@@ -109,9 +109,13 @@ class BlockToken(token.Token):
 
     Attributes:
         children (list): inner tokens.
-        line_number (int): starting line (1-based).
+        line_number (int or None): starting line (1-based), set during parsing.
+            May be None when constructed directly without a line number.
     """
-    repr_attributes = ("line_number",)
+    # Set by block_tokenizer.make_tokens; some direct constructors accept None.
+    line_number: Optional[int]
+
+    repr_attributes: tuple[str, ...] = ("line_number",)
 
     def __init__(self, lines, tokenize_func):
         self.children = tokenize_func(lines)
@@ -137,6 +141,7 @@ class Document(BlockToken):
     Attributes:
         footnotes (dictionary): link reference definitions.
     """
+    children: Iterable[BlockToken]
 
     def __init__(self, lines: Union[str, Iterable[str]]):
         """
@@ -154,7 +159,7 @@ class Document(BlockToken):
         if isinstance(lines, str):
             lines = lines.splitlines(keepends=True)
         lines = [line if line.endswith('\n') else '{}\n'.format(line) for line in lines]
-        self.footnotes = {}
+        self.footnotes: dict[str, tuple[str, str]] = {}
         self.line_number = 1
         token._root_node = self
         self.children = tokenize(lines)
@@ -169,6 +174,8 @@ class Heading(BlockToken):
     Attributes:
         level (int): heading level.
     """
+    children: Iterable[span_token.SpanToken]
+
     repr_attributes = BlockToken.repr_attributes + ("level",)
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(\n|\s+?#+\s*?$))')
     level = 0
@@ -210,6 +217,8 @@ class SetextHeading(BlockToken):
     Attributes:
         level (int): heading level.
     """
+    children: Iterable[span_token.SpanToken]
+
     repr_attributes = BlockToken.repr_attributes + ("level",)
 
     def __init__(self, lines):
@@ -232,6 +241,10 @@ class Quote(BlockToken):
     Block quote token. (["> # heading\\n", "> paragraph\\n"])
     This is a container block token. Its children are block tokens - container or leaf ones.
     """
+    children: Sequence[BlockToken]
+
+    nesting_container = True
+
     def __init__(self, parse_buffer):
         # span-level tokenizing happens here.
         self.children = tokenizer.make_tokens(parse_buffer)
@@ -263,7 +276,7 @@ class Quote(BlockToken):
 
         # following lines
         next_line = lines.peek()
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == Quote]
+        breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == Quote]
         while (next_line is not None
                 and next_line.strip() != ''
                 and not any(token_type.check_interrupts_paragraph(lines) for token_type in breaking_tokens)):
@@ -290,7 +303,7 @@ class Quote(BlockToken):
 
         # parse child block tokens
         Paragraph.parse_setext = False
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
         Paragraph.parse_setext = True
         return parse_buffer
 
@@ -315,6 +328,8 @@ class Paragraph(BlockToken):
     Paragraph token. (["some\\n", "continuous\\n", "lines\\n"])
     This is a leaf block token. Its children are inline (span) tokens.
     """
+    children: Iterable[span_token.SpanToken]
+
     setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
     parse_setext = True  # can be disabled by Quote
 
@@ -336,7 +351,7 @@ class Paragraph(BlockToken):
     def read(cls, lines):
         line_buffer = [next(lines)]
         next_line = lines.peek()
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
+        breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
         while (next_line is not None and next_line.strip() != ''):
             # check if a paragraph-breaking token starts on the next line.
             # (except ThematicBreak, because these can be confused with Setext underlines.)
@@ -369,6 +384,8 @@ class BlockCode(BlockToken):
     Attributes:
         language (str): always the empty string.
     """
+    children: Sequence[span_token.RawText]
+
     repr_attributes = BlockToken.repr_attributes + ("language",)
 
     def __init__(self, lines):
@@ -426,6 +443,8 @@ class CodeFence(BlockToken):
     Attributes:
         language (str): language of code block (default to empty).
     """
+    children: Sequence[span_token.RawText]
+
     repr_attributes = BlockToken.repr_attributes + ("language",)
     pattern = re.compile(r'( {0,3})(`{3,}|~{3,})( *(\S*)[^\n]*)')
     _open_info = None
@@ -486,8 +505,12 @@ class List(BlockToken):
         loose (bool): whether the list is loose.
         start (NoneType or int): None if unordered, starting number if ordered.
     """
+    children: Sequence['ListItem']
+
+    nesting_container = True
+
     repr_attributes = BlockToken.repr_attributes + ("loose", "start")
-    pattern = re.compile(r' {0,3}(?:\d{0,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
+    pattern = re.compile(r' {0,3}(?:\d{1,9}[.)]|[+\-*])(?:[ \t]*$|[ \t]+)')
 
     def __init__(self, matches):
         self.children = [ListItem(*match) for match in matches]
@@ -558,8 +581,10 @@ class ListItem(BlockToken):
                        for continuation lines.
         loose (bool): whether the list is loose.
     """
+    children: Sequence[BlockToken]
+
     repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose")
-    pattern = re.compile(r'( {0,3})(\d{0,9}[.)]|[+\-*])($|\s+)')
+    pattern = re.compile(r'( {0,3})(\d{1,9}[.)]|[+\-*])($|\s+)')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
     def __init__(self, parse_buffer, indentation, prepend, leader, line_number=None):
@@ -647,7 +672,7 @@ class ListItem(BlockToken):
             line_buffer.append(content)
 
         # loop over the following lines, looking for the end of the list item
-        breaking_tokens = [t for t in _token_types if hasattr(t, 'check_interrupts_paragraph') and not t == List]
+        breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == List]
         newline_count = 0
         while True:
             if next_line is None:
@@ -686,7 +711,7 @@ class ListItem(BlockToken):
 
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line)
+        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
         return (parse_buffer, indentation, prepend, leader, start_line), next_marker
 
 
@@ -703,6 +728,8 @@ class Table(BlockToken):
         header: header row (TableRow).
         column_align (list): align options for each column (default to [None]).
     """
+    children: Iterable['TableRow']
+
     repr_attributes = BlockToken.repr_attributes + ("column_align",)
     interrupt_paragraph = True
 
@@ -793,6 +820,8 @@ class TableRow(BlockToken):
     Attributes:
         row_align (list): align options for each column (default to [None]).
     """
+    children: Iterable['TableCell']
+
     repr_attributes = BlockToken.repr_attributes + ("row_align",)
     # Note: Python regex requires fixed-length look-behind,
     # so we cannot use a more precise alternative: r"(?<!\\(?:\\\\)*)(\|)"
@@ -817,6 +846,8 @@ class TableCell(BlockToken):
     Attributes:
         align (bool): align option for current cell (default to None).
     """
+    children: Iterable[span_token.SpanToken]
+
     repr_attributes = BlockToken.repr_attributes + ("align",)
 
     def __init__(self, content, align=None, line_number=None):
@@ -1050,6 +1081,8 @@ class HtmlBlock(BlockToken):
     This is a leaf block token with a single child of type span_token.RawText,
     which holds the raw HTML content.
     """
+    children: Sequence[span_token.RawText]
+
     _end_cond = None
     multiblock = re.compile(r'<(pre|script|style|textarea)[ >\n]')
     predefined = re.compile(r'<\/?(.+?)(?:\/?>|[ \n])')
@@ -1129,5 +1162,5 @@ Deprecated name of the `HtmlBlock` class.
 """
 
 
-_token_types = []
+_token_types: list[type[BlockToken]] = []
 reset_tokens()

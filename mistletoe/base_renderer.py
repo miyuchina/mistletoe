@@ -169,7 +169,12 @@ class BaseRenderer(object):
         return self.render_inner(token)
 
     def render_line_break(self, token: span_token.LineBreak) -> str:
-        return self.render_inner(token)
+        """Render a line break using the target language's syntax.
+
+        Subclasses must implement this method because line breaks have no
+        children to render.
+        """
+        raise NotImplementedError('Subclasses must implement render_line_break.')
 
     def render_heading(self, token: block_token.Heading) -> str:
         return self.render_inner(token)

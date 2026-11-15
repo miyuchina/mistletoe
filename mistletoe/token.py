@@ -1,4 +1,7 @@
-from typing import Iterable, Optional
+from typing import TYPE_CHECKING, Iterable, Optional
+
+if TYPE_CHECKING:
+    from mistletoe.block_token import Document
 
 """
 Base token class.
@@ -10,7 +13,7 @@ Stores a reference to the current document (root) token during parsing.
 
 Footnotes are stored in the document token by accessing this reference.
 """
-_root_node = None
+_root_node: Optional["Document"] = None
 
 
 def _short_repr(value):
@@ -48,7 +51,7 @@ class Token:
     to a tuple containing the attribute names to be output.
     """
 
-    repr_attributes = ()
+    repr_attributes: tuple[str, ...] = ()
 
     def __repr__(self):
         output = "<{}.{}".format(
@@ -64,7 +67,7 @@ class Token:
                 output += " with {} children".format(count)
 
         if "content" in vars(self):
-            output += " content=" + _short_repr(self.content)
+            output += " content=" + _short_repr(getattr(self, 'content'))
 
         for attrname in self.repr_attributes:
             attrvalue = getattr(self, attrname)
@@ -77,22 +80,28 @@ class Token:
         """Returns the parent token, if there is any."""
         return getattr(self, '_parent', None)
 
-    @property
-    def children(self) -> Optional[Iterable['Token']]:
-        """
-        Returns the child (nested) tokens.
-        Returns `None` if the token is a leaf token.
-        """
-        return getattr(self, '_children', None)
+    if TYPE_CHECKING:
+        # Expose an attribute so concrete tokens can refine their child types
+        # without incompatible property setter overrides. At runtime, retain
+        # the property below to assign parent links and return None for leaves.
+        children: Optional[Iterable['Token']]
+    else:
+        @property
+        def children(self) -> Optional[Iterable['Token']]:
+            """
+            Returns the child (nested) tokens.
+            Returns `None` if the token is a leaf token.
+            """
+            return getattr(self, '_children', None)
 
-    @children.setter
-    def children(self, value: Iterable['Token']):
-        """"
-        Sets new child (nested) tokens.
-        Passed tokens are iterated and their ``parent`` property is set to
-        this token.
-        """
-        self._children = value
-        if value:
-            for child in value:
-                child._parent = self
+        @children.setter
+        def children(self, value: Iterable['Token']):
+            """"
+            Sets new child (nested) tokens.
+            Passed tokens are iterated and their ``parent`` property is set to
+            this token.
+            """
+            self._children = value
+            if value:
+                for child in value:
+                    child._parent = self

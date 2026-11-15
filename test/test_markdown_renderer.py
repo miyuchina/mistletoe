@@ -2,7 +2,7 @@ import unittest
 
 from mistletoe import block_token, span_token
 from mistletoe.block_token import Document
-from mistletoe.markdown_renderer import MarkdownRenderer
+from mistletoe.markdown_renderer import Fragment, MarkdownRenderer
 
 
 class TestMarkdownRenderer(unittest.TestCase):
@@ -11,6 +11,22 @@ class TestMarkdownRenderer(unittest.TestCase):
         """Parses the given markdown input and renders it back to markdown again."""
         with MarkdownRenderer(**rendererArgs) as renderer:
             return renderer.render(Document(input))
+
+    def test_infinite_line_length(self):
+        # Infinity selects word wrapping (including whitespace normalization),
+        # while retaining hard breaks and never wrapping for length.
+        with MarkdownRenderer(max_line_length=float("inf")) as renderer:
+            self.assertEqual(
+                renderer.render(Document(
+                    "> - one   two\n>   three\n>   four  \n>   five\n"
+                )),
+                "> - one two three four  \n>   five\n",
+            )
+            self.assertEqual(list(renderer.fragments_to_lines([
+                Fragment("one   two\nthree", wordwrap=True),
+                Fragment("  \n", hard_line_break=True),
+                Fragment("four"),
+            ], max_line_length=float("inf"))), ["one two three  ", "four"])
 
     def test_empty_document(self):
         input = []
