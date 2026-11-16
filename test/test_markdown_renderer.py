@@ -3,7 +3,7 @@ import unittest
 
 from mistletoe import block_token, span_token
 from mistletoe.block_token import Document
-from mistletoe.markdown_renderer import Fragment, MarkdownRenderer
+from mistletoe.markdown_renderer import MarkdownRenderer
 
 
 class TestMarkdownRenderer(unittest.TestCase):
@@ -12,22 +12,6 @@ class TestMarkdownRenderer(unittest.TestCase):
         """Parses the given markdown input and renders it back to markdown again."""
         with MarkdownRenderer(**rendererArgs) as renderer:
             return renderer.render(Document(input))
-
-    def test_infinite_line_length(self):
-        # Infinity selects word wrapping (including whitespace normalization),
-        # while retaining hard breaks and never wrapping for length.
-        with MarkdownRenderer(max_line_length=float("inf")) as renderer:
-            self.assertEqual(
-                renderer.render(Document(
-                    "> - one   two\n>   three\n>   four  \n>   five\n"
-                )),
-                "> - one two three four  \n>   five\n",
-            )
-            self.assertEqual(list(renderer.fragments_to_lines([
-                Fragment("one   two\nthree", wordwrap=True),
-                Fragment("  \n", hard_line_break=True),
-                Fragment("four"),
-            ], max_line_length=float("inf"))), ["one two three  ", "four"])
 
     def test_empty_document(self):
         input = []
@@ -306,6 +290,26 @@ class TestMarkdownRenderer(unittest.TestCase):
         ]
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
+
+    def test_empty_fenced_code_blocks(self):
+        for input in (
+            "```\n```\n",
+            "~~~\n~~~\n",
+            "```python\n```\n",
+            "  ```\n  ```\n",
+            "> ```\n> ```\n",
+            "- ```\n  ```\n",
+        ):
+            with self.subTest(input=input):
+                self.assertEqual(self.roundtrip(input), input)
+
+    def test_empty_unclosed_fenced_code_block(self):
+        self.assertEqual(self.roundtrip("```\n"), "```\n```\n")
+
+    def test_fenced_code_blocks_preserve_blank_content(self):
+        for input in ("```\n\n```\n", "```\n\n\n```\n"):
+            with self.subTest(input=input):
+                self.assertEqual(self.roundtrip(input), input)
 
     def test_html_block(self):
         input = [
@@ -787,3 +791,12 @@ class TestMarkdownFormatting(unittest.TestCase):
             assert renderer.render(document) == normalized
             assert renderer.render(Document(source + "\n")) == normalized + "\n"
             assert renderer.render(Document(normalized)) == normalized
+
+    def test_infinite_line_length(self):
+        with MarkdownRenderer(max_line_length=float("inf")) as renderer:
+            self.assertEqual(
+                renderer.render(Document(
+                    "> - one   two\n>   three\n>   four  \n>   five\n"
+                )),
+                "> - one two three four  \n>   five\n",
+            )

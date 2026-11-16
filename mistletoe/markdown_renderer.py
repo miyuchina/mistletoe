@@ -116,6 +116,9 @@ class MarkdownRenderer(BaseRenderer):
             max_line_length (float): if specified, the document is word wrapped to the
                 specified line length when rendered. Otherwise the formatting from the
                 original (parsed) document is retained as much as possible.
+                Use `float("inf")` to join soft lines and normalize spacing in
+                reflowable text without imposing a line-length limit. Hard line
+                breaks are preserved.
             normalize_whitespace (bool): if `False`, the renderer will try to preserve
                 as much whitespace as it currently can. For example, you can
                 use this flag to control whether to replace the original
@@ -325,9 +328,10 @@ class MarkdownRenderer(BaseRenderer):
     ) -> Iterable[str]:
         indentation = " " * token.indentation
         yield indentation + token.delimiter + token.info_string
-        yield from self.prefix_lines(
-            token.content[:-1].split("\n"), indentation
-        )
+        if token.content:
+            yield from self.prefix_lines(
+                token.content[:-1].split("\n"), indentation
+            )
         yield indentation + token.delimiter
 
     def render_list(
