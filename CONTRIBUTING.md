@@ -31,10 +31,24 @@ uv run ty check
 ```
 
 The type checkers run the static examples in `test/typing_markdown_renderer.py`
-and the library modules listed in `pyproject.toml`. All three target lists must
+and `test/typing_token_tree.py`, and the library modules listed in
+`pyproject.toml`. All three target lists must
 match. Imported modules still supply type information, but diagnostics outside
 the selected files are not part of the required CI checks. Add modules to all
 three lists as their remaining typing issues are resolved.
+
+Token classes accept a child-collection type parameter, for example
+`class CustomToken(Token[list[RawText]])`. The parameter is invariant because
+`children` is writable. Existing subclasses without type arguments retain broad
+defaults; use `Token[Any]`, `BlockToken[Any]` or `SpanToken[Any]` when accepting
+all collection specializations. Built-in tokens retain their declared iterable
+or sequence types; see `test/typing_token_tree.py` for examples.
+
+Child assignment stores the original collection and sets parent links by
+iterating it. It does not copy collections or track later mutations. Generators
+are consumed during assignment. Leaves return `None`; nonoptional child types
+describe initialized instances, whose constructors must assign children before
+reading them.
 
 To audit the whole library, including modules with known typing issues, run:
 

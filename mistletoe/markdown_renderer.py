@@ -4,7 +4,7 @@ Markdown renderer for mistletoe.
 
 import re
 from itertools import chain
-from typing import Iterable, Iterator, Optional, Sequence, Union
+from typing import Any, Iterable, Iterator, Optional, Sequence, Union
 
 from mistletoe import block_token, span_token, token
 from mistletoe.base_renderer import BaseRenderer
@@ -48,7 +48,7 @@ class LinkReferenceDefinition(span_token.SpanToken):
         self.label, self.dest, self.title, self.dest_type, self.title_delimiter = match
 
 
-class LinkReferenceDefinitionBlock(block_token.Footnote):
+class LinkReferenceDefinitionBlock(block_token.Footnote[Iterable[LinkReferenceDefinition]]):
     """
     A sequence of link reference definitions.
     This is a leaf block token. Its children are link reference definition tokens.
@@ -56,8 +56,6 @@ class LinkReferenceDefinitionBlock(block_token.Footnote):
     This class inherits from `Footnote` and modifies the behavior of the constructor,
     to keep the tokens in the AST.
     """
-
-    children: Iterable[LinkReferenceDefinition]
 
     def __new__(cls, *args, **kwargs):
         obj = object.__new__(cls)
@@ -138,7 +136,7 @@ class MarkdownRenderer(BaseRenderer):
         self.max_line_length = max_line_length
         self.normalize_whitespace = normalize_whitespace
 
-    def render(self, token: token.Token) -> str:
+    def render(self, token: token.Token[Any]) -> str:
         """
         Renders the tree of tokens rooted at the given token into markdown.
         """
@@ -381,7 +379,7 @@ class MarkdownRenderer(BaseRenderer):
     def embed_span(
         self,
         leader: Fragment,
-        tokens: Iterable[span_token.SpanToken],
+        tokens: Iterable[span_token.SpanToken[Any]],
         trailer: Optional[Fragment] = None,
     ) -> Iterable[Fragment]:
         """
@@ -393,7 +391,7 @@ class MarkdownRenderer(BaseRenderer):
         yield trailer or leader
 
     def blocks_to_lines(
-        self, tokens: Iterable[block_token.BlockToken], max_line_length: Optional[float]
+        self, tokens: Iterable[block_token.BlockToken[Any]], max_line_length: Optional[float]
     ) -> Iterable[str]:
         """
         Renders a sequence of block tokens into a sequence of lines.
@@ -404,7 +402,7 @@ class MarkdownRenderer(BaseRenderer):
             )
 
     def span_to_lines(
-        self, tokens: Iterable[span_token.SpanToken], max_line_length: Optional[float]
+        self, tokens: Iterable[span_token.SpanToken[Any]], max_line_length: Optional[float]
     ) -> Iterator[str]:
         """
         Renders a sequence of span (inline) tokens into a sequence of lines.
@@ -412,7 +410,7 @@ class MarkdownRenderer(BaseRenderer):
         fragments = self.make_fragments(tokens)
         return self.fragments_to_lines(fragments, max_line_length=max_line_length)
 
-    def make_fragments(self, tokens: Iterable[span_token.SpanToken]
+    def make_fragments(self, tokens: Iterable[span_token.SpanToken[Any]]
     ) -> Iterable[Fragment]:
         """
         Renders a sequence of span (inline) tokens into a sequence of Fragments.

@@ -558,6 +558,9 @@ wheels = [
 [[package]]
 name = "mistletoe"
 source = { editable = "." }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
 
 [package.optional-dependencies]
 pygments = [
@@ -591,7 +594,10 @@ typing = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "pygments", marker = "extra == 'pygments'", specifier = ">=2.11.2,<=2.16" }]
+requires-dist = [
+    { name = "pygments", marker = "extra == 'pygments'", specifier = ">=2.11.2,<=2.16" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13'", specifier = ">=4.12" },
+]
 provides-extras = ["pygments"]
 
 [package.metadata.requires-dev]

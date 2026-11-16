@@ -12,7 +12,7 @@ belong to downstream subclasses; None text is not supported by the standard
 fragment consumers and needs a separate sentinel/consumer contract downstream.
 """
 
-from typing import Iterable, Iterator, Match, Optional, Sequence, Union, assert_type
+from typing import Any, Iterable, Iterator, Match, Optional, Sequence, Union, assert_type
 
 from mistletoe import block_token, span_token, token
 from mistletoe.core_tokens import MatchObj
@@ -32,7 +32,7 @@ class PlaceholderFragment(Fragment):
 
 class CustomRenderer(MarkdownRenderer):
     def span_to_lines(
-        self, tokens: Iterable[span_token.SpanToken],
+        self, tokens: Iterable[span_token.SpanToken[Any]],
         max_line_length: Optional[float],
     ) -> Iterator[str]:
         return super().span_to_lines(tokens, max_line_length)
@@ -54,7 +54,7 @@ def renderer_examples(
     renderer: MarkdownRenderer,
     link: span_token.Link,
     image: span_token.Image,
-    block: block_token.BlockToken,
+    block: block_token.BlockToken[Any],
     leaf: span_token.RawText,
 ) -> None:
     assert_type(next(renderer.span_to_lines(link.children, None), ""), str)
@@ -64,7 +64,7 @@ def renderer_examples(
     assert_type(renderer.render_link_or_image(image, "source"), Iterable[Fragment])
     assert_type(block.line_number, Optional[int])
     assert_type(token._root_node, Optional[block_token.Document])
-    assert_type(leaf.children, Optional[Iterable[span_token.SpanToken]])
+    assert_type(leaf.children, Optional[Iterable[span_token.SpanToken[Any]]])
     assert_type(renderer.fragments_to_lines(
         [Fragment("text", wordwrap=True)], float("inf")), Iterator[str])
     renderer.span_to_lines(image.children, 80)
@@ -81,7 +81,7 @@ def renderer_examples(
 
 def parser_examples(
     match: MatchObj,
-    span_class: type[span_token.SpanToken],
+    span_class: type[span_token.SpanToken[Any]],
     document: block_token.Document,
     quote: block_token.Quote,
 ) -> None:
@@ -91,4 +91,4 @@ def parser_examples(
     assert_type(span_class.find("text"), Iterable[Union[Match[str], MatchObj]])
     assert_type(span_class.repr_attributes, tuple[str, ...])
     assert_type(document.footnotes, dict[str, tuple[str, str]])
-    assert_type(quote.children, Sequence[block_token.BlockToken])
+    assert_type(quote.children, Sequence[block_token.BlockToken[Any]])
