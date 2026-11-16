@@ -11,7 +11,8 @@ __all__ = ['GithubWiki', 'GithubWikiRenderer']
 
 
 class GithubWiki(SpanToken):
-    pattern = re.compile(r"\[\[ *(.+?) *\| *(.+?) *\]\]")
+    # In order to avoid inefficient backtracking, we use positive lookahead here.
+    pattern = re.compile(r"\[\[(?=[^\n|]*\|[^\n]*\]\]) *([^\n|]+?) *\| *([^\n]+?) *\]\]")
 
     def __init__(self, match):
         self.target = match.group(2)

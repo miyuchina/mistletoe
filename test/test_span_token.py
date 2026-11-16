@@ -35,6 +35,24 @@ class TestStrong(TestBranchToken):
         self._test_token(next(tokens), 'bar', children=True)
         self._test_token(next(tokens), '***baz', children=False)
 
+    def test_overlapping_delimiter_runs_do_not_crash(self):
+        tokens = list(span_token.tokenize_inner('**a****a*'))
+        self.assertEqual(len(tokens), 3)
+        self.assertIsInstance(tokens[0], span_token.Strong)
+        self.assertIsInstance(tokens[2], span_token.Emphasis)
+        self.mock.assert_any_call('*')
+
+    def test_issue_261_asterisk_sequences_do_not_crash(self):
+        cases = [
+            '**IKXZXPTB****AJFHV *Pbjovp*VSN*',
+            '**IKXZXPTB****AJFHV*Pbjovp*',
+            'Ch******her R**a, Bu*****ly In****nt, j**n ko***ob, '
+            'ji*yu, M**s, Ch****us, M*',
+        ]
+        for case in cases:
+            with self.subTest(case=case):
+                self.assertTrue(list(span_token.tokenize_inner(case)))
+
 
 class TestEmphasis(TestBranchToken):
     def test_parse(self):
@@ -212,3 +230,21 @@ class TestHtmlSpan(unittest.TestCase):
         tokens = span_token.tokenize_inner('< a><\nfoo><bar/ >\n<foo bar=baz\nbim!bop />')
         for t in tokens:
             self.assertNotIsInstance(t, span_token.HtmlSpan)
+
+
+class TestRemoveToken(unittest.TestCase):
+    def setUp(self):
+        self.addCleanup(span_token.reset_tokens)
+
+    def test_remove_token_from_processing(self):
+        # Check that token exists
+        self.assertIn(span_token.RawText, span_token._token_types)
+
+        span_token.remove_token(span_token.RawText)
+        self.assertNotIn(span_token.RawText, span_token._token_types)
+
+        # Check that second removal does not raise error (see issue #262)
+        try:
+            span_token.remove_token(span_token.RawText)
+        except ValueError:
+            self.fail("Idempotent removal failed")

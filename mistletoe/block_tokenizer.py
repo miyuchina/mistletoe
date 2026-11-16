@@ -2,11 +2,19 @@
 Block-level tokenizer for mistletoe.
 """
 
+import warnings
+
+
+# Lists and quotes share a limit so their combined depth stays safe to render.
+MAX_BLOCK_NESTING = 100
+
 
 class FileWrapper:
-    def __init__(self, lines, start_line=1):
+    def __init__(self, lines, start_line=1, depth=0, token_types=None):
         self.lines = lines if isinstance(lines, list) else list(lines)
         self.start_line = start_line
+        self.depth = depth
+        self.token_types = token_types
         self._index = -1
         self._anchor = 0
 
@@ -66,14 +74,23 @@ def tokenize(iterable, token_types):
     return make_tokens(tokenize_block(iterable, token_types))
 
 
-def tokenize_block(iterable, token_types, start_line=1):
+def tokenize_block(iterable, token_types, start_line=1, depth=0):
     """
     Returns a list of tuples (token_type, read_result, line_number).
 
     Footnotes are parsed here, but span-level parsing has not
     started yet.
     """
-    lines = FileWrapper(iterable, start_line=start_line)
+    if depth >= MAX_BLOCK_NESTING:
+        warnings.warn(
+            ('Maximum block nesting depth of {} reached; '
+             'further list and quote markers are treated as text.').format(MAX_BLOCK_NESTING),
+            UserWarning,
+            stacklevel=2,
+        )
+        token_types = [token_type for token_type in token_types
+                       if not getattr(token_type, 'nesting_container', False)]
+    lines = FileWrapper(iterable, start_line=start_line, depth=depth, token_types=token_types)
     parse_buffer = ParseBuffer()
     line = lines.peek()
     while line is not None:

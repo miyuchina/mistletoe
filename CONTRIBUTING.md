@@ -13,6 +13,44 @@ judgement when employing them.
 Refer to the [README][readme] for install instructions. Since you're going to
 mess with the code, it's preferred that you clone the repo directly.
 
+Install the development environment with [uv][uv]:
+
+```sh
+uv sync --dev --all-extras --locked
+```
+
+Run tests and checks through uv as well:
+
+```sh
+uv run pytest
+uv run python -m test.specification --ignore-known
+uv run flake8
+uv run mypy
+uv run pyright
+uv run ty check
+```
+
+The type checkers run the static examples in `test/typing_markdown_renderer.py`
+and the library modules listed in `pyproject.toml`. All three target lists must
+match. Imported modules still supply type information, but diagnostics outside
+the selected files are not part of the required CI checks. Add modules to all
+three lists as their remaining typing issues are resolved.
+
+To audit the whole library, including modules with known typing issues, run:
+
+```sh
+uv run mypy mistletoe test/typing_markdown_renderer.py
+uv run pyright mistletoe test/typing_markdown_renderer.py
+uv run ty check --config 'src.include = ["**"]' mistletoe test/typing_markdown_renderer.py
+```
+
+The ty audit overrides its configured include list to cover the whole library.
+These full-library audits currently report errors. The checker versions are
+pinned in the typing dependency group so upgrades can be reviewed explicitly.
+
+The previous `tox` configuration has been removed. This changes the contributor
+workflow but does not affect projects that install mistletoe as a dependency.
+
 ## Things you can do
 
 ### Introducing new features
@@ -113,3 +151,4 @@ I tweet [@mi_before_yu][twitter]. Also yell at me over [email][email].
 [conv-commits]: https://www.conventionalcommits.org/
 [black-formatter]: https://black.readthedocs.io/
 [flake8]: https://flake8.pycqa.org/
+[uv]: https://docs.astral.sh/uv/
