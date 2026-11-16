@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11,<4"
 license = "MIT"
 license-files = ["LICENSE"]
+dependencies = ["typing-extensions>=4.12; python_version < '3.13'"]
 
 authors = [
     {name = "Mi Yu", email = "hello@afteryu.me"},
@@ -93,6 +94,8 @@ files = [
     "mistletoe/latex_token.py",
     "mistletoe/span_tokenizer.py",
     "mistletoe/utils.py",
+    "mistletoe/token.py",
+    "test/typing_token_tree.py",
     "test/typing_markdown_renderer.py",
 ]
 
@@ -114,6 +117,8 @@ include = [
     "mistletoe/latex_token.py",
     "mistletoe/span_tokenizer.py",
     "mistletoe/utils.py",
+    "mistletoe/token.py",
+    "test/typing_token_tree.py",
     "test/typing_markdown_renderer.py",
 ]
 
@@ -135,5 +140,7 @@ include = [
     "mistletoe/latex_token.py",
     "mistletoe/span_tokenizer.py",
     "mistletoe/utils.py",
+    "mistletoe/token.py",
+    "test/typing_token_tree.py",
     "test/typing_markdown_renderer.py",
 ]

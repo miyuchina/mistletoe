@@ -3,8 +3,15 @@ Built-in block-level token classes.
 """
 
 import re
+import sys
 from itertools import zip_longest
-from typing import Iterable, Optional, Sequence, Union
+from typing import Any, Generic, Iterable, Optional, Sequence, Union
+
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
+
 import mistletoe.block_tokenizer as tokenizer
 from mistletoe import token, span_token
 from mistletoe.core_tokens import (
@@ -71,7 +78,14 @@ def reset_tokens():
     _token_types = [globals()[cls_name] for cls_name in __all__]
 
 
-class BlockToken(token.Token):
+Children = TypeVar(
+    "Children",
+    bound=Optional[Iterable[token.Token[Any]]],
+    default=Optional[Iterable["token.Token[Any]"]],
+)
+
+
+class BlockToken(token.Token[Children], Generic[Children]):
     """
     Base class for block-level tokens. Recursively parse inner tokens.
 
@@ -133,7 +147,7 @@ class BlockToken(token.Token):
         return line_buffer
 
 
-class Document(BlockToken):
+class Document(BlockToken[Iterable[BlockToken[Any]]]):
     """
     Document token.
     This is a container block token. Its children are block tokens - container or leaf ones.
@@ -141,7 +155,6 @@ class Document(BlockToken):
     Attributes:
         footnotes (dictionary): link reference definitions.
     """
-    children: Iterable[BlockToken]
 
     def __init__(self, lines: Union[str, Iterable[str]]):
         """
@@ -166,7 +179,7 @@ class Document(BlockToken):
         token._root_node = None
 
 
-class Heading(BlockToken):
+class Heading(BlockToken[Iterable[span_token.SpanToken[Any]]]):
     """
     ATX heading token. (["### some heading ###\\n"])
     This is a leaf block token. Its children are inline (span) tokens.
@@ -174,7 +187,6 @@ class Heading(BlockToken):
     Attributes:
         level (int): heading level.
     """
-    children: Iterable[span_token.SpanToken]
 
     repr_attributes = BlockToken.repr_attributes + ("level",)
     pattern = re.compile(r' {0,3}(#{1,6})(?:\n|\s+?(.*?)(\n|\s+?#+\s*?$))')
@@ -207,7 +219,7 @@ class Heading(BlockToken):
         return cls.level, cls.content, cls.closing_sequence
 
 
-class SetextHeading(BlockToken):
+class SetextHeading(BlockToken[Iterable[span_token.SpanToken[Any]]]):
     """
     Setext heading token.
     This is a leaf block token. Its children are inline (span) tokens.
@@ -217,7 +229,6 @@ class SetextHeading(BlockToken):
     Attributes:
         level (int): heading level.
     """
-    children: Iterable[span_token.SpanToken]
 
     repr_attributes = BlockToken.repr_attributes + ("level",)
 
@@ -236,12 +247,11 @@ class SetextHeading(BlockToken):
         raise NotImplementedError()
 
 
-class Quote(BlockToken):
+class Quote(BlockToken[Sequence[BlockToken[Any]]]):
     """
     Block quote token. (["> # heading\\n", "> paragraph\\n"])
     This is a container block token. Its children are block tokens - container or leaf ones.
     """
-    children: Sequence[BlockToken]
 
     nesting_container = True
 
@@ -323,12 +333,11 @@ class Quote(BlockToken):
         return '>' + ' ' * count + string[i:]
 
 
-class Paragraph(BlockToken):
+class Paragraph(BlockToken[Iterable[span_token.SpanToken[Any]]]):
     """
     Paragraph token. (["some\\n", "continuous\\n", "lines\\n"])
     This is a leaf block token. Its children are inline (span) tokens.
     """
-    children: Iterable[span_token.SpanToken]
 
     setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
     parse_setext = True  # can be disabled by Quote
@@ -376,7 +385,7 @@ class Paragraph(BlockToken):
         return cls.setext_pattern.match(line)
 
 
-class BlockCode(BlockToken):
+class BlockCode(BlockToken[Sequence[span_token.RawText]]):
     """
     Indented code block token.
     This is a leaf block token with a single child of type span_token.RawText.
@@ -384,7 +393,6 @@ class BlockCode(BlockToken):
     Attributes:
         language (str): always the empty string.
     """
-    children: Sequence[span_token.RawText]
 
     repr_attributes = BlockToken.repr_attributes + ("language",)
 
@@ -435,7 +443,7 @@ class BlockCode(BlockToken):
         return string
 
 
-class CodeFence(BlockToken):
+class CodeFence(BlockToken[Sequence[span_token.RawText]]):
     """
     Fenced code block token. (["```sh\\n", "rm -rf /", ..., "```"])
     This is a leaf block token with a single child of type span_token.RawText.
@@ -443,7 +451,6 @@ class CodeFence(BlockToken):
     Attributes:
         language (str): language of code block (default to empty).
     """
-    children: Sequence[span_token.RawText]
 
     repr_attributes = BlockToken.repr_attributes + ("language",)
     pattern = re.compile(r'( {0,3})(`{3,}|~{3,})( *(\S*)[^\n]*)')
@@ -496,7 +503,7 @@ class CodeFence(BlockToken):
         return line_buffer, cls._open_info
 
 
-class List(BlockToken):
+class List(BlockToken[Sequence['ListItem']]):
     """
     List token.
     This is a container block token. Its children are ListItem tokens.
@@ -505,7 +512,6 @@ class List(BlockToken):
         loose (bool): whether the list is loose.
         start (NoneType or int): None if unordered, starting number if ordered.
     """
-    children: Sequence['ListItem']
 
     nesting_container = True
 
@@ -567,7 +573,7 @@ class List(BlockToken):
         return leader[:-1].isdigit() and other[:-1].isdigit() and leader[-1] == other[-1]
 
 
-class ListItem(BlockToken):
+class ListItem(BlockToken[Sequence[BlockToken[Any]]]):
     """
     List item token.
     This is a container block token. Its children are block tokens - container or leaf ones.
@@ -581,7 +587,6 @@ class ListItem(BlockToken):
                        for continuation lines.
         loose (bool): whether the list is loose.
     """
-    children: Sequence[BlockToken]
 
     repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose")
     pattern = re.compile(r'( {0,3})(\d{1,9}[.)]|[+\-*])($|\s+)')
@@ -715,7 +720,7 @@ class ListItem(BlockToken):
         return (parse_buffer, indentation, prepend, leader, start_line), next_marker
 
 
-class Table(BlockToken):
+class Table(BlockToken[Iterable['TableRow']]):
     """
     Table token. See its GFM definition at <https://github.github.com/gfm/#tables-extension->.
     This is a container block token. Its children are TableRow tokens.
@@ -728,7 +733,6 @@ class Table(BlockToken):
         header: header row (TableRow).
         column_align (list): align options for each column (default to [None]).
     """
-    children: Iterable['TableRow']
 
     repr_attributes = BlockToken.repr_attributes + ("column_align",)
     interrupt_paragraph = True
@@ -810,7 +814,7 @@ class Table(BlockToken):
         return line_buffer, start_line
 
 
-class TableRow(BlockToken):
+class TableRow(BlockToken[Iterable['TableCell']]):
     """
     Table row token. Supports escaped pipes in table cells (for primary use within code spans).
     This is a container block token. Its children are TableCell tokens.
@@ -820,7 +824,6 @@ class TableRow(BlockToken):
     Attributes:
         row_align (list): align options for each column (default to [None]).
     """
-    children: Iterable['TableCell']
 
     repr_attributes = BlockToken.repr_attributes + ("row_align",)
     # Note: Python regex requires fixed-length look-behind,
@@ -836,7 +839,7 @@ class TableRow(BlockToken):
                          for cell, align in zip_longest(cells, self.row_align)]
 
 
-class TableCell(BlockToken):
+class TableCell(BlockToken[Iterable[span_token.SpanToken[Any]]]):
     """
     Table cell token.
     This is a leaf block token. Its children are inline (span) tokens.
@@ -846,7 +849,6 @@ class TableCell(BlockToken):
     Attributes:
         align (bool): align option for current cell (default to None).
     """
-    children: Iterable[span_token.SpanToken]
 
     repr_attributes = BlockToken.repr_attributes + ("align",)
 
@@ -856,7 +858,7 @@ class TableCell(BlockToken):
         super().__init__(content, span_token.tokenize_inner)
 
 
-class Footnote(BlockToken):
+class Footnote(BlockToken[Children], Generic[Children]):
     """
     Footnote token. One or more "link reference definitions" according to the CommonMark spec.
     This is a leaf block token without children.
@@ -1075,13 +1077,12 @@ class ThematicBreak(BlockToken):
         return [next(lines)]
 
 
-class HtmlBlock(BlockToken):
+class HtmlBlock(BlockToken[Sequence[span_token.RawText]]):
     """
     Block-level HTML token.
     This is a leaf block token with a single child of type span_token.RawText,
     which holds the raw HTML content.
     """
-    children: Sequence[span_token.RawText]
 
     _end_cond = None
     multiblock = re.compile(r'<(pre|script|style|textarea)[ >\n]')
@@ -1162,5 +1163,5 @@ Deprecated name of the `HtmlBlock` class.
 """
 
 
-_token_types: list[type[BlockToken]] = []
+_token_types: list[type[BlockToken[Any]]] = []
 reset_tokens()

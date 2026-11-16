@@ -1,4 +1,10 @@
-from typing import TYPE_CHECKING, Iterable, Optional
+import sys
+from typing import TYPE_CHECKING, Any, Generic, Iterable, Optional, Sized, cast
+
+if sys.version_info >= (3, 13):
+    from typing import TypeVar
+else:
+    from typing_extensions import TypeVar
 
 if TYPE_CHECKING:
     from mistletoe.block_token import Document
@@ -16,7 +22,14 @@ Footnotes are stored in the document token by accessing this reference.
 _root_node: Optional["Document"] = None
 
 
-def _short_repr(value):
+Children = TypeVar(
+    "Children",
+    bound=Optional[Iterable["Token[Any]"]],
+    default=Optional[Iterable["Token[Any]"]],
+)
+
+
+def _short_repr(value: object) -> str:
     """
     Return a shortened ``repr`` output of value for use in ``__repr__`` methods.
     """
@@ -29,7 +42,7 @@ def _short_repr(value):
     return repr(value)
 
 
-class Token:
+class Token(Generic[Children]):
     """
     Base token class.
 
@@ -53,14 +66,17 @@ class Token:
 
     repr_attributes: tuple[str, ...] = ()
 
-    def __repr__(self):
+    _children: Children
+    _parent: Optional["Token[Any]"]
+
+    def __repr__(self) -> str:
         output = "<{}.{}".format(
             self.__class__.__module__,
             self.__class__.__name__
         )
 
         if self.children is not None:
-            count = len(self.children)
+            count = len(cast(Sized, self.children))
             if count == 1:
                 output += " with 1 child"
             else:
@@ -76,32 +92,23 @@ class Token:
         return output
 
     @property
-    def parent(self) -> Optional['Token']:
+    def parent(self) -> Optional['Token[Any]']:
         """Returns the parent token, if there is any."""
         return getattr(self, '_parent', None)
 
-    if TYPE_CHECKING:
-        # Expose an attribute so concrete tokens can refine their child types
-        # without incompatible property setter overrides. At runtime, retain
-        # the property below to assign parent links and return None for leaves.
-        children: Optional[Iterable['Token']]
-    else:
-        @property
-        def children(self) -> Optional[Iterable['Token']]:
-            """
-            Returns the child (nested) tokens.
-            Returns `None` if the token is a leaf token.
-            """
-            return getattr(self, '_children', None)
+    @property
+    def children(self) -> Children:
+        """Return children, or None before assignment (including leaf tokens).
 
-        @children.setter
-        def children(self, value: Iterable['Token']):
-            """"
-            Sets new child (nested) tokens.
-            Passed tokens are iterated and their ``parent`` property is set to
-            this token.
-            """
-            self._children = value
-            if value:
-                for child in value:
-                    child._parent = self
+        Nonoptional specializations describe initialized instances. Keep the
+        supplied collection itself: assigning children also sets parent links,
+        but later mutations of that collection do not update those links.
+        """
+        return cast(Children, getattr(self, '_children', None))
+
+    @children.setter
+    def children(self, value: Children) -> None:
+        self._children = value
+        if value:
+            for child in cast(Iterable[Token[Any]], value):
+                child._parent = self
