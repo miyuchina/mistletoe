@@ -3,8 +3,13 @@
 include LICENSE
 include .flake8
 include uv.lock
+include *.md
 
 graft test
-recursive-include ** makefile
+graft docs
+graft resources
+graft scripts
+include makefile
+include mistletoe/contrib/Makefile
 
-global-exclude *~ *.py[cod] *.so __pycache__
+global-exclude *~ *.py[cod] *.so __pycache__ .gitignore
