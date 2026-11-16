@@ -35,7 +35,10 @@ def run_tests(test_entries, start=None, end=None,
 def run_test(test_entry, quiet=False):
     test_case = test_entry['markdown'].splitlines(keepends=True)
     try:
-        with HtmlRenderer(html_escape_double_quotes=True) as renderer:
+        with HtmlRenderer(
+            html_escape_double_quotes=True,
+            allowed_url_schemes=None,
+        ) as renderer:
             output = renderer.render(Document(test_case))
         success = test_entry['html'] == output
         if not success and not quiet:
