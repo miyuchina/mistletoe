@@ -10,6 +10,52 @@ from mistletoe import block_token, span_token, token
 from mistletoe.base_renderer import BaseRenderer
 
 
+_ASCII_PUNCTUATION = frozenset("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~")
+_ENTITY = re.compile(r"&(?:#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|[A-Za-z][A-Za-z0-9]*);")
+
+
+def _escape_link_part(text: str, special: Iterable[int]) -> str:
+    """
+    Escapes the destination or the title of a link, whose escapes and entities
+    were resolved when parsing. `special` holds the indices of characters that
+    have to be backslash escaped in this context, like unbalanced parentheses.
+    """
+    special = set(special)
+    out = []
+    for i, c in enumerate(text):
+        if c == "\\" and (i + 1 == len(text) or text[i + 1] in _ASCII_PUNCTUATION):
+            # a backslash at the end would escape the closing delimiter
+            out.append("\\\\")
+        elif i in special:
+            out.append("\\" + c)
+        elif c == "&" and _ENTITY.match(text, i):
+            out.append("&amp;")
+        else:
+            out.append(c)
+    return "".join(out)
+
+
+def _escape_link_dest(dest: str, angle_brackets: bool) -> str:
+    if angle_brackets:
+        return _escape_link_part(dest, (i for i, c in enumerate(dest) if c in "<>"))
+    unbalanced = []
+    opened = []
+    for i, c in enumerate(dest):
+        if c == "(":
+            opened.append(i)
+        elif c == ")":
+            if opened:
+                opened.pop()
+            else:
+                unbalanced.append(i)
+    return _escape_link_part(dest, unbalanced + opened)
+
+
+def _escape_link_title(title: str, delimiter: str) -> str:
+    chars = "()" if delimiter == "(" else delimiter
+    return _escape_link_part(title, (i for i, c in enumerate(title) if c in chars))
+
+
 class BlankLine(block_token.BlockToken):
     """
     Blank line token. Represents a single blank line.
@@ -193,14 +239,22 @@ class MarkdownRenderer(BaseRenderer):
 
         if token.dest_type == "uri" or token.dest_type == "angle_uri":
             # "[" description "](" dest_part [" " title] ")"
+            # the parser resolved the escapes and entities of the destination
+            # and the title, so they are escaped again here.
+            angle_brackets = token.dest_type == "angle_uri" or any(
+                c.isspace() or ord(c) < 0x20 for c in target
+            )
+            dest_part = _escape_link_dest(target, angle_brackets)
             yield Fragment("(")
-            dest_part = "<" + target + ">" if token.dest_type == "angle_uri" else target
-            yield Fragment(dest_part)
+            yield Fragment("<" + dest_part + ">" if angle_brackets else dest_part)
             if token.title:
                 yield from (
                     Fragment(" ", wordwrap=True),
                     Fragment(token.title_delimiter),
-                    Fragment(token.title, wordwrap=True),
+                    Fragment(
+                        _escape_link_title(token.title, token.title_delimiter),
+                        wordwrap=True,
+                    ),
                     Fragment(
                         ")" if token.title_delimiter == "(" else token.title_delimiter,
                     ),
