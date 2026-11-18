@@ -10,6 +10,16 @@ class Program(block_token.BlockToken):
     def __init__(self, lines):
         self.children = span_token.tokenize_inner(''.join([line.strip() for line in lines]))
 
+    @classmethod
+    def start(cls, line):
+        # A program is not delimited: from the tokenizer's point of view,
+        # any line can start one, and the program runs to the end of input.
+        return True
+
+    @classmethod
+    def read(cls, lines):
+        return list(lines)
+
 
 class Expr(span_token.SpanToken):
     @classmethod
@@ -69,12 +79,13 @@ class Procedure:
 class Scheme(BaseRenderer):
     def __init__(self):
         self.render_map = {
+            "Document": self.render_document,
             "Program": self.render_program,
             "Expr": self.render_expr,
             "Number": self.render_number,
             "Variable": self.render_variable,
         }
-        block_token._token_types = []
+        block_token._token_types = [Program]
         span_token._token_types = [Expr, Number, Variable, Whitespace]
 
         self.env = ChainMap({
@@ -104,6 +115,14 @@ class Scheme(BaseRenderer):
             "list": lambda *args: reduce(lambda x, y: (y, x), map(self.render, reversed(args)), None),
             "display": lambda *args: print(*map(self.render, args)),
         })
+
+    def render_document(self, token):
+        # A document is a sequence of programs. Unlike rendering a Program
+        # directly, document rendering must return text (the CLI writes the
+        # result of markdown() to stdout), so the value of the last program
+        # is rendered as text.
+        result = self.render_inner(token)
+        return '' if result is None else str(result)
 
     def render_program(self, token):
         return self.render_inner(token)
