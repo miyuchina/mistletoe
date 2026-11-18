@@ -127,6 +127,54 @@ in order to create the output in the desired format.
 Creating a custom token and renderer
 ------------------------------------
 
+### Parsing configuration and concurrency
+
+Renderer extras configure that renderer alone. They become active when entering
+the renderer's context, rather than when constructing it. Each renderer starts
+from the current context's ambient token registrations plus its own extras;
+it does not inherit the extras of an enclosing renderer.
+
+`renderer.parse(source)` returns a `Document` parsed with that renderer's tokens,
+without requiring a context manager. Inside the renderer's own context, it also
+honors token registrations made since entering. Under another renderer's context,
+it temporarily selects its own configuration and restores the caller's on return
+or failure. It does not invoke custom `__enter__` or `__exit__` hooks.
+
+The functions `block_token.add_token`, `span_token.add_token`, `remove_token`,
+and `reset_tokens` update only the current context. Inside a renderer context,
+they configure that active scope. Outside one, they configure ambient defaults
+for subsequent parsing and renderer construction in that context. Exiting a
+renderer restores the preceding registrations rather than resetting to built-in
+defaults. `reset_tokens` explicitly selects the built-in defaults in the current
+scope. Token ordering and the functions' arguments are unchanged.
+
+Custom token method signatures are unchanged. Stateful tokens must keep their
+temporary parsing data local to a call or in context-local storage, rather than
+writing class attributes between `start` and `read`. Direct mutation of the private
+`_token_types` lists or `_root_node` global is no longer supported.
+
+Use a separate renderer instance per thread or asyncio task for overlapping
+operations. Both `renderer.parse(source)` and `with renderer:` can use the
+instance's stack for restoring parser settings. `renderer.render(document)`
+can also update instance state, such as a list of collected headings. The
+instance requirement applies even when all concurrent calls only parse.
+Custom tokens and renderers must keep their own mutable state isolated.
+
+### Migrating custom renderer constructors
+
+Custom renderers that call `add_token` or `remove_token` in `__init__` must no
+longer rely on renderer exit to undo those calls. Previously, exiting a renderer
+reset the global token lists. Constructor calls made outside a renderer context
+now change the current context's ambient defaults, and those changes persist
+after the renderer exits. If another renderer is active during construction,
+the calls instead change that enclosing renderer's active scope.
+
+To add tokens for your renderer alone, pass them as extras to
+`super().__init__(*extras)`. To exclude built-in tokens, declare an
+`_excluded_tokens` tuple on the renderer class, as `MarkdownRenderer` does for
+`Footnote`. These settings belong to the renderer and do not alter ambient
+defaults or an enclosing renderer's configuration.
+
 Here's an example of how to add GitHub-style wiki links to the parsing process,
 and provide a renderer for this new token.
 

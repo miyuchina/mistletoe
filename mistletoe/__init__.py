@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     )
 
 from mistletoe.base_renderer import BaseRenderer
-from mistletoe.block_token import Document
+from mistletoe.block_token import Document  # noqa: F401
 from mistletoe.html_renderer import HtmlRenderer
 # import the old name for backwards compatibility:
 from mistletoe.html_renderer import HTMLRenderer  # noqa: F401
@@ -34,4 +34,4 @@ def markdown(iterable: Union[str, Iterable[str]], renderer: Callable[..., BaseRe
     are automatically (and temporarily) added to the parsing process.
     """
     with renderer() as r:
-        return r.render(Document(iterable))
+        return r.render(r.parse(iterable))
