@@ -68,6 +68,27 @@ class LinkReferenceDefinitionBlock(block_token.Footnote):
         self.children = [LinkReferenceDefinition(match) for match in matches]
 
 
+class CharacterReference(span_token.SpanToken):
+    """
+    Entity or numeric character reference, like `&amp;` or `&#42;`.
+    This is an inline token without children.
+
+    The parser decodes these into plain text, so rendering the text again could turn
+    a character like `&#42;` into markdown syntax. This token keeps the reference
+    as it was written instead.
+
+    Attributes:
+        content (str): the reference as written.
+    """
+
+    pattern = re.compile(
+        r"&(?:#[0-9]{1,7}|#[xX][0-9a-fA-F]{1,6}|[a-zA-Z][a-zA-Z0-9]{0,31});"
+    )
+    parse_inner = False
+    parse_group = 0
+    precedence = 2
+
+
 class Fragment:
     """
     Markdown fragment. Used when rendering trees of span tokens into flat sequences.
@@ -124,6 +145,7 @@ class MarkdownRenderer(BaseRenderer):
                 (
                     block_token.HtmlBlock,
                     span_token.HtmlSpan,
+                    CharacterReference,
                     BlankLine,
                     LinkReferenceDefinitionBlock,
                 ),
@@ -234,6 +256,9 @@ class MarkdownRenderer(BaseRenderer):
         )
 
     def render_html_span(self, token: span_token.HtmlSpan) -> Iterable[Fragment]:
+        yield Fragment(token.content)
+
+    def render_character_reference(self, token: CharacterReference) -> Iterable[Fragment]:
         yield Fragment(token.content)
 
     def render_link_reference_definition(

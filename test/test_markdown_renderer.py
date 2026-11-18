@@ -55,6 +55,20 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
+    def test_character_references(self):
+        input = [
+            "&#42;not emphasized&#42; &copy; &amp;amp; \\&amp;\n",
+            "foo&#10;&#10;bar &#x2A; AT&T &unknown;\n",
+            "# heading &#35;\n",
+        ]
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
+
+    def test_character_references_with_word_wrap(self):
+        input = ["&#42;one&#42; two three four five six seven\n"]
+        output = self.roundtrip(input, max_line_length=10)
+        self.assertEqual(output, "&#42;one&#42;\ntwo three\nfour five\nsix seven\n")
+
     def test_html_span(self):
         input = ["so <p>hear ye</p><h1>\n"]
         output = self.roundtrip(input)
