@@ -326,19 +326,22 @@ class HtmlSpan(SpanToken):
     def find(cls, string):
         # No comment can end after the last "-->". Bounding the comment search
         # there keeps each unclosed "<!--" from rescanning the rest of the string.
+        # Tag matches stop at the next comment so a body full of "<?" is not scanned.
         comment_end = string.rfind('-->') + 3
-        tag = cls._tag_pattern.search(string)
-        comment = cls._comment_pattern.search(string, 0, comment_end)
-        while tag or comment:
-            if comment is None or (tag is not None and tag.start() < comment.start()):
+        start = 0
+        length = len(string)
+        while start <= length:
+            comment = cls._comment_pattern.search(string, start, comment_end)
+            tag_end = comment.start() if comment is not None else length
+            tag = cls._tag_pattern.search(string, start, tag_end)
+            if tag is not None:
                 match = tag
-            else:
+            elif comment is not None:
                 match = comment
+            else:
+                return
             yield match
-            if tag is not None and tag.start() < match.end():
-                tag = cls._tag_pattern.search(string, match.end())
-            if comment is not None and comment.start() < match.end():
-                comment = cls._comment_pattern.search(string, match.end(), comment_end)
+            start = match.end()
 
 
 HTMLSpan = HtmlSpan
