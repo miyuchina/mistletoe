@@ -13,6 +13,23 @@ judgement when employing them.
 Refer to the [README][readme] for install instructions. Since you're going to
 mess with the code, it's preferred that you clone the repo directly.
 
+Install the development environment with [uv][uv]:
+
+```sh
+uv sync --dev --all-extras --locked
+```
+
+Run tests and checks through uv as well:
+
+```sh
+uv run pytest
+uv run python -m test.specification --ignore-known
+uv run flake8
+```
+
+The previous `tox` configuration has been removed. This changes the contributor
+workflow but does not affect projects that install mistletoe as a dependency.
+
 ## Things you can do
 
 ### Introducing new features
@@ -113,3 +130,4 @@ I tweet [@mi_before_yu][twitter]. Also yell at me over [email][email].
 [conv-commits]: https://www.conventionalcommits.org/
 [black-formatter]: https://black.readthedocs.io/
 [flake8]: https://flake8.pycqa.org/
+[uv]: https://docs.astral.sh/uv/
