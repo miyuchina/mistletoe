@@ -831,7 +831,12 @@ class TableRow(BlockToken):
     def __init__(self, line, row_align=None, line_number=None):
         self.row_align = row_align or [None]
         self.line_number = line_number
-        cells = filter(None, self.split_pattern.split(line.strip()))
+        cells = self.split_pattern.split(line.strip())
+        # drop only the outer pipes' empty strings; keep empty cells such as in `|a||c|`
+        if cells[0] == '':
+            cells = cells[1:]
+        if cells and cells[-1] == '':
+            cells = cells[:-1]
         self.children = [TableCell(self.escaped_pipe_pattern.sub('\\1|', cell.strip()) if cell else '', align, line_number)
                          for cell, align in zip_longest(cells, self.row_align)]
 
