@@ -51,10 +51,17 @@ lint = [
 coverage = [
     "coveralls",
 ]
+typing = [
+    "mypy==2.4.1",
+    "pyright==1.1.414",
+    "ty==0.0.101",
+    "types-Pygments",
+]
 dev = [
     {include-group = "test"},
     {include-group = "lint"},
     {include-group = "coverage"},
+    {include-group = "typing"},
 ]
 
 [tool.setuptools]
@@ -66,3 +73,67 @@ version = {attr = "mistletoe.__version__"}
 
 [tool.setuptools.package-data]
 mistletoe = ["py.typed"]
+
+# Keep these three target lists in sync. Expand them as modules become clean
+# under all three checkers; imported modules still provide type information.
+[tool.mypy]
+python_version = "3.11"
+follow_imports = "silent"
+files = [
+    "mistletoe/__init__.py",
+    "mistletoe/__main__.py",
+    "mistletoe/ast_renderer.py",
+    "mistletoe/base_renderer.py",
+    "mistletoe/block_tokenizer.py",
+    "mistletoe/contrib/__init__.py",
+    "mistletoe/contrib/github_wiki.py",
+    "mistletoe/contrib/md2jira.py",
+    "mistletoe/contrib/pygments_renderer.py",
+    "mistletoe/contrib/toc_renderer.py",
+    "mistletoe/latex_token.py",
+    "mistletoe/span_tokenizer.py",
+    "mistletoe/utils.py",
+    "test/typing_markdown_renderer.py",
+]
+
+[tool.pyright]
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"
+include = [
+    "mistletoe/__init__.py",
+    "mistletoe/__main__.py",
+    "mistletoe/ast_renderer.py",
+    "mistletoe/base_renderer.py",
+    "mistletoe/block_tokenizer.py",
+    "mistletoe/contrib/__init__.py",
+    "mistletoe/contrib/github_wiki.py",
+    "mistletoe/contrib/md2jira.py",
+    "mistletoe/contrib/pygments_renderer.py",
+    "mistletoe/contrib/toc_renderer.py",
+    "mistletoe/latex_token.py",
+    "mistletoe/span_tokenizer.py",
+    "mistletoe/utils.py",
+    "test/typing_markdown_renderer.py",
+]
+
+[tool.ty.environment]
+python-version = "3.11"
+
+[tool.ty.src]
+include = [
+    "mistletoe/__init__.py",
+    "mistletoe/__main__.py",
+    "mistletoe/ast_renderer.py",
+    "mistletoe/base_renderer.py",
+    "mistletoe/block_tokenizer.py",
+    "mistletoe/contrib/__init__.py",
+    "mistletoe/contrib/github_wiki.py",
+    "mistletoe/contrib/md2jira.py",
+    "mistletoe/contrib/pygments_renderer.py",
+    "mistletoe/contrib/toc_renderer.py",
+    "mistletoe/latex_token.py",
+    "mistletoe/span_tokenizer.py",
+    "mistletoe/utils.py",
+    "test/typing_markdown_renderer.py",
+]

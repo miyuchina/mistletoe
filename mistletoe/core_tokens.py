@@ -23,7 +23,7 @@ punctuation = set.union(
 code_pattern = re.compile(r"(?<!\\|`)(?:\\\\)*(`+)(?!`)(.+?)(?<!`)\1(?!`)", re.DOTALL)
 
 
-_code_matches = []
+_code_matches: list[re.Match[str]] = []
 
 
 def find_core_tokens(string, root):
@@ -492,6 +492,13 @@ class Delimiter:
 
 
 class MatchObj:
+    # Populated by the parser for the corresponding emphasis or link match.
+    type: str
+    delimiter: str
+    dest_type: str
+    title_delimiter: str | None
+    label: str
+
     def __init__(self, start, end, *fields):
         self._start = start
         self._end = end
