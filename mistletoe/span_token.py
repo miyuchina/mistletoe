@@ -15,7 +15,7 @@ __all__ = ['EscapeSequence', 'Strikethrough', 'AutoLink', 'CoreTokens',
            'InlineCode', 'LineBreak', 'RawText']
 
 
-def tokenize_inner(content):
+def tokenize_inner(content, inside_tasklist=False):
     """
     A wrapper around span_tokenizer.tokenize. Pass in all span-level token
     constructors as arguments to span_tokenizer.tokenize.
@@ -28,6 +28,7 @@ def tokenize_inner(content):
 
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
+    add_token(TaskListMarker, position=0) if inside_tasklist else None
     return tokenizer.tokenize(content, _token_types)
 
 
@@ -261,6 +262,14 @@ class RawText(SpanToken):
     """
     def __init__(self, content):
         self.content = content
+
+
+class TaskListMarker(RawText):
+    pattern = re.compile(r'^(\[[xX ]\])')
+
+    @classmethod
+    def from_parent(cls, content):
+        return RawText(content)
 
 
 _tags = {'address', 'article', 'aside', 'base', 'basefont', 'blockquote',

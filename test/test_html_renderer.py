@@ -215,3 +215,8 @@ class TestHtmlRendererTasklist(TestCase):
         token = Document(["- [x] task\n", "\n", "[x]: /url\n"])
         expected = '<ul>\n<li><input type="checkbox" checked/> task</li>\n</ul>\n'
         self.assertEqual(self.renderer.render(token), expected)
+
+    def test_task_list_with_loose_paragraphs(self):
+        token = Document(["- [x] foo\n", "\n", "- [ ] bar\n"])
+        expected = '<ul>\n<li>\n<p><input type="checkbox" checked/> foo</p>\n</li>\n<li>\n<p><input type="checkbox" /> bar</p>\n</li>\n</ul>\n'
+        self.assertEqual(self.renderer.render(token), expected)

@@ -95,21 +95,13 @@ def tokenize_block(iterable, token_types, start_line=1, depth=0, tasklist=None):
     lines = FileWrapper(iterable, start_line=start_line, depth=depth, token_types=token_types)
     parse_buffer = ParseBuffer()
     line = lines.peek()
-    use_tasklist = True  # This should only apply to the first Paragraph seen inside ListItem
     while line is not None:
         for token_type in token_types:
             if token_type.start(line):
                 line_number = lines.line_number() + 1
-                if token_type is block_token.Paragraph and tasklist and use_tasklist:
-                    result = token_type.read(lines, tasklist=tasklist)
-                else:
-                    result = token_type.read(lines)
+                result = token_type.read(lines)
                 if result is not None:
-                    if use_tasklist and tasklist:
-                        parse_buffer.append((token_type, result, line_number, tasklist))
-                        use_tasklist = False
-                    else:
-                        parse_buffer.append((token_type, result, line_number, None))
+                    parse_buffer.append((token_type, result, line_number, tasklist))
                     break
         else:  # unmatched newlines
             next(lines)

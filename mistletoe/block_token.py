@@ -113,8 +113,8 @@ class BlockToken(token.Token):
     """
     repr_attributes = ("line_number",)
 
-    def __init__(self, lines, tokenize_func):
-        self.children = tokenize_func(lines)
+    def __init__(self, lines, tokenize_func, inside_tasklist=False):
+        self.children = tokenize_func(lines, inside_tasklist)
 
     def __contains__(self, text):
         return any(text in child for child in self.children)
@@ -319,6 +319,7 @@ class Paragraph(BlockToken):
     """
     setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
     parse_setext = True  # can be disabled by Quote
+    tasklist_pattern = re.compile(r'^(\[[xX ]\])\s+')
 
     def __new__(cls, lines, _=None):
         if not isinstance(lines, list):
@@ -326,35 +327,19 @@ class Paragraph(BlockToken):
             return lines
         return super().__new__(cls)
 
-    def __init__(self, lines, tasklist=None):
-        if tasklist is None:
-            content = ''.join([line.lstrip() for line in lines]).strip()
-        else:
-            content = ''
-            tasklist_seen = False
-            for line in lines:
-                if tasklist_seen:
-                    content = content + line.lstrip()
-                else:  # Prevents issue of whitespace characters being removed
-                    content = content + line
-                    tasklist_seen = True
-            content = content.rstrip()
+    def __init__(self, lines, inside_tasklist=False):
+        content = ''.join([line.lstrip() for line in lines])
+        if self.tasklist_pattern.fullmatch(content) is None:  # Keeps new lines and other whitespace with tasklist markers
+            content = content.strip()
 
-        super().__init__(content, span_token.tokenize_inner)
-
-        if tasklist is not None:
-            if len(self.children) >= 1 and isinstance(self.children[0], span_token.RawText):
-                raw = self.children[0]
-                raw.content = tasklist + raw.content
-            else:
-                self.children.insert(0, span_token.RawText(tasklist))
+        super().__init__(content, span_token.tokenize_inner, inside_tasklist=inside_tasklist)
 
     @staticmethod
     def start(line):
         return line.strip() != ''
 
     @classmethod
-    def read(cls, lines, tasklist=None):
+    def read(cls, lines):
         line_buffer = [next(lines)]
         next_line = lines.peek()
         breaking_tokens = [t for t in lines.token_types if hasattr(t, 'check_interrupts_paragraph') and not t == ThematicBreak]
@@ -367,8 +352,6 @@ class Paragraph(BlockToken):
             # check if the paragraph being parsed is in fact a Setext heading
             if cls.parse_setext and cls.is_setext_heading(next_line):
                 line_buffer.append(next(lines))
-                if tasklist and len(line_buffer) > 0:
-                    line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
                 return SetextHeading(line_buffer)
 
             # finish the check for paragraph-breaking tokens with the special case: ThematicBreak
@@ -378,8 +361,6 @@ class Paragraph(BlockToken):
             line_buffer.append(next(lines))
             next_line = lines.peek()
 
-        if tasklist and len(line_buffer) > 0:
-            line_buffer[0] = line_buffer[0].replace(tasklist, "", 1)
         return line_buffer
 
     @classmethod
@@ -599,7 +580,11 @@ class ListItem(BlockToken):
         self.indentation = indentation
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
-        self.tasklist_marker = tasklist_marker
+        self.tasklist_marker = (
+            tasklist_marker
+            if len(self.children) > 0 and isinstance(self.children[0], Paragraph)
+            else None
+        )
         self.loose = parse_buffer.loose
 
     def is_checked(self):

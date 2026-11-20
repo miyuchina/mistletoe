@@ -5,6 +5,8 @@ Inline tokenizer for mistletoe.
 import html
 import re
 
+from mistletoe import span_token
+
 
 # replacement for html._charref which matches only entitydefs ending with ';',
 # according to the CommonMark spec.
@@ -82,9 +84,10 @@ def make_tokens(tokens, start, end, string, fallback_token):
             if t is not None:
                 result.append(t)
         t = token.make()
-        if t is not None:
+        if t is not None and not isinstance(t, span_token.TaskListMarker):
             result.append(t)
-        prev_end = token.end
+        if not isinstance(t, span_token.TaskListMarker):
+            prev_end = token.end
     if prev_end != end:
         result.append(fallback_token(html.unescape(string[prev_end:end])))
     return result

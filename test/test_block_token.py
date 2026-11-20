@@ -329,11 +329,15 @@ class TestListItem(unittest.TestCase):
         self.assertTrue(list_item_checked.is_checked())
         self.assertEqual(list_item_checked.tasklist_marker, '[x]')
 
-    def test_task_list_with_setext(self):
+    def test_setext_not_parsed_into_task_list(self):
         lines = ["- [x] heading\n", "  ---\n"]
 
-        list_item_checked = block_token.tokenize(lines)[0].children[0]
+        tokenized_lines = block_token.tokenize(lines)
+        list_item = tokenized_lines[0].children[0]
+        setext = list_item.children[0]
 
+        self.assertIsNone(list_item.tasklist_marker)
+        self.assertEqual(setext.children[0].content, "[x] heading")        
 
     def test_tabbed_list_items(self):
         # according to the CommonMark spec:
