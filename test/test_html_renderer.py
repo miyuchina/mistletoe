@@ -1,4 +1,6 @@
 from unittest import TestCase, mock
+import pytest
+
 from mistletoe import Document
 from mistletoe.html_renderer import HtmlRenderer
 
@@ -144,31 +146,29 @@ class TestHtmlRenderer(TestRenderer):
         self._test_token('Document', '', footnotes={})
 
 
-class TestHtmlRendererEscaping(TestCase):
-    def test_escape_html_text(self):
-        for escape_double, escape_single, expected in [
-            (False, False, '" and \''),
-            (False, True, '" and &#x27;'),
-            (True, False, '&quot; and \''),
-            (True, True, '&quot; and &#x27;'),
-        ]:
-            with self.subTest(escape_double=escape_double,
-                              escape_single=escape_single):
-                with HtmlRenderer(html_escape_double_quotes=escape_double,
-                                  html_escape_single_quotes=escape_single) as renderer:
-                    self.assertEqual(renderer.escape_html_text('" and \''), expected)
+class TestHtmlRendererEscaping:
+    @pytest.mark.parametrize('escape_double, escape_single, expected', [
+        (False, False, '" and \''),
+        (False, True, '" and &#x27;'),
+        (True, False, '&quot; and \''),
+        (True, True, '&quot; and &#x27;'),
+    ], ids=['neither', 'single', 'double', 'both'])
+    def test_escape_html_text(self, escape_double, escape_single, expected):
+        with HtmlRenderer(html_escape_double_quotes=escape_double,
+                          html_escape_single_quotes=escape_single) as renderer:
+            assert renderer.escape_html_text('" and \'') == expected
 
     def test_unprocessed_html_tokens_escaped(self):
         with HtmlRenderer(process_html_tokens=False) as renderer:
             token = Document(['<div><br> as plain text</div>\n'])
             expected = '<p>&lt;div&gt;&lt;br&gt; as plain text&lt;/div&gt;</p>\n'
-            self.assertEqual(renderer.render(token), expected)
+            assert renderer.render(token) == expected
 
     def test_email_autolink_escapes_href(self):
         with HtmlRenderer() as renderer:
             output = renderer.render(Document('<a&b@example.com>'))
         expected = '<p><a href="mailto:a&amp;b@example.com">a&amp;b@example.com</a></p>\n'
-        self.assertEqual(output, expected)
+        assert output == expected
 
 
 class TestHtmlRendererFootnotes(TestCase):

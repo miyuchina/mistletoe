@@ -1,9 +1,26 @@
 import unittest
 from unittest.mock import patch
+
+import pytest
+
 from mistletoe import span_token
 
 
-class TestBranchToken(unittest.TestCase):
+class BranchTokenAssertions:
+    def _test_parse(self, token_cls, raw, arg, **kwargs):
+        token = next(iter(span_token.tokenize_inner(raw)))
+        assert isinstance(token, token_cls)
+        self._test_token(token, arg, **kwargs)
+        return token
+
+    def _test_token(self, token, arg, children=True, **kwargs):
+        for attr, value in kwargs.items():
+            assert getattr(token, attr) == value
+        if children:
+            self.mock.assert_any_call(arg)
+
+
+class TestBranchToken(BranchTokenAssertions, unittest.TestCase):
     def setUp(self):
         self.addCleanup(lambda: span_token._token_types.__setitem__(-1, span_token.RawText))
         patcher = patch('mistletoe.span_token.RawText')
@@ -11,20 +28,18 @@ class TestBranchToken(unittest.TestCase):
         span_token._token_types[-1] = self.mock
         self.addCleanup(patcher.stop)
 
-    def _test_parse(self, token_cls, raw, arg, **kwargs):
-        token = next(iter(span_token.tokenize_inner(raw)))
-        self.assertIsInstance(token, token_cls)
-        self._test_token(token, arg, **kwargs)
-        return token
 
-    def _test_token(self, token, arg, children=True, **kwargs):
-        for attr, value in kwargs.items():
-            self.assertEqual(getattr(token, attr), value)
-        if children:
-            self.mock.assert_any_call(arg)
+class TestStrong(BranchTokenAssertions):
+    @pytest.fixture(autouse=True)
+    def mock_raw_text(self):
+        raw_text = span_token._token_types[-1]
+        with patch('mistletoe.span_token.RawText') as self.mock:
+            span_token._token_types[-1] = self.mock
+            try:
+                yield
+            finally:
+                span_token._token_types[-1] = raw_text
 
-
-class TestStrong(TestBranchToken):
     def test_parse(self):
         self._test_parse(span_token.Strong, '**some text**', 'some text')
         self._test_parse(span_token.Strong, '__some text__', 'some text')
@@ -37,21 +52,19 @@ class TestStrong(TestBranchToken):
 
     def test_overlapping_delimiter_runs_do_not_crash(self):
         tokens = list(span_token.tokenize_inner('**a****a*'))
-        self.assertEqual(len(tokens), 3)
-        self.assertIsInstance(tokens[0], span_token.Strong)
-        self.assertIsInstance(tokens[2], span_token.Emphasis)
+        assert len(tokens) == 3
+        assert isinstance(tokens[0], span_token.Strong)
+        assert isinstance(tokens[2], span_token.Emphasis)
         self.mock.assert_any_call('*')
 
-    def test_issue_261_asterisk_sequences_do_not_crash(self):
-        cases = [
-            '**IKXZXPTB****AJFHV *Pbjovp*VSN*',
-            '**IKXZXPTB****AJFHV*Pbjovp*',
-            'Ch******her R**a, Bu*****ly In****nt, j**n ko***ob, '
-            'ji*yu, M**s, Ch****us, M*',
-        ]
-        for case in cases:
-            with self.subTest(case=case):
-                self.assertTrue(list(span_token.tokenize_inner(case)))
+    @pytest.mark.parametrize('case', [
+        '**IKXZXPTB****AJFHV *Pbjovp*VSN*',
+        '**IKXZXPTB****AJFHV*Pbjovp*',
+        'Ch******her R**a, Bu*****ly In****nt, j**n ko***ob, '
+        'ji*yu, M**s, Ch****us, M*',
+    ], ids=['spaced-emphasis', 'adjacent-emphasis', 'mixed-runs'])
+    def test_issue_261_asterisk_sequences_do_not_crash(self, case):
+        assert list(span_token.tokenize_inner(case))
 
 
 class TestEmphasis(TestBranchToken):

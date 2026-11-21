@@ -1,4 +1,4 @@
-from unittest import TestCase
+import pytest
 
 from mistletoe import Document
 from mistletoe.base_renderer import BaseRenderer
@@ -14,20 +14,20 @@ LINE_BREAKS = [
 ]
 
 
-class TestBaseRenderer(TestCase):
-    def test_line_break_requires_override(self):
-        for name, markdown, _expected in LINE_BREAKS:
-            with self.subTest(name=name):
-                with BaseRenderer() as renderer:
-                    with self.assertRaisesRegex(NotImplementedError, 'render_line_break'):
-                        renderer.render(Document(markdown))
+class TestBaseRenderer:
+    @pytest.mark.parametrize('markdown', [case[1] for case in LINE_BREAKS],
+                             ids=[case[0] for case in LINE_BREAKS])
+    def test_line_break_requires_override(self, markdown):
+        with BaseRenderer() as renderer:
+            with pytest.raises(NotImplementedError, match='render_line_break'):
+                renderer.render(Document(markdown))
 
-    def test_line_break_override(self):
+    @pytest.mark.parametrize('markdown, expected', [case[1:] for case in LINE_BREAKS],
+                             ids=[case[0] for case in LINE_BREAKS])
+    def test_line_break_override(self, markdown, expected):
         class TextRenderer(BaseRenderer):
             def render_line_break(self, token):
                 return '\n'
 
-        for name, markdown, expected in LINE_BREAKS:
-            with self.subTest(name=name):
-                with TextRenderer() as renderer:
-                    self.assertEqual(renderer.render(Document(markdown)), expected)
+        with TextRenderer() as renderer:
+            assert renderer.render(Document(markdown)) == expected

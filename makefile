@@ -6,11 +6,11 @@ run:
 	${PYTHON_EXEC} -m mistletoe
 
 test:
-	${PYTHON_EXEC} -m unittest
+	${PYTHON_EXEC} -m pytest
 
 coverage:
 	. venv/bin/activate && \
-	${PYTHON_EXEC} -m coverage run -m unittest && \
+	${PYTHON_EXEC} -m coverage run -m pytest && \
 	coverage report && \
 	deactivate
 
