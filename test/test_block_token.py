@@ -477,6 +477,11 @@ class TestTable(unittest.TestCase):
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.Paragraph)
 
+    def test_empty_cells_without_spaces(self):
+        html = markdown('|a||c|\n|-|-|-|\n|1||3|\n')
+        self.assertIn('<th align="left"></th>\n<th align="left">c</th>', html)
+        self.assertIn('<td align="left"></td>\n<td align="left">3</td>', html)
+
     def test_interrupt_paragraph_option(self):
         lines = [
             'Paragraph 1\n',
