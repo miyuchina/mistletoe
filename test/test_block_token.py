@@ -663,7 +663,7 @@ class TestDocument(unittest.TestCase):
             ("a\r", True),
             ("a\nb", False),
             ("a\nb\n", True),
-            ("", False),
+            ("", True),
             ("\n", True),
             ("\n\n", True),
         ]
@@ -687,7 +687,8 @@ class TestDocument(unittest.TestCase):
         self.assertTrue(block_token.Document(["b", "a\r"]).trailing_newline)
         self.assertTrue(block_token.Document(["b\n", "a\r\n"]).trailing_newline)
         self.assertFalse(block_token.Document(["a\r", "b"]).trailing_newline)
-        self.assertFalse(block_token.Document(iter(())).trailing_newline)
+        self.assertTrue(block_token.Document(iter(())).trailing_newline)
+        self.assertTrue(block_token.Document([]).trailing_newline)
 
         # A one-shot generator is consumed once; internal lines still gain LF.
         def lines():

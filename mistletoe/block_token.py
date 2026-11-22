@@ -141,8 +141,9 @@ class Document(BlockToken):
     Attributes:
         footnotes (dictionary): link reference definitions.
         trailing_newline (bool): whether the last original input line ended
-            with LF, CRLF, or CR before normalization. ``False`` for empty
-            input and when the last line has no terminator.
+            with LF, CRLF, or CR before normalization. ``False`` when the
+            last line has no terminator. ``True`` for empty input, so a
+            document built up from ``Document([])`` keeps its final newline.
     """
     children: Iterable[BlockToken]
 
@@ -173,7 +174,7 @@ class Document(BlockToken):
                 line = '{}\n'.format(line)
             normalized_lines.append(line)
         self.trailing_newline = (
-            last_line is not None and last_line.endswith(('\n', '\r'))
+            last_line is None or last_line.endswith(('\n', '\r'))
         )
         self.footnotes: dict[str, tuple[str, str]] = {}
         self.line_number = 1
