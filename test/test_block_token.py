@@ -477,6 +477,11 @@ class TestTable(unittest.TestCase):
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.Paragraph)
 
+    def test_empty_cells_without_spaces(self):
+        html = markdown('|a||c|\n|-|-|-|\n|1||3|\n')
+        self.assertIn('<th align="left"></th>\n<th align="left">c</th>', html)
+        self.assertIn('<td align="left"></td>\n<td align="left">3</td>', html)
+
     def test_interrupt_paragraph_option(self):
         lines = [
             'Paragraph 1\n',
@@ -515,6 +520,13 @@ class TestTableRow(unittest.TestCase):
             token = block_token.TableRow(line, [None, None], 10)
             self.assertEqual(token.row_align, [None, None])
             mock.assert_has_calls([call('cell 1', None, 10), call('', None, 10)])
+
+    def test_empty_cell_without_spaces(self):
+        with patch('mistletoe.block_token.TableCell') as mock:
+            line = '|cell 1||cell 3|\n'
+            block_token.TableRow(line, [None, None, None], 10)
+            self.assertEqual(mock.call_args_list,
+                             [call('cell 1', None, 10), call('', None, 10), call('cell 3', None, 10)])
 
     def test_escaped_pipe_in_cell(self):
         with patch('mistletoe.block_token.TableCell') as mock:
