@@ -279,6 +279,110 @@ For more info, take a look at the `base_renderer` module in mistletoe.
 The docstrings might give you a more granular idea of customizing mistletoe
 to your needs.
 
+### A new block-level token
+
+Block-level tokens are set up differently from span-level ones. Instead of
+a single regex, the block tokenizer reads the document line by line and asks
+each block token class two questions:
+
+1. `start(line)`: does a token of this kind begin on this line?
+2. `read(lines)`: if it does, consume the lines that belong to the token
+   and return whatever the constructor needs.
+
+The value returned by `read` is passed unchanged to the token's
+constructor. If `read` returns `None`, the result is ignored, and the token
+class is responsible for moving the iterator back to where it was
+(see `FileWrapper.get_pos` and `FileWrapper.set_pos` in `block_tokenizer`).
+
+This applies to tokens that the tokenizer should find on its own. Tokens that
+are only ever created by another token don't need to implement `start` and
+`read`: for example, `ListItem` instances are created by `List`, `TableCell`
+instances by `TableRow`, and `SetextHeading` instances by `Paragraph.read`.
+
+As an example, here is a token for "admonition" blocks such as:
+
+```markdown
+:::warning
+Don't *panic*.
+:::
+```
+
+```python
+import re
+
+from mistletoe import block_token
+from mistletoe.block_token import BlockToken
+
+
+class Admonition(BlockToken):
+    pattern = re.compile(r' {0,3}:::[ \t]*(\w+)[ \t]*$')
+
+    def __init__(self, result):
+        self.kind, lines = result
+        # parse the inner lines as block-level tokens
+        super().__init__(lines, block_token.tokenize)
+
+    @classmethod
+    def start(cls, line):
+        return cls.pattern.match(line) is not None
+
+    @classmethod
+    def read(cls, lines):
+        kind = cls.pattern.match(next(lines)).group(1)
+        content = []
+        for line in lines:
+            if line.strip() == ':::':
+                break
+            content.append(line)
+        return kind, content
+```
+
+`BlockToken.__init__` takes the lines and a tokenize function and sets
+`self.children` to the result. Here the content is parsed with
+`block_token.tokenize`, so the admonition can contain paragraphs, lists and
+any other block. A leaf block whose content is inline text, like `Heading`,
+would pass a string and `span_token.tokenize_inner` instead.
+
+Block tokens are tried in order, and the first one whose `start` returns
+`True` wins. A renderer adds its custom tokens to the front of the list,
+so they take priority over the built-in ones.
+
+By default, a new block token cannot interrupt a paragraph: in the example
+above, `:::warning` on the line right after a paragraph is read as part of
+that paragraph. To change this, add a `check_interrupts_paragraph(cls, lines)`
+classmethod which returns `True` when `lines.peek()` starts the token
+(see `Heading` and `Quote` in `block_token` for examples).
+
+The renderer looks the same as for span tokens. Since the children are
+block tokens, join them with newlines rather than using `render_inner`:
+
+```python
+from mistletoe import Document
+from mistletoe.html_renderer import HtmlRenderer
+
+
+class AdmonitionRenderer(HtmlRenderer):
+    def __init__(self):
+        super().__init__(Admonition)
+
+    def render_admonition(self, token):
+        template = '<div class="admonition {kind}">\n{inner}\n</div>'
+        inner = '\n'.join([self.render(child) for child in token.children])
+        return template.format(kind=token.kind, inner=inner)
+
+
+with AdmonitionRenderer() as renderer:
+    print(renderer.render(Document(':::warning\nDon\'t *panic*.\n:::\n')))
+```
+
+Output:
+
+```html
+<div class="admonition warning">
+<p>Don't <em>panic</em>.</p>
+</div>
+```
+
 Markdown to Markdown parsing-and-rendering
 ------------------------------------------
 
