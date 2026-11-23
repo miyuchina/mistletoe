@@ -158,7 +158,8 @@ class Strikethrough(SpanToken):
     """
     children: Iterable[SpanToken]
 
-    pattern = re.compile(r"(?<!\\)(?:\\\\)*~~(.+?)~~", re.DOTALL)
+    # The positive lookahead quickly rejects positions that cannot start a match.
+    pattern = re.compile(r"(?=[\\~])(?<!\\)(?:\\\\)*~~(.+?)~~", re.DOTALL)
 
 
 class Image(SpanToken):
@@ -220,7 +221,8 @@ class AutoLink(SpanToken):
     children: Sequence['RawText']
 
     repr_attributes = ("target", "mailto")
-    pattern = re.compile(r"(?<!\\)(?:\\\\)*<(([A-Za-z][A-Za-z0-9+.-]{1,31}):[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
+    # The positive lookahead quickly rejects positions that cannot start a match.
+    pattern = re.compile(r"(?=[\\<])(?<!\\)(?:\\\\)*<(([A-Za-z][A-Za-z0-9+.-]{1,31}):[^ <>]*?|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*)>")
     parse_inner = False
 
     def __init__(self, match):
@@ -262,7 +264,8 @@ class LineBreak(SpanToken):
         soft (bool): true if this is a soft line break.
     """
     repr_attributes = ("soft",)
-    pattern = re.compile(r'( *|\\)\n')
+    # The positive lookahead quickly rejects positions that cannot start a match.
+    pattern = re.compile(r'(?=[ \\\n])( *|\\)\n')
     parse_inner = False
     parse_group = 0
 
