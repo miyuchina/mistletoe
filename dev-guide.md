@@ -294,6 +294,12 @@ constructor. If `read` returns `None`, the result is ignored, and the token
 class is responsible for moving the iterator back to where it was
 (see `FileWrapper.get_pos` and `FileWrapper.set_pos` in `block_tokenizer`).
 
+This applies to tokens that the tokenizer should find on its own. Tokens that
+are only ever created by another token don't need to implement `start` and
+`read`: for example, `ListItem` instances are created by `List`, `TableCell`
+instances by `TableRow`, and `SetextHeading` by `Paragraph` (when it finds an
+underline).
+
 As an example, here is a token for "admonition" blocks such as:
 
 ```markdown
