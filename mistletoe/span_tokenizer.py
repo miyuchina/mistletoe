@@ -16,10 +16,14 @@ _markdown_charref = re.compile(r'&(#[0-9]{1,7};'
 _stdlib_charref: re.Pattern[str] = getattr(html, '_charref')
 
 
-def tokenize(string, token_types):
+def tokenize(string, token_types, inside_tasklist=False):
     try:
         setattr(html, '_charref', _markdown_charref)
         *token_types, fallback_token = token_types
+        token_types.insert(0, span_token.TaskListMarker) \
+            if span_token.TaskListMarker not in token_types and inside_tasklist \
+            else None
+
         tokens = find_tokens(string, token_types, fallback_token)
         token_buffer = []
         if tokens:

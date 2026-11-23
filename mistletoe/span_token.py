@@ -29,7 +29,6 @@ def tokenize_inner(content, inside_tasklist=False):
 
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
-    add_token(TaskListMarker, position=0) if inside_tasklist else None
     return tokenizer.tokenize(content, _token_types)
 
 
