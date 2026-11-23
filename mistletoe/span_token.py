@@ -29,7 +29,7 @@ def tokenize_inner(content, inside_tasklist=False):
 
     See also: span_tokenizer.tokenize, block_token.tokenize.
     """
-    return tokenizer.tokenize(content, _token_types)
+    return tokenizer.tokenize(content, _token_types, inside_tasklist=inside_tasklist)
 
 
 def add_token(token_cls, position=1):
