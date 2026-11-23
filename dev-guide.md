@@ -297,8 +297,7 @@ class is responsible for moving the iterator back to where it was
 This applies to tokens that the tokenizer should find on its own. Tokens that
 are only ever created by another token don't need to implement `start` and
 `read`: for example, `ListItem` instances are created by `List`, `TableCell`
-instances by `TableRow`, and `SetextHeading` by `Paragraph` (when it finds an
-underline).
+instances by `TableRow`, and `SetextHeading` instances by `Paragraph.read`.
 
 As an example, here is a token for "admonition" blocks such as:
 
