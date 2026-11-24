@@ -3,6 +3,8 @@ Base class for renderers.
 """
 
 import re
+from typing import Iterable, Union
+from mistletoe._state import active_renderer
 from mistletoe import block_token, span_token
 
 
@@ -41,6 +43,7 @@ class BaseRenderer(object):
         _extras (list): a list of custom tokens to be added to the
                         parsing process.
     """
+    _excluded_tokens = ()
     _parse_name = re.compile(r"([A-Z][a-z]+|[A-Z]+(?![a-z]))")
 
     def __init__(self, *extras, **kwargs):
@@ -68,18 +71,26 @@ class BaseRenderer(object):
             'ThematicBreak':  self.render_thematic_break,
             'LineBreak':      self.render_line_break,
             'Document':       self.render_document,
+            'BlankLine':      self.render_blank_line,
+            'LinkReferenceDefinitionBlock': self.render_link_reference_definition_block,
         }
         self._extras = extras
+        self._context_tokens = []
+        block_types = [t for t in block_token._token_types.defaults()
+                       if t not in self._excluded_tokens]
+        span_types = [t for t in span_token._token_types.defaults()
+                      if t not in self._excluded_tokens]
 
         for token in extras:
             if issubclass(token, span_token.SpanToken):
-                token_module = span_token
+                span_types.insert(1, token)
             else:
-                token_module = block_token
-            token_module.add_token(token)
+                block_types.insert(0, token)
             render_func = getattr(self, self._cls_to_func(token.__name__))
             self.render_map[token.__name__] = render_func
 
+        self._block_tokens = tuple(block_types)
+        self._span_tokens = tuple(span_types)
         self.footnotes = {}
 
     def render(self, token):
@@ -111,18 +122,40 @@ class BaseRenderer(object):
 
     def __enter__(self):
         """
-        Make renderer classes into context managers.
+        Activate this renderer's parsing configuration in the current context.
         """
+        self._context_tokens.append((
+            block_token._token_types.active.set(self._block_tokens),
+            span_token._token_types.active.set(self._span_tokens),
+            active_renderer.set(self),
+        ))
         return self
 
     def __exit__(self, exception_type, exception_val, traceback):
         """
-        Make renderer classes into context managers.
-
-        Reset block_token._token_types and span_token._token_types.
+        Restore the enclosing parsing configuration, even after an exception.
         """
-        block_token.reset_tokens()
-        span_token.reset_tokens()
+        block_state, span_state, renderer_state = self._context_tokens.pop()
+        active_renderer.reset(renderer_state)
+        span_token._token_types.active.reset(span_state)
+        block_token._token_types.active.reset(block_state)
+
+    def parse(self, source: Union[str, Iterable[str]]) -> block_token.Document:
+        """Parse input using this renderer's tokens, inside or outside a context.
+
+        Explicit parsing also works while a different renderer is active. If
+        this renderer is already active, context-local token registrations are
+        honored. Parsing does not change the caller's renderer configuration.
+        """
+        if active_renderer.get() is self:
+            return block_token.Document(source)
+        # Use the base context methods directly: parsing should not run a
+        # subclass's unrelated resource acquisition or cleanup hooks.
+        BaseRenderer.__enter__(self)
+        try:
+            return block_token.Document(source)
+        finally:
+            BaseRenderer.__exit__(self, None, None, None)
 
     @classmethod
     def _cls_to_func(cls, cls_name):
@@ -205,6 +238,14 @@ class BaseRenderer(object):
 
     def render_thematic_break(self, token: block_token.ThematicBreak) -> str:
         return self.render_inner(token)
+
+    def render_blank_line(self, token) -> str:
+        """Ignore whitespace retained in a Markdown-preserving document."""
+        return ''
+
+    def render_link_reference_definition_block(self, token) -> str:
+        """Definitions are already available through the document's footnotes."""
+        return ''
 
     def render_document(self, token: block_token.Document) -> str:
         return self.render_inner(token)

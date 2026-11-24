@@ -63,7 +63,7 @@ def renderer_examples(
     assert_type(renderer.render_link_or_image(link, "target"), Iterable[Fragment])
     assert_type(renderer.render_link_or_image(image, "source"), Iterable[Fragment])
     assert_type(block.line_number, Optional[int])
-    assert_type(token._root_node, Optional[block_token.Document])
+    assert_type(token._root_node.get(), Optional[block_token.Document])
     assert_type(leaf.children, Optional[Iterable[span_token.SpanToken]])
     assert_type(renderer.fragments_to_lines(
         [Fragment("text", wordwrap=True)], float("inf")), Iterator[str])

@@ -137,26 +137,49 @@ with open('dev-guide.md', 'r') as fin:
         print(renderer.render(mistletoe.Document(fin)))
 ```
 
-Finally, here's how you would manually specify extra tokens via a renderer.
-In the following example, we use `HtmlRenderer` to render
-the AST. The renderer itself adds `HtmlBlock` and `HtmlSpan` tokens to the parsing
-process. The result should be equal to the output obtained from
-the first example above.
+Use `HtmlRenderer` directly when you want to work with the document tree before
+rendering it. By default, the renderer adds `HtmlBlock` and `HtmlSpan` to the
+parser. To add a custom token, pass its class as a positional argument to a
+renderer that provides the matching render method. Those extra tokens apply
+only to that renderer.
 
 ```python
 from mistletoe import Document, HtmlRenderer
 
 with open('foo.md', 'r') as fin:
-    with HtmlRenderer() as renderer:     # or: `with HtmlRenderer(AnotherToken1, AnotherToken2) as renderer:`
+    with HtmlRenderer() as renderer:
         doc = Document(fin)              # parse the lines into AST
         rendered = renderer.render(doc)  # render the AST
-        # internal lists of tokens to be parsed are automatically reset when exiting this `with` block
 ```
 
-**Important**: As can be seen from the example above,
-the parsing phase is currently tightly connected with initiation
-and closing of a renderer. Therefore, you should never call `Document(...)`
-outside of a `with ... as renderer` block, unless you know what you are doing.
+`Document(...)` uses the innermost active renderer's parsing rules. Outside a
+renderer context, it uses the default token types and any tokens registered in
+the current context. Constructing a renderer does not activate its parsing rules.
+
+Use `renderer.parse(source)` to explicitly select a renderer's parsing rules.
+This works inside or outside a `with` block, including when another renderer is
+active:
+
+```python
+from mistletoe import HtmlRenderer
+from mistletoe.markdown_renderer import MarkdownRenderer
+
+html = HtmlRenderer()
+with MarkdownRenderer() as markdown:
+    html_output = html.render(html.parse('a\n\nb'))
+    markdown_output = markdown.render(markdown.parse('a\n\nb'))
+```
+
+**Use a separate renderer instance per thread or asyncio task** for overlapping
+operations. Custom tokens and renderers must also keep their mutable state
+isolated.
+
+Within one thread or task, nested renderer contexts restore the enclosing
+configuration, including after exceptions.
+
+**Migration for custom renderers:** If your renderer calls `add_token` or
+`remove_token` in `__init__`, see
+[Migrating custom renderer constructors](dev-guide.md#migrating-custom-renderer-constructors).
 
 ### Usage from command-line
 
