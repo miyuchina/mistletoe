@@ -57,6 +57,7 @@ in the [contrib][contrib] package:
 * HTML with TOC (for programmatical use) (_toc\_renderer.py_)
 * HTML with support for GitHub wiki links (_github\_wiki.py_)
 * Jira Markdown (_jira\_renderer.py_)
+* Telegraph DOM nodes (_telegraph.py_)
 * XWiki Syntax (_xwiki20\_renderer.py_)
 * Scheme (_scheme.py_)
 
