@@ -8,6 +8,8 @@ __all__ = ['html_renderer', 'ast_renderer', 'block_token', 'block_tokenizer',
 
 from typing import TYPE_CHECKING, Callable, Iterable, Union
 
+# Expose the __all__ submodules to type checkers. At runtime, wildcard imports
+# can load these submodules on demand.
 if TYPE_CHECKING:
     from mistletoe import (
         ast_renderer as ast_renderer,

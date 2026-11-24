@@ -74,8 +74,7 @@ version = {attr = "mistletoe.__version__"}
 [tool.setuptools.package-data]
 mistletoe = ["py.typed"]
 
-# Keep these three target lists in sync. Expand them as modules become clean
-# under all three checkers; imported modules still provide type information.
+# Keep the three type checkers' target lists in sync.
 [tool.mypy]
 python_version = "3.11"
 follow_imports = "silent"
