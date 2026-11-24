@@ -326,22 +326,49 @@ class HtmlSpan(SpanToken):
     def find(cls, string):
         # No comment can end after the last "-->". Bounding the comment search
         # there keeps each unclosed "<!--" from rescanning the rest of the string.
-        # Tag matches stop at the next comment so a body full of "<?" is not scanned.
+        # Tags may start only before the next comment, but may end after its
+        # opener (quoted attributes, PIs, CDATA). Comment bodies are not scanned
+        # for tags, and a pending comment match is reused across earlier tags.
         comment_end = string.rfind('-->') + 3
         start = 0
         length = len(string)
+        pending_comment = None
         while start <= length:
-            comment = cls._comment_pattern.search(string, start, comment_end)
-            tag_end = comment.start() if comment is not None else length
-            tag = cls._tag_pattern.search(string, start, tag_end)
+            if pending_comment is None or pending_comment.start() < start:
+                pending_comment = cls._comment_pattern.search(
+                    string, start, comment_end)
+            tag_limit = (pending_comment.start()
+                         if pending_comment is not None else length)
+            # Contained tags: do not scan into the next comment body.
+            tag = cls._tag_pattern.search(string, start, tag_limit)
+            # Spanning tags: a tag may start before the comment opener and end
+            # after it (quoted attributes, PIs, CDATA). Try only at '<' before
+            # the comment so comment bodies full of "<?" stay unscanned.
+            if tag is None and pending_comment is not None:
+                pos = start
+                while pos < tag_limit:
+                    lt = string.find('<', pos, tag_limit)
+                    if lt == -1:
+                        break
+                    candidate = cls._tag_pattern.match(string, lt)
+                    if (candidate is not None
+                            and candidate.end() > pending_comment.start()):
+                        tag = candidate
+                        break
+                    pos = lt + 1
             if tag is not None:
-                match = tag
-            elif comment is not None:
-                match = comment
-            else:
-                return
-            yield match
-            start = match.end()
+                yield tag
+                start = tag.end()
+                if (pending_comment is not None
+                        and start > pending_comment.start()):
+                    pending_comment = None
+                continue
+            if pending_comment is not None:
+                yield pending_comment
+                start = pending_comment.end()
+                pending_comment = None
+                continue
+            return
 
 
 HTMLSpan = HtmlSpan

@@ -1,7 +1,6 @@
 import time
 import unittest
 from unittest.mock import patch
-from parameterized import parameterized
 from mistletoe import span_token
 
 
@@ -233,18 +232,20 @@ class TestHtmlSpan(unittest.TestCase):
         for t in tokens:
             self.assertNotIsInstance(t, span_token.HtmlSpan)
 
-    @parameterized.expand([
-        ('<!-->',),
-        ('<!--->',),
-        ('<!---->',),
-        ('<!-- a -- b - c -->',),
-        ('<!--- a --->',),
-        ('<!-- line\nbreak -->',),
-    ])
-    def test_parse_comment(self, comment):
-        tokens = span_token.tokenize_inner('foo ' + comment + ' bar')
-        self.assertIsInstance(tokens[1], span_token.HtmlSpan)
-        self.assertEqual(comment, tokens[1].content)
+    def test_parse_comment(self):
+        comments = [
+            '<!-->',
+            '<!--->',
+            '<!---->',
+            '<!-- a -- b - c -->',
+            '<!--- a --->',
+            '<!-- line\nbreak -->',
+        ]
+        for comment in comments:
+            with self.subTest(comment=comment):
+                tokens = span_token.tokenize_inner('foo ' + comment + ' bar')
+                self.assertIsInstance(tokens[1], span_token.HtmlSpan)
+                self.assertEqual(comment, tokens[1].content)
 
     def test_parse_comment_ends_at_first_closing_sequence(self):
         tokens = span_token.tokenize_inner('<!--> foo -->')
@@ -265,6 +266,18 @@ class TestHtmlSpan(unittest.TestCase):
         self.assertLess(time.perf_counter() - started, 0.5)
         html = [token.content for token in tokens if isinstance(token, span_token.HtmlSpan)]
         self.assertEqual([comment, '<em>', '</em>'], html)
+
+    def test_comment_text_inside_a_quoted_attribute_stays_in_the_tag(self):
+        raw = 'foo <a title="<!-- x -->">link</a>'
+        tokens = span_token.tokenize_inner(raw)
+        html = [token.content for token in tokens if isinstance(token, span_token.HtmlSpan)]
+        self.assertEqual(['<a title="<!-- x -->">', '</a>'], html)
+
+    def test_comment_opener_inside_a_processing_instruction_stays_in_the_pi(self):
+        raw = 'foo <? a <!-- ?> b -->'
+        tokens = span_token.tokenize_inner(raw)
+        html = [token.content for token in tokens if isinstance(token, span_token.HtmlSpan)]
+        self.assertEqual(['<? a <!-- ?>'], html)
 
 
 class TestRemoveToken(unittest.TestCase):
