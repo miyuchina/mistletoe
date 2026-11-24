@@ -200,7 +200,10 @@ class MarkdownRenderer(BaseRenderer):
                 yield from (
                     Fragment(" ", wordwrap=True),
                     Fragment(token.title_delimiter),
-                    Fragment(token.title, wordwrap=True),
+                    Fragment(
+                        self._escape_title(token.title, token.title_delimiter),
+                        wordwrap=True,
+                    ),
                     Fragment(
                         ")" if token.title_delimiter == "(" else token.title_delimiter,
                     ),
@@ -219,6 +222,17 @@ class MarkdownRenderer(BaseRenderer):
         else:
             # "[" description "]"
             pass
+
+    @staticmethod
+    def _escape_title(title: str, delimiter: str) -> str:
+        """
+        Escapes backslashes and the title delimiters in a link or image title.
+
+        The parser removes the escapes from the title (e.g. `"say \\"hi\\""`),
+        so they have to be added back, or the title would end too early.
+        """
+        specials = {"\\", "(", ")"} if delimiter == "(" else {"\\", delimiter}
+        return "".join("\\" + c if c in specials else c for c in title)
 
     def render_auto_link(self, token: span_token.AutoLink) -> Iterable[Fragment]:
         yield Fragment("<" + token.children[0].content + ">")

@@ -90,6 +90,16 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
+    def test_link_titles_with_escapes(self):
+        input = [
+            '[a](#url "say \\"hi\\"")\n',
+            "[b](#url 'it\\'s')\n",
+            "[c](#url (a \\(b\\) c))\n",
+            '![d](#url "back\\\\slash")\n',
+        ]
+        output = self.roundtrip(input)
+        self.assertEqual(output, "".join(input))
+
     def test_multiline_fragment(self):
         input = [
             "[a link](<url-in-angle-brackets> '*emphasized\n",
