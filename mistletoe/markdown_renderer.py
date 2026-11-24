@@ -77,7 +77,7 @@ class Fragment:
         text (str): markdown fragment.
     """
 
-    # Optional metadata installed through extras; consumers use getattr defaults.
+    # These optional flags come from extras. The renderer treats missing flags as False.
     wordwrap: bool
     hard_line_break: bool
 

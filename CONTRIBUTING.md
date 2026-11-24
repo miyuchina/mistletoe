@@ -30,23 +30,9 @@ uv run pyright
 uv run ty check
 ```
 
-The type checkers run the static examples in `test/typing_markdown_renderer.py`
-and the library modules listed in `pyproject.toml`. All three target lists must
-match. Imported modules still supply type information, but diagnostics outside
-the selected files are not part of the required CI checks. Add modules to all
-three lists as their remaining typing issues are resolved.
-
-To audit the whole library, including modules with known typing issues, run:
-
-```sh
-uv run mypy mistletoe test/typing_markdown_renderer.py
-uv run pyright mistletoe test/typing_markdown_renderer.py
-uv run ty check --config 'src.include = ["**"]' mistletoe test/typing_markdown_renderer.py
-```
-
-The ty audit overrides its configured include list to cover the whole library.
-These full-library audits currently report errors. The checker versions are
-pinned in the typing dependency group so upgrades can be reviewed explicitly.
+CI runs all three type checkers on the same set of library modules and on the
+static regression checks in `test/typing_markdown_renderer.py`. The target
+lists and pinned checker versions are in `pyproject.toml`.
 
 The previous `tox` configuration has been removed. This changes the contributor
 workflow but does not affect projects that install mistletoe as a dependency.
