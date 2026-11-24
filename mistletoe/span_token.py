@@ -298,7 +298,7 @@ _attrs = r'(?:\s+[A-Za-z_:][A-Za-z0-9_.:-]*(?:\s*=\s*(?:[^\s"\'=<>`]+|\'[^\']*?\
 
 _open_tag    = r'(?<!\\)<' + _tag + _attrs + r'\s*/?>'  # noqa: E221
 _closing_tag = r'(?<!\\)</' + _tag + r'\s*>'
-_comment     = r'(?<!\\)<!--(?!>|->)(?:(?!--).)+?(?<!-)-->'  # noqa: E221
+_comment     = r'(?<!\\)<!--(?:-?>|.*?-->)'  # noqa: E221
 _instruction = r'(?<!\\)<\?.+?\?>'
 _declaration = r'(?<!\\)<![A-Z].+?>'
 _cdata       = r'(?<!\\)<!\[CDATA.+?\]\]>'  # noqa: E221
@@ -315,8 +315,60 @@ class HtmlSpan(SpanToken):
     pattern = re.compile('|'.join([_open_tag, _closing_tag, _comment,
                                    _instruction, _declaration, _cdata]),
                                    re.DOTALL)
+    _tag_pattern = re.compile('|'.join([_open_tag, _closing_tag,
+                                        _instruction, _declaration, _cdata]),
+                                        re.DOTALL)
+    _comment_pattern = re.compile(_comment, re.DOTALL)
     parse_inner = False
     parse_group = 0
+
+    @classmethod
+    def find(cls, string):
+        # No comment can end after the last "-->". Bounding the comment search
+        # there keeps each unclosed "<!--" from rescanning the rest of the string.
+        # Tags may start only before the next comment, but may end after its
+        # opener (quoted attributes, PIs, CDATA). Comment bodies are not scanned
+        # for tags, and a pending comment match is reused across earlier tags.
+        comment_end = string.rfind('-->') + 3
+        start = 0
+        length = len(string)
+        pending_comment = None
+        while start <= length:
+            if pending_comment is None or pending_comment.start() < start:
+                pending_comment = cls._comment_pattern.search(
+                    string, start, comment_end)
+            tag_limit = (pending_comment.start()
+                         if pending_comment is not None else length)
+            # Contained tags: do not scan into the next comment body.
+            tag = cls._tag_pattern.search(string, start, tag_limit)
+            # Spanning tags: a tag may start before the comment opener and end
+            # after it (quoted attributes, PIs, CDATA). Try only at '<' before
+            # the comment so comment bodies full of "<?" stay unscanned.
+            if tag is None and pending_comment is not None:
+                pos = start
+                while pos < tag_limit:
+                    lt = string.find('<', pos, tag_limit)
+                    if lt == -1:
+                        break
+                    candidate = cls._tag_pattern.match(string, lt)
+                    if (candidate is not None
+                            and candidate.end() > pending_comment.start()):
+                        tag = candidate
+                        break
+                    pos = lt + 1
+            if tag is not None:
+                yield tag
+                start = tag.end()
+                if (pending_comment is not None
+                        and start > pending_comment.start()):
+                    pending_comment = None
+                continue
+            if pending_comment is not None:
+                yield pending_comment
+                start = pending_comment.end()
+                pending_comment = None
+                continue
+            return
 
 
 HTMLSpan = HtmlSpan
