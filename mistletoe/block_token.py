@@ -668,6 +668,12 @@ class ListItem(BlockToken):
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
                 return (parse_buffer, indentation, prepend, leader, start_line), next_marker
+            # a line that is not indented enough to belong to the item cannot continue it, because
+            # there is no paragraph yet for a lazy continuation line to extend: the item is empty.
+            if next_line is not None and cls.parse_continuation(next_line, prepend) is None:
+                parse_buffer = tokenizer.ParseBuffer()
+                next_marker = cls.parse_marker(next_line)
+                return (parse_buffer, indentation, prepend, leader, start_line), next_marker
         else:
             line_buffer.append(content)
 
