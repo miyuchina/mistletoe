@@ -219,6 +219,9 @@ class TestListItem(unittest.TestCase):
                      '1item 1\n',
                      '2| item 2\n',
                      '1234567890. item x\n',
+                     '１. fullwidth digit\n',
+                     '١) Arabic-Indic digit\n',
+                     '1２. mixed digits\n',
                      '. no number\n',
                      ') no number\n',
                      ')\n',
@@ -371,6 +374,10 @@ class TestList(unittest.TestCase):
                  '  + bar\n']
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.List)
+
+    def test_non_ascii_ordered_marker_stays_in_paragraph(self):
+        token, = block_token.tokenize(['１. 項目\n'])
+        self.assertIsInstance(token, block_token.Paragraph)
 
     def test_ordered_marker_without_number(self):
         lines = [') foo\n',
