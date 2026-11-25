@@ -334,6 +334,25 @@ class TestListItem(unittest.TestCase):
         self.assertEqual(len(tokens[0].children), 3)
         self.assertTrue(tokens[0].loose)
 
+    def test_unindented_line_after_a_bare_marker_is_not_part_of_the_item(self):
+        # there is no paragraph yet for a lazy continuation line to extend
+        for marker in ('-', '*', '+', '1.', '2)'):
+            with self.subTest(marker=marker):
+                tokens = block_token.tokenize([marker + '\n', 'foo\n'])
+                self.assertEqual(len(tokens), 2)
+                self.assertIsInstance(tokens[0], block_token.List)
+                self.assertEqual(len(tokens[0].children), 1)
+                self.assertEqual(len(tokens[0].children[0].children), 0)
+                self.assertFalse(tokens[0].loose)
+                self.assertIsInstance(tokens[1], block_token.Paragraph)
+
+    def test_indented_line_after_a_bare_marker_is_the_content_of_the_item(self):
+        tokens = block_token.tokenize(['-\n', '  foo\n', '-\n', '  bar\n'])
+        self.assertEqual(len(tokens), 1)
+        self.assertEqual(len(tokens[0].children), 2)
+        self.assertTrue('foo' in tokens[0].children[0])
+        self.assertTrue('bar' in tokens[0].children[1])
+
     def test_list_with_code_block(self):
         lines = ['1.      indented code\n',
                  '\n',
