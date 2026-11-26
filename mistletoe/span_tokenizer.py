@@ -5,6 +5,8 @@ Inline tokenizer for mistletoe.
 import html
 import re
 
+from mistletoe import span_token
+
 
 # replacement for html._charref which matches only entitydefs ending with ';',
 # according to the CommonMark spec.
@@ -14,10 +16,14 @@ _markdown_charref = re.compile(r'&(#[0-9]{1,7};'
 _stdlib_charref: re.Pattern[str] = getattr(html, '_charref')
 
 
-def tokenize(string, token_types):
+def tokenize(string, token_types, inside_tasklist=False):
     try:
         setattr(html, '_charref', _markdown_charref)
         *token_types, fallback_token = token_types
+        token_types.insert(0, span_token.TaskListMarker) \
+            if span_token.TaskListMarker not in token_types and inside_tasklist \
+            else None
+
         tokens = find_tokens(string, token_types, fallback_token)
         token_buffer = []
         if tokens:
@@ -82,9 +88,12 @@ def make_tokens(tokens, start, end, string, fallback_token):
             if t is not None:
                 result.append(t)
         t = token.make()
-        if t is not None:
+        # Avoid adding TaskListMarker into results, it should eventually
+        # be parsed as a Paragraph (or whatever value for the fallback_token)
+        if t is not None and not isinstance(t, span_token.TaskListMarker):
             result.append(t)
-        prev_end = token.end
+        if not isinstance(t, span_token.TaskListMarker):  # Avoid having prev_end be set to a TaskListMarker position
+            prev_end = token.end                          # It will reintrepret as fallback_token from the starting if check
     if prev_end != end:
         result.append(fallback_token(html.unescape(string[prev_end:end])))
     return result

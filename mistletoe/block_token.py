@@ -117,8 +117,8 @@ class BlockToken(token.Token):
 
     repr_attributes: tuple[str, ...] = ("line_number",)
 
-    def __init__(self, lines, tokenize_func):
-        self.children = tokenize_func(lines)
+    def __init__(self, lines, tokenize_func, inside_tasklist=False):
+        self.children = tokenize_func(lines, inside_tasklist)
 
     def __contains__(self, text):
         return any(text in child for child in self.children)
@@ -332,16 +332,20 @@ class Paragraph(BlockToken):
 
     setext_pattern = re.compile(r' {0,3}(=|-)+ *$')
     parse_setext = True  # can be disabled by Quote
+    tasklist_pattern = re.compile(r'^(\[[xX ]\])\s+')
 
-    def __new__(cls, lines):
+    def __new__(cls, lines, _=None):
         if not isinstance(lines, list):
             # setext heading token, return directly
             return lines
         return super().__new__(cls)
 
-    def __init__(self, lines):
-        content = ''.join([line.lstrip() for line in lines]).strip()
-        super().__init__(content, span_token.tokenize_inner)
+    def __init__(self, lines, inside_tasklist=False):
+        content = ''.join([line.lstrip() for line in lines])
+        if self.tasklist_pattern.fullmatch(content) is None:  # Keeps new lines and other whitespace with tasklist markers
+            content = content.strip()
+
+        super().__init__(content, span_token.tokenize_inner, inside_tasklist=inside_tasklist)
 
     @staticmethod
     def start(line):
@@ -369,6 +373,7 @@ class Paragraph(BlockToken):
 
             line_buffer.append(next(lines))
             next_line = lines.peek()
+
         return line_buffer
 
     @classmethod
@@ -530,7 +535,7 @@ class List(BlockToken):
         # and the list must either be unordered or start from 1.
         marker_tuple = ListItem.parse_marker(lines.peek())
         if (marker_tuple is not None):
-            _, _, leader, content = marker_tuple
+            _, _, leader, _, content = marker_tuple
             if not content.strip() == '':
                 return not leader[0].isdigit() or leader in ['1.', '1)']
         return False
@@ -580,20 +585,38 @@ class ListItem(BlockToken):
         prepend (int): the start position of the content, i.e., the indentation required
                        for continuation lines.
         loose (bool): whether the list is loose.
+        tasklist_marker (string): the string matching on the characters defined in
+                                  tasklist_pattern
     """
     children: Sequence[BlockToken]
 
-    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose")
+    repr_attributes = BlockToken.repr_attributes + ("leader", "indentation", "prepend", "loose", "tasklist_marker")
     pattern = re.compile(r'( {0,3})(\d{1,9}[.)]|[+\-*])($|\s+)')
+    tasklist_pattern = re.compile(r'(\[[xX ]\])\s+')
     continuation_pattern = re.compile(r'([ \t]*)(\S.*\n|\n)')
 
-    def __init__(self, parse_buffer, indentation, prepend, leader, line_number=None):
+    def __init__(self, parse_buffer, indentation, prepend, leader, tasklist_marker, line_number=None):
         self.line_number = line_number
         self.leader = leader
         self.indentation = indentation
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
+        self.tasklist_marker = ( # From GFM spec, it can only be a tasklist_marker if first child is paragraph
+            tasklist_marker
+            if len(self.children) > 0 and isinstance(self.children[0], Paragraph)
+            else None
+        )
         self.loose = parse_buffer.loose
+
+    def is_checked(self):
+        """
+        Returns boolean value if tasklist is 'checked' or not. If the
+        tasklist is not present in the text, returns None.
+        """
+        if self.tasklist_marker:
+            return True if 'x' in self.tasklist_marker.casefold() else False
+        else:
+            return None
 
     @classmethod
     def parse_continuation(cls, line, prepend):
@@ -614,10 +637,28 @@ class ListItem(BlockToken):
         return expanded_spaces[prepend:] + match_obj.group(2) if len(expanded_spaces) >= prepend else None
 
     @classmethod
+    def parse_tasklist_marker(cls, line):
+        """
+        Returns a tasklist marker (defined by [x|X] or [ ], more detail see GitHub
+        Flavored Markdown Spec) by regex matching with the line provided.
+
+        Attributes:
+          line: A str of current line of text
+        """
+        tasklist_match_obj = cls.tasklist_pattern.match(line)
+        tasklist_marker = (
+            tasklist_match_obj.group(1)
+            if tasklist_match_obj is not None
+            else None
+        )
+
+        return tasklist_marker
+
+    @classmethod
     def parse_marker(cls, line):
         """
-        Returns a tuple (prepend, leader, content) iff the line has a valid leader and at
-        least one space separating leader and content, or if the content is empty, in which
+        Returns a tuple (prepend, leader, tasklist_marker, content) iff the line has a valid leader
+        and at least one space separating leader and content, or if the content is empty, in which
         case there need not be any spaces.
         The return value is None if the line doesn't have a valid marker.
 
@@ -627,12 +668,17 @@ class ListItem(BlockToken):
 
         The prepend is the start position of the content, i.e., the indentation required
         for continuation lines.
+
+        The tasklist_marker are the characters that match from tasklist_pattern, i.e., the
+        `[x]` or `[ ]` plus any trailing whitelist characters.
         """
         match_obj = cls.pattern.match(line)
         if match_obj is None:
             return None
         indentation = len(match_obj.group(1))
+
         prepend = len(match_obj.group(0).expandtabs(4))
+
         leader = match_obj.group(2)
         content = line[match_obj.end(0):]
         n_spaces = prepend - match_obj.end(2)
@@ -641,7 +687,11 @@ class ListItem(BlockToken):
             # with the exception of the first (marker separator) space.
             prepend -= n_spaces - 1
             content = ' ' * (n_spaces - 1) + content
-        return indentation, prepend, leader, content
+            tasklist_marker = None
+        else:
+            tasklist_marker = cls.parse_tasklist_marker(content)
+
+        return indentation, prepend, leader, tasklist_marker, content
 
     @classmethod
     def read(cls, lines, prev_marker=None):
@@ -652,7 +702,7 @@ class ListItem(BlockToken):
         line = next(lines)
         start_line = lines.line_number()
         next_line = lines.peek()
-        indentation, prepend, leader, content = prev_marker if prev_marker else cls.parse_marker(line)
+        indentation, prepend, leader, tasklist_marker, content = prev_marker if prev_marker else cls.parse_marker(line)
         if content.strip() == '':
             # item starting with a blank line: look for the next non-blank line
             prepend = indentation + len(leader) + 1
@@ -667,7 +717,9 @@ class ListItem(BlockToken):
                 parse_buffer = tokenizer.ParseBuffer()
                 parse_buffer.loose = True
                 next_marker = cls.parse_marker(next_line) if next_line is not None else None
-                return (parse_buffer, indentation, prepend, leader, start_line), next_marker
+                return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line), next_marker
+            elif blanks == 1 and next_line is not None and next_line.lstrip() != '':
+                tasklist_marker = cls.parse_tasklist_marker(next_line.lstrip())
         else:
             line_buffer.append(content)
 
@@ -711,8 +763,14 @@ class ListItem(BlockToken):
 
         # block-level tokens are parsed here, so that footnotes can be
         # recognized before span-level parsing.
-        parse_buffer = tokenizer.tokenize_block(line_buffer, _token_types, start_line=start_line, depth=lines.depth + 1)
-        return (parse_buffer, indentation, prepend, leader, start_line), next_marker
+        parse_buffer = tokenizer.tokenize_block(
+            line_buffer,
+            _token_types,
+            start_line=start_line,
+            depth=lines.depth + 1,
+            tasklist=tasklist_marker,
+        )
+        return (parse_buffer, indentation, prepend, leader, tasklist_marker, start_line,), next_marker
 
 
 class Table(BlockToken):
