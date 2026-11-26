@@ -601,7 +601,7 @@ class ListItem(BlockToken):
         self.indentation = indentation
         self.prepend = prepend
         self.children = tokenizer.make_tokens(parse_buffer)
-        self.tasklist_marker = (
+        self.tasklist_marker = ( # From GFM spec, it can only be a tasklist_marker if first child is paragraph
             tasklist_marker
             if len(self.children) > 0 and isinstance(self.children[0], Paragraph)
             else None
@@ -638,6 +638,13 @@ class ListItem(BlockToken):
 
     @classmethod
     def parse_tasklist_marker(cls, line):
+        """
+        Returns a tasklist marker (defined by [x|X] or [ ], more detail see GitHub
+        Flavored Markdown Spec) by regex matching with the line provided.
+
+        Attributes:
+          line: A str of current line of text
+        """
         tasklist_match_obj = cls.tasklist_pattern.match(line)
         tasklist_marker = (
             tasklist_match_obj.group(1)

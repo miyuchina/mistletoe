@@ -88,10 +88,12 @@ def make_tokens(tokens, start, end, string, fallback_token):
             if t is not None:
                 result.append(t)
         t = token.make()
+        # Avoid adding TaskListMarker into results, it should eventually
+        # be parsed as a Paragraph (or whatever value for the fallback_token)
         if t is not None and not isinstance(t, span_token.TaskListMarker):
             result.append(t)
-        if not isinstance(t, span_token.TaskListMarker):
-            prev_end = token.end
+        if not isinstance(t, span_token.TaskListMarker):  # Avoid having prev_end be set to a TaskListMarker position
+            prev_end = token.end                          # It will reintrepret as fallback_token from the starting if check
     if prev_end != end:
         result.append(fallback_token(html.unescape(string[prev_end:end])))
     return result
