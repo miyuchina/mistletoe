@@ -106,7 +106,11 @@ class JiraRenderer(BaseRenderer):
         return template.format(level=token.level, inner=inner) + self._block_eol(token)
 
     def render_quote(self, token):
-        self.lastChildOfQuotes.append(token.children[-1])
+        # An empty quote has no last child; keep the stack balanced with a
+        # sentinel that no token can be identical to.
+        self.lastChildOfQuotes.append(
+            token.children[-1] if token.children else None
+        )
         inner = self.render_inner(token)
         del (self.lastChildOfQuotes[-1])
 
