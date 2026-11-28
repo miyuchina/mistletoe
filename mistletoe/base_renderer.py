@@ -68,6 +68,17 @@ class BaseRenderer(object):
             'ThematicBreak':  self.render_thematic_break,
             'LineBreak':      self.render_line_break,
             'Document':       self.render_document,
+            # Tokens registered globally by MarkdownRenderer (see #318):
+            # a Document parsed while it is active contains BlankLine and
+            # LinkReferenceDefinitionBlock tokens, so every renderer must
+            # know how to render them. A blank line contributes nothing
+            # to HTML/LaTeX output, and link definitions are metadata
+            # (already consumed via Document.footnotes), so both render
+            # as empty strings here; MarkdownRenderer overrides them
+            # with its own round-trip renderers.
+            'BlankLine':      self.render_blank_line,
+            'LinkReferenceDefinitionBlock':
+                              self.render_link_reference_definition_block,
         }
         self._extras = extras
 
@@ -108,6 +119,16 @@ class BaseRenderer(object):
             token: a branch node who has children attribute.
         """
         return ''.join(map(self.render, token.children))
+
+    @staticmethod
+    def render_blank_line(token) -> str:
+        """A blank line contributes no output (see #318)."""
+        return ''
+
+    @staticmethod
+    def render_link_reference_definition_block(token) -> str:
+        """Link definitions are metadata, not visible output (see #318)."""
+        return ''
 
     def __enter__(self):
         """
