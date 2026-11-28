@@ -78,6 +78,16 @@ class TestEmphasis(TestBranchToken):
         self._test_token(next(tokens), 'an example without', children=True)
         self._test_token(next(tokens), 'punctuation', children=False)
 
+    def test_unicode_symbols_are_punctuation(self):
+        # CommonMark 0.31 counts Unicode symbols (category S) as punctuation
+        tokens = list(span_token.tokenize_inner('*£*bravo'))
+        self.assertEqual(len(tokens), 1)
+        self._test_token(tokens[0], '*£*bravo', children=False)
+
+        tokens = iter(span_token.tokenize_inner('_foo_€'))
+        self._test_token(next(tokens), 'foo', children=True)
+        self._test_token(next(tokens), '€', children=False)
+
 
 class TestInlineCode(TestBranchToken):
     def _test_parse_enclosed(self, encl_type, encl_delimiter):
