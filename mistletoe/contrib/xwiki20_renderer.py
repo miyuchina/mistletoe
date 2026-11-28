@@ -133,7 +133,11 @@ class XWiki20Renderer(BaseRenderer):
         if '1' in self.listTokens:
             prefix += '.'
 
-        self.firstChildOfListItems.append(token.children[0])
+        # An empty list item has no first child; keep the stack balanced with
+        # a sentinel that no token can be identical to.
+        self.firstChildOfListItems.append(
+            token.children[0] if token.children else None
+        )
         inner = self.render_inner(token)
         del (self.firstChildOfListItems[-1])
 

@@ -114,6 +114,9 @@ Use this feature with //caution//. See {{Wikipedia article="SomeArticle"/}}. {{t
 """
         self.markdownResultTest(markdown, expected)
 
+    def test_render__empty_list_item(self):
+        self.markdownResultTest('-\n', '* \n\n')
+
     @filesBasedTest
     def test_render__basic_blocks(self):
         pass

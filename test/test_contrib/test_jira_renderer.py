@@ -232,6 +232,9 @@ public static void main(String[] args) {
 """
         self.markdownResultTest(markdown, expected)
 
+    def test_render__empty_quote(self):
+        self.markdownResultTest('>\n', '{quote}\n{quote}\n\n')
+
     @filesBasedTest
     def test_render__basic_blocks(self):
         pass
