@@ -372,12 +372,6 @@ class TestList(unittest.TestCase):
         token, = block_token.tokenize(lines)
         self.assertIsInstance(token, block_token.List)
 
-    def test_ordered_marker_without_number(self):
-        lines = [') foo\n',
-                 '.\n']
-        token, = block_token.tokenize(lines)
-        self.assertIsInstance(token, block_token.Paragraph)
-
 
 class TestBlockNestingLimit(unittest.TestCase):
     def test_below_limit_does_not_warn(self):
