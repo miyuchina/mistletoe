@@ -90,6 +90,33 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
+    def test_link_escapes(self):
+        # the parser resolves escapes and entities in the destination and the title,
+        # so the renderer has to put back the ones that matter.
+        input = [
+            "[link](foo\\(and\\(bar\\))\n",
+            "[link](foo\\):)\n",
+            "[link](/url \"title \\\"&quot;\")\n",
+            "[link](foo&amp;quot;bar 'it\\'s (here)')\n",
+            "![image](<a\\<b> (p\\)q))\n",
+            "[link](foo\\\\)\n",
+        ]
+        output = self.roundtrip(input)
+        expected = [
+            "[link](foo\\(and(bar))\n",
+            "[link](foo\\):)\n",
+            "[link](/url \"title \\\"\\\"\")\n",
+            "[link](foo&amp;quot;bar 'it\\'s (here)')\n",
+            "![image](<a\\<b> (p\\)q))\n",
+            "[link](foo\\\\)\n",
+        ]
+        self.assertEqual(output, "".join(expected))
+
+    def test_link_dest_with_whitespace(self):
+        # a space in the destination can only come from an entity, and needs angle brackets
+        output = self.roundtrip(["[link](foo&#32;bar)\n"])
+        self.assertEqual(output, "[link](<foo bar>)\n")
+
     def test_multiline_fragment(self):
         input = [
             "[a link](<url-in-angle-brackets> '*emphasized\n",
