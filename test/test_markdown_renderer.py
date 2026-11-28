@@ -101,6 +101,48 @@ class TestMarkdownRenderer(unittest.TestCase):
         output = self.roundtrip(input)
         self.assertEqual(output, "".join(input))
 
+    def test_paragraph_lines_that_would_start_a_block(self):
+        # the parser drops the indentation of continuation lines, and resolves
+        # entities, so these lines have to be escaped to stay in the paragraph.
+        input = [
+            "Foo\n",
+            "    ***\n",
+            "    # bar\n",
+            "    ---\n",
+            "    ===\n",
+            "    > quote\n",
+            "    + item\n",
+            "    1) item\n",
+            "    2) not an item\n",
+            "    ```\n",
+            "\n",
+            "&#35; not a heading\n",
+            "\n",
+            "&#42; not an item\n",
+            "\n",
+            "&#50;. not an item\n",
+        ]
+        output = self.roundtrip(input)
+        expected = [
+            "Foo\n",
+            "\\***\n",
+            "\\# bar\n",
+            "\\---\n",
+            "\\===\n",
+            "\\> quote\n",
+            "\\+ item\n",
+            "1\\) item\n",
+            "2) not an item\n",
+            "\\```\n",
+            "\n",
+            "\\# not a heading\n",
+            "\n",
+            "\\* not an item\n",
+            "\n",
+            "2\\. not an item\n",
+        ]
+        self.assertEqual(output, "".join(expected))
+
     def test_thematic_break(self):
         input = [
             " **  * ** * ** * **\n",
@@ -182,7 +224,8 @@ class TestMarkdownRenderer(unittest.TestCase):
             # note: we still always normalize the indentation of all list item lines:
             "   - 3 spaces: ok.\n",
             "     subsequent line.\n",
-            "     - 4 spaces: in the paragraph of the above list item.\n",
+            # the dash is escaped so that the line does not start a nested list:
+            "     \\- 4 spaces: in the paragraph of the above list item.\n",
             "     subsequent line.\n",
         ]
         self.assertEqual(output, "".join(expected))
@@ -211,7 +254,7 @@ class TestMarkdownRenderer(unittest.TestCase):
             "  subsequent line.\n",
             "- 3 spaces: ok.\n",
             "  subsequent line.\n",
-            "  - 4 spaces: in the paragraph of the above list item.\n",
+            "  \\- 4 spaces: in the paragraph of the above list item.\n",
             "  subsequent line.\n",
         ]
         self.assertEqual(output, "".join(expected))
@@ -526,6 +569,20 @@ class TestMarkdownFormatting(unittest.TestCase):
                 "A short paragraph  \n"
                 "without any\\\n"
                 "very long words.\n"
+            )
+
+    def test_wordwrap_escapes_block_starts(self):
+        with MarkdownRenderer() as renderer:
+            # given a paragraph with words that start a block at the start of a line
+            paragraph = block_token.Paragraph(["Rated 4 # in the list - with 1. place.\n"])
+
+            # when reflowing so that each word ends up on its own line
+            renderer.max_line_length = 1
+            lines = renderer.render(paragraph)
+
+            # then those words are escaped, so the paragraph stays one paragraph
+            assert lines == (
+                "Rated\n4\n\\#\nin\nthe\nlist\n\\-\nwith\n1\\.\nplace.\n"
             )
 
     def test_wordwrap_paragraph_with_link(self):

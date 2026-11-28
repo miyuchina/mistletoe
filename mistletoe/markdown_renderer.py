@@ -297,7 +297,41 @@ class MarkdownRenderer(BaseRenderer):
     def render_paragraph(
         self, token: block_token.Paragraph, max_line_length: Optional[float]
     ) -> Iterable[str]:
-        return self.span_to_lines(token.children, max_line_length=max_line_length)
+        lines = self.span_to_lines(token.children, max_line_length=max_line_length)
+        for i, line in enumerate(lines):
+            yield self.escape_block_start(line, continuation=i > 0)
+
+    # a paragraph line that starts like one of these would be parsed as another block.
+    # such lines come from indentation the parser dropped, from entities like "&#35;"
+    # or from word wrapping.
+    _block_start = re.compile(
+        r"(?:"
+        r"#{1,6}(?:[ \t]|$)"  # ATX heading
+        r"|[-+*](?:[ \t]|$)"  # bullet list item
+        r"|>"  # block quote
+        r"|`{3,}[^`]*$|~{3,}"  # code fence
+        r"|(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$"  # thematic break
+        r")"
+    )
+    _setext_underline = re.compile(r"(?:=+|-+)[ \t]*$")
+    _ordered_list_start = re.compile(r"([0-9]{1,9})([.)])(?:[ \t]|$)")
+
+    @classmethod
+    def escape_block_start(cls, line: str, continuation: bool) -> str:
+        """
+        Escapes the start of a paragraph line which would otherwise start another
+        block, like a heading or a list item, when the Markdown is parsed again.
+        `continuation` tells whether the line follows another line of the paragraph.
+        """
+        if cls._block_start.match(line) or (
+            continuation and cls._setext_underline.match(line)
+        ):
+            return "\\" + line
+        match = cls._ordered_list_start.match(line)
+        # only a list starting at 1 can interrupt a paragraph
+        if match and not (continuation and int(match.group(1)) != 1):
+            return line[: match.end(1)] + "\\" + line[match.end(1):]
+        return line
 
     def render_block_code(
         self, token: block_token.BlockCode, max_line_length: Optional[float]
