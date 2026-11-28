@@ -140,6 +140,10 @@ class Document(BlockToken):
 
     Attributes:
         footnotes (dictionary): link reference definitions.
+        trailing_newline (bool): whether the last original input line ended
+            with LF, CRLF, or CR before normalization. ``False`` when the
+            last line has no terminator. ``True`` for empty input, so a
+            document built up from ``Document([])`` keeps its final newline.
     """
     children: Iterable[BlockToken]
 
@@ -155,14 +159,27 @@ class Document(BlockToken):
                 the parsing process will not work correctly. For performance reasons,
                 clients need to normalize such line endings themselves, before passing
                 them to this function, e.g. by calling ``lines.replace('\\r', '')``.
+                ``trailing_newline`` still treats a final CR or CRLF as a terminator;
+                that does not change this normalization or fix CRLF parsing.
         """
         if isinstance(lines, str):
             lines = lines.splitlines(keepends=True)
-        lines = [line if line.endswith('\n') else '{}\n'.format(line) for line in lines]
+        # One pass: iterators and generators can be consumed only once.
+        # Keep the normalized lines (LF appended when missing) for tokenize.
+        normalized_lines = []
+        last_line = None
+        for line in lines:
+            last_line = line
+            if not line.endswith('\n'):
+                line = '{}\n'.format(line)
+            normalized_lines.append(line)
+        self.trailing_newline = (
+            last_line is None or last_line.endswith(('\n', '\r'))
+        )
         self.footnotes: dict[str, tuple[str, str]] = {}
         self.line_number = 1
         token._root_node = self
-        self.children = tokenize(lines)
+        self.children = tokenize(normalized_lines)
         token._root_node = None
 
 
